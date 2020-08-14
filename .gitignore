@@ -1,0 +1,70 @@
+# model
+data-bin
+checkpoints
+logs
+*.ipynb
+runs
+
+# macOS dir files
+.DS_Store
+## General
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.cuo
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Compiled protocol buffers
+*.pb.h
+*.pb.cc
+*_pb2.py
+
+# Compiled python
+__pycache__
+*.pyc
+*.pyd
+
+# Compiled cpp directory
+build
+
+# Executables
+*.exe
+*.out
+*.app
+
+# IPython notebook checkpoints
+.ipynb_checkpoints
+
+# Editor temporaries
+*.swn
+*.swo
+*.swp
+*~
+
+# VS Code settings
+*.vscode
+
+# Generated documentation
+_site
+doxygen
+
+# LevelDB files
+*.sst
+*.ldb
+LOCK
+LOG*
+CURRENT
+MANIFEST-*
