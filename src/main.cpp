@@ -11,7 +11,7 @@ using transform::RandomCrop;
 using transform::RandomHorizontalFlip;
 
 int main() {
-  std::cout << "Deep Residual Network" << std::endl;
+  std::cout << "Training Mobilenet V2 Classification Network" << std::endl;
 
   // Device
   auto cuda_available = torch::cuda::is_available();
@@ -26,7 +26,7 @@ int main() {
   const size_t learning_rate_decay_frequency = 8;  // number of epochs after which to decay the learning rate
   const double learning_rate_decay_factor = 1.0 / 3.0;
 
-  const std::string CIFAR_data_path = "../../../../data/cifar10/";
+  const std::string CIFAR_data_path = "../data-bin/cifar10/";
 
   // CIFAR10 custom dataset
   auto train_dataset = CIFAR10(CIFAR_data_path)
@@ -53,7 +53,7 @@ int main() {
 
   // Model
   std::array<int64_t, 3> layers{2, 2, 2};
-  auto model = vision::models::MobileNet(num_classes=10, pretrained=True);
+  auto model = vision::models::MobileNetV2();
   model->to(device);
 
   // Optimizer
