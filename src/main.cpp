@@ -32,26 +32,26 @@ int main() {
 
   // CIFAR10 custom dataset
   auto train_dataset = CIFAR10(CIFAR_data_path)
-    .map(ConstantPad(4))
-    .map(RandomHorizontalFlip())
-    .map(RandomCrop({32, 32}))
-    .map(torch::data::transforms::Stack<>());
+      .map(ConstantPad(4))
+      .map(RandomHorizontalFlip())
+      .map(RandomCrop({32, 32}))
+      .map(torch::data::transforms::Stack<>());
 
   // Number of samples in the training set
   auto num_train_samples = train_dataset.size().value();
 
   auto test_dataset = CIFAR10(CIFAR_data_path, CIFAR10::Mode::kTest)
-    .map(torch::data::transforms::Stack<>());
+      .map(torch::data::transforms::Stack<>());
 
   // Number of samples in the testset
   auto num_test_samples = test_dataset.size().value();
 
   // Data loader
   auto train_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>(
-    std::move(train_dataset), batch_size);
+      std::move(train_dataset), batch_size);
 
   auto test_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
-    std::move(test_dataset), batch_size);
+      std::move(test_dataset), batch_size);
 
   // Model
   std::vector<int64_t> block_config = {16, 16, 16};
@@ -108,14 +108,14 @@ int main() {
     if ((epoch + 1) % learning_rate_decay_frequency == 0) {
       current_learning_rate *= learning_rate_decay_factor;
       static_cast<torch::optim::AdamOptions&>(optimizer.param_groups().front()
-        .options()).lr(current_learning_rate);
+          .options()).lr(current_learning_rate);
     }
 
     auto sample_mean_loss = running_loss / num_train_samples;
     auto accuracy = static_cast<double>(num_correct) / num_train_samples;
 
     std::cout << "Epoch [" << (epoch + 1) << "/" << num_epochs << "], Trainset - Loss: "
-      << sample_mean_loss << ", Accuracy: " << accuracy << '\n';
+        << sample_mean_loss << ", Accuracy: " << accuracy << '\n';
   }
 
   std::cout << "Training finished!\n" << std::endl;

@@ -29,10 +29,10 @@ torch::Tensor RandomHorizontalFlip::operator()(torch::Tensor input) {
 
 // ConstantPad
 ConstantPad::ConstantPad(const std::vector<int64_t>& padding, torch::Scalar value)
-  : padding_(padding), value_(value) {}
+   : padding_(padding), value_(value) {}
 
 ConstantPad::ConstantPad(int64_t padding, torch::Scalar value)
-  : padding_(4, padding), value_(value) {}
+   : padding_(4, padding), value_(value) {}
 
 torch::Tensor ConstantPad::operator()(torch::Tensor input) {
   return torch::constant_pad_nd(input, padding_, value_);
@@ -49,6 +49,7 @@ torch::Tensor RandomCrop::operator()(torch::Tensor input) {
   auto width_offset = rand_int(width_offset_length);
 
   return input.index({Ellipsis,
-    Slice(height_offset, height_offset + size_[0]), Slice(width_offset, width_offset + size_[1])});
+      Slice(height_offset, height_offset + size_[0]),
+      Slice(width_offset, width_offset + size_[1])});
 }
 }  // namespace transform

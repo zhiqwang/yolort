@@ -13,15 +13,15 @@ constexpr uint32_t kBytesPerChannelPerRow = 1024;
 constexpr uint32_t kBytesPerBatchFile = kBytesPerRow * kSizePerBatch;
 
 const std::vector<std::string> kTrainDataBatchFiles = {
-  "data_batch_1.bin",
-  "data_batch_2.bin",
-  "data_batch_3.bin",
-  "data_batch_4.bin",
-  "data_batch_5.bin",
+    "data_batch_1.bin",
+    "data_batch_2.bin",
+    "data_batch_3.bin",
+    "data_batch_4.bin",
+    "data_batch_5.bin",
 };
 
 const std::vector<std::string> kTestDataBatchFiles = {
-  "test_batch.bin"
+    "test_batch.bin"
 };
 
 // Source: https://github.com/pytorch/pytorch/blob/master/torch/csrc/api/src/data/datasets/mnist.cpp.
@@ -63,7 +63,7 @@ std::pair<torch::Tensor, torch::Tensor> read_data(const std::string& root, bool 
     uint32_t image_start = start_index + 1;
     uint32_t image_end = image_start + 3 * kBytesPerChannelPerRow;
     std::copy(data_buffer.begin() + image_start, data_buffer.begin() + image_end,
-      reinterpret_cast<char*>(images[i].data_ptr()));
+        reinterpret_cast<char*>(images[i].data_ptr()));
   }
 
   return {images.to(torch::kFloat32).div_(255), targets.to(torch::kInt64)};
