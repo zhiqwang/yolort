@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(demonet)
+project(libtorch-classifier)
 
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
@@ -19,4 +19,4 @@ target_link_libraries(
 )
 
 # set C++14 to compile PyTorch
-set_property(TARGET demonet PROPERTY CXX_STANDARD 14)
+set_property(TARGET libtorch-classifier PROPERTY CXX_STANDARD 14)

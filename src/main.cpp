@@ -2,7 +2,7 @@
 #include <torch/torch.h>
 #include <iostream>
 #include <iomanip>
-#include <torchvision/models/mobilenet.h>
+#include <torchvision/models/densenet.h>
 #include "cifar10.h"
 #include "transform.h"
 
@@ -11,7 +11,7 @@ using transform::RandomCrop;
 using transform::RandomHorizontalFlip;
 
 int main() {
-  std::cout << "Training Mobilenet V2 Classification Network" << std::endl;
+  std::cout << "Training DenseNet Classification Network" << std::endl;
 
   // Device
   auto cuda_available = torch::cuda::is_available();
@@ -20,7 +20,9 @@ int main() {
 
   // Hyper parameters
   const int64_t num_classes = 10;
-  const int64_t batch_size = 100;
+  const int64_t growth_rate = 12;
+  const int64_t num_init_features = 24;
+  const int64_t batch_size = 32;
   const size_t num_epochs = 20;
   const double learning_rate = 0.001;
   const size_t learning_rate_decay_frequency = 8;  // number of epochs after which to decay the learning rate
@@ -52,8 +54,12 @@ int main() {
     std::move(test_dataset), batch_size);
 
   // Model
-  std::array<int64_t, 3> layers{2, 2, 2};
-  auto model = vision::models::MobileNetV2();
+  std::vector<int64_t> block_config = {16, 16, 16};
+  auto model = vision::models::DenseNet(
+      num_classes,
+      growth_rate,
+      block_config,
+      num_init_features);
   model->to(device);
 
   // Optimizer
