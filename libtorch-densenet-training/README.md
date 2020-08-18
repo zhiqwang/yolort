@@ -1,4 +1,4 @@
-# A Demo to Libtorch Classification
+# A Demo of Classification Training Task in LibTorch
 
 A LibTorch inference implementation of the classification object detection algorithm. Both GPU and CPU are supported. Obviously the libtorch is not suitable for training a deep learning model, this repo is just for presenting the utility of libtorch.
 
