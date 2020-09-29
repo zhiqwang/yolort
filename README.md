@@ -12,3 +12,5 @@
 ## 🤗 Pretrained Models
 
 ## 🎓 Acknowledgement
+
+- <https://github.com/yasenh/libtorch-yolov5>
