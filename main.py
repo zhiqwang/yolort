@@ -8,9 +8,7 @@ import torch
 
 if __name__ == "__main__":
 
-    model_yolo = torch.hub.load(
-        'ultralytics/yolov5', 'yolov5s', pretrained=False, channels=3, classes=80,
-    )
+    entrypoints = torch.hub.list('ultralytics/yolov5')
 
     from yolov5.models.yolo import Model
 
