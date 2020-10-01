@@ -366,8 +366,8 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
         ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
         if CIoU or DIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
             c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
-            rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
-                    (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
+            rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 + (
+                b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
             if DIoU:
                 return iou - rho2 / c2  # DIoU
             elif CIoU:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
@@ -658,7 +658,7 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6, merge=False, 
                 x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
                 if redundant:
                     i = i[iou.sum(1) > 1]  # require redundancy
-            except:  # possible CUDA error https://github.com/ultralytics/yolov3/issues/1139
+            except RuntimeError:  # possible CUDA error https://github.com/ultralytics/yolov3/issues/1139
                 print(x, i, x.shape, i.shape)
                 pass
 
@@ -743,8 +743,8 @@ def coco_single_class_labels(path='../coco/labels/train2014/', label_class=43):
             with open('new/images.txt', 'a') as f:  # add image to dataset list
                 f.write(img_file + '\n')
             with open('new/labels/' + Path(file).name, 'a') as f:  # write label
-                for l in labels[i]:
-                    f.write('%g %.6f %.6f %.6f %.6f\n' % tuple(l))
+                for label_i in labels[i]:
+                    f.write('%g %.6f %.6f %.6f %.6f\n' % tuple(label_i))
             shutil.copyfile(src=img_file, dst='new/images/' + Path(file).name.replace('txt', 'jpg'))  # copy images
 
 
@@ -1008,8 +1008,11 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
 
     # Fix class - colour map
     prop_cycle = plt.rcParams['axes.prop_cycle']
+
     # https://stackoverflow.com/questions/51350872/python-from-color-name-to-rgb
-    hex2rgb = lambda h: tuple(int(h[1 + i:1 + i + 2], 16) for i in (0, 2, 4))
+    def hex2rgb(h):
+        return tuple(int(h[1 + i: 1 + i + 2], 16) for i in (0, 2, 4))
+
     color_lut = [hex2rgb(h) for h in prop_cycle.by_key()['color']]
 
     for i, img in enumerate(images):
@@ -1167,7 +1170,7 @@ def plot_labels(labels, save_dir=''):
                      diag_kws=dict(bins=50))
         plt.savefig(Path(save_dir) / 'labels_correlogram.png', dpi=200)
         plt.close()
-    except Exception as e:
+    except ModuleNotFoundError:
         pass
 
 

@@ -40,7 +40,7 @@ def exif_size(img):
             s = (s[1], s[0])
         elif rotation == 8:  # rotation 90
             s = (s[1], s[0])
-    except:
+    except KeyError:
         pass
 
     return s
@@ -203,7 +203,9 @@ class LoadWebcam:  # for inference
 
         # https://answers.opencv.org/question/200787/video-acceleration-gstremer-pipeline-in-videocapture/
         # https://stackoverflow.com/questions/54095699/install-gstreamer-support-for-opencv-python-package  # install help
-        # pipe = "rtspsrc location=rtsp://root:root@192.168.0.91:554/axis-media/media.amp?videocodec=h264&resolution=3840x2160 protocols=GST_RTSP_LOWER_TRANS_TCP ! rtph264depay ! queue ! vaapih264dec ! videoconvert ! appsink"  # GStreamer
+        # pipe = "rtspsrc location=rtsp://root:root@192.168.0.91:554/axis-media/media.amp?videocodec=h264
+        # &resolution=3840x2160 protocols=GST_RTSP_LOWER_TRANS_TCP ! rtph264depay ! queue ! vaapih264dec !
+        # videoconvert ! appsink"  # GStreamer
 
         self.pipe = pipe
         self.cap = cv2.VideoCapture(pipe)  # video capture object
@@ -284,7 +286,8 @@ class LoadStreams:  # multiple IP or RTSP cameras
         s = np.stack([letterbox(x, new_shape=self.img_size)[0].shape for x in self.imgs], 0)  # inference shapes
         self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
         if not self.rect:
-            print('WARNING: Different stream shapes detected. For optimal performance supply similarly-shaped streams.')
+            print('WARNING: Different stream shapes detected.'
+                  'For optimal performance supply similarly-shaped streams.')
 
     def update(self, index, cap):
         # Read next stream frame in a daemon thread
@@ -902,7 +905,7 @@ def reduce_img_size(path='path/images', img_size=1024):  # from utils.datasets i
                 img = cv2.resize(img, (int(w * r), int(h * r)), interpolation=cv2.INTER_AREA)  # _LINEAR fastest
             fnew = f.replace(path, path_new)  # .replace(Path(f).suffix, '.jpg')
             cv2.imwrite(fnew, img)
-        except:
+        except FileNotFoundError:
             print('WARNING: image failure %s' % f)
 
 

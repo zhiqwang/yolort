@@ -122,7 +122,7 @@ class Model(nn.Module):
                 try:
                     import thop
                     o = thop.profile(m, inputs=(x,), verbose=False)[0] / 1E9 * 2  # FLOPS
-                except:
+                except ModuleNotFoundError:
                     o = 0
                 t = time_synchronized()
                 for _ in range(10):
@@ -193,7 +193,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         for j, a in enumerate(args):
             try:
                 args[j] = eval(a) if isinstance(a, str) else a  # eval strings
-            except:
+            except NameError:
                 pass
 
         n = max(round(n * gd), 1) if n > 1 else n  # depth gain
