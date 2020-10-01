@@ -1,8 +1,10 @@
 # This file contains modules common to various models
 import math
+from typing import List
 
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
+
 from utils.general import non_max_suppression
 
 
@@ -95,7 +97,7 @@ class Concat(nn.Module):
         super().__init__()
         self.d = dimension
 
-    def forward(self, x):
+    def forward(self, x: List[Tensor]):
         return torch.cat(x, self.d)
 
 
