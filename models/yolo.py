@@ -21,7 +21,7 @@ class Detect(nn.Module):
     export = False  # onnx export
 
     def __init__(self, nc=80, anchors=(), ch=()):  # detection layer
-        super(Detect, self).__init__()
+        super().__init__()
         self.nc = nc  # number of classes
         self.no = nc + 5  # number of outputs per anchor
         self.nl = len(anchors)  # number of detection layers
@@ -60,7 +60,7 @@ class Detect(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, cfg='yolov5s.yaml', ch=3, nc=None):  # model, input channels, number of classes
-        super(Model, self).__init__()
+        super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
         else:  # is *.yaml
