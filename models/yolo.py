@@ -2,9 +2,10 @@ import logging
 import math
 from copy import deepcopy
 from pathlib import Path
+from typing import List
 
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
 
 from models.common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
 from models.experimental import MixConv2d, CrossConv, C3
@@ -78,10 +79,18 @@ class Model(nn.Module):
         initialize_weights(self)
         self.info()
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
+        out = x
+        y = torch.jit.annotate(List[Tensor], [])
+
         for m in self.model:
-            x = m(x)  # run
-        return x
+            if m.e > 0:  # Concat layer
+                out = torch.cat([out, y[sorted(self.save).index(m.e)]], 1)
+            else:
+                out = m(out)  # run
+            if m.i in self.save:
+                y.append(out)  # save output
+        return out
 
     def _initialize_biases(self, cf=None):  # initialize biases into Detect(), cf is class frequency
         # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.
@@ -120,7 +129,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
 
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
-    for i, (f, n, m, args) in enumerate(d['backbone']):  # from, number, module, args
+    for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
         m = eval(m) if isinstance(m, str) else m  # eval strings
         for j, a in enumerate(args):
             try:
@@ -149,9 +158,10 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         m_ = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum([x.numel() for x in m_.parameters()])  # number params
-        m_.i, m_.f, m_.type, m_.np = i, f, t, np  # attach index, 'from' index, type, number params
+        e = f[-1] if f != -1 else -1
+        m_.i, m_.f, m_.type, m_.np, m_.e = i, f, t, np, e  # attach index, 'from' index, type, number params
         logger.info('%3s%18s%3s%10.0f  %-40s%-30s' % (i, f, n, np, t, args))  # print
         save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
         layers.append(m_)
         ch.append(c2)
-    return nn.Sequential(*layers), sorted(save)
+    return nn.Sequential(*layers), save

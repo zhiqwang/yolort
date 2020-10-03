@@ -28,7 +28,7 @@ class Conv(nn.Module):
         self.bn = nn.BatchNorm2d(c2)
         self.act = nn.Hardswish() if act else nn.Identity()
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(x)))
 
     def fuseforward(self, x):
@@ -87,17 +87,26 @@ class Focus(nn.Module):
         super().__init__()
         self.conv = Conv(c1 * 4, c2, k, s, p, g, act)
 
-    def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
-        return self.conv(torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1))
+    def forward(self, x: Tensor) -> Tensor:
+        y = focus_transform(x)
+        out = self.conv(y)
+
+        return out
+
+
+def focus_transform(x: Tensor) -> Tensor:
+    '''x(b,c,w,h) -> y(b,4c,w/2,h/2)'''
+    y = torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
+    return y
 
 
 class Concat(nn.Module):
     # Concatenate a list of tensors along dimension
-    def __init__(self, dimension=1):
+    def __init__(self, dimension: int = 1):
         super().__init__()
         self.d = dimension
 
-    def forward(self, x: List[Tensor]):
+    def forward(self, x: List[Tensor]) -> Tensor:
         return torch.cat(x, self.d)
 
 
