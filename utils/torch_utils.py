@@ -30,7 +30,8 @@ def select_device(device='', batch_size=None):
     cpu_request = device.lower() == 'cpu'
     if device and not cpu_request:  # if device requested other than 'cpu'
         os.environ['CUDA_VISIBLE_DEVICES'] = device  # set environment variable
-        assert torch.cuda.is_available(), 'CUDA unavailable, invalid device %s requested' % device  # check availablity
+        # check availablity
+        assert torch.cuda.is_available(), 'CUDA unavailable, invalid device %s requested' % device
 
     cuda = False if cpu_request else torch.cuda.is_available()
     if cuda:
@@ -133,7 +134,8 @@ def model_info(model, verbose=False):
     n_p = sum(x.numel() for x in model.parameters())  # number parameters
     n_g = sum(x.numel() for x in model.parameters() if x.requires_grad)  # number gradients
     if verbose:
-        print('%5s %40s %9s %12s %20s %10s %10s' % ('layer', 'name', 'gradient', 'parameters', 'shape', 'mu', 'sigma'))
+        print('%5s %40s %9s %12s %20s %10s %10s' % (
+            'layer', 'name', 'gradient', 'parameters', 'shape', 'mu', 'sigma'))
         for i, (name, p) in enumerate(model.named_parameters()):
             name = name.replace('module_list.', '')
             print('%5g %40s %9s %12g %20s %10.3g %10.3g' %
@@ -146,8 +148,8 @@ def model_info(model, verbose=False):
     except ImportError:
         fs = ''
 
-    logger.info(
-        'Model Summary: %g layers, %g parameters, %g gradients%s' % (len(list(model.parameters())), n_p, n_g, fs))
+    logger.info('Model Summary: %g layers, %g parameters, %g gradients%s' % (
+        len(list(model.parameters())), n_p, n_g, fs))
 
 
 def load_classifier(name='resnet101', n=2):
@@ -201,7 +203,8 @@ class ModelEMA:
         # if next(model.parameters()).device.type != 'cpu':
         #     self.ema.half()  # FP16 EMA
         self.updates = updates  # number of EMA updates
-        self.decay = lambda x: decay * (1 - math.exp(-x / 2000))  # decay exponential ramp (to help early epochs)
+        # decay exponential ramp (to help early epochs)
+        self.decay = lambda x: decay * (1 - math.exp(-x / 2000))
         for p in self.ema.parameters():
             p.requires_grad_(False)
 

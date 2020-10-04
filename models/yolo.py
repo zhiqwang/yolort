@@ -1,5 +1,5 @@
 import logging
-import math
+
 from copy import deepcopy
 from pathlib import Path
 from typing import List
@@ -83,29 +83,14 @@ class Model(nn.Module):
         out = x
         y = torch.jit.annotate(List[Tensor], [])
 
-        for m in self.model:
-            if m.e > 0:  # Concat layer
-                out = torch.cat([out, y[sorted(self.save).index(m.e)]], 1)
+        for i, m in enumerate(self.model):
+            if m.f > 0:  # Concat layer
+                out = torch.cat([out, y[sorted(self.save).index(m.f)]], 1)
             else:
                 out = m(out)  # run
-            if m.i in self.save:
+            if i in self.save:
                 y.append(out)  # save output
         return out
-
-    def _initialize_biases(self, cf=None):  # initialize biases into Detect(), cf is class frequency
-        # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.
-        m = self.model[-1]  # Detect() module
-        for mi, s in zip(m.m, m.stride):  # from
-            b = mi.bias.view(m.na, -1)  # conv.bias(255) to (3,85)
-            b[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
-            b[:, 5:] += math.log(0.6 / (m.nc - 0.99)) if cf is None else torch.log(cf / cf.sum())  # cls
-            mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
-
-    def _print_biases(self):
-        m = self.model[-1]  # Detect() module
-        for mi in m.m:  # from
-            b = mi.bias.detach().view(m.na, -1).T  # conv.bias(255) to (3,85)
-            print(('%6g Conv2d.bias:' + '%10.3g' * 6) % (mi.weight.shape[1], *b[:5].mean(1).tolist(), b[5:].mean()))
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
         print('Fusing layers... ')
@@ -155,13 +140,12 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         else:
             c2 = ch[f]
 
-        m_ = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
+        module = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
-        np = sum([x.numel() for x in m_.parameters()])  # number params
-        e = f[-1] if f != -1 else -1
-        m_.i, m_.f, m_.type, m_.np, m_.e = i, f, t, np, e  # attach index, 'from' index, type, number params
+        np = sum([x.numel() for x in module.parameters()])  # number params
+        module.f = -1 if f == -1 else f[-1]
         logger.info('%3s%18s%3s%10.0f  %-40s%-30s' % (i, f, n, np, t, args))  # print
         save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
-        layers.append(m_)
+        layers.append(module)
         ch.append(c2)
     return nn.Sequential(*layers), save
