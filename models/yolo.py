@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 from copy import deepcopy
 from pathlib import Path
@@ -17,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 class Detect(nn.Module):
     stride = None  # strides computed during build
-    export = False  # onnx export
 
     def __init__(self, nc=80, anchors=(), ch=()):  # detection layer
         super().__init__()
@@ -31,12 +31,29 @@ class Detect(nn.Module):
         self.register_buffer('anchor_grid', a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
 
-    def forward(self, x):
+    def get_result_from_m(self, x: Tensor, idx: int) -> Tensor:
+        """
+        This is equivalent to self.m[idx](x),
+        but torchscript doesn't support this yet
+        """
+        num_blocks = 0
+        for m in self.m:
+            num_blocks += 1
+        if idx < 0:
+            idx += num_blocks
+        i = 0
+        out = x
+        for module in self.m:
+            if i == idx:
+                out = module(x)
+            i += 1
+        return out
+
+    def forward(self, x: List[Tensor]):
         # x = x.copy()  # for profiling
-        z = []  # inference output
-        self.training |= self.export
+        z: List[Tensor] = []  # inference output
         for i in range(self.nl):
-            x[i] = self.m[i](x[i])  # conv
+            x[i] = self.get_result_from_m(x[i], i)  # conv
             bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
             x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
 
@@ -49,10 +66,21 @@ class Detect(nn.Module):
                 y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 z.append(y.view(bs, -1, self.no))
 
-        return x if self.training else (torch.cat(z, 1), x)
+        if torch.jit.is_scripting():
+            warnings.warn("YOLO always returns a (outputs, features) tuple in scripting")
+            return (torch.cat(z, 1), x)
+        else:
+            return self.eager_outputs(torch.cat(z, 1), x)
+
+    @torch.jit.unused
+    def eager_outputs(self, outputs: Tensor, features: Tensor):
+        if self.training:
+            return features
+
+        return (outputs, features)
 
     @staticmethod
-    def _make_grid(nx=20, ny=20):
+    def _make_grid(nx: int = 20, ny: int = 20):
         yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
         return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
