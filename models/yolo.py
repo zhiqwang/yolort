@@ -1,5 +1,4 @@
 import logging
-import warnings
 
 from copy import deepcopy
 from pathlib import Path
@@ -17,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class Detect(nn.Module):
-    stride = None  # strides computed during build
-
-    def __init__(self, nc=80, anchors=(), ch=()):  # detection layer
+    def __init__(self, nc=80, stride=[8., 16., 32.], anchors=(), ch=()):  # detection layer
         super().__init__()
         self.nc = nc  # number of classes
         self.no = nc + 5  # number of outputs per anchor
@@ -30,6 +27,7 @@ class Detect(nn.Module):
         self.register_buffer('anchors', a)  # shape(nl,na,2)
         self.register_buffer('anchor_grid', a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
+        self.stride = stride
 
     def get_result_from_m(self, x: Tensor, idx: int) -> Tensor:
         """
@@ -51,6 +49,7 @@ class Detect(nn.Module):
 
     def forward(self, x: List[Tensor]):
         # x = x.copy()  # for profiling
+        device = x[0].device
         z: List[Tensor] = []  # inference output
         for i in range(self.nl):
             x[i] = self.get_result_from_m(x[i], i)  # conv
@@ -58,26 +57,18 @@ class Detect(nn.Module):
             x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
 
             if not self.training:  # inference
+                if not isinstance(self.stride, Tensor):
+                    self.stride = torch.tensor(self.stride, device=device)
+
                 if self.grid[i].shape[2:4] != x[i].shape[2:4]:
-                    self.grid[i] = self._make_grid(nx, ny).to(x[i].device)
+                    self.grid[i] = self._make_grid(nx, ny).to(device)
 
                 y = x[i].sigmoid()
-                y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
+                y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(device)) * self.stride[i]  # xy
                 y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 z.append(y.view(bs, -1, self.no))
 
-        if torch.jit.is_scripting():
-            warnings.warn("YOLO always returns a (outputs, features) tuple in scripting")
-            return (torch.cat(z, 1), x)
-        else:
-            return self.eager_outputs(torch.cat(z, 1), x)
-
-    @torch.jit.unused
-    def eager_outputs(self, outputs: Tensor, features: Tensor):
-        if self.training:
-            return features
-
-        return (outputs, features)
+        return (torch.cat(z, 1), x)
 
     @staticmethod
     def _make_grid(nx: int = 20, ny: int = 20):

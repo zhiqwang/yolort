@@ -1,11 +1,51 @@
+import warnings
+
 from collections import OrderedDict
 from typing import List, Dict
 
 import torch
 from torch import nn, Tensor
 
+from utils.general import check_anchor_order
+
 
 class YOLO(nn.Module):
+    def __init__(
+        self,
+        body: nn.Module,
+        box_head: nn.Module,
+        stride: List[float] = [8., 16., 32.],
+    ):
+        super().__init__()
+        self.body = body
+        box_head.stride = torch.tensor(stride)
+        box_head.anchors /= box_head.stride.view(-1, 1, 1)
+        check_anchor_order(box_head)
+        self.box_head = box_head
+        # used only on torchscript mode
+        self._has_warned = False
+
+    @torch.jit.unused
+    def eager_outputs(self, detections: Tensor, features: Tensor):
+        if self.training:
+            return features
+
+        return detections
+
+    def forward(self, samples):
+        features = self.body(samples)
+        detections = self.box_head(features)
+
+        if torch.jit.is_scripting():
+            if not self._has_warned:
+                warnings.warn("YOLO always returns a (detections, features) tuple in scripting")
+                self._has_warned = True
+            return (detections, features)
+        else:
+            return self.eager_outputs(detections, features)
+
+
+class Body(nn.Module):
     def __init__(
         self,
         body: nn.Module,
