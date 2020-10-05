@@ -106,8 +106,14 @@ class Concat(nn.Module):
         super().__init__()
         self.d = dimension
 
+    # torchscript does not yet support *args, so we overload method
+    # allowing it to take either a List[Tensor] or single Tensor
     def forward(self, x: List[Tensor]) -> Tensor:
-        return torch.cat(x, self.d)
+        if isinstance(x, Tensor):
+            prev_features = [x]
+        else:
+            prev_features = x
+        return torch.cat(prev_features, self.d)
 
 
 class NMS(nn.Module):

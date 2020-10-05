@@ -101,7 +101,6 @@ class Model(nn.Module):
             print('Overriding model.yaml nc=%g with nc=%g' % (self.yaml['nc'], nc))
             self.yaml['nc'] = nc  # override yaml value
         self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch])  # model, savelist, ch_out
-        # print([x.shape for x in self.forward(torch.zeros(1, ch, 64, 64))])
 
         # Init weights, biases
         initialize_weights(self)
