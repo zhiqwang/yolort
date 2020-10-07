@@ -2,7 +2,7 @@ import logging
 
 from copy import deepcopy
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import torch
 from torch import nn, Tensor
@@ -47,7 +47,7 @@ class Detect(nn.Module):
             i += 1
         return out
 
-    def forward(self, x: List[Tensor]):
+    def forward(self, x: List[Tensor]) -> Tuple[Tensor, List[Tensor]]:
         # x = x.copy()  # for profiling
         device = x[0].device
         z: List[Tensor] = []  # inference output

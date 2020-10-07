@@ -1,3 +1,4 @@
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import warnings
 
 from collections import OrderedDict
@@ -14,6 +15,7 @@ class YOLO(nn.Module):
         self,
         body: nn.Module,
         box_head: nn.Module,
+        post_process: nn.Module,
         stride: List[float] = [8., 16., 32.],
     ):
         super().__init__()
@@ -22,6 +24,7 @@ class YOLO(nn.Module):
         box_head.anchors /= box_head.stride.view(-1, 1, 1)
         check_anchor_order(box_head)
         self.box_head = box_head
+        self.post_process = post_process
         # used only on torchscript mode
         self._has_warned = False
 
@@ -35,6 +38,9 @@ class YOLO(nn.Module):
     def forward(self, samples):
         features = self.body(samples)
         detections = self.box_head(features)
+
+        if not self.training:
+            detections = self.post_process(detections[0])
 
         if torch.jit.is_scripting():
             if not self._has_warned:
