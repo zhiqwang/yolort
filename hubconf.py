@@ -1,6 +1,7 @@
 import torch
 
 from models.yolo import Detect, Model
+from models.box_head import PostProcess
 from models.yolo_wrapped import Body, YOLO
 
 
@@ -15,8 +16,9 @@ def yolov5(cfg_path='./models/yolov5s.yaml', checkpoint_path=None):
         [128, 256, 512],
     ]
     layer_box_head = Detect(*args_detect)
+    post_process = PostProcess(conf_thres=0.4, iou_thres=0.5)
 
-    model = YOLO(layer_body, layer_box_head, [8., 16., 32.])
+    model = YOLO(layer_body, layer_box_head, post_process, [8., 16., 32.])
 
     if checkpoint_path is not None:
         checkpoint = torch.load(checkpoint_path, map_location="cpu")

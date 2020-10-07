@@ -40,7 +40,7 @@ class YOLO(nn.Module):
         detections = self.box_head(features)
 
         if not self.training:
-            detections = self.post_process(detections[0])
+            detections = self.post_process(detections)
 
         if torch.jit.is_scripting():
             if not self._has_warned:

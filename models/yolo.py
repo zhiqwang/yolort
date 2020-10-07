@@ -2,7 +2,7 @@ import logging
 
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import torch
 from torch import nn, Tensor
@@ -47,7 +47,7 @@ class Detect(nn.Module):
             i += 1
         return out
 
-    def forward(self, x: List[Tensor]) -> Tuple[Tensor, List[Tensor]]:
+    def forward(self, x: List[Tensor]) -> Tensor:
         # x = x.copy()  # for profiling
         device = x[0].device
         z: List[Tensor] = []  # inference output
@@ -68,7 +68,7 @@ class Detect(nn.Module):
                 y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 z.append(y.view(bs, -1, self.no))
 
-        return (torch.cat(z, 1), x)
+        return torch.cat(z, 1)
 
     @staticmethod
     def _make_grid(nx: int = 20, ny: int = 20):

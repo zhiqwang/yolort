@@ -1,10 +1,9 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+from typing import List
 import torch
 from torch import nn, Tensor
 
-from torchvision.ops import nms
-
-from utils.general import xywh2xyxy
+from torchvision.ops import nms, box_iou
 
 
 class PostProcess(nn.Module):
@@ -32,7 +31,7 @@ class PostProcess(nn.Module):
         redundant = True  # require redundant detections
         multi_label = nc > 1  # multiple labels per box (adds 0.5ms/img)
 
-        output = [None] * prediction.shape[0]
+        output = torch.jit.annotate(List[Tensor], [])
         for xi, x in enumerate(prediction):  # image index, image inference
             # Apply constraints
             # x[((x[..., 2:4] < min_wh) | (x[..., 2:4] > max_wh)).any(1), 4] = 0  # width-height
@@ -46,11 +45,13 @@ class PostProcess(nn.Module):
             x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
             # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-            box = xywh2xyxy(x[:, :4])
+            box = box_cxcywh_to_xyxy(x[:, :4])
 
             # Detections matrix nx6 (xyxy, conf, cls)
             if multi_label:
-                i, j = (x[:, 5:] > self.conf_thres).nonzero(as_tuple=False).T
+                inds = torch.nonzero(x[:, 5:] > self.conf_thres)
+                i = inds[:, 0]
+                j = inds[:, 1]
                 x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
             else:  # best class only
                 conf, j = x[:, 5:].max(1, keepdim=True)
@@ -75,16 +76,26 @@ class PostProcess(nn.Module):
             if i.shape[0] > max_det:  # limit detections
                 i = i[:max_det]
             if self.merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
-                try:  # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
-                    iou = self.box_iou(boxes[i], boxes) > self.iou_thres  # iou matrix
-                    weights = iou * scores[None]  # box weights
-                    x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
-                    if redundant:
-                        i = i[iou.sum(1) > 1]  # require redundancy
-                except RuntimeError:  # possible CUDA error https://github.com/ultralytics/yolov3/issues/1139
-                    print(x, i, x.shape, i.shape)
-                    pass
+                iou = box_iou(boxes[i], boxes) > self.iou_thres  # iou matrix
+                weights = iou * scores[None]  # box weights
+                x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
+                if redundant:
+                    i = i[iou.sum(1) > 1]  # require redundancy
 
-            output[xi] = x[i]
+            output.append(x[i])
 
-        return output
+        return torch.stack(output, dim=0)
+
+
+def box_cxcywh_to_xyxy(x):
+    """ Convert BoxMode of boxes from XYWHA_REL to XYXY_REL.
+    Args:
+        boxes (Tensor): XYWHA_REL BoxMode
+            default BoxMode from priorbox generator layers.
+    Return:
+        boxes (Tensor): XYXY_REL BoxMode
+    """
+    x_c, y_c, w, h = x.unbind(-1)
+    b = [(x_c - 0.5 * w), (y_c - 0.5 * h),
+         (x_c + 0.5 * w), (y_c + 0.5 * h)]
+    return torch.stack(b, dim=-1)
