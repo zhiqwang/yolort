@@ -1,13 +1,13 @@
 import torch
 
-from models.yolo import Detect, Model
-from models.box_head import PostProcess
-from models.yolo_wrapped import Body, YOLO
+from models.yolo import Model
+from models.box_head import YoloHead, PostProcess
+from models.yolo_wrapped import YoloBody, YOLO
 
 
 def yolov5(cfg_path='./models/yolov5s.yaml', checkpoint_path=None):
     backbone = Model(cfg=cfg_path)
-    layer_body = Body(body=backbone, return_layers_body={'17': '0', '20': '1', '23': '2'})
+    layer_body = YoloBody(yolo_body=backbone, return_layers={'17': '0', '20': '1', '23': '2'})
 
     args_detect = [
         80,
@@ -15,7 +15,7 @@ def yolov5(cfg_path='./models/yolov5s.yaml', checkpoint_path=None):
         [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]],
         [128, 256, 512],
     ]
-    layer_box_head = Detect(*args_detect)
+    layer_box_head = YoloHead(*args_detect)
     post_process = PostProcess(conf_thres=0.4, iou_thres=0.5)
 
     model = YOLO(layer_body, layer_box_head, post_process, [8., 16., 32.])

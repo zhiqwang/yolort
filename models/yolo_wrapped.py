@@ -51,21 +51,21 @@ class YOLO(nn.Module):
             return self.eager_outputs(detections, features)
 
 
-class Body(nn.Module):
+class YoloBody(nn.Module):
     def __init__(
         self,
-        body: nn.Module,
-        return_layers_body: dict,
+        yolo_body: nn.Module,
+        return_layers: dict,
     ):
         super().__init__()
-        self.body = IntermediateLayerGetter(
-            body.model,
-            return_layers=return_layers_body,
-            save_list=body.save,
+        self.features = IntermediateLayerGetter(
+            yolo_body.model,
+            return_layers=return_layers,
+            save_list=yolo_body.save,
         )
 
     def forward(self, inputs: Tensor):
-        body = self.body(inputs)
+        body = self.features(inputs)
         out: List[Tensor] = []
 
         for name, x in body.items():
