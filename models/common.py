@@ -5,8 +5,6 @@ from typing import List
 import torch
 from torch import nn, Tensor
 
-from utils.general import non_max_suppression
-
 
 def autopad(k, p=None):  # kernel, padding
     # Pad to 'same'
@@ -114,19 +112,6 @@ class Concat(nn.Module):
         else:
             prev_features = x
         return torch.cat(prev_features, self.d)
-
-
-class NMS(nn.Module):
-    # Non-Maximum Suppression (NMS) module
-    conf = 0.3  # confidence threshold
-    iou = 0.6  # IoU threshold
-    classes = None  # (optional list) filter by class
-
-    def __init__(self, dimension=1):
-        super().__init__()
-
-    def forward(self, x):
-        return non_max_suppression(x[0], conf_thres=self.conf, iou_thres=self.iou, classes=self.classes)
 
 
 class Flatten(nn.Module):

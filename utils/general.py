@@ -6,7 +6,6 @@ import platform
 import random
 import shutil
 import subprocess
-import time
 from contextlib import contextmanager
 from copy import copy
 from pathlib import Path
@@ -201,24 +200,31 @@ def coco80_to_coco91_class():  # converts 80-index (val2014) to 91-index (paper)
     return x
 
 
-def xyxy2xywh(x):
-    # Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] where xy1=top-left, xy2=bottom-right
-    y = torch.zeros_like(x) if isinstance(x, torch.Tensor) else np.zeros_like(x)
-    y[:, 0] = (x[:, 0] + x[:, 2]) / 2  # x center
-    y[:, 1] = (x[:, 1] + x[:, 3]) / 2  # y center
-    y[:, 2] = x[:, 2] - x[:, 0]  # width
-    y[:, 3] = x[:, 3] - x[:, 1]  # height
-    return y
+def box_xyxy_to_cxcywh(x):
+    """ Convert BoxMode of boxes from XYXY_REL to XYWHA_REL.
+    Args:
+        boxes (Tensor): XYXY_REL BoxMode
+    Return:
+        boxes (Tensor): XYWHA_REL BoxMode
+    """
+    x0, y0, x1, y1 = x.unbind(-1)
+    b = [(x0 + x1) / 2, (y0 + y1) / 2,
+         (x1 - x0), (y1 - y0)]
+    return torch.stack(b, dim=-1)
 
 
-def xywh2xyxy(x):
-    # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
-    y = torch.zeros_like(x) if isinstance(x, torch.Tensor) else np.zeros_like(x)
-    y[:, 0] = x[:, 0] - x[:, 2] / 2  # top left x
-    y[:, 1] = x[:, 1] - x[:, 3] / 2  # top left y
-    y[:, 2] = x[:, 0] + x[:, 2] / 2  # bottom right x
-    y[:, 3] = x[:, 1] + x[:, 3] / 2  # bottom right y
-    return y
+def box_cxcywh_to_xyxy(x):
+    """ Convert BoxMode of boxes from XYWHA_REL to XYXY_REL.
+    Args:
+        boxes (Tensor): XYWHA_REL BoxMode
+            default BoxMode from priorbox generator layers.
+    Return:
+        boxes (Tensor): XYXY_REL BoxMode
+    """
+    x_c, y_c, w, h = x.unbind(-1)
+    b = [(x_c - 0.5 * w), (y_c - 0.5 * h),
+         (x_c + 0.5 * w), (y_c + 0.5 * h)]
+    return torch.stack(b, dim=-1)
 
 
 def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
@@ -380,31 +386,6 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
             return iou - (c_area - union) / c_area  # GIoU
     else:
         return iou  # IoU
-
-
-def box_iou(box1, box2):
-    # https://github.com/pytorch/vision/blob/master/torchvision/ops/boxes.py
-    """
-    Return intersection-over-union (Jaccard index) of boxes.
-    Both sets of boxes are expected to be in (x1, y1, x2, y2) format.
-    Arguments:
-        box1 (Tensor[N, 4])
-        box2 (Tensor[M, 4])
-    Returns:
-        iou (Tensor[N, M]): the NxM matrix containing the pairwise
-            IoU values for every element in boxes1 and boxes2
-    """
-
-    def box_area(box):
-        # box = 4xn
-        return (box[2] - box[0]) * (box[3] - box[1])
-
-    area1 = box_area(box1.T)
-    area2 = box_area(box2.T)
-
-    # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
-    inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
-    return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 
 def wh_iou(wh1, wh2):
@@ -585,88 +566,6 @@ def build_targets(p, targets, model):
         tcls.append(c)  # class
 
     return tcls, tbox, indices, anch
-
-
-def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6, merge=False, classes=None, agnostic=False):
-    """Performs Non-Maximum Suppression (NMS) on inference results
-
-    Returns:
-         detections with shape: nx6 (x1, y1, x2, y2, conf, cls)
-    """
-
-    nc = prediction[0].shape[1] - 5  # number of classes
-    xc = prediction[..., 4] > conf_thres  # candidates
-
-    # Settings
-    _, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
-    max_det = 300  # maximum number of detections per image
-    time_limit = 10.0  # seconds to quit after
-    redundant = True  # require redundant detections
-    multi_label = nc > 1  # multiple labels per box (adds 0.5ms/img)
-
-    t = time.time()
-    output = [None] * prediction.shape[0]
-    for xi, x in enumerate(prediction):  # image index, image inference
-        # Apply constraints
-        # x[((x[..., 2:4] < min_wh) | (x[..., 2:4] > max_wh)).any(1), 4] = 0  # width-height
-        x = x[xc[xi]]  # confidence
-
-        # If none remain process next image
-        if not x.shape[0]:
-            continue
-
-        # Compute conf
-        x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
-
-        # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-        box = xywh2xyxy(x[:, :4])
-
-        # Detections matrix nx6 (xyxy, conf, cls)
-        if multi_label:
-            i, j = (x[:, 5:] > conf_thres).nonzero(as_tuple=False).T
-            x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
-        else:  # best class only
-            conf, j = x[:, 5:].max(1, keepdim=True)
-            x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > conf_thres]
-
-        # Filter by class
-        if classes:
-            x = x[(x[:, 5:6] == torch.tensor(classes, device=x.device)).any(1)]
-
-        # Apply finite constraint
-        # if not torch.isfinite(x).all():
-        #     x = x[torch.isfinite(x).all(1)]
-
-        # If none remain process next image
-        n = x.shape[0]  # number of boxes
-        if not n:
-            continue
-
-        # Sort by confidence
-        # x = x[x[:, 4].argsort(descending=True)]
-
-        # Batched NMS
-        c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
-        boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
-        i = torch.ops.torchvision.nms(boxes, scores, iou_thres)
-        if i.shape[0] > max_det:  # limit detections
-            i = i[:max_det]
-        if merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
-            try:  # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
-                iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
-                weights = iou * scores[None]  # box weights
-                x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
-                if redundant:
-                    i = i[iou.sum(1) > 1]  # require redundancy
-            except RuntimeError:  # possible CUDA error https://github.com/ultralytics/yolov3/issues/1139
-                print(x, i, x.shape, i.shape)
-                pass
-
-        output[xi] = x[i]
-        if (time.time() - t) > time_limit:
-            break  # time limit exceeded
-
-    return output
 
 
 def strip_optimizer(f='weights/best.pt', s=''):  # from utils.general import *; strip_optimizer()
@@ -855,10 +754,10 @@ def apply_classifier(x, model, img, im0):
             d = d.clone()
 
             # Reshape and pad cutouts
-            b = xyxy2xywh(d[:, :4])  # boxes
+            b = box_xyxy_to_cxcywh(d[:, :4])  # boxes
             b[:, 2:] = b[:, 2:].max(1)[0].unsqueeze(1)  # rectangle to square
             b[:, 2:] = b[:, 2:] * 1.3 + 30  # pad
-            d[:, :4] = xywh2xyxy(b).long()
+            d[:, :4] = box_cxcywh_to_xyxy(b).long()
 
             # Rescale boxes from img_size to im0 size
             scale_coords(img.shape[2:], d[:, :4], im0[i].shape)
@@ -1029,7 +928,7 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
         mosaic[block_y:block_y + h, block_x:block_x + w, :] = img
         if len(targets) > 0:
             image_targets = targets[targets[:, 0] == i]
-            boxes = xywh2xyxy(image_targets[:, 2:6]).T
+            boxes = box_cxcywh_to_xyxy(image_targets[:, 2:6]).T
             classes = image_targets[:, 1].astype('int')
             gt = image_targets.shape[1] == 6  # ground truth if no conf column
             conf = None if gt else image_targets[:, 6]  # check for confidence presence (gt vs pred)
@@ -1083,7 +982,7 @@ def plot_lr_scheduler(optimizer, scheduler, epochs=300, save_dir=''):
 def plot_test_txt():  # from utils.general import *; plot_test()
     # Plot test.txt histograms
     x = np.loadtxt('test.txt', dtype=np.float32)
-    box = xyxy2xywh(x[:, :4])
+    box = box_xyxy_to_cxcywh(x[:, :4])
     cx, cy = box[:, 0], box[:, 1]
 
     fig, ax = plt.subplots(1, 1, figsize=(6, 6), tight_layout=True)

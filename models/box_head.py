@@ -2,8 +2,9 @@
 from typing import List
 import torch
 from torch import nn, Tensor
-
 from torchvision.ops import nms, box_iou
+
+from utils.general import box_cxcywh_to_xyxy
 
 
 class YoloHead(nn.Module):
@@ -146,17 +147,3 @@ class PostProcess(nn.Module):
             output.append(x[i])
 
         return torch.stack(output, dim=0)
-
-
-def box_cxcywh_to_xyxy(x):
-    """ Convert BoxMode of boxes from XYWHA_REL to XYXY_REL.
-    Args:
-        boxes (Tensor): XYWHA_REL BoxMode
-            default BoxMode from priorbox generator layers.
-    Return:
-        boxes (Tensor): XYXY_REL BoxMode
-    """
-    x_c, y_c, w, h = x.unbind(-1)
-    b = [(x_c - 0.5 * w), (y_c - 0.5 * h),
-         (x_c + 0.5 * w), (y_c + 0.5 * h)]
-    return torch.stack(b, dim=-1)
