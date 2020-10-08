@@ -46,9 +46,11 @@ def exif_size(img):
     return s
 
 
-def create_dataloader(path, imgsz, batch_size, stride, opt, hyp=None, augment=False, cache=False, pad=0.0, rect=False,
+def create_dataloader(path, imgsz, batch_size, stride, opt, hyp=None,
+                      augment=False, cache=False, pad=0.0, rect=False,
                       rank=-1, world_size=1, workers=8):
-    # Make sure only the first process in DDP process the dataset first, and the following others can use the cache.
+    # Make sure only the first process in DDP process the dataset first,
+    # and the following others can use the cache.
     with torch_distributed_zero_first(rank):
         dataset = LoadImagesAndLabels(path, imgsz, batch_size,
                                       augment=augment,  # augment images
@@ -132,8 +134,9 @@ class LoadImages:  # for inference
             self.new_video(videos[0])  # new video
         else:
             self.cap = None
-        assert self.nf > 0, 'No images or videos found in %s. Supported formats are:\nimages: %s\nvideos: %s' % \
-                            (p, img_formats, vid_formats)
+        assert self.nf > 0, (
+            'No images or videos found in %s. '
+            'Supported formats are:\nimages: %s\nvideos: %s' % (p, img_formats, vid_formats))
 
     def __iter__(self):
         self.count = 0
@@ -159,7 +162,8 @@ class LoadImages:  # for inference
                     ret_val, img0 = self.cap.read()
 
             self.frame += 1
-            print('video %g/%g (%g/%g) %s: ' % (self.count + 1, self.nf, self.frame, self.nframes, path), end='')
+            print('video %g/%g (%g/%g) %s: ' % (
+                self.count + 1, self.nf, self.frame, self.nframes, path), end='')
 
         else:
             # Read image
@@ -175,7 +179,8 @@ class LoadImages:  # for inference
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
         img = np.ascontiguousarray(img)
 
-        # cv2.imwrite(path + '.letterbox.jpg', 255 * img.transpose((1, 2, 0))[:, :, ::-1])  # save letterbox image
+        # save letterbox image
+        # cv2.imwrite(path + '.letterbox.jpg', 255 * img.transpose((1, 2, 0))[:, :, ::-1])
         return path, img, img0, self.cap
 
     def new_video(self, path):
@@ -202,7 +207,8 @@ class LoadWebcam:  # for inference
         # pipe = '"rtspsrc location="rtsp://username:password@192.168.1.64/1" latency=10 ! appsink'  # GStreamer
 
         # https://answers.opencv.org/question/200787/video-acceleration-gstremer-pipeline-in-videocapture/
-        # https://stackoverflow.com/questions/54095699/install-gstreamer-support-for-opencv-python-package  # install help
+        # install help
+        # https://stackoverflow.com/questions/54095699/install-gstreamer-support-for-opencv-python-package
         # pipe = "rtspsrc location=rtsp://root:root@192.168.0.91:554/axis-media/media.amp?videocodec=h264
         # &resolution=3840x2160 protocols=GST_RTSP_LOWER_TRANS_TCP ! rtph264depay ! queue ! vaapih264dec !
         # videoconvert ! appsink"  # GStreamer
@@ -283,7 +289,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
         print('')  # newline
 
         # check for common shapes
-        s = np.stack([letterbox(x, new_shape=self.img_size)[0].shape for x in self.imgs], 0)  # inference shapes
+        s = np.stack([letterbox(x, new_shape=self.img_size)[0].shape for x in self.imgs], 0)
         self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
         if not self.rect:
             print('WARNING: Different stream shapes detected.'
@@ -606,7 +612,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         return torch.stack(img, 0), torch.cat(label, 0), path, shapes
 
 
-# Ancillary functions --------------------------------------------------------------------------------------------------
+# Ancillary functions
 def load_image(self, index):
     # loads 1 image from dataset, returns img, original hw, resized hw
     img = self.imgs[index]
