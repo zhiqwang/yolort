@@ -29,7 +29,7 @@ class YOLO(nn.Module):
         self._has_warned = False
 
     @torch.jit.unused
-    def eager_outputs(self, detections: Tensor, features: Tensor):
+    def eager_outputs(self, detections: List[Tensor], features: List[Tensor]):
         if self.training:
             return features
 
