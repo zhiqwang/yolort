@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Modified from ultralytics/yolov5 by Zhiqiang Wang
 from typing import List
 import torch
 from torch import nn, Tensor
@@ -75,14 +75,12 @@ class PostProcess(nn.Module):
         conf_thres: float,
         iou_thres: float,
         merge: bool = False,
-        agnostic: bool = False,
         detections_per_img: int = 300,
     ):
         super().__init__()
         self.conf_thres = conf_thres
         self.iou_thres = iou_thres
         self.merge = merge
-        self.agnostic = agnostic
         self.detections_per_img = detections_per_img  # maximum number of detections per image
 
     def forward(self, prediction: List[Tensor]) -> List[Tensor]:
@@ -100,7 +98,7 @@ class PostProcess(nn.Module):
             # x[((x[..., 2:4] < min_wh) | (x[..., 2:4] > max_wh)).any(1), 4] = 0  # width-height
             x = x[xc[xi]]  # confidence
 
-            # If none remain process next image
+            # TODO: If none remain process next image
             if not x.shape[0]:
                 continue
 
@@ -118,17 +116,10 @@ class PostProcess(nn.Module):
                 conf, j = x[:, 5:].max(1, keepdim=True)
                 x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > self.conf_thres]
 
-            # Apply finite constraint
-            # if not torch.isfinite(x).all():
-            #     x = x[torch.isfinite(x).all(1)]
-
-            # If none remain process next image
+            # TODO: If none remain process next image
             n = x.shape[0]  # number of boxes
             if not n:
                 continue
-
-            # Sort by confidence
-            # x = x[x[:, 4].argsort(descending=True)]
 
             # Batched NMS
             boxes, scores, labels = x[:, :4], x[:, 4], x[:, 5]   # boxes, scores, labels
