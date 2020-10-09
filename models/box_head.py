@@ -112,9 +112,7 @@ class PostProcess(nn.Module):
 
             # Detections matrix nx6 (xyxy, conf, cls)
             if multi_label:
-                inds = torch.nonzero(x[:, 5:] > self.conf_thres)
-                i = inds[:, 0]
-                j = inds[:, 1]
+                i, j = torch.where(x[:, 5:] > self.conf_thres)
                 x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
             else:  # best class only
                 conf, j = x[:, 5:].max(1, keepdim=True)
