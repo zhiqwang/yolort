@@ -39,10 +39,10 @@ class YoloHead(nn.Module):
             i += 1
         return out
 
-    def forward(self, x: List[Tensor]) -> Tensor:
+    def forward(self, x: List[Tensor]) -> List[Tensor]:
         # x = x.copy()  # for profiling
         device = x[0].device
-        z: List[Tensor] = []  # inference output
+        z = torch.jit.annotate(List[Tensor], [])  # inference output
         for i in range(self.nl):
             x[i] = self.get_result_from_m(x[i], i)  # conv
             bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
@@ -60,7 +60,7 @@ class YoloHead(nn.Module):
                 y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 z.append(y.view(bs, -1, self.no))
 
-        return torch.cat(z, 1)
+        return z
 
     @staticmethod
     def _make_grid(nx: int = 20, ny: int = 20):
@@ -85,7 +85,8 @@ class PostProcess(nn.Module):
         self.agnostic = agnostic
         self.detections_per_img = detections_per_img  # maximum number of detections per image
 
-    def forward(self, prediction: Tensor):
+    def forward(self, prediction: List[Tensor]) -> List[Tensor]:
+        prediction = torch.cat(prediction, 1)
         nc = prediction[0].shape[1] - 5  # number of classes
         xc = prediction[..., 4] > self.conf_thres  # candidates
 
@@ -145,4 +146,4 @@ class PostProcess(nn.Module):
 
             output.append(x[i])
 
-        return torch.stack(output, dim=0)
+        return output
