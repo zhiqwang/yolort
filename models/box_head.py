@@ -2,7 +2,7 @@
 from typing import List
 import torch
 from torch import nn, Tensor
-from torchvision.ops import nms, box_iou
+from torchvision.ops.boxes import batched_nms, box_iou
 
 from utils.general import box_cxcywh_to_xyxy
 
@@ -76,20 +76,20 @@ class PostProcess(nn.Module):
         iou_thres: float,
         merge: bool = False,
         agnostic: bool = False,
+        detections_per_img: int = 300,
     ):
         super().__init__()
         self.conf_thres = conf_thres
         self.iou_thres = iou_thres
         self.merge = merge
         self.agnostic = agnostic
+        self.detections_per_img = detections_per_img  # maximum number of detections per image
 
     def forward(self, prediction: Tensor):
         nc = prediction[0].shape[1] - 5  # number of classes
         xc = prediction[..., 4] > self.conf_thres  # candidates
 
         # Settings
-        _, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
-        max_det = 300  # maximum number of detections per image
         redundant = True  # require redundant detections
         multi_label = nc > 1  # multiple labels per box (adds 0.5ms/img)
 
@@ -132,11 +132,10 @@ class PostProcess(nn.Module):
             # x = x[x[:, 4].argsort(descending=True)]
 
             # Batched NMS
-            c = x[:, 5:6] * (0 if self.agnostic else max_wh)  # classes
-            boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
-            i = nms(boxes, scores, self.iou_thres)
-            if i.shape[0] > max_det:  # limit detections
-                i = i[:max_det]
+            boxes, scores, labels = x[:, :4], x[:, 4], x[:, 5]   # boxes, scores, labels
+            i = batched_nms(boxes, scores, labels, self.iou_thres)
+            if i.shape[0] > self.detections_per_img:  # limit detections
+                i = i[:self.detections_per_img]
             if self.merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
                 iou = box_iou(boxes[i], boxes) > self.iou_thres  # iou matrix
                 weights = iou * scores[None]  # box weights
