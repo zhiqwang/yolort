@@ -26,15 +26,14 @@ std::vector<std::string> LoadNames(const std::string& path) {
 
 
 void Demo(cv::Mat& img,
-        const std::vector<std::tuple<cv::Rect, float, int>>& data_vec,
+        const std::vector<Detection>& detections,
         const std::vector<std::string>& class_names,
         const std::string& img_name,
         bool label = true) {
-    for (const auto & data : data_vec) {
-        cv::Rect box;
-        float score;
-        int class_idx;
-        std::tie(box, score, class_idx) = data;
+    for (const auto& detection : detections) {
+        const auto& box = detection.bbox;
+        float score = detection.score;
+        int class_idx = detection.class_idx;
 
         cv::rectangle(img, box, cv::Scalar(0, 0, 255), 2);
 
@@ -110,9 +109,16 @@ int main(int argc, const char* argv[]) {
     std::string weights = opt["weights"].as<std::string>();
     auto detector = Detector(weights, device_type);
 
-    // inference
+    // run once to warm up
+    std::cout << "Run once on empty image" << std::endl;
+    auto temp_img = cv::Mat::zeros(img.rows, img.cols, CV_32F);
+    detector.Run(img, 1.0f, 1.0f);
+
+    // set up threshold
     float conf_thres = opt["conf-thres"].as<float>();
     float iou_thres = opt["iou-thres"].as<float>();
+
+    // inference
     auto result = detector.Run(img, conf_thres, iou_thres);
 
     // visualize detections
@@ -120,4 +126,6 @@ int main(int argc, const char* argv[]) {
         std::string img_vis_name = source.substr(0, source.find_last_of('.')) + "_det.jpg";
         Demo(img, result, class_names, img_vis_name);
     }
+
+    return 0;
 }

@@ -8,3 +8,9 @@ enum Det {
     score = 4,
     class_idx = 5
 };
+
+struct Detection {
+    cv::Rect bbox;
+    float score;
+    int class_idx;
+};

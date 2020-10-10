@@ -12,7 +12,7 @@ A LibTorch inference implementation of yolov5. Both GPU and CPU are supported.
 
 ```bash
 mkdir build && cd build
-cmake -D CMAKE_PREFIX_PATH=/absolute/path/to/libtorch ..
+cmake -D -DTorch_DIR=/absolute/path/to/libtorch/share/cmake/Torch ..
 make
 # CPU
 ./libtorch-inference --source [demo.jpg] --weights [yolov5s.torchscript.pt] --view-img

@@ -22,10 +22,12 @@ Detector::Detector(const std::string& model_path, const torch::DeviceType& devic
 }
 
 
-std::vector<std::tuple<cv::Rect, float, int>>
+std::vector<Detection>
 Detector::Run(const cv::Mat& img, float conf_threshold, float iou_threshold) {
     torch::NoGradGuard no_grad;
     std::cout << "----------New Frame----------" << std::endl;
+
+    // TODO: check_img_size()
 
     /*** Pre-process ***/
 
@@ -58,7 +60,7 @@ Detector::Run(const cv::Mat& img, float conf_threshold, float iou_threshold) {
     std::cout << "pre-process takes : " << duration.count() << " ms" << std::endl;
 
     /*** Inference ***/
-
+    // TODO: add synchronize point
     start = std::chrono::high_resolution_clock::now();
 
     // inference
@@ -81,30 +83,18 @@ Detector::Run(const cv::Mat& img, float conf_threshold, float iou_threshold) {
     // Note - only the first image in the batch will be used for demo
     auto idx_mask = result * (result.select(1, 0) == 0).to(torch::kFloat32).unsqueeze(1);
     auto idx_mask_index =  torch::nonzero(idx_mask.select(1, 1)).squeeze();
-    const auto& result_data_demo = result.index_select(0, idx_mask_index).slice(1, 1, 7);
+    const auto& data = result.index_select(0, idx_mask_index).slice(1, 1, 7);
 
     // use accessor to access tensor elements efficiently
-    const auto& demo_data = result_data_demo.accessor<float, 2>();
-
     // remap to original image and list bounding boxes for debugging purpose
-    std::vector<std::tuple<cv::Rect, float, int>> demo_data_vec;
-    for (int i = 0; i < result.size(0) ; i++) {
-        auto x1 = static_cast<int>((demo_data[i][Det::tl_x] - pad_w)/scale);
-        auto y1 = static_cast<int>((demo_data[i][Det::tl_y] - pad_h)/scale);
-        auto x2 = static_cast<int>((demo_data[i][Det::br_x] - pad_w)/scale);
-        auto y2 = static_cast<int>((demo_data[i][Det::br_y] - pad_h)/scale);
-        cv::Rect rect(cv::Point(x1, y1), cv::Point(x2, y2));
-        std::tuple<cv::Rect, float, int> t = std::make_tuple(rect,
-            demo_data[i][Det::score], demo_data[i][Det::class_idx]);
-        demo_data_vec.emplace_back(t);
-    }
+    std::vector<Detection> det = ScaleCoordinates(data.accessor<float, 2>(), pad_w, pad_h, scale, img.size());
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     // It should be known that it takes longer time at first time
     std::cout << "post-process takes : " << duration.count() << " ms" << std::endl;
 
-    return demo_data_vec;
+    return det;
 }
 
 
@@ -275,4 +265,32 @@ torch::Tensor Detector::PostProcessing(const torch::Tensor& detections, float co
     }
 
     return output;
+}
+
+
+std::vector<Detection> Detector::ScaleCoordinates(const at::TensorAccessor<float, 2>& data,
+                                                  float pad_w, float pad_h, float scale, const cv::Size& img_shape) {
+    auto clip = [](float n, float lower, float upper) {
+        return std::max(lower, std::min(n, upper));
+    };
+
+    std::vector<Detection> detections;
+    for (int i = 0; i < data.size(0) ; i++) {
+        Detection detection;
+        float x1 = (data[i][Det::tl_x] - pad_w)/scale;  // x padding
+        float y1 = (data[i][Det::tl_y] - pad_h)/scale;  // y padding
+        float x2 = (data[i][Det::br_x] - pad_w)/scale;  // x padding
+        float y2 = (data[i][Det::br_y] - pad_h)/scale;  // y padding
+
+        x1 = clip(x1, 0, img_shape.width);
+        y1 = clip(y1, 0, img_shape.height);
+        x2 = clip(x2, 0, img_shape.width);
+        y2 = clip(y2, 0, img_shape.height);
+
+        detection.bbox = cv::Rect(cv::Point(x1, y1), cv::Point(x2, y2));
+        detection.score = data[i][Det::score];
+        detection.class_idx = data[i][Det::class_idx];
+        detections.emplace_back(detection);
+    }
+    return detections;
 }

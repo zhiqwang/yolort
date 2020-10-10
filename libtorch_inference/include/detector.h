@@ -5,6 +5,9 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
+#include <c10/cuda/CUDAStream.h>
+#include <ATen/cuda/CUDAEvent.h>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -27,7 +30,7 @@ public:
      * @param iou_threshold - IoU threshold for nms
      * @return detection result - bounding box, score, class index
      */
-    std::vector<std::tuple<cv::Rect, float, int>>
+    std::vector<Detection>
     Run(const cv::Mat& img, float conf_threshold, float iou_threshold);
 
 private:
@@ -53,6 +56,18 @@ private:
      */
     static torch::Tensor PostProcessing(const torch::Tensor& detections,
         float conf_thres = 0.4, float iou_thres = 0.6);
+
+    /***
+     * @brief Rescale coordinates to original input image
+     * @param data - detection result after inference and nms
+     * @param pad_w - width padding
+     * @param pad_h - height padding
+     * @param scale - zoom scale
+     * @param img_shape - original input image shape
+     * @return rescaled detections
+     */
+    static std::vector<Detection> ScaleCoordinates(const at::TensorAccessor<float, 2>& data,
+                                                   float pad_w, float pad_h, float scale, const cv::Size& img_shape);
 
     torch::jit::script::Module module_;
     torch::Device device_;
