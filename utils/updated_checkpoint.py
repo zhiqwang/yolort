@@ -33,7 +33,7 @@ def get_args_parser():
                         help='Path of ultralytics trained yolov5 checkpoint model')
     parser.add_argument('--cfg-path', default='./models/yolov5s.yaml',
                         help='Path of yolov5 configures model')
-    parser.add_argument('--updated-checkpoint-path', default='./checkpoints/yolov5/yolov5s_updated.pt',
+    parser.add_argument('--updated-checkpoint-path', default='./checkpoints/yolov5/yolov5s.pt',
                         help='Path of updated yolov5 checkpoint model')
 
     return parser
