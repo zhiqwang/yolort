@@ -33,8 +33,9 @@ int main() {
   inputs.push_back(images);
   auto output = module.forward(inputs);
 
-  std::cout << "ok" << std::endl;
-  std::cout << "output" << output << std::endl;
+  auto detections = output.toTuple()->elements()[0];
+
+  std::cout << "ok, detections: " << detections << std::endl;
 
   if (torch::cuda::is_available()) {
     // Move traced model to GPU
@@ -49,8 +50,9 @@ int main() {
     inputs.push_back(images);
     auto output = module.forward(inputs);
 
-    std::cout << "ok" << std::endl;
-    std::cout << "output" << output << std::endl;
+    auto detections = output.toTuple()->elements()[0];
+
+    std::cout << "ok, detections: " << detections << std::endl;
   }
   return 0;
 }
