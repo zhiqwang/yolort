@@ -7,6 +7,7 @@ if __name__ == "__main__":
 
     model = yolov5(
         cfg_path='./models/yolov5s.yaml',
+        checkpoint_path='./test/tracing/yolov5s.pt',
     )
     model.eval()
 

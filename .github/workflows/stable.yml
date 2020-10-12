@@ -43,9 +43,14 @@ jobs:
         cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
         make -j4
         sudo make install
+    - name: Download pretrained checkpoints and generate torchscript
+      run: |
+        cd test/tracing
+        wget https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.1.0/yolov5s.pt
+        cd ../..
+        python -m test.tracing.trace_model
     - name: Test libtorch tracing
       run: |
-        python -m test.tracing.trace_model
         export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
         cd test/tracing
