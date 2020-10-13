@@ -21,8 +21,8 @@ from scipy.cluster.vq import kmeans
 from scipy.signal import butter, filtfilt
 from tqdm import tqdm
 
-from utils.torch_utils import init_seeds as init_torch_seeds
-from utils.torch_utils import is_parallel
+from .torch_utils import init_seeds as init_torch_seeds
+from .torch_utils import is_parallel
 
 # Set printoptions
 torch.set_printoptions(linewidth=320, precision=5, profile='long')
@@ -36,7 +36,8 @@ cv2.setNumThreads(0)
 @contextmanager
 def torch_distributed_zero_first(local_rank: int):
     """
-    Decorator to make all processes in distributed training wait for each local_master to do something.
+    Decorator to make all processes in distributed training
+    wait for each local_master to do something.
     """
     if local_rank not in [-1, 0]:
         torch.distributed.barrier()
@@ -75,7 +76,7 @@ def check_img_size(img_size, s=32):
     # Verify img_size is a multiple of stride s
     new_size = make_divisible(img_size, int(s))  # ceil gs-multiple
     if new_size != img_size:
-        print('WARNING: --img-size %g must be multiple of max stride %g, updating to %g' % (img_size, s, new_size))
+        print(f'WARNING: --img-size {img_size} must be multiple of max stride {s}, updating to {new_size}')
     return new_size
 
 
@@ -85,7 +86,7 @@ def check_anchors(dataset, model, thr=4.0, imgsz=640):
     m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]  # Detect()
     shapes = imgsz * dataset.shapes / dataset.shapes.max(1, keepdims=True)
     scale = np.random.uniform(0.9, 1.1, size=(shapes.shape[0], 1))  # augment scale
-    wh = torch.tensor(np.concatenate([l[:, 3:5] * s for s, l in zip(shapes * scale, dataset.labels)])).float()  # wh
+    wh = torch.tensor(np.concatenate([l[:, 3:5] * s for s, l in zip(shapes * scale, dataset.labels)])).float()
 
     def metric(k):  # compute metric
         r = wh[:, None] / k[None]
@@ -230,7 +231,7 @@ def box_cxcywh_to_xyxy(x):
 def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
     # Rescale coords (xyxy) from img1_shape to img0_shape
     if ratio_pad is None:  # calculate from img0_shape
-        gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain  = old / new
+        gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain = old / new
         pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
     else:
         gain = ratio_pad[0][0]
@@ -521,10 +522,11 @@ def build_targets(p, targets, model):
     targets = torch.cat((targets.repeat(na, 1, 1), ai[:, :, None]), 2)  # append anchor indices
 
     g = 0.5  # bias
-    off = torch.tensor([[0, 0],
-                        [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
-                        # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
-                        ], device=targets.device).float() * g  # offsets
+    off = torch.tensor([
+        [0, 0],
+        [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
+        # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
+    ], device=targets.device).float() * g  # offsets
 
     for i in range(det.nl):
         anchors = det.anchors[i]
@@ -568,7 +570,7 @@ def build_targets(p, targets, model):
     return tcls, tbox, indices, anch
 
 
-def strip_optimizer(f='weights/best.pt', s=''):  # from utils.general import *; strip_optimizer()
+def strip_optimizer(f='weights/best.pt', s=''):
     # Strip optimizer from 'f' to finalize training, optionally save as 's'
     x = torch.load(f, map_location=torch.device('cpu'))
     x['optimizer'] = None
@@ -593,7 +595,7 @@ def coco_class_count(path='../coco/labels/train2014/'):
         print(i, len(files))
 
 
-def coco_only_people(path='../coco/labels/train2017/'):  # from utils.general import *; coco_only_people()
+def coco_only_people(path='../coco/labels/train2017/'):
     # Find images with only people
     files = sorted(glob.glob('%s/*.*' % path))
     for i, file in enumerate(files):
@@ -602,7 +604,7 @@ def coco_only_people(path='../coco/labels/train2017/'):  # from utils.general im
             print(labels.shape[0], file)
 
 
-def crop_images_random(path='../images/', scale=0.50):  # from utils.general import *; crop_images_random()
+def crop_images_random(path='../images/', scale=0.50):
     # crops images into random squares up to scale fraction
     # WARNING: overwrites images!
     for file in tqdm(sorted(glob.glob('%s/*.*' % path))):
@@ -626,7 +628,7 @@ def crop_images_random(path='../images/', scale=0.50):  # from utils.general imp
 
 
 def coco_single_class_labels(path='../coco/labels/train2014/', label_class=43):
-    # Makes single-class coco datasets. from utils.general import *; coco_single_class_labels()
+    # Makes single-class coco datasets.
     if os.path.exists('new/'):
         shutil.rmtree('new/')  # delete output folder
     os.makedirs('new/')  # make new output folder
@@ -819,7 +821,7 @@ def increment_dir(dir, comment=''):
     return dir + str(n) + ('_' + comment if comment else '')
 
 
-# Plotting functions ---------------------------------------------------------------------------------------------------
+# Plotting functions
 def hist2d(x, y, n=100):
     # 2d histogram used in labels.png and evolve.png
     xedges, yedges = np.linspace(x.min(), x.max(), n), np.linspace(y.min(), y.max(), n)
@@ -852,10 +854,13 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
         t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
         cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+        cv2.putText(
+            img, label, (c1[0], c1[1] - 2), 0, tl / 3,
+            [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA,
+        )
 
 
-def plot_wh_methods():  # from utils.general import *; plot_wh_methods()
+def plot_wh_methods():
     # Compares the two methods for width-height anchor multiplication
     # https://github.com/ultralytics/yolov3/issues/168
     x = np.arange(-4.0, 4.0, .1)
@@ -876,7 +881,10 @@ def plot_wh_methods():  # from utils.general import *; plot_wh_methods()
     fig.savefig('comparison.png', dpi=200)
 
 
-def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max_size=640, max_subplots=16):
+def plot_images(
+    images, targets, paths=None, fname='images.jpg',
+    names=None, max_size=640, max_subplots=16,
+):
     tl = 3  # line thickness
     tf = max(tl - 1, 1)  # font thickness
     if os.path.isfile(fname):  # do not overwrite
@@ -949,14 +957,23 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
         if paths is not None:
             label = os.path.basename(paths[i])[:40]  # trim to 40 char
             t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
-            cv2.putText(mosaic, label, (block_x + 5, block_y + t_size[1] + 5), 0, tl / 3, [220, 220, 220], thickness=tf,
-                        lineType=cv2.LINE_AA)
+            cv2.putText(
+                mosaic, label, (block_x + 5, block_y + t_size[1] + 5),
+                0, tl / 3, [220, 220, 220], thickness=tf,
+                lineType=cv2.LINE_AA,
+            )
 
         # Image border
-        cv2.rectangle(mosaic, (block_x, block_y), (block_x + w, block_y + h), (255, 255, 255), thickness=3)
+        cv2.rectangle(
+            mosaic, (block_x, block_y), (block_x + w, block_y + h),
+            (255, 255, 255), thickness=3,
+        )
 
     if fname is not None:
-        mosaic = cv2.resize(mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA)
+        mosaic = cv2.resize(
+            mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)),
+            interpolation=cv2.INTER_AREA,
+        )
         cv2.imwrite(fname, cv2.cvtColor(mosaic, cv2.COLOR_BGR2RGB))
 
     return mosaic
@@ -969,6 +986,7 @@ def plot_lr_scheduler(optimizer, scheduler, epochs=300, save_dir=''):
     for _ in range(epochs):
         scheduler.step()
         y.append(optimizer.param_groups[0]['lr'])
+
     plt.plot(y, '.-', label='LR')
     plt.xlabel('epoch')
     plt.ylabel('LR')
@@ -979,7 +997,7 @@ def plot_lr_scheduler(optimizer, scheduler, epochs=300, save_dir=''):
     plt.savefig(Path(save_dir) / 'LR.png', dpi=200)
 
 
-def plot_test_txt():  # from utils.general import *; plot_test()
+def plot_test_txt():
     # Plot test.txt histograms
     x = np.loadtxt('test.txt', dtype=np.float32)
     box = box_xyxy_to_cxcywh(x[:, :4])
@@ -996,7 +1014,7 @@ def plot_test_txt():  # from utils.general import *; plot_test()
     plt.savefig('hist1d.png', dpi=200)
 
 
-def plot_targets_txt():  # from utils.general import *; plot_targets_txt()
+def plot_targets_txt():
     # Plot targets.txt histograms
     x = np.loadtxt('targets.txt', dtype=np.float32).T
     s = ['x targets', 'y targets', 'width targets', 'height targets']
@@ -1009,7 +1027,7 @@ def plot_targets_txt():  # from utils.general import *; plot_targets_txt()
     plt.savefig('targets.jpg', dpi=200)
 
 
-def plot_study_txt(f='study.txt', x=None):  # from utils.general import *; plot_study_txt()
+def plot_study_txt(f='study.txt', x=None):
     # Plot study.txt generated by test.py
     fig, ax = plt.subplots(2, 4, figsize=(10, 6), tight_layout=True)
     ax = ax.ravel()
@@ -1073,7 +1091,7 @@ def plot_labels(labels, save_dir=''):
         pass
 
 
-def plot_evolution(yaml_file='data/hyp.finetune.yaml'):  # from utils.general import *; plot_evolution()
+def plot_evolution(yaml_file='data/hyp.finetune.yaml'):
     # Plot hyperparameter evolution results in evolve.txt
     with open(yaml_file) as f:
         hyp = yaml.load(f, Loader=yaml.FullLoader)
@@ -1097,7 +1115,7 @@ def plot_evolution(yaml_file='data/hyp.finetune.yaml'):  # from utils.general im
     print('\nPlot saved as evolve.png')
 
 
-def plot_results_overlay(start=0, stop=0):  # from utils.general import *; plot_results_overlay()
+def plot_results_overlay(start=0, stop=0):
     # Plot training 'results*.txt', overlaying train and val losses
     s = ['train', 'train', 'train', 'Precision', 'mAP@0.5', 'val', 'val', 'val', 'Recall', 'mAP@0.5:0.95']  # legends
     t = ['GIoU', 'Objectness', 'Classification', 'P-R', 'mAP-F1']  # titles
@@ -1120,8 +1138,7 @@ def plot_results_overlay(start=0, stop=0):  # from utils.general import *; plot_
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 
-def plot_results(start=0, stop=0, bucket='', id=(), labels=(),
-                 save_dir=''):  # from utils.general import *; plot_results()
+def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
     # Plot training 'results*.txt' as seen in https://github.com/ultralytics/yolov5#reproduce-our-training
     fig, ax = plt.subplots(2, 5, figsize=(12, 6))
     ax = ax.ravel()
