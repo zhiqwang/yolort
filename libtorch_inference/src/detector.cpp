@@ -24,8 +24,8 @@ Detector::Detector(const std::string& model_path,
 }
 
 
-std::vector<Detection>
-Detector::Run(const cv::Mat& img, float conf_threshold, float iou_threshold) {
+std::vector<Detection> Detector::Run(const cv::Mat& img,
+    float conf_threshold, float iou_threshold) {
   torch::NoGradGuard no_grad;
   std::cout << "----------New Frame----------" << std::endl;
 
@@ -84,7 +84,7 @@ Detector::Run(const cv::Mat& img, float conf_threshold, float iou_threshold) {
 
   // Note - only the first image in the batch will be used for demo
   auto idx_mask = result * (result.select(1, 0) == 0).to(torch::kFloat32).unsqueeze(1);
-  auto idx_mask_index =  torch::nonzero(idx_mask.select(1, 1)).squeeze();
+  auto idx_mask_index = torch::nonzero(idx_mask.select(1, 1)).squeeze();
   const auto& data = result.index_select(0, idx_mask_index).slice(1, 1, 7);
 
   // use accessor to access tensor elements efficiently
@@ -115,9 +115,9 @@ std::vector<float> Detector::LetterboxImage(const cv::Mat& src,
   cv::resize(src, dst, cv::Size(mid_w, mid_h));
 
   int top = (static_cast<int>(out_h) - mid_h) / 2;
-  int down = (static_cast<int>(out_h)- mid_h + 1) / 2;
-  int left = (static_cast<int>(out_w)- mid_w) / 2;
-  int right = (static_cast<int>(out_w)- mid_w + 1) / 2;
+  int down = (static_cast<int>(out_h) - mid_h + 1) / 2;
+  int left = (static_cast<int>(out_w) - mid_w) / 2;
+  int right = (static_cast<int>(out_w) - mid_w + 1) / 2;
 
   cv::copyMakeBorder(dst, dst, top, down, left, right, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
@@ -140,18 +140,18 @@ torch::Tensor Detector::GetBoundingBoxIoU(const torch::Tensor& box1, const torch
   const torch::Tensor& b2_y2 = box2.select(1, 3);
 
   // get the coordinates of the intersection rectangle
-  torch::Tensor inter_rect_x1 =  torch::max(b1_x1, b2_x1);
-  torch::Tensor inter_rect_y1 =  torch::max(b1_y1, b2_y1);
-  torch::Tensor inter_rect_x2 =  torch::min(b1_x2, b2_x2);
-  torch::Tensor inter_rect_y2 =  torch::min(b1_y2, b2_y2);
+  torch::Tensor inter_rect_x1 = torch::max(b1_x1, b2_x1);
+  torch::Tensor inter_rect_y1 = torch::max(b1_y1, b2_y1);
+  torch::Tensor inter_rect_x2 = torch::min(b1_x2, b2_x2);
+  torch::Tensor inter_rect_y2 = torch::min(b1_y2, b2_y2);
 
   // calculate intersection area
-  torch::Tensor inter_area = torch::max(inter_rect_x2 - inter_rect_x1 + 1, torch::zeros(inter_rect_x2.sizes()))
-      * torch::max(inter_rect_y2 - inter_rect_y1 + 1, torch::zeros(inter_rect_x2.sizes()));
+  torch::Tensor inter_area = torch::max(inter_rect_x2 - inter_rect_x1 + 1, torch::zeros(inter_rect_x2.sizes())) *
+      torch::max(inter_rect_y2 - inter_rect_y1 + 1, torch::zeros(inter_rect_x2.sizes()));
 
   // calculate union area
-  torch::Tensor b1_area = (b1_x2 - b1_x1 + 1)*(b1_y2 - b1_y1 + 1);
-  torch::Tensor b2_area = (b2_x2 - b2_x1 + 1)*(b2_y2 - b2_y1 + 1);
+  torch::Tensor b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1);
+  torch::Tensor b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1);
 
   // calculate IoU
   torch::Tensor iou = inter_area / (b1_area + b2_area - inter_area);
@@ -160,7 +160,8 @@ torch::Tensor Detector::GetBoundingBoxIoU(const torch::Tensor& box1, const torch
 }
 
 
-torch::Tensor Detector::PostProcessing(const torch::Tensor& detections, float conf_thres, float iou_thres) {
+torch::Tensor Detector::PostProcessing(const torch::Tensor& detections,
+    float conf_thres, float iou_thres) {
   constexpr int item_attr_size = 5;
   int batch_size = detections.size(0);
   auto num_classes = detections.size(2) - item_attr_size;  // 80 for coco dataset
@@ -229,11 +230,11 @@ torch::Tensor Detector::PostProcessing(const torch::Tensor& detections, float co
     // iterating all unique classes
     for (const auto& cls : img_classes) {
       auto cls_mask = det * (det.select(1, Det::class_idx) == cls).to(torch::kFloat32).unsqueeze(1);
-      auto class_mask_index =  torch::nonzero(cls_mask.select(1, Det::score)).squeeze();
+      auto class_mask_index = torch::nonzero(cls_mask.select(1, Det::score)).squeeze();
       auto bbox_by_class = det.index_select(0, class_mask_index).view({-1, 6});
 
       // sort by confidence (descending)
-      std::tuple<torch::Tensor,torch::Tensor> sort_ret = torch::sort(bbox_by_class.select(1, 4), -1, true);
+      std::tuple<torch::Tensor, torch::Tensor> sort_ret = torch::sort(bbox_by_class.select(1, 4), -1, true);
       auto conf_sort_index = std::get<1>(sort_ret);
 
       bbox_by_class = bbox_by_class.index_select(0, conf_sort_index.squeeze()).cpu();
@@ -261,7 +262,7 @@ torch::Tensor Detector::PostProcessing(const torch::Tensor& detections, float co
       }
       else {
         auto out = torch::cat({batch_index, bbox_by_class}, 1);
-        output = torch::cat({output,out}, 0);
+        output = torch::cat({output, out}, 0);
       }
     }
   }
@@ -279,10 +280,10 @@ std::vector<Detection> Detector::ScaleCoordinates(const at::TensorAccessor<float
   std::vector<Detection> detections;
   for (int i = 0; i < data.size(0) ; i++) {
     Detection detection;
-    float x1 = (data[i][Det::tl_x] - pad_w)/scale;  // x padding
-    float y1 = (data[i][Det::tl_y] - pad_h)/scale;  // y padding
-    float x2 = (data[i][Det::br_x] - pad_w)/scale;  // x padding
-    float y2 = (data[i][Det::br_y] - pad_h)/scale;  // y padding
+    float x1 = (data[i][Det::tl_x] - pad_w) / scale;  // x padding
+    float y1 = (data[i][Det::tl_y] - pad_h) / scale;  // y padding
+    float x2 = (data[i][Det::br_x] - pad_w) / scale;  // x padding
+    float y2 = (data[i][Det::br_y] - pad_h) / scale;  // y padding
 
     x1 = clip(x1, 0, img_shape.width);
     y1 = clip(y1, 0, img_shape.height);

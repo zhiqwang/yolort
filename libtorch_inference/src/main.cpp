@@ -12,7 +12,7 @@ std::vector<std::string> LoadNames(const std::string& path) {
   std::ifstream infile(path);
   if (infile.is_open()) {
     std::string line;
-    while (getline (infile,line)) {
+    while (getline (infile, line)) {
       class_names.emplace_back(line);
     }
     infile.close();
