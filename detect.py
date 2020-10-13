@@ -38,6 +38,47 @@ def inference(model, img, is_half):
     return model_out, time_consume
 
 
+def post_detections(model_out, path, img, im0s, time_consume, args):
+    for i, det in enumerate(model_out):  # detections per image
+
+        if args.webcam:  # batch_size >= 1
+            p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
+        else:
+            p, s, im0 = path, '', im0s
+
+        save_path = os.path.join(args.output_dir, Path(p).name)
+        txt_path = os.path.join(args.output_dir, f"{Path(p).stem}_")
+        s += '%gx%g ' % img.shape[-2:]  # print string
+        gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+        if det is not None and len(det):
+            # Rescale boxes from img_size to im0 size
+            det[:, :4] = scale_coords(img.shape[-2:], det[:, :4], im0.shape).round()
+
+            # Print results
+            for c in det[:, -1].unique():
+                n = (det[:, -1] == c).sum()  # detections per class
+                s += '%g %ss, ' % (n, args.names[int(c)])  # add to string
+
+            # Write results
+            for *xyxy, conf, cls in reversed(det):
+                if args.save_txt:  # Write to file
+                    # normalized xywh
+                    xywh = (box_xyxy_to_cxcywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
+                    with open(f'{txt_path}.txt', 'a') as f:
+                        f.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format
+
+                if args.save_img or args.view_img:  # Add bbox to image
+                    label = '%s %.2f' % (args.names[int(cls)], conf)
+                    plot_one_box(xyxy, im0, label=label, color=args.colors[int(cls)], line_thickness=3)
+
+        # Print inference time
+        print('%sDone. (%.3fs)' % (s, time_consume))
+
+        # Save results (image with detections)
+        if args.save_img and args.mode == 'images':
+            cv2.imwrite(save_path, im0)
+
+
 def main(args):
     print(args)
 
@@ -47,7 +88,7 @@ def main(args):
     model.eval()
     model = model.to(device)
 
-    webcam = (args.image_source.isnumeric() or args.image_source.startswith(
+    args.webcam = (args.image_source.isnumeric() or args.image_source.startswith(
         ('rtsp://', 'rtmp://', 'http://')) or args.image_source.endswith('.txt'))
 
     # Initialize
@@ -63,10 +104,11 @@ def main(args):
 
     # Set Dataloader
     dataset = LoadImages(args.image_source, img_size=imgsz)
+    args.mode = dataset.mode
 
     # Get names and colors
-    names = get_coco_names(Path(args.coco_category_path))
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
+    args.names = get_coco_names(Path(args.coco_category_path))
+    args.colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(args.names))]
 
     # Run inference
     t0 = time.time()
@@ -78,45 +120,7 @@ def main(args):
         model_out, time_consume = inference(model, img, is_half)
 
         # Process detections
-        for i, det in enumerate(model_out):  # detections per image
-
-            if webcam:  # batch_size >= 1
-                p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
-            else:
-                p, s, im0 = path, '', im0s
-
-            save_path = os.path.join(args.output_dir, Path(p).name)
-            txt_postfix = f"{Path(p).stem}_{dataset.fram if dataset.mode == 'video' else ''}"
-            txt_path = os.path.join(args.output_dir, txt_postfix)
-            s += '%gx%g ' % img.shape[-2:]  # print string
-            gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-            if det is not None and len(det):
-                # Rescale boxes from img_size to im0 size
-                det[:, :4] = scale_coords(img.shape[-2:], det[:, :4], im0.shape).round()
-
-                # Print results
-                for c in det[:, -1].unique():
-                    n = (det[:, -1] == c).sum()  # detections per class
-                    s += '%g %ss, ' % (n, names[int(c)])  # add to string
-
-                # Write results
-                for *xyxy, conf, cls in reversed(det):
-                    if args.save_txt:  # Write to file
-                        # normalized xywh
-                        xywh = (box_xyxy_to_cxcywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
-                        with open(f'{txt_path}.txt', 'a') as f:
-                            f.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format
-
-                    if args.save_img or args.view_img:  # Add bbox to image
-                        label = '%s %.2f' % (names[int(cls)], conf)
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
-
-            # Print inference time
-            print('%sDone. (%.3fs)' % (s, time_consume))
-
-            # Save results (image with detections)
-            if args.save_img and dataset.mode == 'images':
-                cv2.imwrite(save_path, im0)
+        post_detections(model_out, path, img, im0s, time_consume, args)
 
     if args.save_txt or args.save_img:
         print(f'Results saved to {Path(args.output_dir)}')
