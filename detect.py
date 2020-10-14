@@ -1,4 +1,3 @@
-import os
 import time
 from pathlib import Path
 
@@ -7,7 +6,12 @@ import cv2
 import torch
 
 from utils.datasets import LoadImages
-from utils.general import check_img_size, scale_coords, box_xyxy_to_cxcywh, plot_one_box, set_logging
+
+from utils.general import (
+    check_img_size, scale_coords,
+    box_xyxy_to_cxcywh, plot_one_box,
+    set_logging,
+)
 from utils.torch_utils import time_synchronized
 
 from hubconf import yolov5
@@ -38,16 +42,15 @@ def inference(model, img, is_half):
     return model_out, time_consume
 
 
-def post_detections(model_out, path, img, im0s, time_consume, args):
+def post_processing(model_out, path, img, im0s, time_consume, args):
     for i, det in enumerate(model_out):  # detections per image
 
         if args.webcam:  # batch_size >= 1
             p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
         else:
             p, s, im0 = path, '', im0s
-
-        save_path = os.path.join(args.output_dir, Path(p).name)
-        txt_path = os.path.join(args.output_dir, f"{Path(p).stem}_")
+        save_path = Path(args.output_dir).joinpath(Path(p).name)
+        txt_path = Path(args.output_dir).joinpath(Path(p).stem)
         s += '%gx%g ' % img.shape[-2:]  # print string
         gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
         if det is not None and len(det):
@@ -60,23 +63,23 @@ def post_detections(model_out, path, img, im0s, time_consume, args):
                 s += '%g %ss, ' % (n, args.names[int(c)])  # add to string
 
             # Write results
-            for *xyxy, conf, cls in reversed(det):
+            for *xyxy, conf, cls_name in reversed(det):
                 if args.save_txt:  # Write to file
                     # normalized xywh
                     xywh = (box_xyxy_to_cxcywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
                     with open(f'{txt_path}.txt', 'a') as f:
-                        f.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format
+                        f.write(('%g ' * 5 + '\n') % (cls_name, *xywh))  # label format
 
                 if args.save_img or args.view_img:  # Add bbox to image
-                    label = '%s %.2f' % (args.names[int(cls)], conf)
-                    plot_one_box(xyxy, im0, label=label, color=args.colors[int(cls)], line_thickness=3)
+                    label = '%s %.2f' % (args.names[int(cls_name)], conf)
+                    plot_one_box(xyxy, im0, label=label, color=args.colors[int(cls_name)], line_thickness=3)
 
         # Print inference time
         print('%sDone. (%.3fs)' % (s, time_consume))
 
         # Save results (image with detections)
         if args.save_img and args.mode == 'images':
-            cv2.imwrite(save_path, im0)
+            cv2.imwrite(str(save_path), im0)
 
 
 def main(args):
@@ -120,10 +123,10 @@ def main(args):
         model_out, time_consume = inference(model, img, is_half)
 
         # Process detections
-        post_detections(model_out, path, img, im0s, time_consume, args)
+        post_processing(model_out, path, img, im0s, time_consume, args)
 
     if args.save_txt or args.save_img:
-        print(f'Results saved to {Path(args.output_dir)}')
+        print(f'Results saved to {args.output_dir}')
 
     print('Done. (%.3fs)' % (time.time() - t0))
 
