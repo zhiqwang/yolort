@@ -42,8 +42,9 @@ def inference(model, img, is_half):
     return model_out, time_consume
 
 
-def post_processing(model_out, path, img, im0s, time_consume, args):
-    for i, det in enumerate(model_out):  # detections per image
+def overlay_boxes(detections, path, img, im0s, time_consume, args):
+    outputs = [t.clone().detach() for t in detections]
+    for i, det in enumerate(outputs):  # detections per image
 
         if args.webcam:  # batch_size >= 1
             p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
@@ -80,6 +81,8 @@ def post_processing(model_out, path, img, im0s, time_consume, args):
         # Save results (image with detections)
         if args.save_img and args.mode == 'images':
             cv2.imwrite(str(save_path), im0)
+
+    return outputs
 
 
 def main(args):
@@ -123,7 +126,7 @@ def main(args):
         model_out, time_consume = inference(model, img, is_half)
 
         # Process detections
-        post_processing(model_out, path, img, im0s, time_consume, args)
+        _ = overlay_boxes(model_out, path, img, im0s, time_consume, args)
 
     if args.save_txt or args.save_img:
         print(f'Results saved to {args.output_dir}')
