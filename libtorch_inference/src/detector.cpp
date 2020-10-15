@@ -1,3 +1,8 @@
+#include <ATen/ATen.h>
+
+#include <torchvision/ROIPool.h>
+#include <torchvision/nms.h>
+
 #include "detector.h"
 
 
@@ -76,7 +81,9 @@ std::vector<Detection> Detector::Run(const cv::Mat& img,
   /*** Post-process ***/
 
   start = std::chrono::high_resolution_clock::now();
-  auto detections = output.toTuple()->elements()[0].toTensor();
+  auto detections = output.toTuple()->elements()[0];
+
+  std::cout << "ok, detections: " << detections << std::endl;
 
   // result: n * 7
   // batch index(0), top-left x/y (1,2), bottom-right x/y (3,4), score(5), class id(6)
