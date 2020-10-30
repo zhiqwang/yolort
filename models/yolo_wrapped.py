@@ -50,6 +50,24 @@ class YOLO(nn.Module):
         else:
             return self.eager_outputs(detections, features)
 
+    def update_ultralytics(self, checkpoint_path_ultralytics: str):
+        checkpoint = torch.load(checkpoint_path_ultralytics, map_location="cpu")
+        state_dict = checkpoint['model'].float().state_dict()  # to FP32
+
+        # Update body features
+        for name, params in self.body.features.named_parameters(prefix='model'):
+            params.data.copy_(state_dict[name])
+
+        for name, buffers in self.body.features.named_buffers(prefix='model'):
+            buffers.copy_(state_dict[name])
+
+        # Update box heads
+        for name, params in self.box_head.named_parameters(prefix='model.24'):
+            params.data.copy_(state_dict[name])
+
+        for name, buffers in self.box_head.named_buffers(prefix='model.24'):
+            buffers.copy_(state_dict[name])
+
 
 class YoloBody(nn.Module):
     def __init__(
