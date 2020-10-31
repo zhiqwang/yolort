@@ -38,6 +38,7 @@ jobs:
         cd ..
         git clone https://github.com/pytorch/vision.git vision
         cd vision
+        git checkout nightly
         mkdir build && cd build
         cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
         make -j4
