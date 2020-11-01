@@ -1,8 +1,8 @@
 # Modified from ultralytics/yolov5 by Zhiqiang Wang
-from typing import List
+from typing import List, Dict, Optional
 import torch
 from torch import nn, Tensor
-from torchvision.ops.boxes import batched_nms, box_iou
+from torchvision.ops.boxes import batched_nms
 
 from utils.general import box_cxcywh_to_xyxy
 
@@ -39,7 +39,7 @@ class YoloHead(nn.Module):
             i += 1
         return out
 
-    def forward(self, x: List[Tensor]) -> List[Tensor]:
+    def forward(self, x: List[Tensor]) -> Tensor:
         # x = x.copy()  # for profiling
         device = x[0].device
         z = torch.jit.annotate(List[Tensor], [])  # inference output
@@ -60,7 +60,9 @@ class YoloHead(nn.Module):
                 y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 z.append(y.view(bs, -1, self.no))
 
-        return z
+        prediction = torch.cat(z, 1)
+
+        return prediction
 
     @staticmethod
     def _make_grid(nx: int = 20, ny: int = 20):
@@ -83,56 +85,30 @@ class PostProcess(nn.Module):
         self.merge = merge
         self.detections_per_img = detections_per_img  # maximum number of detections per image
 
-    def forward(self, prediction: List[Tensor]) -> List[Tensor]:
-        prediction = torch.cat(prediction, 1)
-        nc = prediction[0].shape[1] - 5  # number of classes
-        xc = prediction[..., 4] > self.conf_thres  # candidates
+    def forward(
+        self,
+        prediction: Tensor,
+        target_sizes: Optional[Tensor] = None,
+    ) -> List[Dict[str, Tensor]]:
+        results = torch.jit.annotate(List[Dict[str, Tensor]], [])
 
-        # Settings
-        redundant = True  # require redundant detections
-        multi_label = nc > 1  # multiple labels per box (adds 0.5ms/img)
-
-        output = torch.jit.annotate(List[Tensor], [])
-        for xi, x in enumerate(prediction):  # image index, image inference
-            # Apply constraints
-            # x[((x[..., 2:4] < min_wh) | (x[..., 2:4] > max_wh)).any(1), 4] = 0  # width-height
-            x = x[xc[xi]]  # confidence
-
-            # TODO: If none remain process next image
-            if not x.shape[0]:
-                continue
-
+        for pred in prediction:  # image index, image inference
             # Compute conf
-            x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
+            scores = pred[:, 5:] * pred[:, 4:5]  # conf = obj_conf * cls_conf
 
             # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-            box = box_cxcywh_to_xyxy(x[:, :4])
+            boxes = box_cxcywh_to_xyxy(pred[:, :4])
 
-            # Detections matrix nx6 (xyxy, conf, cls)
-            if multi_label:
-                i, j = torch.where(x[:, 5:] > self.conf_thres)
-                x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
-            else:  # best class only
-                conf, j = x[:, 5:].max(1, keepdim=True)
-                x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > self.conf_thres]
+            # remove low scoring boxes
+            inds, labels = torch.where(scores > self.conf_thres)
+            boxes, scores = boxes[inds], scores[inds, labels]
 
-            # TODO: If none remain process next image
-            n = x.shape[0]  # number of boxes
-            if not n:
-                continue
+            # non-maximum suppression, independently done per level
+            keep = batched_nms(boxes, scores, labels, self.iou_thres)
+            # keep only topk scoring predictions
+            keep = keep[:self.detections_per_img]
+            boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
-            # Batched NMS
-            boxes, scores, labels = x[:, :4], x[:, 4], x[:, 5]   # boxes, scores, labels
-            i = batched_nms(boxes, scores, labels, self.iou_thres)
-            if i.shape[0] > self.detections_per_img:  # limit detections
-                i = i[:self.detections_per_img]
-            if self.merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
-                iou = box_iou(boxes[i], boxes) > self.iou_thres  # iou matrix
-                weights = iou * scores[None]  # box weights
-                x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
-                if redundant:
-                    i = i[iou.sum(1) > 1]  # require redundancy
+            results.append({'scores': scores, 'labels': labels, 'boxes': boxes})
 
-            output.append(x[i])
-
-        return output
+        return results
