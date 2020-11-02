@@ -60,9 +60,9 @@ class YoloHead(nn.Module):
                 y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 z.append(y.view(bs, -1, self.no))
 
-        prediction = torch.cat(z, 1)
+        predictions = torch.cat(z, 1)
 
-        return prediction
+        return predictions
 
     @staticmethod
     def _make_grid(nx: int = 20, ny: int = 20):
@@ -87,14 +87,25 @@ class PostProcess(nn.Module):
 
     def forward(
         self,
-        prediction: Tensor,
+        predictions: Tensor,
         target_sizes: Optional[Tensor] = None,
     ) -> List[Dict[str, Tensor]]:
+        """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
+        Decode location preds, apply non-maximum suppression to location predictions based on conf
+        scores and threshold to a detections_per_img number of output predictions for both confidence
+        score and locations.
+
+        Parameters:
+            predictions : [batch_size, num_priors, num_classes + 5] predicted locations and class/object confidence.
+            target_sizes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
+                          For evaluation, this must be the original image size (before any data augmentation)
+                          For visualization, this should be the image size after data augment, but before padding
+        """
         results = torch.jit.annotate(List[Dict[str, Tensor]], [])
 
-        for pred in prediction:  # image index, image inference
+        for pred in predictions:  # image index, image inference
             # Compute conf
-            scores = pred[:, 5:] * pred[:, 4:5]  # conf = obj_conf * cls_conf
+            scores = pred[:, 5:] * pred[:, 4:5]  # obj_conf x cls_conf, w/ shape: num_priors x num_classes
 
             # Box (center x, center y, width, height) to (x1, y1, x2, y2)
             boxes = box_cxcywh_to_xyxy(pred[:, :4])
