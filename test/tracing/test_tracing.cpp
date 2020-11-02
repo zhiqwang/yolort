@@ -33,7 +33,7 @@ int main() {
   inputs.push_back(images);
   auto output = module.forward(inputs);
 
-  auto detections = output.toTuple()->elements()[0];
+  auto detections = output.toTuple()->elements()[1];
 
   std::cout << "ok, detections: " << detections << std::endl;
 
@@ -50,7 +50,7 @@ int main() {
     inputs.push_back(images);
     auto output = module.forward(inputs);
 
-    auto detections = output.toTuple()->elements()[0];
+    auto detections = output.toTuple()->elements()[1];
 
     std::cout << "ok, detections: " << detections << std::endl;
   }

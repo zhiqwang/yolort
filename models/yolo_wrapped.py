@@ -1,11 +1,12 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import warnings
-
 from collections import OrderedDict
-from typing import List, Dict
+from typing import Union
 
 import torch
 from torch import nn, Tensor
+
+from torch.jit.annotations import List, Dict
 
 from utils.general import check_anchor_order
 
@@ -29,26 +30,28 @@ class YOLO(nn.Module):
         self._has_warned = False
 
     @torch.jit.unused
-    def eager_outputs(self, detections: List[Tensor], features: List[Tensor]):
+    def eager_outputs(
+        self,
+        features: List[Tensor],
+        detections: List[Dict[str, Tensor]],
+    ) -> Union[List[Tensor], List[Dict[str, Tensor]]]:
         if self.training:
             return features
 
         return detections
 
-    def forward(self, samples):
+    def forward(self, samples: Tensor):
         features = self.body(samples)
-        detections = self.box_head(features)
-
-        if not self.training:
-            detections = self.post_process(detections)
+        predictions = self.box_head(features)
+        detections = self.post_process(predictions)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLO always returns a (detections, features) tuple in scripting")
+                warnings.warn("YOLO always returns a (features, detections) tuple in scripting")
                 self._has_warned = True
-            return (detections, features)
+            return (features, detections)
         else:
-            return self.eager_outputs(detections, features)
+            return self.eager_outputs(features, detections)
 
     def update_ultralytics(self, checkpoint_path_ultralytics: str):
         checkpoint = torch.load(checkpoint_path_ultralytics, map_location="cpu")

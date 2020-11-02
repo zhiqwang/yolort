@@ -2,10 +2,10 @@ import logging
 
 from copy import deepcopy
 from pathlib import Path
-from typing import List
 
 import torch
 from torch import nn, Tensor
+from torch.jit.annotations import List
 
 from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
 from .experimental import MixConv2d, CrossConv, C3

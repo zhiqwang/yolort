@@ -42,9 +42,10 @@ def inference(model, img, is_half):
     return model_out, time_consume
 
 
+@torch.no_grad()
 def overlay_boxes(detections, path, img, im0s, time_consume, args):
-    outputs = [t.clone().detach() for t in detections]
-    for i, det in enumerate(outputs):  # detections per image
+
+    for i, pred in enumerate(detections):  # detections per image
 
         if args.webcam:  # batch_size >= 1
             p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
@@ -54,17 +55,18 @@ def overlay_boxes(detections, path, img, im0s, time_consume, args):
         txt_path = Path(args.output_dir).joinpath(Path(p).stem)
         s += '%gx%g ' % img.shape[-2:]  # print string
         gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-        if det is not None and len(det):
+        if pred is not None and len(pred):
             # Rescale boxes from img_size to im0 size
-            det[:, :4] = scale_coords(img.shape[-2:], det[:, :4], im0.shape).round()
+            boxes, scores, labels = pred['boxes'].detach(), pred['scores'].detach(), pred['labels'].detach()
+            boxes = scale_coords(img.shape[-2:], boxes, im0.shape).round()
 
             # Print results
-            for c in det[:, -1].unique():
-                n = (det[:, -1] == c).sum()  # detections per class
+            for c in labels.unique():
+                n = (labels == c).sum()  # detections per class
                 s += '%g %ss, ' % (n, args.names[int(c)])  # add to string
 
             # Write results
-            for *xyxy, conf, cls_name in reversed(det):
+            for xyxy, conf, cls_name in zip(boxes, scores, labels):
                 if args.save_txt:  # Write to file
                     # normalized xywh
                     xywh = (box_xyxy_to_cxcywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
@@ -82,7 +84,7 @@ def overlay_boxes(detections, path, img, im0s, time_consume, args):
         if args.save_img and args.mode == 'images':
             cv2.imwrite(str(save_path), im0)
 
-    return outputs
+    return (boxes.tolist(), scores.tolist(), labels.tolist())
 
 
 def main(args):

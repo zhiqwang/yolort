@@ -1,7 +1,8 @@
 # Modified from ultralytics/yolov5 by Zhiqiang Wang
-from typing import List, Dict, Optional
 import torch
 from torch import nn, Tensor
+from torch.jit.annotations import List, Dict, Optional
+
 from torchvision.ops.boxes import batched_nms
 
 from utils.general import box_cxcywh_to_xyxy
