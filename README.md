@@ -39,7 +39,7 @@ python -m detect [--model-cfg ./models/yolov5s.yaml]
 
 ### LibTorch interface
 
-Here provides a minimal [example](test/tracing/test_tracing.cpp) of getting `LibTorch` inferencing to work. You can check the [CI](.github/workflows/stable.yml) for more details. Curranty, there are some buges in [libtorch_inference](libtorch_inference), very pleasure for your cooperation.
+Here providing a minimal [example](test/tracing/test_tracing.cpp) of getting `LibTorch` inferencing to work. You can check the [CI](.github/workflows/stable.yml) for more details.
 
 - Generate `TorchScript` model
 
