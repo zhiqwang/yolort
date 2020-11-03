@@ -27,32 +27,36 @@ int main() {
   // TorchScript models require a List[IValue] as input
   std::vector<torch::jit::IValue> inputs;
 
-  // Demonet accepts a List[Tensor] as main input
-  torch::Tensor images = torch::rand({1, 3, 416, 352});
+  // YOLO accepts a List[Tensor] as main input
+  std::vector<torch::Tensor> images;
+  images.push_back(torch::rand({3, 416, 352}));
+  images.push_back(torch::rand({3, 480, 384}));
 
   inputs.push_back(images);
   auto output = module.forward(inputs);
 
   auto detections = output.toTuple()->elements()[1];
 
-  std::cout << "ok, detections: " << detections << std::endl;
+  std::cout << ">> OKey, detections: " << detections << std::endl;
 
   if (torch::cuda::is_available()) {
     // Move traced model to GPU
     module.to(torch::kCUDA);
 
     // Add GPU inputs
+    images.clear();
     inputs.clear();
 
     torch::TensorOptions options = torch::TensorOptions{torch::kCUDA};
-    images = images.to(torch::kCUDA); 
+    images.push_back(torch::rand({3, 416, 352}, options));
+    images.push_back(torch::rand({3, 480, 384}, options));
 
     inputs.push_back(images);
     auto output = module.forward(inputs);
 
     auto detections = output.toTuple()->elements()[1];
 
-    std::cout << "ok, detections: " << detections << std::endl;
+    std::cout << ">> OKey, detections: " << detections << std::endl;
   }
   return 0;
 }
