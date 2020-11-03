@@ -33,10 +33,10 @@ std::vector<std::string> LoadNames(const std::string& path) {
   return class_names;
 }
 
-torch::Tensor read_data(const std::string& loc) {
+torch::Tensor ReadImage(const std::string& loc) {
   // Read Image from the location of image
   cv::Mat img = cv::imread(loc);
-  img.convertTo(img, CV_32FC3, 1.0f / 255.0f);  // normalization 1/255
+  img.convertTo(img, CV_32FC3, 1.0f / 255.0f); // normalization 1/255
 
   // Convert image to tensor
   torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, 3});
@@ -50,12 +50,11 @@ int main(int argc, const char* argv[]) {
 
   // TODO: add other args
   parser.allow_unrecognised_options().add_options()
-      ("weights", "yolov5.torchscript.pt path", cxxopts::value<std::string>())
-      ("source", "source", cxxopts::value<std::string>())
-      ("conf-thres", "object confidence threshold", cxxopts::value<float>()->default_value("0.4"))
-      ("iou-thres", "IOU threshold for NMS", cxxopts::value<float>()->default_value("0.5"))
+      ("checkpoint", "yolov5.torchscript.pt path", cxxopts::value<std::string>())
+      ("input_source", "image source to be detected", cxxopts::value<std::string>())
+      ("labelmap", "label of datasets", cxxopts::value<std::string>())
       ("gpu", "Enable cuda device or cpu", cxxopts::value<bool>()->default_value("false"))
-      ("view-img", "display results", cxxopts::value<bool>()->default_value("false"))
+      ("view_img", "display results", cxxopts::value<bool>()->default_value("false"))
       ("h,help", "Print usage");
 
   auto opt = parser.parse(argc, argv);
@@ -79,19 +78,20 @@ int main(int argc, const char* argv[]) {
   }
 
   // load class names from dataset for visualization
-  std::vector<std::string> class_names = LoadNames("../weights/coco.names");
+  std::string labelmap = opt["labelmap"].as<std::string>();
+  std::vector<std::string> class_names = LoadNames(labelmap);
   if (class_names.empty()) {
     return -1;
   }
 
   // load input image
-  std::string source = opt["source"].as<std::string>();
+  std::string image_path = opt["input_source"].as<std::string>();
 
   torch::jit::script::Module module;
   try {
     std::cout << ">>> Loading model" << std::endl;
     // Deserialize the ScriptModule from a file using torch::jit::load().
-    std::string weights = opt["weights"].as<std::string>();
+    std::string weights = opt["checkpoint"].as<std::string>();
     module = torch::jit::load(weights);
     module.to(device_type);
     std::cout << ">>> Model loaded" << std::endl;
@@ -122,11 +122,11 @@ int main(int argc, const char* argv[]) {
   inputs.clear();
 
   // Read image
-  auto image = read_data(source);
-  image.to(device_type);
+  auto img = ReadImage(image_path);
+  img = img.to(device_type);
 
   // Inference
-  images.push_back(image);
+  images.push_back(img);
   inputs.push_back(images);
 
   output = module.forward(inputs);
