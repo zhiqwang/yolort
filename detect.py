@@ -8,11 +8,10 @@ import torch
 from utils.datasets import LoadImages
 
 from utils.general import (
-    check_img_size, scale_coords,
+    check_img_size,
     box_xyxy_to_cxcywh, plot_one_box,
     set_logging,
 )
-from utils.torch_utils import time_synchronized
 
 from hubconf import yolov5
 
@@ -26,39 +25,17 @@ def get_coco_names(category_path):
 
 
 @torch.no_grad()
-def inference(model, img, is_half):
-    model.eval()
-
-    img = img.half() if is_half else img.float()  # uint8 to fp16/32
-    img /= 255.0  # 0 - 255 to 0.0 - 1.0
-    if img.ndimension() == 3:
-        img = img.unsqueeze(0)
-
-    # Inference
-    t1 = time_synchronized()
-    model_out = model(img)
-    t2 = time_synchronized()
-    time_consume = t2 - t1
-    return model_out, time_consume
-
-
-@torch.no_grad()
-def overlay_boxes(detections, path, img, im0s, time_consume, args):
+def overlay_boxes(detections, path, img, time_consume, args):
 
     for i, pred in enumerate(detections):  # detections per image
+        s = '%g: ' % i if args.webcam else ''
+        save_path = Path(args.output_dir).joinpath(Path(path).name)
+        txt_path = Path(args.output_dir).joinpath(Path(path).stem)
+        s += '%gx%g ' % img.shape[:2]  # print string
 
-        if args.webcam:  # batch_size >= 1
-            p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
-        else:
-            p, s, im0 = path, '', im0s
-        save_path = Path(args.output_dir).joinpath(Path(p).name)
-        txt_path = Path(args.output_dir).joinpath(Path(p).stem)
-        s += '%gx%g ' % img.shape[-2:]  # print string
-        gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-        if pred is not None and len(pred):
+        if pred is not None and len(pred) > 0:
             # Rescale boxes from img_size to im0 size
-            boxes, scores, labels = pred['boxes'].detach(), pred['scores'].detach(), pred['labels'].detach()
-            boxes = scale_coords(img.shape[-2:], boxes, im0.shape).round()
+            boxes, scores, labels = pred['boxes'].round(), pred['scores'], pred['labels']
 
             # Print results
             for c in labels.unique():
@@ -69,20 +46,20 @@ def overlay_boxes(detections, path, img, im0s, time_consume, args):
             for xyxy, conf, cls_name in zip(boxes, scores, labels):
                 if args.save_txt:  # Write to file
                     # normalized xywh
-                    xywh = (box_xyxy_to_cxcywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
+                    xywh = box_xyxy_to_cxcywh(xyxy).tolist()
                     with open(f'{txt_path}.txt', 'a') as f:
                         f.write(('%g ' * 5 + '\n') % (cls_name, *xywh))  # label format
 
                 if args.save_img or args.view_img:  # Add bbox to image
                     label = '%s %.2f' % (args.names[int(cls_name)], conf)
-                    plot_one_box(xyxy, im0, label=label, color=args.colors[int(cls_name)], line_thickness=3)
+                    plot_one_box(xyxy, img, label=label, color=args.colors[int(cls_name)], line_thickness=3)
 
         # Print inference time
         print('%sDone. (%.3fs)' % (s, time_consume))
 
         # Save results (image with detections)
         if args.save_img and args.mode == 'images':
-            cv2.imwrite(str(save_path), im0)
+            cv2.imwrite(str(save_path), img)
 
     return (boxes.tolist(), scores.tolist(), labels.tolist())
 
