@@ -39,7 +39,7 @@ torch::Tensor read_data(const std::string& loc) {
   img.convertTo(img, CV_32FC3, 1.0f / 255.0f);  // normalization 1/255
 
   // Convert image to tensor
-  torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, 3}, torch::kByte);
+  torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, 3});
   img_tensor = img_tensor.permute({2, 0, 1}); // Channels x Height x Width
 
   return img_tensor.clone();
