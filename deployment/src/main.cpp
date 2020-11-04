@@ -121,16 +121,31 @@ int main(int argc, const char* argv[]) {
   images.clear();
   inputs.clear();
 
+  /*** Pre-process ***/
+  auto start = std::chrono::high_resolution_clock::now();
+
   // Read image
   auto img = ReadImage(image_path);
   img = img.to(device_type);
 
-  // Inference
   images.push_back(img);
   inputs.push_back(images);
 
+  auto end = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << "pre-process takes : " << duration.count() << " ms" << std::endl;
+
+  /*** Inference ***/
+  // TODO: add synchronize point
+  start = std::chrono::high_resolution_clock::now();
+
   output = module.forward(inputs);
   auto detections = output.toTuple()->elements()[1];
+
+  end = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  // It should be known that it takes longer time at first time
+  std::cout << "inference takes : " << duration.count() << " ms" << std::endl;
 
   std::cout << ">>> OKey, detections: " << detections << std::endl;
 
