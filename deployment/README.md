@@ -30,9 +30,9 @@ make
 Now, you can infer your own images.
 
 ```bash
-./yolo_inference [--input-source YOUR_IMAGE_SOURCE_PATH]
-                 [--checkpoint ./checkpoints/yolov5/yolov5s.pt]
-                 [--labelmap ./checkpoints/yolov5/coco.names]
-                 [--output-dir ./data-bin/output]
+./yolo_inference [--input_source YOUR_IMAGE_SOURCE_PATH]
+                 [--checkpoint ../../checkpoints/yolov5/yolov5s.torchscript.pt]
+                 [--labelmap ../../checkpoints/yolov5/coco.names]
+                 [--output_dir ../../data-bin/output]
                  [--gpu]  # GPU switch, Set False as default
 ```

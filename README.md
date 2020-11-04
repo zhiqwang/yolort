@@ -28,13 +28,13 @@ Or you can download it from [here](https://github.com/zhiqwang/yolov5-rt-stack/r
 The `detect.py` reads a directory and does inferencing with all contained images.
 
 ```bash
-python -m detect [--model-cfg ./models/yolov5s.yaml]
-                 [--input-source YOUR_IMAGE_SOURCE_DIR]
+python -m detect [--model_cfg ./models/yolov5s.yaml]
+                 [--input_source YOUR_IMAGE_SOURCE_DIR]
                  [--checkpoint ./checkpoints/yolov5/yolov5s.pt]
                  [--labelmap ./checkpoints/yolov5/coco.names]
-                 [--output-dir ./data-bin/output]
-                 [--img-size 416]
-                 [--save-img]
+                 [--output_dir ./data-bin/output]
+                 [--img_size 416]
+                 [--save_img]
                  [--gpu]  # GPU switch, Set False as default
 ```
 

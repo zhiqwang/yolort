@@ -142,33 +142,33 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('--model-cfg', type=str, default='./models/yolov5s.yaml',
+    parser.add_argument('--model_cfg', type=str, default='./models/yolov5s.yaml',
                         help='path where the model cfg in')
     parser.add_argument('--checkpoint', type=str, default='./checkpoints/yolov5/yolov5s.pt',
                         help='path where the model checkpoint in')
     parser.add_argument('--labelmap', type=str, default='./checkpoints/yolov5/coco.names',
                         help='path where the coco category in')
-    parser.add_argument('--input-source', type=str, default='./.github/',
+    parser.add_argument('--input_source', type=str, default='./.github/',
                         help='path where the source images in')
-    parser.add_argument('--output-dir', type=str, default='./data-bin/output',
+    parser.add_argument('--output_dir', type=str, default='./data-bin/output',
                         help='path where to save')
-    parser.add_argument('--img-size', type=int, default=416,
+    parser.add_argument('--img_size', type=int, default=416,
                         help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.4,
+    parser.add_argument('--conf_thres', type=float, default=0.4,
                         help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5,
+    parser.add_argument('--iou_thres', type=float, default=0.5,
                         help='IOU threshold for NMS')
     parser.add_argument('--gpu', action='store_true',
                         help='GPU switch')
-    parser.add_argument('--view-img', action='store_true',
+    parser.add_argument('--view_img', action='store_true',
                         help='display results')
-    parser.add_argument('--save-txt', action='store_true',
+    parser.add_argument('--save_txt', action='store_true',
                         help='save results to *.txt')
-    parser.add_argument('--save-img', action='store_true',
+    parser.add_argument('--save_img', action='store_true',
                         help='save image inference results')
     parser.add_argument('--classes', nargs='+', type=int,
                         help='filter by class: --class 0, or --class 0 2 3')
-    parser.add_argument('--agnostic-nms', action='store_true',
+    parser.add_argument('--agnostic_nms', action='store_true',
                         help='class-agnostic NMS')
     parser.add_argument('--augment', action='store_true',
                         help='augmented inference')
