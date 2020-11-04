@@ -29,12 +29,13 @@ The `detect.py` reads a directory and does inferencing with all contained images
 
 ```bash
 python -m detect [--model-cfg ./models/yolov5s.yaml]
-                 [--model-checkpoint ./checkpoints/yolov5/yolov5s.pt]
-                 [--coco-category-path ./libtorch_inference/weights/coco.names]
-                 [--image-source YOUR_IMAGE_SOURCE_DIR]
+                 [--input-source YOUR_IMAGE_SOURCE_DIR]
+                 [--checkpoint ./checkpoints/yolov5/yolov5s.pt]
+                 [--labelmap ./checkpoints/yolov5/coco.names]
                  [--output-dir ./data-bin/output]
                  [--img-size 416]
                  [--save-img]
+                 [--gpu]  # GPU switch, Set False as default
 ```
 
 ### LibTorch interface
