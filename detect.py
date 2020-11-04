@@ -2,10 +2,13 @@ import time
 from pathlib import Path
 
 from numpy import random
+import numpy as np
+
 import cv2
 import torch
 
 from utils.datasets import LoadImages
+from utils.torch_utils import time_synchronized
 
 from utils.general import (
     check_img_size,
@@ -16,7 +19,7 @@ from utils.general import (
 from hubconf import yolov5
 
 
-def get_coco_names(category_path):
+def load_names(category_path):
     names = []
     with open(category_path, 'r') as f:
         for line in f:
@@ -24,14 +27,35 @@ def get_coco_names(category_path):
     return names
 
 
+def read_image(img_name, is_half):
+    img = cv2.imread(img_name)
+    img = np.ascontiguousarray(img, dtype=np.float32)  # uint8 to float32
+    img /= 255.0  # 0 - 255 to 0.0 - 1.0
+    img = torch.from_numpy(img)
+    img = img.permute(2, 0, 1)
+    return img
+
+
 @torch.no_grad()
-def overlay_boxes(detections, path, img, time_consume, args):
+def inference(model, img_name, device, is_half=False):
+    model.eval()
+    img = read_image(img_name, is_half)
+    img = img.to(device)
+    t1 = time_synchronized()
+    detections = model([img])
+    time_consume = time_synchronized() - t1
+
+    return detections, time_consume
+
+
+@torch.no_grad()
+def overlay_boxes(detections, path, time_consume, args):
+    img = cv2.imread(path) if args.save_img else None
 
     for i, pred in enumerate(detections):  # detections per image
         s = '%g: ' % i if args.webcam else ''
         save_path = Path(args.output_dir).joinpath(Path(path).name)
         txt_path = Path(args.output_dir).joinpath(Path(path).stem)
-        s += '%gx%g ' % img.shape[:2]  # print string
 
         if pred is not None and len(pred) > 0:
             # Rescale boxes from img_size to im0 size
@@ -50,7 +74,7 @@ def overlay_boxes(detections, path, img, time_consume, args):
                     with open(f'{txt_path}.txt', 'a') as f:
                         f.write(('%g ' * 5 + '\n') % (cls_name, *xywh))  # label format
 
-                if args.save_img or args.view_img:  # Add bbox to image
+                if args.save_img:  # Add bbox to image
                     label = '%s %.2f' % (args.names[int(cls_name)], conf)
                     plot_one_box(xyxy, img, label=label, color=args.colors[int(cls_name)], line_thickness=3)
 
@@ -66,15 +90,14 @@ def overlay_boxes(detections, path, img, time_consume, args):
 
 def main(args):
     print(args)
+    device = torch.device("cuda") if torch.cuda.is_available() and args.gpu else torch.device("cpu")
 
-    device = torch.device(args.device)
-
-    model = yolov5(cfg_path=args.model_cfg, checkpoint_path=args.model_checkpoint)
+    model = yolov5(cfg_path=args.model_cfg, checkpoint_path=args.checkpoint)
     model.eval()
     model = model.to(device)
 
-    args.webcam = (args.image_source.isnumeric() or args.image_source.startswith(
-        ('rtsp://', 'rtmp://', 'http://')) or args.image_source.endswith('.txt'))
+    args.webcam = (args.input_source.isnumeric() or args.input_source.startswith(
+        ('rtsp://', 'rtmp://', 'http://')) or args.input_source.endswith('.txt'))
 
     # Initialize
     set_logging()
@@ -88,24 +111,26 @@ def main(args):
         model.half()  # to FP16
 
     # Set Dataloader
-    dataset = LoadImages(args.image_source, img_size=imgsz)
+    dataset = LoadImages(args.input_source, img_size=imgsz)
     args.mode = dataset.mode
 
     # Get names and colors
-    args.names = get_coco_names(Path(args.coco_category_path))
+    args.names = load_names(Path(args.labelmap))
     args.colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(args.names))]
 
     # Run inference
     t0 = time.time()
-    img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
-    _ = model(img.half() if is_half else img) if device.type != 'cpu' else None  # run once
+    img = torch.zeros((3, imgsz, imgsz), device=device)  # init img
+    if is_half:
+        img = img.half()
+    _ = model([img])  # run once
 
-    for path, img, im0s, vid_cap in dataset:
-        img = torch.from_numpy(img).to(device)
-        model_out, time_consume = inference(model, img, is_half)
+    for data in dataset:
+        img_name = data[0]
+        model_out, time_consume = inference(model, img_name, device, is_half)
 
         # Process detections
-        _ = overlay_boxes(model_out, path, img, im0s, time_consume, args)
+        _ = overlay_boxes(model_out, img_name, time_consume, args)
 
     if args.save_txt or args.save_img:
         print(f'Results saved to {args.output_dir}')
@@ -119,22 +144,22 @@ if __name__ == "__main__":
 
     parser.add_argument('--model-cfg', type=str, default='./models/yolov5s.yaml',
                         help='path where the model cfg in')
-    parser.add_argument('--model-checkpoint', type=str, default='./checkpoints/yolov5/yolov5s.pt',
+    parser.add_argument('--checkpoint', type=str, default='./checkpoints/yolov5/yolov5s.pt',
                         help='path where the model checkpoint in')
-    parser.add_argument('--coco-category-path', type=str, default='./libtorch_inference/weights/coco.names',
+    parser.add_argument('--labelmap', type=str, default='./checkpoints/yolov5/coco.names',
                         help='path where the coco category in')
-    parser.add_argument('--image-source', type=str, default='./.github/',
+    parser.add_argument('--input-source', type=str, default='./.github/',
                         help='path where the source images in')
     parser.add_argument('--output-dir', type=str, default='./data-bin/output',
                         help='path where to save')
-    parser.add_argument('--img-size', type=int, default=640,
+    parser.add_argument('--img-size', type=int, default=416,
                         help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.4,
                         help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5,
                         help='IOU threshold for NMS')
-    parser.add_argument('--device', default='cuda',
-                        help='device')
+    parser.add_argument('--gpu', action='store_true',
+                        help='GPU switch')
     parser.add_argument('--view-img', action='store_true',
                         help='display results')
     parser.add_argument('--save-txt', action='store_true',
