@@ -14,11 +14,11 @@ def main(args):
 
 def get_args_parser():
     parser = argparse.ArgumentParser('YOLO checkpoint configures', add_help=False)
-    parser.add_argument('--checkpoint-path', default='./yolov5s.pt',
+    parser.add_argument('--checkpoint_path', default='./yolov5s.pt',
                         help='Path of ultralytics trained yolov5 checkpoint model')
-    parser.add_argument('--cfg-path', default='./models/yolov5s.yaml',
+    parser.add_argument('--cfg_path', default='./models/yolov5s.yaml',
                         help='Path of yolov5 configures model')
-    parser.add_argument('--updated-checkpoint-path', default='./checkpoints/yolov5/yolov5s.pt',
+    parser.add_argument('--updated_checkpoint_path', default='./checkpoints/yolov5/yolov5s.pt',
                         help='Path of updated yolov5 checkpoint model')
 
     return parser

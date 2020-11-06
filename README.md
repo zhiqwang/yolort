@@ -16,9 +16,9 @@
 There are something different comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation, you should update [ultralytics's](https://github.com/ultralytics/yolov5/releases/download/v3.0/yolov5s.pt) trained (or your own) model checkpoint with the following command:
 
 ```bash
-python -m utils.updated_checkpoint [--checkpoint-path ./yolov5s.pt]
-                                   [--cfg-path ./models/yolov5s.yaml]
-                                   [--updated-checkpoint-path ./checkpoints/yolov5/yolov5s.pt]
+python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
+                                   [--cfg_path ./models/yolov5s.yaml]
+                                   [--updated_checkpoint_path ./checkpoints/yolov5/yolov5s.pt]
 ```
 
 Or you can download it from [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.1.0/yolov5s.pt).
