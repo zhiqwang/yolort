@@ -40,7 +40,7 @@ torch::Tensor ReadImage(const std::string& loc) {
 
   // Convert image to tensor
   torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, 3});
-  img_tensor = img_tensor.permute({2, 0, 1}); // Channels x Height x Width
+  img_tensor = img_tensor.permute({2, 0, 1}); // Reshape to C x H x W
 
   return img_tensor.clone();
 };
@@ -94,6 +94,7 @@ int main(int argc, const char* argv[]) {
     std::string weights = opt["checkpoint"].as<std::string>();
     module = torch::jit::load(weights);
     module.to(device_type);
+    module.eval();
     std::cout << ">>> Model loaded" << std::endl;
   } catch (const torch::Error& e) {
     std::cout << ">>> error loading the model" << std::endl;
@@ -113,7 +114,7 @@ int main(int argc, const char* argv[]) {
 
   // Run once to warm up
   std::cout << ">>> Run once on empty image" << std::endl;
-  images.push_back(torch::rand({3, 416, 352}, options));
+  images.push_back(torch::rand({3, 416, 320}, options));
   inputs.push_back(images);
 
   auto output = module.forward(inputs);
@@ -133,20 +134,23 @@ int main(int argc, const char* argv[]) {
 
   auto end = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "pre-process takes : " << duration.count() << " ms" << std::endl;
+  std::cout << ">>> Pre-process takes : " << duration.count() << " ms" << std::endl;
+
+  // Run once to warm up
+  output = module.forward(inputs);
 
   /*** Inference ***/
   // TODO: add synchronize point
   start = std::chrono::high_resolution_clock::now();
 
   output = module.forward(inputs);
-  auto detections = output.toTuple()->elements()[1];
-
   end = std::chrono::high_resolution_clock::now();
   duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  // It should be known that it takes longer time at first time
-  std::cout << "inference takes : " << duration.count() << " ms" << std::endl;
 
+  // It should be known that it takes longer time at first time
+  std::cout << ">>> Inference takes : " << duration.count() << " ms" << std::endl;
+
+  auto detections = output.toTuple()->elements()[1];
   std::cout << ">>> OKey, detections: " << detections << std::endl;
 
   return 0;
