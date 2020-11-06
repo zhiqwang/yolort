@@ -23,7 +23,7 @@ python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
 
 Or you can download it from [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.1.0/yolov5s.pt).
 
-### PyTorch interface
+### ✨ PyTorch interface
 
 The `detect.py` reads a directory and does inferencing with all contained images.
 
@@ -38,38 +38,9 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
                  [--gpu]  # GPU switch, Set False as default
 ```
 
-### LibTorch interface
+### 🚀 LibTorch interface
 
-Here providing a minimal [example](test/tracing/test_tracing.cpp) of getting `LibTorch` inferencing to work. You can check the [CI](.github/workflows/stable.yml) for more details.
-
-- Generate `TorchScript` model
-
-Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/export.py) trace (`torch.jit.trace`) mechanism, I use `torch.jit.script` to jit trace the YOLO models containing the whole post processing (especially the ops `nms`) procedures, so you don't need to rewrite manually the post processes.
-
-```bash
-python -m test.tracing.trace_model
-```
-
-- Setup the environment variables
-
-```bash
-export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
-```
-
-- Navigate to the root directory of the example
-
-```bash
-cd test/tracing
-```
-
-- Build the example
-
-```bash
-mkdir build && cd build
-cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
-make
-```
+Here providing a minimal [example](./deployment/README.md) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
 
 ## 🎓 Acknowledgement
 
