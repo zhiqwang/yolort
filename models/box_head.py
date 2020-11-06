@@ -3,9 +3,7 @@ import torch
 from torch import nn, Tensor
 from torch.jit.annotations import List, Dict, Optional
 
-from torchvision.ops.boxes import batched_nms
-
-from utils.general import box_cxcywh_to_xyxy
+from torchvision.ops import batched_nms, box_convert
 
 
 class YoloHead(nn.Module):
@@ -18,7 +16,7 @@ class YoloHead(nn.Module):
         self.grid = [torch.zeros(1)] * self.nl  # init grid
         a = torch.tensor(anchors).float().view(self.nl, -1, 2)
         self.register_buffer('anchors', a)  # shape(nl,na,2)
-        self.register_buffer('anchor_grid', a.clone().view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
+        self.register_buffer('anchor_grid', a.view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
         self.stride = stride
 
@@ -109,7 +107,7 @@ class PostProcess(nn.Module):
             scores = pred[:, 5:] * pred[:, 4:5]  # obj_conf x cls_conf, w/ shape: num_priors x num_classes
 
             # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-            boxes = box_cxcywh_to_xyxy(pred[:, :4])
+            boxes = box_convert(pred[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
 
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.conf_thres)

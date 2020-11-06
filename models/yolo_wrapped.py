@@ -8,8 +8,6 @@ from torch import nn, Tensor
 
 from torch.jit.annotations import Tuple, List, Dict, Optional
 
-from utils.general import check_anchor_order
-
 
 class YOLO(nn.Module):
     def __init__(
@@ -18,14 +16,10 @@ class YOLO(nn.Module):
         box_head: nn.Module,
         post_process: nn.Module,
         transform: nn.Module,
-        stride: List[float] = [8., 16., 32.],
     ):
         super().__init__()
         self.transform = transform
         self.body = body
-        box_head.stride = torch.tensor(stride)
-        box_head.anchors /= box_head.stride.view(-1, 1, 1)
-        check_anchor_order(box_head)
         self.box_head = box_head
         self.post_process = post_process
         # used only on torchscript mode

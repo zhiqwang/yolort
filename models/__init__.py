@@ -19,9 +19,13 @@ def yolov5(cfg_path='./models/yolov5s.yaml', checkpoint_path=None):
         [128, 256, 512],
     ]
     layer_box_head = YoloHead(*args_detect)
+    stride = [8., 16., 32.]
+    layer_box_head.stride = torch.tensor(stride)
+    layer_box_head.anchors /= layer_box_head.stride.view(-1, 1, 1)
+
     post_process = PostProcess(conf_thres=0.4, iou_thres=0.5)
 
-    model = YOLO(layer_body, layer_box_head, post_process, transform, [8., 16., 32.])
+    model = YOLO(layer_body, layer_box_head, post_process, transform)
 
     if checkpoint_path is not None:
         checkpoint = torch.load(checkpoint_path, map_location="cpu")
