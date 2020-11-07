@@ -40,10 +40,11 @@ class YoloHead(nn.Module):
         for i, features in enumerate(x):
             pred_logits = self.get_result_from_head(features, i)
 
-            # Permute output from (N, A * K, H, W) to (N, A, H, W, K)
+            # Permute output from (N, A * K, H, W) to (N, HWA, K)
             N, _, H, W = pred_logits.shape
             pred_logits = pred_logits.view(N, self.num_anchors, -1, H, W)
             pred_logits = pred_logits.permute(0, 1, 3, 4, 2)
+            pred_logits = pred_logits.reshape(N, -1, self.num_outputs)  # Size=(N, HWA, K)
 
             all_pred_logits.append(pred_logits)
 
@@ -79,16 +80,16 @@ class PostProcess(nn.Module):
         score and locations.
 
         Parameters:
-            head_outputs : [batch_size, num_priors, num_classes + 5] predicted locations and class/object confidence.
+            head_outputs : [batch_size, num_anchors, num_classes + 5] predicted locations and class/object confidence.
             image_shapes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
                           For evaluation, this must be the original image size (before any data augmentation)
                           For visualization, this should be the image size after data augment, but before padding
         """
-        results = torch.jit.annotate(List[Dict[str, Tensor]], [])
+        detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
 
         for pred in head_outputs:  # image index, image inference
             # Compute conf
-            scores = pred[:, 5:] * pred[:, 4:5]  # obj_conf x cls_conf, w/ shape: num_priors x num_classes
+            scores = pred[:, 5:] * pred[:, 4:5]  # obj_conf x cls_conf, w/ shape: num_anchors x num_classes
 
             # Box (center x, center y, width, height) to (x1, y1, x2, y2)
             boxes = box_convert(pred[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
@@ -103,6 +104,6 @@ class PostProcess(nn.Module):
             keep = keep[:self.detections_per_img]
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
-            results.append({'scores': scores, 'labels': labels, 'boxes': boxes})
+            detections.append({'scores': scores, 'labels': labels, 'boxes': boxes})
 
-        return results
+        return detections

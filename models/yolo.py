@@ -1,9 +1,10 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
-from collections import OrderedDict
 import warnings
 
 import torch
 from torch import nn, Tensor
+
+from torchvision.models.utils import load_state_dict_from_url
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
 from torch.jit.annotations import Tuple, List, Dict, Optional
@@ -16,7 +17,7 @@ from .anchor_utils import AnchorGenerator
 class YOLO(nn.Module):
     def __init__(
         self,
-        body: nn.Module,
+        backbone: nn.Module,
         num_classes: int,
         # transform parameters
         min_size: int = 320,
@@ -33,12 +34,12 @@ class YOLO(nn.Module):
         detections_per_img: int = 300,
     ):
         super().__init__()
-        if not hasattr(body, "out_channels"):
+        if not hasattr(backbone, "out_channels"):
             raise ValueError(
                 "backbone should contain an attribute out_channels "
                 "specifying the number of output channels (assumed to be the "
                 "same for all the levels)")
-        self.body = body
+        self.backbone = backbone
 
         if anchor_generator is None:
             anchor_sizes = tuple((x,) for x in [128, 256, 512])
@@ -47,7 +48,11 @@ class YOLO(nn.Module):
         self.anchor_generator = anchor_generator
 
         if head is None:
-            head = YoloHead(body.out_channels, anchor_generator.num_anchors_per_location()[0], num_classes)
+            head = YoloHead(
+                backbone.out_channels,
+                anchor_generator.num_anchors_per_location()[0],
+                num_classes,
+            )
         self.head = head
 
         if image_mean is None:
@@ -103,12 +108,7 @@ class YOLO(nn.Module):
         images, targets = self.transform(images, targets)
 
         # get the features from the backbone
-        features = self.body(images.tensors)
-        if isinstance(features, Tensor):
-            features = OrderedDict([('0', features)])
-
-        # TODO: Do we want a list or a dict?
-        features = list(features.values())
+        features = self.backbone(images.tensors)
 
         # compute the yolo heads outputs using the features
         head_outputs = self.head(features)
@@ -133,6 +133,12 @@ class YOLO(nn.Module):
             return losses, detections
         else:
             return self.eager_outputs(losses, detections)
+
+
+model_urls = {
+    'yolov5s':
+        'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.0/yolov5s.pt',
+}
 
 
 def yolov5s(pretrained=False, progress=True,
@@ -177,7 +183,9 @@ def yolov5s(pretrained=False, progress=True,
         # no need to download the backbone if pretrained is set
         pretrained_backbone = False
     # skip P2 because it generates too many anchors (according to their paper)
-    body = darknet()
-    model = YOLO(body, num_classes, **kwargs)
-
+    backbone = darknet(cfg_path='./models/yolov5s.yaml', pretrained=pretrained_backbone)
+    model = YOLO(backbone, num_classes, **kwargs)
+    if pretrained:
+        state_dict = load_state_dict_from_url(model_urls['yolov5s'], progress=progress)
+        model.load_state_dict(state_dict)
     return model

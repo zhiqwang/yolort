@@ -18,30 +18,32 @@ from utils.torch_utils import fuse_conv_and_bn, model_info, initialize_weights
 logger = logging.getLogger(__name__)
 
 
-class YoloBody(nn.Module):
+class YoloBackbone(nn.Module):
     def __init__(
         self,
         yolo_body: nn.Module,
         return_layers: dict,
+        out_channels: List[int],
     ):
         super().__init__()
-        self.features = IntermediateLayerGetter(
+        self.body = IntermediateLayerGetter(
             yolo_body.model,
             return_layers=return_layers,
             save_list=yolo_body.save,
         )
+        self.out_channels = out_channels
 
-    def forward(self, inputs: Tensor):
-        body = self.features(inputs)
+    def forward(self, x: Tensor):
+        x = self.body(x)
         out: List[Tensor] = []
 
-        for name, x in body.items():
-            out.append(x)
+        for name, feature in x.items():
+            out.append(feature)
 
         return out
 
 
-class YoloBackbone(nn.Module):
+class YoloBody(nn.Module):
     def __init__(self, cfg='yolov5s.yaml', ch=3, nc=None):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
@@ -178,6 +180,11 @@ class IntermediateLayerGetter(nn.ModuleDict):
         return out
 
 
-def darknet(cfg_path='./models/yolov5s.yaml'):
-    model = YoloBackbone(cfg=cfg_path)
-    return model
+def darknet(cfg_path='./models/yolov5s.yaml', pretrained=False):
+    backbone = YoloBody(cfg=cfg_path)
+    body = YoloBackbone(
+        yolo_body=backbone,
+        return_layers={'17': '0', '20': '1', '23': '2'},
+        out_channels=[128, 256, 512],
+    )
+    return body
