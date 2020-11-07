@@ -176,3 +176,8 @@ class IntermediateLayerGetter(nn.ModuleDict):
                 out_name = self.return_layers[name]
                 out[out_name] = x
         return out
+
+
+def darknet(cfg_path='./models/yolov5s.yaml'):
+    model = YoloBackbone(cfg=cfg_path)
+    return model

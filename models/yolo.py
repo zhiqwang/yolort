@@ -1,37 +1,77 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+from collections import OrderedDict
 import warnings
-from typing import Union
 
 import torch
 from torch import nn, Tensor
+from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
 from torch.jit.annotations import Tuple, List, Dict, Optional
+
+from .backbone import darknet
+from .box_head import YoloHead, PostProcess
+from .anchor_utils import AnchorGenerator
 
 
 class YOLO(nn.Module):
     def __init__(
         self,
         body: nn.Module,
-        box_head: nn.Module,
-        post_process: nn.Module,
-        transform: nn.Module,
+        num_classes: int,
+        # transform parameters
+        min_size: int = 320,
+        max_size: int = 416,
+        image_mean: Optional[List[float]] = None,
+        image_std: Optional[List[float]] = None,
+        # Anchor parameters
+        anchor_generator: Optional[nn.Module] = None,
+        head: Optional[nn.Module] = None,
+        # Post Process parameter
+        postprocess_detections: Optional[nn.Module] = None,
+        score_thresh: float = 0.05,
+        nms_thresh: float = 0.5,
+        detections_per_img: int = 300,
     ):
         super().__init__()
-        self.transform = transform
+        if not hasattr(body, "out_channels"):
+            raise ValueError(
+                "backbone should contain an attribute out_channels "
+                "specifying the number of output channels (assumed to be the "
+                "same for all the levels)")
         self.body = body
-        self.box_head = box_head
-        self.post_process = post_process
+
+        if anchor_generator is None:
+            anchor_sizes = tuple((x,) for x in [128, 256, 512])
+            aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
+            anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+        self.anchor_generator = anchor_generator
+
+        if head is None:
+            head = YoloHead(body.out_channels, anchor_generator.num_anchors_per_location()[0], num_classes)
+        self.head = head
+
+        if image_mean is None:
+            image_mean = [0., 0., 0.]
+        if image_std is None:
+            image_std = [1., 1., 1.]
+
+        self.transform = GeneralizedRCNNTransform(min_size, max_size, image_mean, image_std)
+
+        if postprocess_detections is None:
+            postprocess_detections = PostProcess(score_thresh, nms_thresh, detections_per_img)
+        self.postprocess_detections = postprocess_detections
+
         # used only on torchscript mode
         self._has_warned = False
 
     @torch.jit.unused
     def eager_outputs(
         self,
-        features: List[Tensor],
+        losses: Dict[str, Tensor],
         detections: List[Dict[str, Tensor]],
-    ) -> Union[List[Tensor], List[Dict[str, Tensor]]]:
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         if self.training:
-            return features
+            return losses
 
         return detections
 
@@ -52,41 +92,92 @@ class YOLO(nn.Module):
                 During Testing, it returns list[BoxList] contains additional fields
                 like `scores` and `labels`.
         """
+        # get the original image sizes
         original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])
         for img in images:
             val = img.shape[-2:]
             assert len(val) == 2
             original_image_sizes.append((val[0], val[1]))
 
+        # transform the input
         images, targets = self.transform(images, targets)
 
+        # get the features from the backbone
         features = self.body(images.tensors)
-        predictions = self.box_head(features)
-        detections = self.post_process(predictions)
-        detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
+        if isinstance(features, Tensor):
+            features = OrderedDict([('0', features)])
+
+        # TODO: Do we want a list or a dict?
+        features = list(features.values())
+
+        # compute the yolo heads outputs using the features
+        head_outputs = self.head(features)
+
+        # create the set of anchors
+        anchors = self.anchor_generator(images, features)
+
+        losses = {}
+        detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
+
+        if self.training:
+            assert targets is not None
+        else:
+            # compute the detections
+            detections = self.postprocess_detections(head_outputs, anchors, images.image_sizes)
+            detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLO always returns a (features, detections) tuple in scripting")
+                warnings.warn("YOLO always returns a (Losses, Detections) tuple in scripting")
                 self._has_warned = True
-            return (features, detections)
+            return losses, detections
         else:
-            return self.eager_outputs(features, detections)
+            return self.eager_outputs(losses, detections)
 
-    def update_ultralytics(self, checkpoint_path_ultralytics: str):
-        checkpoint = torch.load(checkpoint_path_ultralytics, map_location="cpu")
-        state_dict = checkpoint['model'].float().state_dict()  # to FP32
 
-        # Update body features
-        for name, params in self.body.features.named_parameters(prefix='model'):
-            params.data.copy_(state_dict[name])
+def yolov5s(pretrained=False, progress=True,
+            num_classes=80, pretrained_backbone=True, **kwargs):
+    """
+    Constructs a YOLO model.
 
-        for name, buffers in self.body.features.named_buffers(prefix='model'):
-            buffers.copy_(state_dict[name])
+    The input to the model is expected to be a list of tensors, each of shape ``[C, H, W]``, one for each
+    image, and should be in ``0-1`` range. Different images can have different sizes.
 
-        # Update box heads
-        for name, params in self.box_head.named_parameters(prefix='model.24'):
-            params.data.copy_(state_dict[name])
+    The behavior of the model changes depending if it is in training or evaluation mode.
 
-        for name, buffers in self.box_head.named_buffers(prefix='model.24'):
-            buffers.copy_(state_dict[name])
+    During training, the model expects both the input tensors, as well as a targets (list of dictionary),
+    containing:
+        - boxes (``FloatTensor[N, 4]``): the ground-truth boxes in ``[x1, y1, x2, y2]`` format, with values
+          between ``0`` and ``H`` and ``0`` and ``W``
+        - labels (``Int64Tensor[N]``): the class label for each ground-truth box
+
+    The model returns a ``Dict[Tensor]`` during training, containing the classification and regression
+    losses.
+
+    During inference, the model requires only the input tensors, and returns the post-processed
+    predictions as a ``List[Dict[Tensor]]``, one for each input image. The fields of the ``Dict`` are as
+    follows:
+        - boxes (``FloatTensor[N, 4]``): the predicted boxes in ``[x1, y1, x2, y2]`` format, with values between
+          ``0`` and ``H`` and ``0`` and ``W``
+        - labels (``Int64Tensor[N]``): the predicted labels for each image
+        - scores (``Tensor[N]``): the scores or each prediction
+
+    Example::
+
+        >>> model = yolov5s(pretrained=True)
+        >>> model.eval()
+        >>> x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
+        >>> predictions = model(x)
+
+    Arguments:
+        pretrained (bool): If True, returns a model pre-trained on COCO train2017
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    if pretrained:
+        # no need to download the backbone if pretrained is set
+        pretrained_backbone = False
+    # skip P2 because it generates too many anchors (according to their paper)
+    body = darknet()
+    model = YOLO(body, num_classes, **kwargs)
+
+    return model

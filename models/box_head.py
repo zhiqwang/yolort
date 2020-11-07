@@ -2,92 +2,76 @@
 import torch
 from torch import nn, Tensor
 from torch.jit.annotations import List, Dict, Optional
-
 from torchvision.ops import batched_nms, box_convert
+
+from . import _utils as det_utils
 
 
 class YoloHead(nn.Module):
-    def __init__(self, nc=80, stride=[8., 16., 32.], anchors=(), ch=()):  # detection layer
+    def __init__(self, in_channels, num_anchors, num_classes):  # detection layer
         super().__init__()
-        self.nc = nc  # number of classes
-        self.no = nc + 5  # number of outputs per anchor
-        self.nl = len(anchors)  # number of detection layers
-        self.na = len(anchors[0]) // 2  # number of anchors
-        self.grid = [torch.zeros(1)] * self.nl  # init grid
-        a = torch.tensor(anchors).float().view(self.nl, -1, 2)
-        self.register_buffer('anchors', a)  # shape(nl,na,2)
-        self.register_buffer('anchor_grid', a.view(self.nl, 1, -1, 1, 1, 2))  # shape(nl,1,na,1,1,2)
-        self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
-        self.stride = stride
+        self.num_anchors = num_anchors  # anchors
+        self.num_outputs = num_classes + 5  # number of outputs per anchor
 
-    def get_result_from_m(self, x: Tensor, idx: int) -> Tensor:
+        self.head = nn.ModuleList(
+            nn.Conv2d(ch, self.num_outputs * self.num_anchors, 1) for ch in in_channels)  # output conv
+
+    def get_result_from_head(self, features: Tensor, idx: int) -> Tensor:
         """
-        This is equivalent to self.m[idx](x),
+        This is equivalent to self.head[idx](features),
         but torchscript doesn't support this yet
         """
         num_blocks = 0
-        for m in self.m:
+        for m in self.head:
             num_blocks += 1
         if idx < 0:
             idx += num_blocks
         i = 0
-        out = x
-        for module in self.m:
+        out = features
+        for module in self.head:
             if i == idx:
-                out = module(x)
+                out = module(features)
             i += 1
         return out
 
     def forward(self, x: List[Tensor]) -> Tensor:
-        # x = x.copy()  # for profiling
-        device = x[0].device
-        z = torch.jit.annotate(List[Tensor], [])  # inference output
-        for i in range(self.nl):
-            x[i] = self.get_result_from_m(x[i], i)  # conv
-            bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
-            x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+        all_pred_logits = torch.jit.annotate(List[Tensor], [])  # inference output
 
-            if not self.training:  # inference
-                if not isinstance(self.stride, Tensor):
-                    self.stride = torch.tensor(self.stride, device=device)
+        for i, features in enumerate(x):
+            pred_logits = self.get_result_from_head(features, i)
 
-                if self.grid[i].shape[2:4] != x[i].shape[2:4]:
-                    self.grid[i] = self._make_grid(nx, ny).to(device)
+            # Permute output from (N, A * K, H, W) to (N, A, H, W, K)
+            N, _, H, W = pred_logits.shape
+            pred_logits = pred_logits.view(N, self.num_anchors, -1, H, W)
+            pred_logits = pred_logits.permute(0, 1, 3, 4, 2)
 
-                y = x[i].sigmoid()
-                y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(device)) * self.stride[i]  # xy
-                y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-                z.append(y.view(bs, -1, self.no))
+            all_pred_logits.append(pred_logits)
 
-        predictions = torch.cat(z, 1)
-
-        return predictions
-
-    @staticmethod
-    def _make_grid(nx: int = 20, ny: int = 20):
-        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
-        return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
+        return torch.cat(all_pred_logits, dim=1)
 
 
 class PostProcess(nn.Module):
+    __annotations__ = {
+        'box_coder': det_utils.BoxCoder,
+    }
     """Performs Non-Maximum Suppression (NMS) on inference results"""
     def __init__(
         self,
-        conf_thres: float,
-        iou_thres: float,
-        merge: bool = False,
-        detections_per_img: int = 300,
+        score_thresh: float,
+        nms_thresh: float,
+        detections_per_img: int,
     ):
         super().__init__()
-        self.conf_thres = conf_thres
-        self.iou_thres = iou_thres
-        self.merge = merge
+        self.box_coder = det_utils.BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
+        self.score_thresh = score_thresh
+        self.nms_thresh = nms_thresh
         self.detections_per_img = detections_per_img  # maximum number of detections per image
 
     def forward(
         self,
-        predictions: Tensor,
-        target_sizes: Optional[Tensor] = None,
+        head_outputs: Tensor,
+        anchors: Tensor,
+        image_shapes: Optional[Tensor] = None,
     ) -> List[Dict[str, Tensor]]:
         """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
         Decode location preds, apply non-maximum suppression to location predictions based on conf
@@ -95,14 +79,14 @@ class PostProcess(nn.Module):
         score and locations.
 
         Parameters:
-            predictions : [batch_size, num_priors, num_classes + 5] predicted locations and class/object confidence.
-            target_sizes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
+            head_outputs : [batch_size, num_priors, num_classes + 5] predicted locations and class/object confidence.
+            image_shapes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
                           For evaluation, this must be the original image size (before any data augmentation)
                           For visualization, this should be the image size after data augment, but before padding
         """
         results = torch.jit.annotate(List[Dict[str, Tensor]], [])
 
-        for pred in predictions:  # image index, image inference
+        for pred in head_outputs:  # image index, image inference
             # Compute conf
             scores = pred[:, 5:] * pred[:, 4:5]  # obj_conf x cls_conf, w/ shape: num_priors x num_classes
 
@@ -110,12 +94,12 @@ class PostProcess(nn.Module):
             boxes = box_convert(pred[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
 
             # remove low scoring boxes
-            inds, labels = torch.where(scores > self.conf_thres)
+            inds, labels = torch.where(scores > self.score_thresh)
             boxes, scores = boxes[inds], scores[inds, labels]
 
             # non-maximum suppression, independently done per level
-            keep = batched_nms(boxes, scores, labels, self.iou_thres)
-            # keep only topk scoring predictions
+            keep = batched_nms(boxes, scores, labels, self.nms_thresh)
+            # keep only topk scoring head_outputs
             keep = keep[:self.detections_per_img]
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
