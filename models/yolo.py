@@ -1,109 +1,161 @@
-import logging
-
-from copy import deepcopy
-from pathlib import Path
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+import warnings
+from collections import OrderedDict
+from typing import Union
 
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import List
 
-from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
-from .experimental import MixConv2d, CrossConv, C3
-from .box_head import YoloHead as Detect
-
-from utils.general import make_divisible
-from utils.torch_utils import fuse_conv_and_bn, model_info, initialize_weights
-
-logger = logging.getLogger(__name__)
+from torch.jit.annotations import Tuple, List, Dict, Optional
 
 
-class Model(nn.Module):
-    def __init__(self, cfg='yolov5s.yaml', ch=3, nc=None):  # model, input channels, number of classes
+class YOLO(nn.Module):
+    def __init__(
+        self,
+        body: nn.Module,
+        box_head: nn.Module,
+        post_process: nn.Module,
+        transform: nn.Module,
+    ):
         super().__init__()
-        if isinstance(cfg, dict):
-            self.yaml = cfg  # model dict
-        else:  # is *.yaml
-            import yaml  # for torch hub
-            self.yaml_file = Path(cfg).name
-            with open(cfg) as f:
-                self.yaml = yaml.load(f, Loader=yaml.FullLoader)  # model dict
+        self.transform = transform
+        self.body = body
+        self.box_head = box_head
+        self.post_process = post_process
+        # used only on torchscript mode
+        self._has_warned = False
 
-        # Define model
-        if nc and nc != self.yaml['nc']:
-            print('Overriding model.yaml nc=%g with nc=%g' % (self.yaml['nc'], nc))
-            self.yaml['nc'] = nc  # override yaml value
-        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch])  # model, savelist, ch_out
+    @torch.jit.unused
+    def eager_outputs(
+        self,
+        features: List[Tensor],
+        detections: List[Dict[str, Tensor]],
+    ) -> Union[List[Tensor], List[Dict[str, Tensor]]]:
+        if self.training:
+            return features
 
-        # Init weights, biases
-        initialize_weights(self)
-        self.info()
+        return detections
 
-    def forward(self, x: Tensor) -> Tensor:
-        out = x
-        y = torch.jit.annotate(List[Tensor], [])
+    def forward(
+        self,
+        images: List[Tensor],
+        targets: Optional[List[Dict[str, Tensor]]] = None,
+    ) -> Tuple[List[Tensor], List[Dict[str, Tensor]]]:
+        """
+        Arguments:
+            images (list[Tensor]): images to be processed
+            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
 
-        for i, m in enumerate(self.model):
-            if m.f > 0:  # Concat layer
-                out = torch.cat([out, y[sorted(self.save).index(m.f)]], 1)
-            else:
-                out = m(out)  # run
-            if i in self.save:
-                y.append(out)  # save output
+        Returns:
+            result (list[BoxList] or dict[Tensor]): the output from the model.
+                During Training, it returns a dict[Tensor] which contains the losses
+                TODO, currently this repo doesn't support training.
+                During Testing, it returns list[BoxList] contains additional fields
+                like `scores` and `labels`.
+        """
+        original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])
+        for img in images:
+            val = img.shape[-2:]
+            assert len(val) == 2
+            original_image_sizes.append((val[0], val[1]))
+
+        images, targets = self.transform(images, targets)
+
+        features = self.body(images.tensors)
+        predictions = self.box_head(features)
+        detections = self.post_process(predictions)
+        detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
+
+        if torch.jit.is_scripting():
+            if not self._has_warned:
+                warnings.warn("YOLO always returns a (features, detections) tuple in scripting")
+                self._has_warned = True
+            return (features, detections)
+        else:
+            return self.eager_outputs(features, detections)
+
+    def update_ultralytics(self, checkpoint_path_ultralytics: str):
+        checkpoint = torch.load(checkpoint_path_ultralytics, map_location="cpu")
+        state_dict = checkpoint['model'].float().state_dict()  # to FP32
+
+        # Update body features
+        for name, params in self.body.features.named_parameters(prefix='model'):
+            params.data.copy_(state_dict[name])
+
+        for name, buffers in self.body.features.named_buffers(prefix='model'):
+            buffers.copy_(state_dict[name])
+
+        # Update box heads
+        for name, params in self.box_head.named_parameters(prefix='model.24'):
+            params.data.copy_(state_dict[name])
+
+        for name, buffers in self.box_head.named_buffers(prefix='model.24'):
+            buffers.copy_(state_dict[name])
+
+
+class YoloBody(nn.Module):
+    def __init__(
+        self,
+        yolo_body: nn.Module,
+        return_layers: dict,
+    ):
+        super().__init__()
+        self.features = IntermediateLayerGetter(
+            yolo_body.model,
+            return_layers=return_layers,
+            save_list=yolo_body.save,
+        )
+
+    def forward(self, inputs: Tensor):
+        body = self.features(inputs)
+        out: List[Tensor] = []
+
+        for name, x in body.items():
+            out.append(x)
+
         return out
 
-    def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
-        print('Fusing layers... ')
-        for m in self.model.modules():
-            if type(m) is Conv and hasattr(m, 'bn'):
-                m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
-                delattr(m, 'bn')  # remove batchnorm
-                m.forward = m.fuseforward  # update forward
-        self.info()
-        return self
 
-    def info(self, verbose=False):  # print model information
-        model_info(self, verbose)
+class IntermediateLayerGetter(nn.ModuleDict):
+    """
+    Module wrapper that returns intermediate layers from a model
+    """
+    _version = 2
+    __annotations__ = {
+        "return_layers": Dict[str, str],
+        "save_list": List[int],
+    }
 
+    def __init__(self, model, return_layers, save_list):
+        if not set(return_layers).issubset([name for name, _ in model.named_children()]):
+            raise ValueError("return_layers are not present in model")
+        orig_return_layers = return_layers
+        return_layers = {str(k): str(v) for k, v in return_layers.items()}
+        layers = OrderedDict()
+        for name, module in model.named_children():
+            layers[name] = module
+            if name in return_layers:
+                del return_layers[name]
+            if not return_layers:
+                break
 
-def parse_model(d, ch):  # model_dict, input_channels(3)
-    logger.info('\n%3s%18s%3s%10s  %-40s%-30s' % ('', 'from', 'n', 'params', 'module', 'arguments'))
-    anchors, nc, gd, gw = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple']
-    na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
-    no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
+        super().__init__(layers)
+        self.return_layers = orig_return_layers
+        self.save_list = save_list
 
-    layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
-    for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
-        m = eval(m) if isinstance(m, str) else m  # eval strings
-        for j, a in enumerate(args):
-            try:
-                args[j] = eval(a) if isinstance(a, str) else a  # eval strings
-            except NameError:
-                pass
+    def forward(self, x):
+        out = OrderedDict()
+        y = torch.jit.annotate(List[Tensor], [])
 
-        n = max(round(n * gd), 1) if n > 1 else n  # depth gain
-        if m in [Conv, Bottleneck, SPP, DWConv, MixConv2d, Focus, CrossConv, BottleneckCSP, C3]:
-            c1, c2 = ch[f], args[0]
-            c2 = make_divisible(c2 * gw, 8) if c2 != no else c2
+        for i, (name, module) in enumerate(self.items()):
+            if module.f > 0:  # Concat layer
+                x = torch.cat([x, y[sorted(self.save_list).index(module.f)]], 1)
+            else:
+                x = module(x)  # run
+            if i in self.save_list:
+                y.append(x)  # save output
 
-            args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3]:
-                args.insert(2, n)
-                n = 1
-        elif m is nn.BatchNorm2d:
-            args = [ch[f]]
-        elif m is Concat:
-            c2 = sum([ch[-1 if x == -1 else x + 1] for x in f])
-        elif m is Detect:
-            continue
-        else:
-            c2 = ch[f]
-
-        module = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
-        t = str(m)[8:-2].replace('__main__.', '')  # module type
-        np = sum([x.numel() for x in module.parameters()])  # number params
-        module.f = -1 if f == -1 else f[-1]
-        logger.info('%3s%18s%3s%10.0f  %-40s%-30s' % (i, f, n, np, t, args))  # print
-        save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
-        layers.append(module)
-        ch.append(c2)
-    return nn.Sequential(*layers), save
+            if name in self.return_layers:
+                out_name = self.return_layers[name]
+                out[out_name] = x
+        return out

@@ -1,25 +1,22 @@
 import torch
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
-from .yolo import Model
+from .backbone import YoloBackbone
 from .box_head import YoloHead, PostProcess
-from .yolo_wrapped import YoloBody, YOLO
+from .yolo import YoloBody, YOLO
 
 
 def yolov5(cfg_path='./models/yolov5s.yaml', checkpoint_path=None):
     min_size, max_size, image_mean, image_std = 320, 416, [0, 0, 0], [1, 1, 1]
     transform = GeneralizedRCNNTransform(min_size, max_size, image_mean, image_std)
-    backbone = Model(cfg=cfg_path)
+    backbone = YoloBackbone(cfg=cfg_path)
     layer_body = YoloBody(yolo_body=backbone, return_layers={'17': '0', '20': '1', '23': '2'})
 
-    args_detect = [
-        80,
-        [8., 16., 32.],
-        [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]],
-        [128, 256, 512],
-    ]
-    layer_box_head = YoloHead(*args_detect)
+    nc = 80
     stride = [8., 16., 32.]
+    anchors = [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]]
+    ch = [128, 256, 512]
+    layer_box_head = YoloHead(nc=nc, stride=stride, anchors=anchors, ch=ch)
     layer_box_head.stride = torch.tensor(stride)
     layer_box_head.anchors /= layer_box_head.stride.view(-1, 1, 1)
 
