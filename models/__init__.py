@@ -1,9 +1,9 @@
 import torch
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
-from .backbone import YoloBackbone
+from .backbone import YoloBackbone, YoloBody
 from .box_head import YoloHead, PostProcess
-from .yolo import YoloBody, YOLO
+from .yolo import YOLO
 
 
 def yolov5(cfg_path='./models/yolov5s.yaml', checkpoint_path=None):

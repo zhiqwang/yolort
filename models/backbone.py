@@ -1,11 +1,12 @@
 import logging
+from collections import OrderedDict
 
 from copy import deepcopy
 from pathlib import Path
 
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import List
+from torch.jit.annotations import List, Dict
 
 from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
 from .experimental import MixConv2d, CrossConv, C3
@@ -15,6 +16,29 @@ from utils.general import make_divisible
 from utils.torch_utils import fuse_conv_and_bn, model_info, initialize_weights
 
 logger = logging.getLogger(__name__)
+
+
+class YoloBody(nn.Module):
+    def __init__(
+        self,
+        yolo_body: nn.Module,
+        return_layers: dict,
+    ):
+        super().__init__()
+        self.features = IntermediateLayerGetter(
+            yolo_body.model,
+            return_layers=return_layers,
+            save_list=yolo_body.save,
+        )
+
+    def forward(self, inputs: Tensor):
+        body = self.features(inputs)
+        out: List[Tensor] = []
+
+        for name, x in body.items():
+            out.append(x)
+
+        return out
 
 
 class YoloBackbone(nn.Module):
@@ -107,3 +131,48 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         layers.append(module)
         ch.append(c2)
     return nn.Sequential(*layers), save
+
+
+class IntermediateLayerGetter(nn.ModuleDict):
+    """
+    Module wrapper that returns intermediate layers from a model
+    """
+    _version = 2
+    __annotations__ = {
+        "return_layers": Dict[str, str],
+        "save_list": List[int],
+    }
+
+    def __init__(self, model, return_layers, save_list):
+        if not set(return_layers).issubset([name for name, _ in model.named_children()]):
+            raise ValueError("return_layers are not present in model")
+        orig_return_layers = return_layers
+        return_layers = {str(k): str(v) for k, v in return_layers.items()}
+        layers = OrderedDict()
+        for name, module in model.named_children():
+            layers[name] = module
+            if name in return_layers:
+                del return_layers[name]
+            if not return_layers:
+                break
+
+        super().__init__(layers)
+        self.return_layers = orig_return_layers
+        self.save_list = save_list
+
+    def forward(self, x):
+        out = OrderedDict()
+        y = torch.jit.annotate(List[Tensor], [])
+
+        for i, (name, module) in enumerate(self.items()):
+            if module.f > 0:  # Concat layer
+                x = torch.cat([x, y[sorted(self.save_list).index(module.f)]], 1)
+            else:
+                x = module(x)  # run
+            if i in self.save_list:
+                y.append(x)  # save output
+
+            if name in self.return_layers:
+                out_name = self.return_layers[name]
+                out[out_name] = x
+        return out
