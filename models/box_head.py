@@ -85,14 +85,19 @@ class PostProcess(nn.Module):
                           For evaluation, this must be the original image size (before any data augmentation)
                           For visualization, this should be the image size after data augment, but before padding
         """
+        num_images = len(image_shapes)
         detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
 
-        for pred in head_outputs:  # image index, image inference
+        for index in range(num_images):  # image index, image inference
+            pred_logits = torch.sigmoid(head_outputs[index])
+            anchors_per_image = anchors[index]
             # Compute conf
-            scores = pred[:, 5:] * pred[:, 4:5]  # obj_conf x cls_conf, w/ shape: num_anchors x num_classes
+            # box_conf x class_conf, w/ shape: num_anchors x num_classes
+            scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
 
             # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-            boxes = box_convert(pred[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
+            box_regression_per_image = self.box_coder.decode_single(pred_logits[:, :4], anchors_per_image)
+            boxes = box_convert(box_regression_per_image, in_fmt="cxcywh", out_fmt="xyxy")
 
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)
