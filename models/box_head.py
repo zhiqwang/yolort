@@ -2,9 +2,9 @@
 import torch
 from torch import nn, Tensor
 from torch.jit.annotations import Tuple, List, Dict, Optional
-from torchvision.ops import batched_nms, box_convert
+from torchvision.ops import batched_nms
 
-from torchvision.models.detection import _utils as det_utils
+from . import _utils as det_utils
 
 
 class YoloHead(nn.Module):
@@ -63,7 +63,7 @@ class PostProcess(nn.Module):
         detections_per_img: int,
     ):
         super().__init__()
-        self.box_coder = det_utils.BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
+        self.box_coder = det_utils.BoxCoder()
         self.score_thresh = score_thresh
         self.nms_thresh = nms_thresh
         self.detections_per_img = detections_per_img  # maximum number of detections per image
@@ -71,7 +71,9 @@ class PostProcess(nn.Module):
     def forward(
         self,
         head_outputs: Tensor,
-        anchors: List[Tensor],
+        anchors: Tensor,
+        wh_weights: List[Tensor],
+        xy_weights: List[Tensor],
         image_shapes: Optional[List[Tuple[int, int]]] = None,
     ) -> List[Dict[str, Tensor]]:
         """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
@@ -90,14 +92,14 @@ class PostProcess(nn.Module):
 
         for index in range(num_images):  # image index, image inference
             pred_logits = torch.sigmoid(head_outputs[index])
-            anchors_per_image = anchors[index]
+            wh_weights_per_image = wh_weights
+            xy_weights_per_image = xy_weights
             # Compute conf
             # box_conf x class_conf, w/ shape: num_anchors x num_classes
             scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
 
-            # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-            box_regression_per_image = self.box_coder.decode_single(pred_logits[:, :4], anchors_per_image)
-            boxes = box_convert(box_regression_per_image, in_fmt="cxcywh", out_fmt="xyxy")
+            boxes = self.box_coder.decode_single(
+                pred_logits[:, :4], anchors, wh_weights_per_image, xy_weights_per_image)
 
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)

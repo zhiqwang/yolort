@@ -11,7 +11,7 @@ from torch.jit.annotations import Tuple, List, Dict, Optional
 
 from .backbone import darknet
 from .box_head import YoloHead, PostProcess
-from torchvision.models.detection.anchor_utils import AnchorGenerator
+from .anchor_utils import AnchorGenerator
 
 
 class YOLO(nn.Module):
@@ -42,15 +42,20 @@ class YOLO(nn.Module):
         self.backbone = backbone
 
         if anchor_generator is None:
-            anchor_sizes = tuple((x,) for x in [128, 256, 512])
-            aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
-            anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+            num_anchors = 3
+            strides = tuple((x,) for x in [8, 16, 32])
+            anchor_grids = [
+                [10, 13, 16, 30, 33, 23],
+                [30, 61, 62, 45, 59, 119],
+                [116, 90, 156, 198, 373, 326],
+            ]
+            anchor_generator = AnchorGenerator(num_anchors, strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
         if head is None:
             head = YoloHead(
                 backbone.out_channels,
-                anchor_generator.num_anchors_per_location()[0],
+                anchor_generator.num_anchors,
                 num_classes,
             )
         self.head = head
@@ -114,8 +119,7 @@ class YOLO(nn.Module):
         head_outputs = self.head(features)
 
         # create the set of anchors
-        anchors = self.anchor_generator(images, features)
-
+        anchors, anchor_weights, grid_weights = self.anchor_generator(features)
         losses = {}
         detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
 
@@ -123,8 +127,10 @@ class YOLO(nn.Module):
             assert targets is not None
         else:
             # compute the detections
-            detections = self.postprocess_detections(head_outputs, anchors, images.image_sizes)
-            detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
+            detections = self.postprocess_detections(
+                head_outputs, anchors, anchor_weights, grid_weights, images.image_sizes)
+            detections = self.transform.postprocess(
+                detections, images.image_sizes, original_image_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
