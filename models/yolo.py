@@ -139,7 +139,7 @@ class YOLO(nn.Module):
 
 model_urls = {
     'yolov5s':
-        'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.0/yolov5s.pt',
+        'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
 }
 
 

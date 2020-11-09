@@ -5,10 +5,7 @@ from hubconf import yolov5
 
 if __name__ == "__main__":
 
-    model = yolov5(
-        cfg_path='./models/yolov5s.yaml',
-        checkpoint_path='./test/tracing/yolov5s.pt',
-    )
+    model = yolov5(pretrained=True)
     model.eval()
 
     traced_model = torch.jit.script(model)
