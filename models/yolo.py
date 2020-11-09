@@ -43,12 +43,10 @@ class YOLO(nn.Module):
 
         if anchor_generator is None:
             num_anchors = 3
-            strides = tuple((x,) for x in [8, 16, 32])
-            anchor_grids = [
-                [10, 13, 16, 30, 33, 23],
-                [30, 61, 62, 45, 59, 119],
-                [116, 90, 156, 198, 373, 326],
-            ]
+            strides = [8, 16, 32]
+            anchor_grids = [[10, 13, 16, 30, 33, 23],
+                            [30, 61, 62, 45, 59, 119],
+                            [116, 90, 156, 198, 373, 326]]
             anchor_generator = AnchorGenerator(num_anchors, strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
@@ -119,7 +117,7 @@ class YOLO(nn.Module):
         head_outputs = self.head(features)
 
         # create the set of anchors
-        anchors, anchor_weights, grid_weights = self.anchor_generator(features)
+        anchors_tuple = self.anchor_generator(features)
         losses = {}
         detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
 
@@ -127,10 +125,8 @@ class YOLO(nn.Module):
             assert targets is not None
         else:
             # compute the detections
-            detections = self.postprocess_detections(
-                head_outputs, anchors, anchor_weights, grid_weights, images.image_sizes)
-            detections = self.transform.postprocess(
-                detections, images.image_sizes, original_image_sizes)
+            detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)
+            detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:

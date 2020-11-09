@@ -1,54 +1,51 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-# Modified by Zhiqiang Wang (zhiqwang@outlook.com)
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import Tuple, List, Dict, Optional
+from torch.jit.annotations import Tuple, List
 
 
 class AnchorGenerator(nn.Module):
-    __annotations__ = {
-        "cell_anchors": Optional[List[torch.Tensor]],
-        "_cache": Dict[str, List[torch.Tensor]]
-    }
 
-    def __init__(self, num_anchors, strides, anchor_grids):
+    def __init__(
+        self,
+        num_anchors: int,
+        strides: List[int],
+        anchor_grids: List[List[int]],
+    ):
         super().__init__()
-
-        if not isinstance(strides[0], (list, tuple)):
-            strides = tuple((s,) for s in strides)
-
+        assert len(strides) == len(anchor_grids)
         self.num_anchors = num_anchors
         self.strides = strides
         self.anchor_grids = anchor_grids
-        self._cache = {}
 
     def set_wh_weights(self, grid_sizes, dtype, device):
-        # type: (int, Device) -> Tensor  # noqa: F821
-        wh_weights_per_image = []
-        for grid_size, stride in zip(grid_sizes, self.strides):
-            wh_weights_per_image.extend([stride] * (grid_size[0] * grid_size[1] * self.num_anchors))
+        # type: (List[List[int]], int, Device) -> Tensor  # noqa: F821
+        stride_lists = torch.jit.annotate(List[int], [])
 
-        wh_weights_per_image = torch.as_tensor(wh_weights_per_image, dtype=dtype, device=device)
-        wh_weights_per_image = wh_weights_per_image.reshape(-1, 1)
+        for size, stride in zip(grid_sizes, self.strides):
+            grid_height, grid_width = size
+            stride_lists.extend([stride] * (grid_height * grid_width * self.num_anchors))
 
-        return wh_weights_per_image
+        wh_weights = torch.as_tensor(stride_lists, dtype=dtype, device=device)
+        wh_weights = wh_weights.reshape(-1, 1)
+
+        return wh_weights
 
     def set_xy_weights(self, grid_sizes, dtype, device):
-        # type: (int, Device) -> Tensor  # noqa: F821
-        xy_weights_per_image = []
-        for grid_size, anchor_grid in zip(grid_sizes, self.anchor_grids):
+        # type: (List[List[int]], int, Device) -> Tensor  # noqa: F821
+        xy_weights = []
+        for size, anchor_grid in zip(grid_sizes, self.anchor_grids):
+            grid_height, grid_width = size
             anchor_grid = torch.as_tensor(anchor_grid, dtype=dtype, device=device)
             anchor_grid = anchor_grid.view(-1, 1, 1, 2)
-            anchor_grid = anchor_grid.repeat(1, grid_size[0], grid_size[1], 1)
+            anchor_grid = anchor_grid.repeat(1, grid_height, grid_width, 1)
             anchor_grid = anchor_grid.reshape(-1, 2)
-            xy_weights_per_image.append(anchor_grid)
+            xy_weights.append(anchor_grid)
 
-        return torch.cat(xy_weights_per_image)
+        return torch.cat(xy_weights)
 
-    # For every combination of (a, (g, s), i) in (self.cell_anchors, zip(grid_sizes, strides), 0:2),
-    # output g[i] anchors that are s[i] distance apart in direction i, with the same dimensions as a.
     def grid_anchors(self, grid_sizes, device):
-        # type: (List[List[int]], Device) -> List[Tensor]  # noqa: F821
+        # type: (List[List[int]], Device) -> Tensor  # noqa: F821
         anchors = []
 
         for size in grid_sizes:
@@ -61,37 +58,19 @@ class AnchorGenerator(nn.Module):
 
             shifts = torch.stack((shift_x, shift_y), dim=2)
             shifts = shifts.view(1, grid_height, grid_width, 2)
-            shifts = shifts.repeat(3, 1, 1, 1)
+            shifts = shifts.repeat(self.num_anchors, 1, 1, 1)
             shifts = shifts - 0.5
 
-            # For every (base anchor, output anchor) pair,
-            # offset each zero-centered base anchor by the center of the output anchor.
             anchors.append(shifts.reshape(-1, 2))
 
-        return anchors
+        return torch.cat(anchors)
 
-    def cached_grid_anchors(self, grid_sizes, device):
-        # type: (List[List[int]], Device) -> List[Tensor]  # noqa: F821
-        key = str(grid_sizes)
-        if key in self._cache:
-            return self._cache[key]
-        anchors = self.grid_anchors(grid_sizes, device)
-        self._cache[key] = anchors
-        return anchors
-
-    def forward(self, feature_maps):
-        # type: (List[Tensor]) -> Tuple[Tensor, List[Tensor]]
+    def forward(self, feature_maps: List[Tensor]) -> Tuple[Tensor, Tensor, Tensor]:
         grid_sizes = list([feature_map.shape[-2:] for feature_map in feature_maps])
         dtype, device = feature_maps[0].dtype, feature_maps[0].device
 
         wh_weights = self.set_wh_weights(grid_sizes, dtype, device)
         xy_weights = self.set_xy_weights(grid_sizes, dtype, device)
-        anchors_over_all_feature_maps = self.cached_grid_anchors(grid_sizes, device)
-        anchors_in_image = torch.jit.annotate(List[torch.Tensor], [])
-        for anchors_per_feature_map in anchors_over_all_feature_maps:
-            anchors_in_image.append(anchors_per_feature_map)
-        anchors = torch.cat(anchors_in_image)
+        anchors = self.grid_anchors(grid_sizes, device)
 
-        # Clear the cache in case that memory leaks.
-        self._cache.clear()
         return anchors, wh_weights, xy_weights

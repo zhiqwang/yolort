@@ -71,9 +71,7 @@ class PostProcess(nn.Module):
     def forward(
         self,
         head_outputs: Tensor,
-        anchors: Tensor,
-        wh_weights: List[Tensor],
-        xy_weights: List[Tensor],
+        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
         image_shapes: Optional[List[Tuple[int, int]]] = None,
     ) -> List[Dict[str, Tensor]]:
         """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
@@ -92,14 +90,12 @@ class PostProcess(nn.Module):
 
         for index in range(num_images):  # image index, image inference
             pred_logits = torch.sigmoid(head_outputs[index])
-            wh_weights_per_image = wh_weights
-            xy_weights_per_image = xy_weights
+
             # Compute conf
             # box_conf x class_conf, w/ shape: num_anchors x num_classes
             scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
 
-            boxes = self.box_coder.decode_single(
-                pred_logits[:, :4], anchors, wh_weights_per_image, xy_weights_per_image)
+            boxes = self.box_coder.decode_single(pred_logits[:, :4], anchors_tuple)
 
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)
