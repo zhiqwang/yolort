@@ -46,7 +46,7 @@ jobs:
     - name: Download pretrained checkpoints and generate torchscript
       run: |
         cd test/tracing
-        wget https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.1.0/yolov5s.pt
+        wget https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.0/yolov5s.pt
         cd ../..
         python -m test.tracing.trace_model
     - name: Test libtorch tracing
