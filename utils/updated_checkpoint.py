@@ -5,9 +5,30 @@ import torch
 from hubconf import yolov5
 
 
+def update_ultralytics(model, checkpoint_path_ultralytics):
+
+    state_dict = torch.load(checkpoint_path_ultralytics, map_location="cpu")
+
+    # Update body features
+    for name, params in model.backbone.body.named_parameters(prefix='model'):
+        params.data.copy_(state_dict[name])
+
+    for name, buffers in model.backbone.body.named_buffers(prefix='model'):
+        buffers.copy_(state_dict[name])
+
+    # Update box heads
+    for name, params in model.head.named_parameters(prefix='model.24'):
+        params.data.copy_(state_dict[name.replace('head', 'm')])
+
+    for name, buffers in model.head.named_buffers(prefix='model.24'):
+        buffers.copy_(state_dict[name.replace('head', 'm')])
+
+    return model
+
+
 def main(args):
     model = yolov5(cfg_path=args.cfg_path)
-    model.update_ultralytics(args.checkpoint_path)
+    model = update_ultralytics(model, args.checkpoint_path)
 
     torch.save(model.state_dict(), args.updated_checkpoint_path)
 
