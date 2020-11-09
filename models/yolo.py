@@ -11,7 +11,7 @@ from torch.jit.annotations import Tuple, List, Dict, Optional
 
 from .backbone import darknet
 from .box_head import YoloHead, PostProcess
-from .anchor_utils import AnchorGenerator
+from torchvision.models.detection.anchor_utils import AnchorGenerator
 
 
 class YOLO(nn.Module):
@@ -84,7 +84,7 @@ class YOLO(nn.Module):
         self,
         images: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> Tuple[List[Tensor], List[Dict[str, Tensor]]]:
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         Arguments:
             images (list[Tensor]): images to be processed

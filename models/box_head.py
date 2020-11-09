@@ -1,10 +1,10 @@
 # Modified from ultralytics/yolov5 by Zhiqiang Wang
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import List, Dict, Optional
+from torch.jit.annotations import Tuple, List, Dict, Optional
 from torchvision.ops import batched_nms, box_convert
 
-from . import _utils as det_utils
+from torchvision.models.detection import _utils as det_utils
 
 
 class YoloHead(nn.Module):
@@ -71,8 +71,8 @@ class PostProcess(nn.Module):
     def forward(
         self,
         head_outputs: Tensor,
-        anchors: Tensor,
-        image_shapes: Optional[Tensor] = None,
+        anchors: List[Tensor],
+        image_shapes: Optional[List[Tuple[int, int]]] = None,
     ) -> List[Dict[str, Tensor]]:
         """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
         Decode location preds, apply non-maximum suppression to location predictions based on conf
