@@ -20,25 +20,27 @@ class AnchorGenerator(nn.Module):
 
     def set_wh_weights(self, grid_sizes, dtype, device):
         # type: (List[List[int]], int, Device) -> Tensor  # noqa: F821
-        stride_lists = torch.jit.annotate(List[int], [])
+        wh_weights = []
 
         for size, stride in zip(grid_sizes, self.strides):
             grid_height, grid_width = size
-            stride_lists.extend([stride] * (grid_height * grid_width * self.num_anchors))
+            stride = torch.as_tensor([stride], dtype=dtype, device=device)
+            stride = stride.view(-1, 1)
+            stride = stride.repeat(1, grid_height * grid_width * self.num_anchors)
+            stride = stride.reshape(-1, 1)
+            wh_weights.append(stride)
 
-        wh_weights = torch.as_tensor(stride_lists, dtype=dtype, device=device)
-        wh_weights = wh_weights.reshape(-1, 1)
-
-        return wh_weights
+        return torch.cat(wh_weights)
 
     def set_xy_weights(self, grid_sizes, dtype, device):
         # type: (List[List[int]], int, Device) -> Tensor  # noqa: F821
         xy_weights = []
+
         for size, anchor_grid in zip(grid_sizes, self.anchor_grids):
             grid_height, grid_width = size
             anchor_grid = torch.as_tensor(anchor_grid, dtype=dtype, device=device)
-            anchor_grid = anchor_grid.view(-1, 1, 1, 2)
-            anchor_grid = anchor_grid.repeat(1, grid_height, grid_width, 1)
+            anchor_grid = anchor_grid.view(-1, 2)
+            anchor_grid = anchor_grid.repeat(1, grid_height * grid_width)
             anchor_grid = anchor_grid.reshape(-1, 2)
             xy_weights.append(anchor_grid)
 
@@ -59,9 +61,10 @@ class AnchorGenerator(nn.Module):
             shifts = torch.stack((shift_x, shift_y), dim=2)
             shifts = shifts.view(1, grid_height, grid_width, 2)
             shifts = shifts.repeat(self.num_anchors, 1, 1, 1)
-            shifts = shifts - 0.5
+            shifts = shifts - torch.tensor(0.5, dtype=shifts.dtype, device=device)
+            shifts = shifts.reshape(-1, 2)
 
-            anchors.append(shifts.reshape(-1, 2))
+            anchors.append(shifts)
 
         return torch.cat(anchors)
 
