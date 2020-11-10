@@ -1,3 +1,4 @@
+import torch
 from torch import Tensor
 from torch.jit.annotations import Tuple
 from torchvision.ops import box_convert
@@ -22,10 +23,9 @@ class BoxCoder(object):
             anchors_tupe (Tensor, Tensor, Tensor): reference boxes.
         """
 
-        boxes = anchors_tuple[0].to(rel_codes.dtype)
-
-        rel_codes[..., 0:2] = (rel_codes[..., 0:2] * 2. + boxes) * anchors_tuple[1]  # wh
-        rel_codes[..., 2:4] = (rel_codes[..., 2:4] * 2) ** 2 * anchors_tuple[2]  # xy
-        pred_boxes = box_convert(rel_codes, in_fmt="cxcywh", out_fmt="xyxy")
+        pred_wh = (rel_codes[..., 0:2] * 2. + anchors_tuple[0]) * anchors_tuple[1]  # wh
+        pred_xy = (rel_codes[..., 2:4] * 2) ** 2 * anchors_tuple[2]  # xy
+        pred_boxes = torch.cat([pred_wh, pred_xy], dim=1)
+        pred_boxes = box_convert(pred_boxes, in_fmt="cxcywh", out_fmt="xyxy")
 
         return pred_boxes
