@@ -6,22 +6,24 @@
 
 ## 🆕 What's New and Development Plans
 
-- [x] Support exporting to `TorchScript` model. *Oct. 8, 2020.*
-- [x] Support doing inference using `LibTorch` cpp interface. *Oct. 10, 2020.*
+- [x] Support exporting to `TorchScript` model. *Oct. 8, 2020*.
+- [x] Support doing inference using `LibTorch` cpp interface. *Oct. 10, 2020*.
+- [x] Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
+- [x] Refactor `YoloHead` and `AnchorGenerator` modules structure, *Nov. 11, 2020*.
 - [ ] Support exporting to `onnx`, and doing inference using `onnxruntime`.
 - [ ] Add more fetures ...
 
 ## 🛠 Usage
 
-There are something different comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation, you should update [ultralytics's](https://github.com/ultralytics/yolov5/releases/download/v3.0/yolov5s.pt) trained (or your own) model checkpoint with the following command:
+There are something different comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation. This repo can load ultralytics's trained model checkpoint with minor modifications, I have converted ultralytics's lastest released [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
+
+And you could convert ultralytics's trained (or your own) model checkpoint with the following command:
 
 ```bash
 python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
                                    [--cfg_path ./models/yolov5s.yaml]
                                    [--updated_checkpoint_path ./checkpoints/yolov5/yolov5s.pt]
 ```
-
-Or you can download it from [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.1.0/yolov5s.pt).
 
 ### ✨ PyTorch interface
 
@@ -40,7 +42,7 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
 
 ### 🚀 LibTorch interface
 
-Here providing a minimal [example](./deployment/README.md) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
+Here providing an [example](./deployment/README.md) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
 
 ## 🎓 Acknowledgement
 
