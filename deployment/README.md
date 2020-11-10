@@ -24,7 +24,7 @@ A LibTorch inference implementation of yolov5. Both GPU and CPU are supported.
     ```bash
     git clone https://github.com/pytorch/vision.git
     cd vision
-    git checkout release/0.8.0 # replace `nightly` instead if you are using the nightly version
+    git checkout release/0.8.0 # replace to `nightly` branch instead if you are using the nightly version
     mkdir build && cd build
     cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
     make -j4
@@ -33,7 +33,7 @@ A LibTorch inference implementation of yolov5. Both GPU and CPU are supported.
 
 1. Generate `TorchScript` model
 
-    Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/export.py) trace (`torch.jit.trace`) mechanism, I use `torch.jit.script` to jit trace the YOLO models containing the whole pre-processing (especially using the `GeneralizedRCNNTransform` ops) and post-processing (especially using the `nms` ops) procedures, so you don't need to rewrite manually the cpp code of pre-processing and post-processing.
+    Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/export.py) trace (`torch.jit.trace`) mechanism, I'm using `torch.jit.script` to jit trace the YOLO models which containing the whole pre-processing (especially using the `GeneralizedRCNNTransform` ops) and post-processing (especially with the `nms` ops) procedures, so you don't need to rewrite manually the cpp codes of pre-processing and post-processing.
 
     ```bash
     git clone https://github.com/zhiqwang/yolov5-rt-stack.git
@@ -54,8 +54,8 @@ A LibTorch inference implementation of yolov5. Both GPU and CPU are supported.
 
     ```bash
     ./yolo_inference [--input_source YOUR_IMAGE_SOURCE_PATH]
-                    [--checkpoint ../../checkpoints/yolov5/yolov5s.torchscript.pt]
-                    [--labelmap ../../checkpoints/yolov5/coco.names]
-                    [--output_dir ../../data-bin/output]
-                    [--gpu]  # GPU switch, Set False as default
+                     [--checkpoint ../../checkpoints/yolov5/yolov5s.torchscript.pt]
+                     [--labelmap ../../checkpoints/yolov5/coco.names]
+                     [--output_dir ../../data-bin/output]
+                     [--gpu]  # GPU switch, Set False as default
     ```
