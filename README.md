@@ -37,7 +37,8 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
                  [--checkpoint ./checkpoints/yolov5/yolov5s.pt]
                  [--labelmap ./checkpoints/yolov5/coco.names]
                  [--output_dir ./data-bin/output]
-                 [--img_size 416]
+                 [--min_size 640]
+                 [--max_size 640]
                  [--save_img]
                  [--gpu]  # GPU switch, Set False as default
 ```

@@ -92,7 +92,13 @@ def main(args):
     print(args)
     device = torch.device("cuda") if torch.cuda.is_available() and args.gpu else torch.device("cpu")
 
-    model = yolov5(cfg_path=args.model_cfg, checkpoint_path=args.checkpoint)
+    model = yolov5(
+        pretrained=True,
+        min_size=args.min_size,
+        max_size=args.max_size,
+        score_thresh=args.score_thresh,
+        nms_thresh=args.nms_thresh,
+    )
     model.eval()
     model = model.to(device)
 
@@ -106,7 +112,7 @@ def main(args):
     is_half = False
 
     # Load model
-    imgsz = check_img_size(args.img_size, s=model.box_head.stride.max())  # check img_size
+    imgsz = check_img_size(args.max_size, s=model.box_head.stride.max())  # check img_size
     if is_half:
         model.half()  # to FP16
 
@@ -152,11 +158,13 @@ if __name__ == "__main__":
                         help='path where the source images in')
     parser.add_argument('--output_dir', type=str, default='./data-bin/output',
                         help='path where to save')
-    parser.add_argument('--img_size', type=int, default=416,
-                        help='inference size (pixels)')
-    parser.add_argument('--conf_thres', type=float, default=0.4,
+    parser.add_argument('--min_size', type=int, default=640,
+                        help='inference min size (pixels)')
+    parser.add_argument('--max_size', type=int, default=640,
+                        help='inference min size (pixels)')
+    parser.add_argument('--score_thresh', type=float, default=0.15,
                         help='object confidence threshold')
-    parser.add_argument('--iou_thres', type=float, default=0.5,
+    parser.add_argument('--nms_thresh', type=float, default=0.5,
                         help='IOU threshold for NMS')
     parser.add_argument('--gpu', action='store_true',
                         help='GPU switch')
