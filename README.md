@@ -2,7 +2,9 @@
 
 [![Stable](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Stable/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3AStable) [![Nightly](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Nightly/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3ANightly)
 
-<p align="left"><a href=".github/bus_det.jpg"><img src=".github/bus_det.jpg" alt="YOLO inferencing" height="440"/></a></p>
+Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in the `libtorch`, `onnxruntime` and other backends. *Currently work in process, very pleasure for suggestion and cooperation.*
+
+<a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inferencing" width="500"/></a>
 
 ## 🆕 What's New and Development Plans
 
@@ -46,5 +48,5 @@ Here providing an [example](./deployment/README.md) of getting `LibTorch` infere
 
 ## 🎓 Acknowledgement
 
-- <https://github.com/ultralytics/yolov5>
-- <https://github.com/yasenh/libtorch-yolov5>
+- The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
+- This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
