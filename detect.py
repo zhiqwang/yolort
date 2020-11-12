@@ -7,11 +7,9 @@ import numpy as np
 import cv2
 import torch
 
-from utils.datasets import LoadImages
 from utils.torch_utils import time_synchronized
 
 from utils.general import (
-    check_img_size,
     box_xyxy_to_cxcywh, plot_one_box,
     set_logging,
 )
@@ -53,7 +51,7 @@ def overlay_boxes(detections, path, time_consume, args):
     img = cv2.imread(path) if args.save_img else None
 
     for i, pred in enumerate(detections):  # detections per image
-        s = '%g: ' % i if args.webcam else ''
+        det_logs = '%g: ' % i if args.webcam else ''
         save_path = Path(args.output_dir).joinpath(Path(path).name)
         txt_path = Path(args.output_dir).joinpath(Path(path).stem)
 
@@ -64,7 +62,7 @@ def overlay_boxes(detections, path, time_consume, args):
             # Print results
             for c in labels.unique():
                 n = (labels == c).sum()  # detections per class
-                s += '%g %ss, ' % (n, args.names[int(c)])  # add to string
+                det_logs += '%g %ss, ' % (n, args.names[int(c)])  # add to string
 
             # Write results
             for xyxy, conf, cls_name in zip(boxes, scores, labels):
@@ -79,7 +77,7 @@ def overlay_boxes(detections, path, time_consume, args):
                     plot_one_box(xyxy, img, label=label, color=args.colors[int(cls_name)], line_thickness=3)
 
         # Print inference time
-        print('%sDone. (%.3fs)' % (s, time_consume))
+        print('%sDone. (%.3fs)' % (det_logs, time_consume))
 
         # Save results (image with detections)
         if args.save_img and args.mode == 'images':
@@ -112,36 +110,30 @@ def main(args):
     is_half = False
 
     # Load model
-    imgsz = check_img_size(args.max_size, s=model.box_head.stride.max())  # check img_size
     if is_half:
         model.half()  # to FP16
-
-    # Set Dataloader
-    dataset = LoadImages(args.input_source, img_size=imgsz)
-    args.mode = dataset.mode
 
     # Get names and colors
     args.names = load_names(Path(args.labelmap))
     args.colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(args.names))]
 
     # Run inference
-    t0 = time.time()
-    img = torch.zeros((3, imgsz, imgsz), device=device)  # init img
+    img = torch.zeros((3, 320, 320), device=device)  # init img
     if is_half:
         img = img.half()
     _ = model([img])  # run once
 
-    for data in dataset:
-        img_name = data[0]
-        model_out, time_consume = inference(model, img_name, device, is_half)
+    t0 = time.time()
+    model_out, time_consume = inference(model, args.input_source, device, is_half)
+    total_time_consume = time.time() - t0
 
-        # Process detections
-        _ = overlay_boxes(model_out, img_name, time_consume, args)
+    # Process detections
+    _ = overlay_boxes(model_out, args.input_source, time_consume, args)
 
     if args.save_txt or args.save_img:
         print(f'Results saved to {args.output_dir}')
 
-    print('Done. (%.3fs)' % (time.time() - t0))
+    print('Total time: (%.3fs)' % (total_time_consume))
 
 
 if __name__ == "__main__":
@@ -154,7 +146,7 @@ if __name__ == "__main__":
                         help='path where the model checkpoint in')
     parser.add_argument('--labelmap', type=str, default='./checkpoints/yolov5/coco.names',
                         help='path where the coco category in')
-    parser.add_argument('--input_source', type=str, default='./.github/',
+    parser.add_argument('--input_source', type=str, default='./data-bin/demo/zidane.jpg',
                         help='path where the source images in')
     parser.add_argument('--output_dir', type=str, default='./data-bin/output',
                         help='path where to save')
