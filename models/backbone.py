@@ -1,3 +1,4 @@
+# Modified from ultralytics/yolov5 by Zhiqiang Wang
 import logging
 from collections import OrderedDict
 

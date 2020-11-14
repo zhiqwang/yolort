@@ -1,4 +1,5 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Modified by Zhiqiang Wang (zhiqwang@outlook.com)
 import warnings
 
 import torch
