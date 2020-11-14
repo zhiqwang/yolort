@@ -11,7 +11,7 @@ Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralyt
 - [x] Support exporting to `TorchScript` model. *Oct. 8, 2020*.
 - [x] Support doing inference using `LibTorch` cpp interface. *Oct. 10, 2020*.
 - [x] Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
-- [x] Refactor `YoloHead` and `AnchorGenerator` modules structure, *Nov. 11, 2020*.
+- [x] Refactor `YoloHead` and `AnchorGenerator` modules, *Nov. 11, 2020*.
 - [ ] Support exporting to `onnx`, and doing inference using `onnxruntime`.
 - [ ] Add more fetures ...
 
@@ -19,7 +19,7 @@ Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralyt
 
 There are something different comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation. This repo can load ultralytics's trained model checkpoint with minor modifications, I have converted ultralytics's lastest released [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
 
-And you could convert ultralytics's trained (or your own) model checkpoint with the following command:
+You can also convert ultralytics's trained (or your own) model checkpoint with the following command:
 
 ```bash
 python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
@@ -29,7 +29,7 @@ python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
 
 ### ✨ PyTorch interface
 
-The `detect.py` reads a directory and does inferencing with all contained images.
+The `detect.py` reads a image source and does inference.
 
 ```bash
 python -m detect [--model_cfg ./models/yolov5s.yaml]
@@ -45,7 +45,7 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
 
 ### 🚀 LibTorch interface
 
-Here providing an [example](./deployment/README.md) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
+Here providing an [example](./deployment) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
 
 ## 🎓 Acknowledgement
 
