@@ -80,7 +80,7 @@ def overlay_boxes(detections, path, time_consume, args):
         print('%sDone. (%.3fs)' % (det_logs, time_consume))
 
         # Save results (image with detections)
-        if args.save_img and args.mode == 'images':
+        if args.save_img:
             cv2.imwrite(str(save_path), img)
 
     return (boxes.tolist(), scores.tolist(), labels.tolist())
