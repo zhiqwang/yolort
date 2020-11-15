@@ -20,6 +20,7 @@ class YOLO(nn.Module):
         self,
         backbone: nn.Module,
         num_classes: int,
+        anchor_grids: List[List[int]],
         # transform parameters
         min_size: int = 320,
         max_size: int = 416,
@@ -43,12 +44,8 @@ class YOLO(nn.Module):
         self.backbone = backbone
 
         if anchor_generator is None:
-            num_anchors = 3
-            strides = [8, 16, 32]
-            anchor_grids = [[10, 13, 16, 30, 33, 23],
-                            [30, 61, 62, 45, 59, 119],
-                            [116, 90, 156, 198, 373, 326]]
-            anchor_generator = AnchorGenerator(num_anchors, strides, anchor_grids)
+            strides: List[int] = [8, 16, 32]
+            anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
         if head is None:
@@ -186,8 +183,8 @@ def yolov5s(pretrained=False, progress=True,
         # no need to download the backbone if pretrained is set
         pretrained_backbone = False
     # skip P2 because it generates too many anchors (according to their paper)
-    backbone = darknet(cfg_path='./models/yolov5s.yaml', pretrained=pretrained_backbone)
-    model = YOLO(backbone, num_classes, **kwargs)
+    backbone, anchor_grids = darknet(cfg_path='./models/yolov5s.yaml', pretrained=pretrained_backbone)
+    model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['yolov5s'], progress=progress)
         model.load_state_dict(state_dict)

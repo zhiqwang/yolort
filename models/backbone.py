@@ -12,7 +12,7 @@ from .experimental import MixConv2d, CrossConv, C3
 from .box_head import YoloHead as Detect
 
 from utils.general import make_divisible
-from utils.torch_utils import fuse_conv_and_bn, model_info, initialize_weights
+from utils.torch_utils import initialize_weights
 
 
 class YoloBackbone(nn.Module):
@@ -26,7 +26,7 @@ class YoloBackbone(nn.Module):
         self.body = IntermediateLayerGetter(
             yolo_body.model,
             return_layers=return_layers,
-            save_list=yolo_body.save,
+            save_list=yolo_body.save_list,
         )
         self.out_channels = out_channels
 
@@ -41,14 +41,18 @@ class YoloBackbone(nn.Module):
 
 
 class YoloBody(nn.Module):
-    def __init__(self, model_dict, channels=3, num_classes=None):
+    __annotations__ = {
+        "save_list": List[int],
+    }
+
+    def __init__(self, layers, save_list):
         super().__init__()
         # Define model
-        self.model, self.save = parse_model(model_dict, channels=[channels])
+        self.model = nn.Sequential(*layers)
+        self.save_list = save_list
 
         # Init weights, biases
         initialize_weights(self)
-        self.info()
 
     def forward(self, x: Tensor) -> Tensor:
         out = x
@@ -56,34 +60,24 @@ class YoloBody(nn.Module):
 
         for i, m in enumerate(self.model):
             if m.f > 0:  # Concat layer
-                out = torch.cat([out, y[sorted(self.save).index(m.f)]], 1)
+                out = torch.cat([out, y[sorted(self.save_list).index(m.f)]], 1)
             else:
                 out = m(out)  # run
-            if i in self.save:
+            if i in self.save_list:
                 y.append(out)  # save output
         return out
 
-    def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
-        print('Fusing layers... ')
-        for m in self.model.modules():
-            if type(m) is Conv and hasattr(m, 'bn'):
-                m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
-                delattr(m, 'bn')  # remove batchnorm
-                m.forward = m.fuseforward  # update forward
-        self.info()
-        return self
 
-    def info(self, verbose=False):  # print model information
-        model_info(self, verbose)
-
-
-def parse_model(model_dict, channels):
+def parse_model(model_dict, in_channels=3):
+    head_info = ()
     anchors, num_classes = model_dict['anchors'], model_dict['nc']
     num_anchors = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors
     num_outputs = num_anchors * (num_classes + 5)
 
-    layers, save, c2 = [], [], channels[-1]  # layers, savelist, channels out
-    for i, (f, n, m, args) in enumerate(model_dict['backbone'] + model_dict['head']):  # from, number, module, args
+    c2 = in_channels
+    layers, save_list, channels = [], [], [c2]  # layers, save list, channels out
+    # from, number, module, args
+    for i, (f, n, m, args) in enumerate(model_dict['backbone'] + model_dict['head']):
         m = eval(m) if isinstance(m, str) else m  # eval strings
         for j, a in enumerate(args):
             try:
@@ -105,17 +99,20 @@ def parse_model(model_dict, channels):
         elif m is Concat:
             c2 = sum([channels[-1 if x == -1 else x + 1] for x in f])
         elif m is Detect:
+            num_layers, anchor_grids = f, args[-1]
+            out_channels = [channels[x + 1] for x in f]
+            head_info = (out_channels, anchor_grids, num_layers)
             continue
         else:
             c2 = channels[f]
 
-        module = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
+        module = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)
         module.f = -1 if f == -1 else f[-1]
 
-        save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
+        save_list.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)
         layers.append(module)
         channels.append(c2)
-    return nn.Sequential(*layers), save
+    return layers, save_list, head_info
 
 
 class IntermediateLayerGetter(nn.ModuleDict):
@@ -165,12 +162,15 @@ class IntermediateLayerGetter(nn.ModuleDict):
 
 def darknet(cfg_path='./models/yolov5s.yaml', pretrained=False):
     with open(cfg_path) as f:
-        model_dict = yaml.load(f, Loader=yaml.FullLoader)  # model dict
+        model_dict = yaml.load(f, Loader=yaml.FullLoader)
 
-    backbone = YoloBody(model_dict)
+    layers, save_list, head_info = parse_model(model_dict, in_channels=3)
+
+    backbone = YoloBody(layers, save_list)
+
     body = YoloBackbone(
         yolo_body=backbone,
-        return_layers={'17': '0', '20': '1', '23': '2'},
-        out_channels=[128, 256, 512],
+        return_layers={str(key): str(i) for i, key in enumerate(head_info[2])},
+        out_channels=head_info[0],
     )
-    return body
+    return body, head_info[1]
