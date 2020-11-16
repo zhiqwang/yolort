@@ -5,14 +5,11 @@ import yaml
 
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import List, Dict
+from torch.jit.annotations import List, Dict, Optional
 
 from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
 from .experimental import MixConv2d, CrossConv, C3
 from .box_head import YoloHead as Detect
-
-from utils.general import make_divisible
-from utils.torch_utils import initialize_weights
 
 
 class YoloBackbone(nn.Module):
@@ -52,7 +49,7 @@ class YoloBody(nn.Module):
         self.save_list = save_list
 
         # Init weights, biases
-        initialize_weights(self)
+        self._initialize_weights()
 
     def forward(self, x: Tensor) -> Tensor:
         out = x
@@ -66,6 +63,16 @@ class YoloBody(nn.Module):
             if i in self.save_list:
                 y.append(out)  # save output
         return out
+
+    def _initialize_weights(self) -> None:
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                m.eps = 1e-3
+                m.momentum = 0.03
+            elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
+                m.inplace = True
 
 
 def parse_model(model_dict, in_channels=3):
@@ -88,7 +95,7 @@ def parse_model(model_dict, in_channels=3):
         n = max(round(n * model_dict['depth_multiple']), 1) if n > 1 else n  # depth gain
         if m in [Conv, Bottleneck, SPP, DWConv, MixConv2d, Focus, CrossConv, BottleneckCSP, C3]:
             c1, c2 = channels[f], args[0]
-            c2 = make_divisible(c2 * model_dict['width_multiple'], 8) if c2 != num_outputs else c2
+            c2 = _make_divisible(c2 * model_dict['width_multiple'], 8) if c2 != num_outputs else c2
 
             args = [c1, c2, *args[1:]]
             if m in [BottleneckCSP, C3]:
@@ -113,6 +120,26 @@ def parse_model(model_dict, in_channels=3):
         layers.append(module)
         channels.append(c2)
     return layers, save_list, head_info
+
+
+def _make_divisible(v: float, divisor: int, min_value: Optional[int] = None) -> int:
+    """
+    This function is taken from the original tf repo.
+    It ensures that all layers have a channel number that is divisible by 8
+    It can be seen here:
+    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+    :param v:
+    :param divisor:
+    :param min_value:
+    :return:
+    """
+    if min_value is None:
+        min_value = divisor
+    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+    # Make sure that round down does not go down by more than 10%.
+    if new_v < 0.9 * v:
+        new_v += divisor
+    return new_v
 
 
 class IntermediateLayerGetter(nn.ModuleDict):
