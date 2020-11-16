@@ -8,18 +8,13 @@ from . import _utils as det_utils
 
 
 class YoloHead(nn.Module):
-    def __init__(self, in_channels, num_anchors, strides, num_classes):  # detection layer
+    def __init__(self, in_channels, num_anchors, num_classes):  # detection layer
         super().__init__()
         self.num_anchors = num_anchors  # anchors
-        self.num_classes = num_classes
         self.num_outputs = num_classes + 5  # number of outputs per anchor
-        self.strides = strides
 
         self.head = nn.ModuleList(
             nn.Conv2d(ch, self.num_outputs * self.num_anchors, 1) for ch in in_channels)  # output conv
-
-        # Init weights, biases
-        self._initialize_biases()
 
     def get_result_from_head(self, features: Tensor, idx: int) -> Tensor:
         """
@@ -54,18 +49,6 @@ class YoloHead(nn.Module):
             all_pred_logits.append(pred_logits)
 
         return torch.cat(all_pred_logits, dim=1)
-
-    def _initialize_biases(self, cf=None):
-        # https://arxiv.org/abs/1708.02002 section 3.3
-        # cf is class frequency
-        # cf = torch.bincount(torch.tensor(
-        #     np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.
-        for m, s in zip(self.head, self.strides):
-            b = m.bias.view(self.num_anchors, -1)  # conv.bias(255) to (3,85)
-            b[:, 4] += torch.log(torch.tensor(8 / (640 / s) ** 2))  # obj (8 objects per 640 image)
-            b[:, 5:] += torch.log(torch.tensor(
-                0.6 / (self.num_classes - 0.99))) if cf is None else torch.log(cf / cf.sum())
-            m.bias = nn.Parameter(b.view(-1), requires_grad=True)
 
 
 class PostProcess(nn.Module):

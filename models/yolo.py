@@ -52,7 +52,6 @@ class YOLO(nn.Module):
             head = YoloHead(
                 backbone.out_channels,
                 anchor_generator.num_anchors,
-                anchor_generator.strides,
                 num_classes,
             )
         self.head = head
