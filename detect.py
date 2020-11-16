@@ -7,13 +7,9 @@ import numpy as np
 import cv2
 import torch
 
-from utils.torch_utils import time_synchronized
+from torchvision.ops import box_convert
 
-from utils.general import (
-    box_xyxy_to_cxcywh, plot_one_box,
-    set_logging,
-)
-
+from utils.image_utils import plot_one_box
 from hubconf import yolov5
 
 
@@ -39,9 +35,9 @@ def inference(model, img_name, device, is_half=False):
     model.eval()
     img = read_image(img_name, is_half)
     img = img.to(device)
-    t1 = time_synchronized()
+    t1 = time.time()
     detections = model([img])
-    time_consume = time_synchronized() - t1
+    time_consume = time.time() - t1
 
     return detections, time_consume
 
@@ -67,10 +63,10 @@ def overlay_boxes(detections, path, time_consume, args):
             # Write results
             for xyxy, conf, cls_name in zip(boxes, scores, labels):
                 if args.save_txt:  # Write to file
-                    # normalized xywh
-                    xywh = box_xyxy_to_cxcywh(xyxy).tolist()
+                    # normalized cxcywh
+                    cxcywh = box_convert(xyxy, in_fmt="xyxy", out_fmt="cxcywh").tolist()
                     with open(f'{txt_path}.txt', 'a') as f:
-                        f.write(('%g ' * 5 + '\n') % (cls_name, *xywh))  # label format
+                        f.write(('%g ' * 5 + '\n') % (cls_name, *cxcywh))  # label format
 
                 if args.save_img:  # Add bbox to image
                     label = '%s %.2f' % (args.names[int(cls_name)], conf)
@@ -104,7 +100,6 @@ def main(args):
         ('rtsp://', 'rtmp://', 'http://')) or args.input_source.endswith('.txt'))
 
     # Initialize
-    set_logging()
 
     # half = device.type != 'cpu'  # half precision only supported on CUDA
     is_half = False
