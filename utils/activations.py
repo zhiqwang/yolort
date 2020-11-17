@@ -15,8 +15,7 @@ class Hardswish(nn.Module):  # export-friendly version of nn.Hardswish()
         super().__init__()
 
     def forward(self, x):
-        # return x * F.hardsigmoid(x)  # for torchscript and CoreML
-        return x * F.hardtanh(x + 3, 0., 6.) / 6.  # for torchscript, CoreML and ONNX
+        return x * F.hardtanh(x + 3, 0., 6.) / 6.  # for TVM, CoreML and ONNX
 
 
 class MemoryEfficientSwish(nn.Module):
