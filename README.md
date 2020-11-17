@@ -12,7 +12,7 @@ Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralyt
 - [x] Support doing inference using `LibTorch` cpp interface. *Oct. 10, 2020*.
 - [x] Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
 - [x] Refactor YOLO modules, *Nov. 16, 2020*.
-- [ ] Support exporting to `onnx`, and doing inference using `onnxruntime`.
+- [x] Support exporting to `onnx`, and doing inference using `onnxruntime`. *Nov. 17, 2020*.
 - [ ] Add more fetures ...
 
 ## 🛠 Usage
