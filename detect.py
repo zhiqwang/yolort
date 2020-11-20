@@ -47,7 +47,7 @@ def overlay_boxes(detections, path, time_consume, args):
     img = cv2.imread(path) if args.save_img else None
 
     for i, pred in enumerate(detections):  # detections per image
-        det_logs = '%g: ' % i if args.webcam else ''
+        det_logs = ''
         save_path = Path(args.output_dir).joinpath(Path(path).name)
         txt_path = Path(args.output_dir).joinpath(Path(path).stem)
 
@@ -95,9 +95,6 @@ def main(args):
     )
     model.eval()
     model = model.to(device)
-
-    args.webcam = (args.input_source.isnumeric() or args.input_source.startswith(
-        ('rtsp://', 'rtmp://', 'http://')) or args.input_source.endswith('.txt'))
 
     # Initialize
 
@@ -155,8 +152,6 @@ if __name__ == "__main__":
                         help='IOU threshold for NMS')
     parser.add_argument('--gpu', action='store_true',
                         help='GPU switch')
-    parser.add_argument('--view_img', action='store_true',
-                        help='display results')
     parser.add_argument('--save_txt', action='store_true',
                         help='save results to *.txt')
     parser.add_argument('--save_img', action='store_true',
