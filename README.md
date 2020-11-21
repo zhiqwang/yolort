@@ -13,9 +13,10 @@ Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralyt
 - [x] Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
 - [x] Refactor YOLO modules, *Nov. 16, 2020*.
 - [x] Support exporting to `onnx`, and doing inference using `onnxruntime`. *Nov. 17, 2020*.
+- [x] Add graph visualization tools. *Nov. 21, 2020*.
 - [ ] Add more fetures ...
 
-## 🛠 Usage
+## 🛠️ Usage
 
 There are something different comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation. This repo can load ultralytics's trained model checkpoint with minor modifications, I have converted ultralytics's lastest released [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
 
@@ -47,7 +48,7 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
 
 Here providing an [example](./deployment) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
 
-### ✏️ Model Visualization
+### 🎨 Model Visualization
 
 Now, `yolov5-rt-stack` can draw the model graph directly, check for more details in [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook.
 
