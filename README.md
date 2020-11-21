@@ -27,9 +27,9 @@ python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
                                    [--updated_checkpoint_path ./checkpoints/yolov5/yolov5s.pt]
 ```
 
-### ✨ PyTorch interface
+### ✨ `PyTorch` Interface
 
-The `detect.py` reads a image source and does inference.
+The `detect.py` reads a image source and does inference, you can also check for the more details in [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook.
 
 ```bash
 python -m detect [--model_cfg ./models/yolov5s.yaml]
@@ -43,9 +43,15 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
                  [--gpu]  # GPU switch, Set False as default
 ```
 
-### 🚀 LibTorch interface
+### 🚀 `LibTorch` Interface
 
 Here providing an [example](./deployment) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
+
+### ✏️ Model Visualization
+
+Now, `yolov5-rt-stack` can draw the model graph directly, check for more details in [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook.
+
+<a href="notebooks/assets/yolov5.detail.svg"><img src="notebooks/assets/yolov5.detail.svg" alt="YOLO model visualize" width="500"/></a>
 
 ## 🎓 Acknowledgement
 
