@@ -2,7 +2,7 @@
 
 [![Stable](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Stable/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3AStable) [![Nightly](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Nightly/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3ANightly)
 
-Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in the `libtorch`, `onnxruntime` and other backends. *Currently work in process, very pleasure for suggestion and cooperation.*
+Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in the `libtorch`, `onnxruntime` and other backends. *Currently work in process, very pleasure for suggestion and cooperation. BTW, leave a 🌟 if you liked it.*
 
 <a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inferencing" width="500"/></a>
 
@@ -35,8 +35,7 @@ The `detect.py` reads a image source and does inference, you can also check for 
 ```bash
 python -m detect [--model_cfg ./models/yolov5s.yaml]
                  [--input_source YOUR_IMAGE_SOURCE_DIR]
-                 [--checkpoint ./checkpoints/yolov5/yolov5s.pt]
-                 [--labelmap ./checkpoints/yolov5/coco.names]
+                 [--labelmap ./notebooks/assets/coco.names]
                  [--output_dir ./data-bin/output]
                  [--min_size 640]
                  [--max_size 640]

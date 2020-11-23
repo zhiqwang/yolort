@@ -134,11 +134,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--model_cfg', type=str, default='./models/yolov5s.yaml',
                         help='path where the model cfg in')
-    parser.add_argument('--checkpoint', type=str, default='./checkpoints/yolov5/yolov5s.pt',
-                        help='path where the model checkpoint in')
-    parser.add_argument('--labelmap', type=str, default='./checkpoints/yolov5/coco.names',
+    parser.add_argument('--labelmap', type=str, default='./notebooks/assets/coco.names',
                         help='path where the coco category in')
-    parser.add_argument('--input_source', type=str, default='./data-bin/demo/zidane.jpg',
+    parser.add_argument('--input_source', type=str, default='./notebooks/assets/zidane.jpg',
                         help='path where the source images in')
     parser.add_argument('--output_dir', type=str, default='./data-bin/output',
                         help='path where to save')

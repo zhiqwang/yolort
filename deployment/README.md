@@ -55,7 +55,7 @@ A LibTorch inference implementation of yolov5. Both GPU and CPU are supported.
     ```bash
     ./yolo_inference [--input_source YOUR_IMAGE_SOURCE_PATH]
                      [--checkpoint ../../checkpoints/yolov5/yolov5s.torchscript.pt]
-                     [--labelmap ../../checkpoints/yolov5/coco.names]
+                     [--labelmap ../../notebooks/assets/coco.names]
                      [--output_dir ../../data-bin/output]
                      [--gpu]  # GPU switch, Set False as default
     ```
