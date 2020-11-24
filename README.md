@@ -4,17 +4,16 @@
 
 Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on. *Currently work in process, very pleasure for suggestion and cooperation. BTW, leave a 🌟 if you liked it.*
 
-<a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inferencing" width="500"/></a>
+<a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
-## 🆕 What's New and Development Plans
+## 🆕 What's New
 
-- [x] Support exporting to `TorchScript` model. *Oct. 8, 2020*.
-- [x] Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
-- [x] Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
-- [x] Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
-- [x] Support exporting to `onnx`, and *dynmaic batching* inference with `onnxruntime` interface. *Nov. 17, 2020*.
-- [x] Add graph visualization tools. *Nov. 21, 2020*.
-- [ ] Add more fetures ...
+- Support exporting to `TorchScript` model. *Oct. 8, 2020*.
+- Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
+- Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
+- Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
+- Support exporting to `onnx`, and inferring with `onnxruntime` inference. *Nov. 17, 2020*.
+- Add graph visualization tools. *Nov. 21, 2020*.
 
 ## 🛠️ Usage
 
@@ -28,9 +27,9 @@ python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
                                    [--updated_checkpoint_path ./checkpoints/yolov5/yolov5s.pt]
 ```
 
-### ✨ `PyTorch` Interface
+### ✨ Inference on `PyTorch` backend
 
-The `detect.py` reads a image source and does inference, you can also check for the more details in [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook.
+Using `detect.py` to read a source image and detect its objects, you can also check for the more details in [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook.
 
 ```bash
 python -m detect [--model_cfg ./models/yolov5s.yaml]
@@ -43,9 +42,9 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
                  [--gpu]  # GPU switch, Set False as default
 ```
 
-### 🚀 `LibTorch` Interface
+### 🚀 Inference on `LibTorch` backend
 
-Here providing an [example](./deployment) of getting `LibTorch` inferencing to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
+Here provide an [example](./deployment) of getting `LibTorch` inference to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
 
 ### 🎨 Model Graph Visualization
 
