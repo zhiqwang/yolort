@@ -9,10 +9,10 @@ Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralyt
 ## 🆕 What's New and Development Plans
 
 - [x] Support exporting to `TorchScript` model. *Oct. 8, 2020*.
-- [x] Support doing inference using `LibTorch` cpp interface. *Oct. 10, 2020*.
+- [x] Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
 - [x] Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
-- [x] Refactor YOLO modules, *Nov. 16, 2020*.
-- [x] Support exporting to `onnx`, and doing inference using `onnxruntime`. *Nov. 17, 2020*.
+- [x] Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
+- [x] Support exporting to `onnx`, and *dynmaic batching* inference with `onnxruntime` interface. *Nov. 17, 2020*.
 - [x] Add graph visualization tools. *Nov. 21, 2020*.
 - [ ] Add more fetures ...
 
