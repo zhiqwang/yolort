@@ -37,7 +37,19 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5', pretrained=True)
 
 ### ✨ Inference on `PyTorch` backend
 
-Using `detect.py` to read a source image and detect its objects, you can also check the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more details.
+There are no extra compiled components in `yolov5-rt-stack` and package dependencies are minimal, so the code is very simple to use. We provide instructions how to install dependencies via conda. First, clone the repository locally:
+
+```bash
+git clone https://github.com/zhiqwang/yolov5-rt-stack.git
+```
+
+Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
+
+```bash
+conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
+```
+
+To read a source image and detect its objects run:
 
 ```bash
 python -m detect [--model_cfg ./models/yolov5s.yaml]
@@ -49,6 +61,8 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
                  [--save_img]
                  [--gpu]  # GPU switch, Set False as default
 ```
+
+You can also check the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more details.
 
 ### 🚀 Inference on `LibTorch` backend
 
