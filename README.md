@@ -52,7 +52,7 @@ conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 To read a source image and detect its objects run:
 
 ```bash
-python -m detect [--model_cfg ./models/yolov5s.yaml]
+python -m detect [--model_cfg yolov5s.yaml]
                  [--input_source YOUR_IMAGE_SOURCE_DIR]
                  [--labelmap ./notebooks/assets/coco.names]
                  [--output_dir ./data-bin/output]

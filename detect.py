@@ -132,7 +132,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('--model_cfg', type=str, default='./models/yolov5s.yaml',
+    parser.add_argument('--model_cfg', type=str, default='yolov5s.yaml',
                         help='path where the model cfg in')
     parser.add_argument('--labelmap', type=str, default='./notebooks/assets/coco.names',
                         help='path where the coco category in')
