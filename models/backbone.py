@@ -1,4 +1,5 @@
 # Modified from ultralytics/yolov5 by Zhiqiang Wang
+import pathlib
 from collections import OrderedDict
 
 import yaml
@@ -187,7 +188,8 @@ class IntermediateLayerGetter(nn.ModuleDict):
         return out
 
 
-def darknet(cfg_path='./models/yolov5s.yaml', pretrained=False):
+def darknet(cfg_path='yolov5s.yaml', pretrained=False):
+    cfg_path = pathlib.Path(__file__).parent.absolute().joinpath(cfg_path)
     with open(cfg_path) as f:
         model_dict = yaml.load(f, Loader=yaml.FullLoader)
 

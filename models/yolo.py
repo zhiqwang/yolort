@@ -183,7 +183,7 @@ def yolov5s(pretrained=False, progress=True,
         # no need to download the backbone if pretrained is set
         pretrained_backbone = False
     # skip P2 because it generates too many anchors (according to their paper)
-    backbone, anchor_grids = darknet(cfg_path='./models/yolov5s.yaml', pretrained=pretrained_backbone)
+    backbone, anchor_grids = darknet(cfg_path='yolov5s.yaml', pretrained=pretrained_backbone)
     model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['yolov5s'], progress=progress)

@@ -12,7 +12,7 @@ Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralyt
 - Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
 - Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
 - Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
-- Support exporting to `onnx`, and inferring with `onnxruntime` inference. *Nov. 17, 2020*.
+- Support exporting to `onnx`, and inferring with `onnxruntime` interface. *Nov. 17, 2020*.
 - Add graph visualization tools. *Nov. 21, 2020*.
 
 ## 🛠️ Usage
@@ -27,9 +27,17 @@ python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
                                    [--updated_checkpoint_path ./checkpoints/yolov5/yolov5s.pt]
 ```
 
+### 🔥 Loading via `torch.hub`
+
+The models are also available via torch hub, to load `yolov5` with pretrained weights simply do:
+
+```python
+model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5', pretrained=True)
+```
+
 ### ✨ Inference on `PyTorch` backend
 
-Using `detect.py` to read a source image and detect its objects, you can also check for the more details in [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook.
+Using `detect.py` to read a source image and detect its objects, you can also check the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more details.
 
 ```bash
 python -m detect [--model_cfg ./models/yolov5s.yaml]
@@ -46,7 +54,7 @@ python -m detect [--model_cfg ./models/yolov5s.yaml]
 
 Here provide an [example](./deployment) of getting `LibTorch` inference to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
 
-### 🎨 Model Graph Visualization
+## 🎨 Model Graph Visualization
 
 Now, `yolov5-rt-stack` can draw the model graph directly, check for more details in [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook.
 
