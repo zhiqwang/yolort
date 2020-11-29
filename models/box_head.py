@@ -122,7 +122,7 @@ class SetCriterion(nn.Module):
         bbox_regression: Tensor,
         anchors: Tensor,
         matched_idxs: List[Tensor],
-    ) -> Tensor:
+    ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
              outputs: dict of tensors, see the output specification of the model for the format
@@ -152,7 +152,9 @@ class SetCriterion(nn.Module):
                 size_average=False
             ) / max(1, num_foreground))
 
-        return _sum(losses) / max(1, len(targets))
+        return {
+            'loss': _sum(losses) / max(1, len(targets)),
+        }
 
 
 class PostProcess(nn.Module):
