@@ -96,7 +96,7 @@ class SetCriterion(nn.Module):
     def forward(
         self,
         targets: List[Dict[str, Tensor]],
-        head_outputs: Dict[str, Tensor],
+        bbox_regression: Tensor,
         anchors: List[Tensor],
     ) -> Dict[str, Tensor]:
         """
@@ -114,9 +114,9 @@ class SetCriterion(nn.Module):
             match_quality_matrix = box_iou(targets_per_image['boxes'], anchors_per_image)
             matched_idxs.append(self.proposal_matcher(match_quality_matrix))
 
-        return self.compute_loss(targets, head_outputs, anchors, matched_idxs)
+        return self.compute_loss(targets, bbox_regression, anchors, matched_idxs)
 
-    def compute_loss(self, targets, head_outputs, anchors, matched_idxs):
+    def compute_loss(self, targets, bbox_regression, anchors, matched_idxs):
         """ This performs the loss computation.
         Parameters:
              outputs: dict of tensors, see the output specification of the model for the format
@@ -124,8 +124,6 @@ class SetCriterion(nn.Module):
                       The expected keys in each dict depends on the losses applied, see each loss' doc
         """
         losses = []
-
-        bbox_regression = head_outputs['bbox_regression']
 
         for targets_per_image, bbox_regression_per_image, anchors_per_image, matched_idxs_per_image in zip(
                 targets, bbox_regression, anchors, matched_idxs):
