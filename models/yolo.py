@@ -11,7 +11,7 @@ from torchvision.models.detection.transform import GeneralizedRCNNTransform
 from torch.jit.annotations import Tuple, List, Dict, Optional
 
 from .backbone import darknet
-from .box_head import YoloHead, PostProcess
+from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
 
 
@@ -29,6 +29,10 @@ class YOLO(nn.Module):
         # Anchor parameters
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
+        # Training parameter
+        compute_loss: Optional[nn.Module] = None,
+        fg_iou_thresh: float = 0.5,
+        bg_iou_thresh: float = 0.4,
         # Post Process parameter
         postprocess_detections: Optional[nn.Module] = None,
         score_thresh: float = 0.05,
@@ -47,6 +51,14 @@ class YOLO(nn.Module):
             strides: List[int] = [8, 16, 32]
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
+
+        if compute_loss is None:
+            compute_loss = SetCriterion(
+                weights=(1.0, 1.0, 1.0, 1.0),
+                fg_iou_thresh=fg_iou_thresh,
+                bg_iou_thresh=bg_iou_thresh,
+            )
+        self.compute_loss = compute_loss
 
         if head is None:
             head = YoloHead(
@@ -121,6 +133,9 @@ class YOLO(nn.Module):
 
         if self.training:
             assert targets is not None
+
+            # compute the losses
+            losses = self.compute_loss(targets, head_outputs, anchors_tuple[0])
         else:
             # compute the detections
             detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)

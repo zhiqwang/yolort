@@ -1,10 +1,18 @@
 # Modified from ultralytics/yolov5 by Zhiqiang Wang
 import torch
 from torch import nn, Tensor
+
 from torch.jit.annotations import Tuple, List, Dict, Optional
-from torchvision.ops import batched_nms
+from torchvision.ops import batched_nms, box_iou
 
 from . import _utils as det_utils
+
+
+def _sum(x: List[Tensor]) -> Tensor:
+    res = x[0]
+    for i in x[1:]:
+        res = res + i
+    return res
 
 
 class YoloHead(nn.Module):
@@ -51,6 +59,104 @@ class YoloHead(nn.Module):
         return torch.cat(all_pred_logits, dim=1)
 
 
+class SetCriterion(nn.Module):
+    """This class computes the loss for YOLOv5.
+    Arguments:
+        variances:
+    """
+    __annotations__ = {
+        'box_coder': det_utils.BoxCoder,
+        'proposal_matcher': det_utils.Matcher,
+    }
+
+    def __init__(
+        self,
+        weights: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
+        fg_iou_thresh: float = 0.5,
+        bg_iou_thresh: float = 0.4,
+        allow_low_quality_matches: bool = True,
+    ) -> None:
+        """
+        Arguments:
+            weights (4-element tuple)
+            fg_iou_thresh (float)
+            bg_iou_thresh (float)
+            allow_low_quality_matches (bool)
+        """
+        super().__init__()
+
+        self.proposal_matcher = det_utils.Matcher(
+            fg_iou_thresh,
+            bg_iou_thresh,
+            allow_low_quality_matches=allow_low_quality_matches,
+        )
+
+        self.box_coder = det_utils.BoxCoder(weights=weights)
+
+    def forward(
+        self,
+        targets: List[Dict[str, Tensor]],
+        bbox_regression: Tensor,
+        anchors: Tensor,
+    ) -> Dict[str, Tensor]:
+        """
+        Arguments:
+            targets (List[Dict[Tensor]]): ground-truth boxes present in the image
+            head_outputs (Dict[Tensor])
+            anchor (List[Tensor])
+        """
+        matched_idxs = []
+        for targets_per_image in targets:
+            if targets_per_image['boxes'].numel() == 0:
+                matched_idxs.append(torch.full((anchors.size(0),), -1, dtype=torch.int64))
+                continue
+
+            match_quality_matrix = box_iou(targets_per_image['boxes'], anchors)
+            matched_idxs.append(self.proposal_matcher(match_quality_matrix))
+
+        return self.compute_loss(targets, bbox_regression, anchors, matched_idxs)
+
+    def compute_loss(
+        self,
+        targets: List[Dict[str, Tensor]],
+        bbox_regression: Tensor,
+        anchors: Tensor,
+        matched_idxs: List[Tensor],
+    ) -> Dict[str, Tensor]:
+        """ This performs the loss computation.
+        Parameters:
+             outputs: dict of tensors, see the output specification of the model for the format
+             targets: list of dicts, such that len(targets) == batch_size.
+                      The expected keys in each dict depends on the losses applied, see each loss' doc
+        """
+        losses = []
+
+        for targets_per_image, bbox_regression_per_image, matched_idxs_per_image in zip(
+                targets, bbox_regression, matched_idxs):
+            # determine only the foreground indices, ignore the rest
+            foreground_idxs_per_image = torch.where(matched_idxs_per_image >= 0)[0]
+            num_foreground = foreground_idxs_per_image.numel()
+
+            # select only the foreground boxes
+            matched_gt_boxes_per_image = targets_per_image['boxes'][matched_idxs_per_image[foreground_idxs_per_image]]
+            bbox_regression_per_image = bbox_regression_per_image[foreground_idxs_per_image, :]
+            anchors = anchors[foreground_idxs_per_image, :]
+
+            # compute the regression targets
+            target_regression = self.box_coder.encode_single(matched_gt_boxes_per_image, anchors)
+
+            # compute the loss
+            losses.append(torch.nn.functional.l1_loss(
+                bbox_regression_per_image,
+                target_regression,
+                size_average=False
+            ) / max(1, num_foreground))
+
+        return {
+            'loss': _sum(losses) / max(1, len(targets)),
+        }
+
+
 class PostProcess(nn.Module):
     __annotations__ = {
         'box_coder': det_utils.BoxCoder,
@@ -61,7 +167,13 @@ class PostProcess(nn.Module):
         score_thresh: float,
         nms_thresh: float,
         detections_per_img: int,
-    ):
+    ) -> None:
+        """
+        Arguments:
+            score_thresh (float)
+            nms_thresh (float)
+            detections_per_img (int)
+        """
         super().__init__()
         self.box_coder = det_utils.BoxCoder()
         self.score_thresh = score_thresh
