@@ -135,7 +135,7 @@ class YOLO(nn.Module):
             assert targets is not None
 
             # compute the losses
-            losses = self.compute_loss(targets, head_outputs, anchors_tuple)
+            losses = self.compute_loss(targets, head_outputs, anchors_tuple[0])
         else:
             # compute the detections
             detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)

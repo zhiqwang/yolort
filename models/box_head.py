@@ -97,7 +97,7 @@ class SetCriterion(nn.Module):
         self,
         targets: List[Dict[str, Tensor]],
         bbox_regression: Tensor,
-        anchors: List[Tensor],
+        anchors: Tensor,
     ) -> Dict[str, Tensor]:
         """
         Arguments:
@@ -106,12 +106,12 @@ class SetCriterion(nn.Module):
             anchor (List[Tensor])
         """
         matched_idxs = []
-        for anchors_per_image, targets_per_image in zip(anchors, targets):
+        for targets_per_image in targets:
             if targets_per_image['boxes'].numel() == 0:
-                matched_idxs.append(torch.full((anchors_per_image.size(0),), -1, dtype=torch.int64))
+                matched_idxs.append(torch.full((anchors.size(0),), -1, dtype=torch.int64))
                 continue
 
-            match_quality_matrix = box_iou(targets_per_image['boxes'], anchors_per_image)
+            match_quality_matrix = box_iou(targets_per_image['boxes'], anchors)
             matched_idxs.append(self.proposal_matcher(match_quality_matrix))
 
         return self.compute_loss(targets, bbox_regression, anchors, matched_idxs)
@@ -125,8 +125,8 @@ class SetCriterion(nn.Module):
         """
         losses = []
 
-        for targets_per_image, bbox_regression_per_image, anchors_per_image, matched_idxs_per_image in zip(
-                targets, bbox_regression, anchors, matched_idxs):
+        for targets_per_image, bbox_regression_per_image, matched_idxs_per_image in zip(
+                targets, bbox_regression, matched_idxs):
             # determine only the foreground indices, ignore the rest
             foreground_idxs_per_image = torch.where(matched_idxs_per_image >= 0)[0]
             num_foreground = foreground_idxs_per_image.numel()
@@ -134,10 +134,10 @@ class SetCriterion(nn.Module):
             # select only the foreground boxes
             matched_gt_boxes_per_image = targets_per_image['boxes'][matched_idxs_per_image[foreground_idxs_per_image]]
             bbox_regression_per_image = bbox_regression_per_image[foreground_idxs_per_image, :]
-            anchors_per_image = anchors_per_image[foreground_idxs_per_image, :]
+            anchors = anchors[foreground_idxs_per_image, :]
 
             # compute the regression targets
-            target_regression = self.box_coder.encode_single(matched_gt_boxes_per_image, anchors_per_image)
+            target_regression = self.box_coder.encode_single(matched_gt_boxes_per_image, anchors)
 
             # compute the loss
             losses.append(torch.nn.functional.l1_loss(
