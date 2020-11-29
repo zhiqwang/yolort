@@ -71,23 +71,40 @@ class SetCriterion(nn.Module):
 
     def __init__(
         self,
-        weights=(1.0, 1.0, 1.0, 1.0),
-        fg_iou_thresh=0.5,
-        bg_iou_thresh=0.4,
-        allow_low_quality_matches=True,
-    ):
+        weights: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
+        fg_iou_thresh: float = 0.5,
+        bg_iou_thresh: float = 0.4,
+        allow_low_quality_matches: bool = True,
+    ) -> None:
+        """
+        Arguments:
+            weights (4-element tuple)
+            fg_iou_thresh (float)
+            bg_iou_thresh (float)
+            allow_low_quality_matches (bool)
+        """
         super().__init__()
 
         self.proposal_matcher = det_utils.Matcher(
-            fg_iou_thresh,
-            bg_iou_thresh,
+            fg_iou_thresh=fg_iou_thresh,
+            bg_iou_thresh=bg_iou_thresh,
             allow_low_quality_matches=allow_low_quality_matches,
         )
 
         self.box_coder = det_utils.BoxCoder(weights=weights)
 
-    def forward(self, targets, head_outputs, anchors):
-        # type: (List[Dict[str, Tensor]], Dict[str, Tensor], List[Tensor]) -> Dict[str, Tensor]
+    def forward(
+        self,
+        targets: List[Dict[str, Tensor]],
+        head_outputs: Dict[str, Tensor],
+        anchors: List[Tensor],
+    ) -> Dict[str, Tensor]:
+        """
+        Arguments:
+            targets (List[Dict[Tensor]]): ground-truth boxes present in the image
+            head_outputs (Dict[Tensor])
+            anchor (List[Tensor])
+        """
         matched_idxs = []
         for anchors_per_image, targets_per_image in zip(anchors, targets):
             if targets_per_image['boxes'].numel() == 0:
