@@ -86,8 +86,8 @@ class SetCriterion(nn.Module):
         super().__init__()
 
         self.proposal_matcher = det_utils.Matcher(
-            fg_iou_thresh=fg_iou_thresh,
-            bg_iou_thresh=bg_iou_thresh,
+            fg_iou_thresh,
+            bg_iou_thresh,
             allow_low_quality_matches=allow_low_quality_matches,
         )
 
