@@ -116,7 +116,13 @@ class SetCriterion(nn.Module):
 
         return self.compute_loss(targets, bbox_regression, anchors, matched_idxs)
 
-    def compute_loss(self, targets, bbox_regression, anchors, matched_idxs):
+    def compute_loss(
+        self,
+        targets: List[Dict[str, Tensor]],
+        bbox_regression: Tensor,
+        anchors: Tensor,
+        matched_idxs: List[Tensor],
+    ) -> Tensor:
         """ This performs the loss computation.
         Parameters:
              outputs: dict of tensors, see the output specification of the model for the format
