@@ -144,7 +144,13 @@ class PostProcess(nn.Module):
         score_thresh: float,
         nms_thresh: float,
         detections_per_img: int,
-    ):
+    ) -> None:
+        """
+        Arguments:
+            score_thresh (float)
+            nms_thresh (float)
+            detections_per_img (int)
+        """
         super().__init__()
         self.box_coder = det_utils.BoxCoder()
         self.score_thresh = score_thresh

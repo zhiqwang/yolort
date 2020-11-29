@@ -130,7 +130,7 @@ class BoxCoder(object):
 
     def __init__(
         self,
-        weights: Tuple[float, float, float, float],
+        weights: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
         bbox_xform_clip: float = math.log(1000. / 16),
     ) -> None:
         """
