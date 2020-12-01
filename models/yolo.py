@@ -9,11 +9,21 @@ from torch import nn, Tensor
 from torchvision.models.utils import load_state_dict_from_url
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
-from torch.jit.annotations import Tuple, List, Dict, Optional
-
 from .backbone import darknet
 from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
+
+from typing import Tuple, Any, List, Dict, Optional
+
+
+__all__ = ['yolov5', 'yolov5s', 'yolov5m', 'yolov5l']
+
+
+model_urls = {
+    'yolov5s': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
+    'yolov5m': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5m.pt',
+    'yolov5l': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5l.pt',
+}
 
 
 class YOLO(nn.Module):
@@ -151,15 +161,14 @@ class YOLO(nn.Module):
             return self.eager_outputs(losses, detections)
 
 
-model_urls = {
-    'yolov5s': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
-    'yolov5m': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5m.pt',
-    'yolov5l': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5l.pt',
-}
-
-
-def yolov5(cfg_path='yolov5s.yaml', pretrained=False, progress=True,
-           num_classes=80, pretrained_backbone=True, **kwargs):
+def yolov5(
+    cfg_path: str = 'yolov5s.yaml',
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    pretrained_backbone: bool = True,
+    **kwargs: Any,
+) -> YOLO:
     """
     Constructs a YOLO model.
 
@@ -206,3 +215,33 @@ def yolov5(cfg_path='yolov5s.yaml', pretrained=False, progress=True,
         state_dict = load_state_dict_from_url(model_urls[Path(cfg_path).stem], progress=progress)
         model.load_state_dict(state_dict)
     return model
+
+
+def yolov5s(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+    r"""yolov5s model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return yolov5('yolov5s.yaml', pretrained, progress, **kwargs)
+
+
+def yolov5m(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+    r"""yolov5m model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return yolov5('yolov5m.yaml', pretrained, progress, **kwargs)
+
+
+def yolov5l(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+    r"""yolov5l model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return yolov5('yolov5l.yaml', pretrained, progress, **kwargs)
