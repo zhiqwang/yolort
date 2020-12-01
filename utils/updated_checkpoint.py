@@ -6,7 +6,13 @@ from hubconf import yolov5
 
 
 def update_ultralytics(model, checkpoint_path_ultralytics):
+    """
+    It's limited that ultralytics saved model must load in their root path.
+    So a very important thing is to desensitize the path befor updating ultralytics's trained model as follows:
 
+        >>> checkpoints_ = torch.load(weights, map_location='cpu')['model']
+        >>> torch.save(checkpoints_.state_dict(), './checkpoints/yolov5/yolov5s_ultralytics.pt')
+    """
     state_dict = torch.load(checkpoint_path_ultralytics, map_location="cpu")
 
     # Update body features
