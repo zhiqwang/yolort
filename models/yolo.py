@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Modified by Zhiqiang Wang (zhiqwang@outlook.com)
 import warnings
+from pathlib import Path
 
 import torch
 from torch import nn, Tensor
@@ -11,7 +12,7 @@ from torchvision.models.detection.transform import GeneralizedRCNNTransform
 from torch.jit.annotations import Tuple, List, Dict, Optional
 
 from .backbone import darknet
-from .box_head import YoloHead, PostProcess
+from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
 
 
@@ -29,6 +30,10 @@ class YOLO(nn.Module):
         # Anchor parameters
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
+        # Training parameter
+        compute_loss: Optional[nn.Module] = None,
+        fg_iou_thresh: float = 0.5,
+        bg_iou_thresh: float = 0.4,
         # Post Process parameter
         postprocess_detections: Optional[nn.Module] = None,
         score_thresh: float = 0.05,
@@ -47,6 +52,14 @@ class YOLO(nn.Module):
             strides: List[int] = [8, 16, 32]
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
+
+        if compute_loss is None:
+            compute_loss = SetCriterion(
+                weights=(1.0, 1.0, 1.0, 1.0),
+                fg_iou_thresh=fg_iou_thresh,
+                bg_iou_thresh=bg_iou_thresh,
+            )
+        self.compute_loss = compute_loss
 
         if head is None:
             head = YoloHead(
@@ -121,6 +134,9 @@ class YOLO(nn.Module):
 
         if self.training:
             assert targets is not None
+
+            # compute the losses
+            losses = self.compute_loss(targets, head_outputs, anchors_tuple[0])
         else:
             # compute the detections
             detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)
@@ -136,13 +152,14 @@ class YOLO(nn.Module):
 
 
 model_urls = {
-    'yolov5s':
-        'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
+    'yolov5s': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
+    'yolov5m': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5m.pt',
+    'yolov5l': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5l.pt',
 }
 
 
-def yolov5s(pretrained=False, progress=True,
-            num_classes=80, pretrained_backbone=True, **kwargs):
+def yolov5(cfg_path='yolov5s.yaml', pretrained=False, progress=True,
+           num_classes=80, pretrained_backbone=True, **kwargs):
     """
     Constructs a YOLO model.
 
@@ -170,7 +187,7 @@ def yolov5s(pretrained=False, progress=True,
 
     Example::
 
-        >>> model = yolov5s(pretrained=True)
+        >>> model = yolov5(pretrained=True)
         >>> model.eval()
         >>> x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
         >>> predictions = model(x)
@@ -183,9 +200,9 @@ def yolov5s(pretrained=False, progress=True,
         # no need to download the backbone if pretrained is set
         pretrained_backbone = False
     # skip P2 because it generates too many anchors (according to their paper)
-    backbone, anchor_grids = darknet(cfg_path='yolov5s.yaml', pretrained=pretrained_backbone)
+    backbone, anchor_grids = darknet(cfg_path=cfg_path, pretrained=pretrained_backbone)
     model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(model_urls['yolov5s'], progress=progress)
+        state_dict = load_state_dict_from_url(model_urls[Path(cfg_path).stem], progress=progress)
         model.load_state_dict(state_dict)
     return model
