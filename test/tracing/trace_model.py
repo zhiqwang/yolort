@@ -1,11 +1,11 @@
 import torch
 
-from hubconf import yolov5
+from hubconf import yolov5s
 
 
 if __name__ == "__main__":
 
-    model = yolov5(pretrained=True)
+    model = yolov5s(pretrained=True)
     model.eval()
 
     traced_model = torch.jit.script(model)

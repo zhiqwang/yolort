@@ -1,7 +1,7 @@
 from torch import nn
 
 from .common import Conv
-from .yolo import yolov5
+from .yolo import yolov5, yolov5s, yolov5m, yolov5l  # noqa
 
 from utils.activations import Hardswish
 
