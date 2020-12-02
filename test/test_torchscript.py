@@ -8,7 +8,7 @@ from models.box_head import YoloHead, PostProcess, SetCriterion
 from models import yolov5s, yolov5m, yolov5l
 
 
-class ModelTester(unittest.TestCase):
+class TorchScriptTester(unittest.TestCase):
 
     def _init_test_backbone(self):
         backbone = darknet()
