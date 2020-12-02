@@ -64,7 +64,7 @@ class TorchScriptTester(unittest.TestCase):
         scripted_model = torch.jit.script(model)  # noqa
 
     def test_yolov5s_script(self):
-        model = yolov5s()
+        model = yolov5s(pretrained=True)
         model.eval()
 
         scripted_model = torch.jit.script(model)
@@ -79,7 +79,7 @@ class TorchScriptTester(unittest.TestCase):
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
 
     def test_yolov5m_script(self):
-        model = yolov5m()
+        model = yolov5m(pretrained=True)
         model.eval()
 
         scripted_model = torch.jit.script(model)
@@ -94,7 +94,7 @@ class TorchScriptTester(unittest.TestCase):
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
 
     def test_yolov5l_script(self):
-        model = yolov5l()
+        model = yolov5l(pretrained=True)
         model.eval()
 
         scripted_model = torch.jit.script(model)
