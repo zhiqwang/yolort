@@ -29,10 +29,10 @@ python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
 
 ### 🔥 Loading via `torch.hub`
 
-The models are also available via torch hub, to load `yolov5` with pretrained weights simply do:
+The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
 
 ```python
-model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5', pretrained=True)
+model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 ```
 
 ### ✨ Inference on `PyTorch` backend
