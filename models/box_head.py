@@ -16,7 +16,7 @@ def _sum(x: List[Tensor]) -> Tensor:
 
 
 class YoloHead(nn.Module):
-    def __init__(self, in_channels, num_anchors, num_classes):  # detection layer
+    def __init__(self, in_channels: List[int], num_anchors: int, num_classes: int):
         super().__init__()
         self.num_anchors = num_anchors  # anchors
         self.num_outputs = num_classes + 5  # number of outputs per anchor
