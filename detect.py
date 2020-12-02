@@ -10,7 +10,7 @@ import torch
 from torchvision.ops import box_convert
 
 from utils.image_utils import plot_one_box
-from hubconf import yolov5
+from hubconf import yolov5s
 
 
 def load_names(category_path):
@@ -86,7 +86,7 @@ def main(args):
     print(args)
     device = torch.device("cuda") if torch.cuda.is_available() and args.gpu else torch.device("cpu")
 
-    model = yolov5(
+    model = yolov5s(
         pretrained=True,
         min_size=args.min_size,
         max_size=args.max_size,
@@ -132,8 +132,6 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('--model_cfg', type=str, default='yolov5s.yaml',
-                        help='path where the model cfg in')
     parser.add_argument('--labelmap', type=str, default='./notebooks/assets/coco.names',
                         help='path where the coco category in')
     parser.add_argument('--input_source', type=str, default='./notebooks/assets/zidane.jpg',
