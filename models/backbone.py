@@ -188,7 +188,7 @@ class IntermediateLayerGetter(nn.ModuleDict):
         return out
 
 
-def darknet(cfg_path='yolov5s.yaml', pretrained=False):
+def darknet(cfg_path='yolov5s.yaml'):
     cfg_path = Path(__file__).parent.absolute().joinpath(cfg_path)
     with open(cfg_path) as f:
         model_dict = yaml.load(f, Loader=yaml.FullLoader)

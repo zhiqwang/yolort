@@ -166,7 +166,6 @@ def yolov5(
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,
-    pretrained_backbone: bool = True,
     **kwargs: Any,
 ) -> YOLO:
     """
@@ -205,11 +204,7 @@ def yolov5(
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    if pretrained:
-        # no need to download the backbone if pretrained is set
-        pretrained_backbone = False
-    # skip P2 because it generates too many anchors (according to their paper)
-    backbone, anchor_grids = darknet(cfg_path=cfg_path, pretrained=pretrained_backbone)
+    backbone, anchor_grids = darknet(cfg_path=cfg_path)
     model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[Path(cfg_path).stem], progress=progress)
