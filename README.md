@@ -22,9 +22,8 @@ There are something different comparing to [ultralytics's](https://github.com/ul
 You can also convert ultralytics's trained (or your own) model checkpoint with the following command:
 
 ```bash
-python -m utils.updated_checkpoint [--checkpoint_path ./yolov5s.pt]
-                                   [--cfg_path ./models/yolov5s.yaml]
-                                   [--updated_checkpoint_path ./checkpoints/yolov5/yolov5s.pt]
+python -m utils.updated_checkpoint [--checkpoint_path_ultralytics ./checkpoint/yolov5s_ultralytics.pt]
+                                   [--checkpoint_path_rt_stack ./checkpoints/yolov5s_rt_stack.pt]
 ```
 
 ### 🔥 Loading via `torch.hub`
