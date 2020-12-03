@@ -2,16 +2,17 @@
 import argparse
 import torch
 
-from hubconf import yolov5
+from hubconf import yolov5s
 
 
-def update_ultralytics(model, checkpoint_path_ultralytics):
+def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):
     """
     It's limited that ultralytics saved model must load in their root path.
-    So a very important thing is to desensitize the path befor updating ultralytics's trained model as follows:
+    So a very important thing is to desensitize the path befor updating
+    ultralytics's trained model as following:
 
         >>> checkpoints_ = torch.load(weights, map_location='cpu')['model']
-        >>> torch.save(checkpoints_.state_dict(), './checkpoints/yolov5/yolov5s_ultralytics.pt')
+        >>> torch.save(checkpoints_.state_dict(), './checkpoints/yolov5s_ultralytics.pt')
     """
     state_dict = torch.load(checkpoint_path_ultralytics, map_location="cpu")
 
@@ -33,19 +34,17 @@ def update_ultralytics(model, checkpoint_path_ultralytics):
 
 
 def main(args):
-    model = yolov5(cfg_path=args.cfg_path)
-    model = update_ultralytics(model, args.checkpoint_path)
+    model = yolov5s()
+    model = update_ultralytics_checkpoints(model, args.checkpoint_path_ultralytics)
 
-    torch.save(model.state_dict(), args.updated_checkpoint_path)
+    torch.save(model.state_dict(), args.checkpoint_path_rt_stack)
 
 
 def get_args_parser():
     parser = argparse.ArgumentParser('YOLO checkpoint configures', add_help=False)
-    parser.add_argument('--checkpoint_path', default='./yolov5s.pt',
+    parser.add_argument('--checkpoint_path_ultralytics', default='.checkpoints/yolov5s_ultralytics.pt',
                         help='Path of ultralytics trained yolov5 checkpoint model')
-    parser.add_argument('--cfg_path', default='./models/yolov5s.yaml',
-                        help='Path of yolov5 configures model')
-    parser.add_argument('--updated_checkpoint_path', default='./checkpoints/yolov5/yolov5s.pt',
+    parser.add_argument('--checkpoint_path_rt_stack', default='./checkpoints/yolov5s_updated.pt',
                         help='Path of updated yolov5 checkpoint model')
 
     return parser
