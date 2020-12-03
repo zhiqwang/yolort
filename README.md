@@ -2,7 +2,7 @@
 
 [![Stable](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Stable/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3AStable) [![Nightly](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Nightly/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3ANightly)
 
-Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on. *Currently work in process, very pleasure for suggestion and cooperation. BTW, leave a 🌟 if you liked it.*
+**What it is.** You like torchvision's faster-rcnn or retinanet? You like ultralytics/yolov5? You love yolov5-rt-stack! Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on.
 
 <a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
@@ -76,3 +76,7 @@ Now, `yolov5-rt-stack` can draw the model graph directly, check for more details
 
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
+
+## 🌟 Contributing
+
+We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. BTW, leave a star if you liked it, this means a lot to me :)
