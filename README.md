@@ -72,11 +72,11 @@ Now, `yolov5-rt-stack` can draw the model graph directly, check for more details
 
 <a href="notebooks/assets/yolov5.detail.svg"><img src="notebooks/assets/yolov5.detail.svg" alt="YOLO model visualize" width="500"/></a>
 
-## 🌟 Contributing to `yolov5-rt-stack`
-
-We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. BTW, leave a star if you liked it, this means a lot to me :)
-
 ## 🎓 Acknowledgement
 
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
+
+## 🌟 Contributing to `yolov5-rt-stack`
+
+We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. BTW, leave a star if you liked it, this means a lot to me :)
