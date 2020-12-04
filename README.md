@@ -1,8 +1,14 @@
-# 🔦 Yolov5 Runtime Stack
+# 🔦 yolov5rt - YOLOv5 Runtime Stack
 
 [![Stable](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Stable/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3AStable) [![Nightly](https://github.com/zhiqwang/yolov5-rt-stack/workflows/Nightly/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3ANightly)
 
-**What it is.** You like torchvision's faster-rcnn or retinanet? You like ultralytics/yolov5? You love yolov5-rt-stack! Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on.
+**What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on.
+
+**About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
+
+> object detection should not be more difficult than classification, and should not require complex libraries for training and inference.
+
+`yolov5rt` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolov5rt`!
 
 <a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
@@ -23,7 +29,7 @@ You can also convert ultralytics's trained (or your own) model checkpoint with t
 
 ```bash
 python -m utils.updated_checkpoint [--checkpoint_path_ultralytics ./checkpoint/yolov5s_ultralytics.pt]
-                                   [--checkpoint_path_rt_stack ./checkpoints/yolov5s_rt_stack.pt]
+                                   [--checkpoint_path_rt_stack ./checkpoints/yolov5s_rt.pt]
 ```
 
 ### 🔥 Loading via `torch.hub`
@@ -36,17 +42,32 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### ✨ Inference on `PyTorch` backend
 
-There are no extra compiled components in `yolov5-rt-stack` and package dependencies are minimal, so the code is very simple to use. We provide instructions how to install dependencies via conda. First, clone the repository locally:
+There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use.
 
-```bash
-git clone https://github.com/zhiqwang/yolov5-rt-stack.git
-```
+<details><summary>We provide instructions how to install dependencies via conda.</summary><br/>
 
-Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
+- First, clone the repository locally:
 
-```bash
-conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
-```
+  ```bash
+  git clone https://github.com/zhiqwang/yolov5-rt-stack.git
+  ```
+
+- Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
+
+  ```bash
+  conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
+  ```
+
+- Install pycocotools (for evaluation on COCO) and scipy (for training):
+
+  ```bash
+  conda install cython scipy
+  pip install -U pycocotools>=2.0.2  # corresponds to https://github.com/ppwwyyxx/cocoapi
+  ```
+
+- That's it, should be good to train and evaluate detection models.
+
+</details>
 
 To read a source image and detect its objects run:
 
@@ -60,15 +81,15 @@ python -m detect [--input_source YOUR_IMAGE_SOURCE_DIR]
                  [--gpu]  # GPU switch, Set False as default
 ```
 
-You can also check the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more details.
+You can also see the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more information.
 
 ### 🚀 Inference on `LibTorch` backend
 
-Here provide an [example](./deployment) of getting `LibTorch` inference to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
+We provide an [example](./deployment) of getting `LibTorch` inference to work. For details see the [CI](.github/workflows/stable.yml).
 
 ## 🎨 Model Graph Visualization
 
-Now, `yolov5-rt-stack` can draw the model graph directly, check for more details in [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook.
+Now, `yolov5rt` can draw the model graph directly, checkout our [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5.detail.svg"><img src="notebooks/assets/yolov5.detail.svg" alt="YOLO model visualize" width="500"/></a>
 
@@ -77,6 +98,6 @@ Now, `yolov5-rt-stack` can draw the model graph directly, check for more details
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
 
-## 🌟 Contributing
+## 🤗 Contributing
 
-We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. BTW, leave a star if you liked it, this means a lot to me :)
+We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. *BTW, leave a 🌟 if you liked it, this means a lot to us* :)

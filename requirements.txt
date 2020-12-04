@@ -1,3 +1,6 @@
+# Do not add opencv here. Just like pytorch, user should install
+# opencv themselves, preferrably by OS's package manager, or by
+# choosing the proper pypi package name at https://github.com/skvark/opencv-python
 Cython
 matplotlib>=3.2.2
 numpy>=1.18.5
