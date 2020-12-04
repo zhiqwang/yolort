@@ -129,32 +129,65 @@ class SetCriterion(nn.Module):
              targets: list of dicts, such that len(targets) == batch_size.
                       The expected keys in each dict depends on the losses applied, see each loss' doc
         """
-        losses = []
+        device = anchors.device
+        lcls, lbox, lobj = torch.zeros(1, device=device), torch.zeros(1, device=device), torch.zeros(1, device=device)
+        h = model.hyp  # hyperparameters
 
-        for targets_per_image, bbox_regression_per_image, matched_idxs_per_image in zip(
-                targets, bbox_regression, matched_idxs):
-            # determine only the foreground indices, ignore the rest
-            foreground_idxs_per_image = torch.where(matched_idxs_per_image >= 0)[0]
-            num_foreground = foreground_idxs_per_image.numel()
+        # Define criteria
+        BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([h['cls_pw']])).to(device)
+        BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([h['obj_pw']])).to(device)
 
-            # select only the foreground boxes
-            matched_gt_boxes_per_image = targets_per_image['boxes'][matched_idxs_per_image[foreground_idxs_per_image]]
-            bbox_regression_per_image = bbox_regression_per_image[foreground_idxs_per_image, :]
-            anchors = anchors[foreground_idxs_per_image, :]
+        # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
+        cp, cn = smooth_BCE(eps=0.0)
 
-            # compute the regression targets
-            target_regression = self.box_coder.encode_single(matched_gt_boxes_per_image, anchors)
+        # Focal loss
+        g = h['fl_gamma']  # focal loss gamma
+        if g > 0:
+            BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
 
-            # compute the loss
-            losses.append(torch.nn.functional.l1_loss(
-                bbox_regression_per_image,
-                target_regression,
-                size_average=False
-            ) / max(1, num_foreground))
+        # Losses
+        nt = 0  # number of targets
+        no = len(bbox_regression)  # number of outputs
+        balance = [4.0, 1.0, 0.4] if no == 3 else [4.0, 1.0, 0.4, 0.1]  # P3-5 or P3-6
+        for i, pi in enumerate(bbox_regression):  # layer index, layer predictions
+            b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
+            tobj = torch.zeros_like(pi[..., 0], device=device)  # target obj
 
-        return {
-            'loss': _sum(losses) / max(1, len(targets)),
-        }
+            n = b.shape[0]  # number of targets
+            if n:
+                nt += n  # cumulative targets
+                ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
+
+                # Regression
+                pxy = ps[:, :2].sigmoid() * 2. - 0.5
+                pwh = (ps[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
+                pbox = torch.cat((pxy, pwh), 1).to(device)  # predicted box
+                iou = bbox_iou(pbox.T, targets['boxes'][i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
+                lbox += (1.0 - iou).mean()  # iou loss
+
+                # Objectness
+                tobj[b, a, gj, gi] = (1.0 - model.gr) + model.gr * iou.detach().clamp(0).type(tobj.dtype)  # iou ratio
+
+                # Classification
+                if model.nc > 1:  # cls loss (only if multiple classes)
+                    t = torch.full_like(ps[:, 5:], cn, device=device)  # targets
+                    t[range(n), targets['classes'][i]] = cp
+                    lcls += BCEcls(ps[:, 5:], t)  # BCE
+
+                # Append targets to text file
+                # with open('targets.txt', 'a') as file:
+                #     [file.write('%11.5g ' * 4 % tuple(x) + '\n') for x in torch.cat((txy[i], twh[i]), 1)]
+
+            lobj += BCEobj(pi[..., 4], tobj) * balance[i]  # obj loss
+
+        s = 3 / no  # output count scaling
+        lbox *= h['box'] * s
+        lobj *= h['obj'] * s * (1.4 if no == 4 else 1.)
+        lcls *= h['cls'] * s
+        bs = tobj.shape[0]  # batch size
+
+        loss = lbox + lobj + lcls
+        return loss * bs, torch.cat((lbox, lobj, lcls, loss)).detach()
 
 
 class PostProcess(nn.Module):
