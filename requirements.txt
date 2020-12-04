@@ -1,3 +1,6 @@
+# Do not add opencv here. Just like pytorch, user should install
+# opencv themselves, preferrably by OS's package manager, or by
+# choosing the proper pypi package name at https://github.com/skvark/opencv-python
 Cython
 matplotlib>=3.2.2
 numpy>=1.18.5
@@ -8,3 +11,4 @@ tensorboard>=2.2
 tqdm>=4.41.0
 onnx>=1.8.0
 onnxruntime>=1.5.2
+pycocotools>=2.0.2

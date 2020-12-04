@@ -42,22 +42,30 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### ✨ Inference on `PyTorch` backend
 
-There are no extra compiled components in `yolov5rt` and package dependencies are minimal.
+There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use.
 
-<details>
-  <summary>We provide instructions how to install dependencies via conda.</summary><br/>
+<details><summary>We provide instructions how to install dependencies via conda.</summary><br/>
 
-  - First, clone the repository locally:
+- First, clone the repository locally:
 
-    ```bash
-    git clone https://github.com/zhiqwang/yolov5-rt-stack.git
-    ```
+  ```bash
+  git clone https://github.com/zhiqwang/yolov5-rt-stack.git
+  ```
 
-  - Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
+- Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
 
-    ```bash
-    conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
-    ```
+  ```bash
+  conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
+  ```
+
+- Install pycocotools (for evaluation on COCO) and scipy (for training):
+
+  ```bash
+  conda install cython scipy
+  pip install -U pycocotools>=2.0.2  # corresponds to https://github.com/ppwwyyxx/cocoapi
+  ```
+
+- That's it, should be good to train and evaluate detection models.
 
 </details>
 
