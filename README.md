@@ -47,17 +47,17 @@ There are no extra compiled components in `yolov5rt` and package dependencies ar
 <details>
   <summary>We provide instructions how to install dependencies via conda.</summary><br/>
 
-  First, clone the repository locally:
+  - First, clone the repository locally:
 
-  ```bash
-  git clone https://github.com/zhiqwang/yolov5-rt-stack.git
-  ```
+    ```bash
+    git clone https://github.com/zhiqwang/yolov5-rt-stack.git
+    ```
 
-  Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
+  - Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
 
-  ```bash
-  conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
-  ```
+    ```bash
+    conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
+    ```
 
 </details>
 
