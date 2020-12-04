@@ -25,7 +25,7 @@
 
 There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use.
 
-<details><summary>We provide instructions how to install dependencies via conda.</summary><br/>
+<details><summary>Expand to see the instructions of how to install dependencies via conda.</summary><br/>
 
 - First, clone the repository locally:
 
