@@ -1,5 +1,5 @@
 # Notebook Examples
 
-Now, `yolov5-rt-stack` can draw the model structure directly, check for more details in [notebook](visualize-jit-models.ipynb).
+`yolov5rt` can draw the model graph directly, for details see [visualize-jit-models](visualize-jit-models.ipynb) notebook.
 
-<a href="assets/yolov5.detail.svg"><img src="assets/yolov5.detail.svg" alt="YOLO model visualize" width="750"/></a>
+<a href="assets/yolov5.detail.svg"><img src="assets/yolov5.detail.svg" alt="YOLO model visualize" width="500"/></a>

@@ -81,15 +81,15 @@ python -m detect [--input_source YOUR_IMAGE_SOURCE_DIR]
                  [--gpu]  # GPU switch, Set False as default
 ```
 
-You can also check the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more details.
+You can also see the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more information.
 
 ### 🚀 Inference on `LibTorch` backend
 
-Here provide an [example](./deployment) of getting `LibTorch` inference to work. Also you can check the [CI](.github/workflows/stable.yml) for more details.
+We provide an [example](./deployment) of getting `LibTorch` inference to work. For details see the [CI](.github/workflows/stable.yml).
 
 ## 🎨 Model Graph Visualization
 
-Now, `yolov5rt` can draw the model graph directly, check for more details in [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook.
+Now, `yolov5rt` can draw the model graph directly, checkout our [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5.detail.svg"><img src="notebooks/assets/yolov5.detail.svg" alt="YOLO model visualize" width="500"/></a>
 
