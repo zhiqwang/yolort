@@ -23,28 +23,9 @@
 
 ## 🛠️ Usage
 
-There are something different comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation. This repo can load ultralytics's trained model checkpoint with minor modifications, I have converted ultralytics's lastest released [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
-
-You can also convert ultralytics's trained (or your own) model checkpoint with the following command:
-
-```bash
-python -m utils.updated_checkpoint [--checkpoint_path_ultralytics ./checkpoint/yolov5s_ultralytics.pt]
-                                   [--checkpoint_path_rt_stack ./checkpoints/yolov5s_rt.pt]
-```
-
-### 🔥 Loading via `torch.hub`
-
-The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
-
-```python
-model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
-```
-
-### ✨ Inference on `PyTorch` backend
-
 There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use.
 
-<details><summary>We provide instructions how to install dependencies via conda.</summary><br/>
+<details><summary>Expand to see the instructions of how to install dependencies via conda.</summary><br/>
 
 - First, clone the repository locally:
 
@@ -68,6 +49,53 @@ There are no extra compiled components in `yolov5rt` and package dependencies ar
 - That's it, should be good to train and evaluate detection models.
 
 </details>
+
+### 🔥 Loading via `torch.hub`
+
+The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
+
+```python
+model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
+```
+
+### ↕️ Updating checkpoint from ultralytics/yolov5
+
+The module state of `yolov5rt` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest release [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
+
+<details><summary>Expand to see more information of how to update ultralytics's trained (or your own) model checkpoint.</summary><br/>
+
+- If you train your model using ultralytics's repo, you should update the model checkpoint first. ultralytics's trained model has a limitation that their model must load in the root path of ultralytics, so a important thing is to desensitize the path dependence as follows:
+
+  ```python
+  # Noted that current path is the root of ultralytics/yolov5, and the checkpoint is
+  # downloaded from <https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt>
+  ultralytics_weights = 'https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt'
+  checkpoints_ = torch.load(ultralytics_weights, map_location='cpu')['model']
+  torch.save(checkpoints_.state_dict(), desensitize_ultralytics_weights)
+  ```
+
+- Load `yolov5rt` model as follows:
+
+  ```python
+  from hubconf import yolov5s
+
+  model = yolov5s()
+  model.eval()
+  ```
+
+- Now let's update ultralytics/yolov5 trained checkpoint, see the [conversion script](utils/updated_checkpoint.py) for more information:
+
+  ```python
+  from utils.updated_checkpoint import update_ultralytics_checkpoints
+
+  model = update_ultralytics_checkpoints(model, desensitize_ultralytics_weights)
+  # updated checkpint is saved to checkpoint_path_rt_stack
+  torch.save(model.state_dict(), checkpoint_path_rt_stack)
+  ```
+
+</details>
+
+### ✨ Inference on `PyTorch` backend
 
 To read a source image and detect its objects run:
 
