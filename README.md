@@ -6,9 +6,9 @@
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
-> object detection should not be more difficult than classification, and should not require complex libraries for training and inference. `yolov5rt` is very simple to implement and experiment with.
+> object detection should not be more difficult than classification, and should not require complex libraries for training and inference.
 
-You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolov5rt`!
+`yolov5rt` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolov5rt`!
 
 <a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
@@ -42,7 +42,7 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### ✨ Inference on `PyTorch` backend
 
-There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use.
+There are no extra compiled components in `yolov5rt` and package dependencies are minimal.
 
 <details>
   <summary>We provide instructions how to install dependencies via conda.</summary><br/>
