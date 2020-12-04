@@ -4,7 +4,11 @@
 
 **What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on.
 
-**About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr): object detection should not be more difficult than classification, and should not require complex libraries for training and inference. `yolov5rt` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolov5rt`!
+**About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
+
+> object detection should not be more difficult than classification, and should not require complex libraries for training and inference. `yolov5rt` is very simple to implement and experiment with.
+
+You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolov5rt`!
 
 <a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
@@ -38,8 +42,10 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### ✨ Inference on `PyTorch` backend
 
+There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use.
+
 <details>
-  <summary>There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use. We provide instructions how to install dependencies via conda.</summary>
+  <summary>We provide instructions how to install dependencies via conda.</summary><br/>
 
   First, clone the repository locally:
 
