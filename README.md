@@ -58,7 +58,7 @@ The models are also available via torch hub, to load `yolov5s` with pretrained w
 model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 ```
 
-### ↕️ Updating checkpoint from ultralytics/yolov5 to `yolov5rt`
+### ↕️ Updating checkpoint from ultralytics/yolov5
 
 The module state of `yolov5rt` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest release [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
 
