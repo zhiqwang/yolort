@@ -67,11 +67,11 @@ The module state of `yolov5rt` has some differences comparing to `ultralytics/yo
 - If you train your model using ultralytics's repo, you should update the model checkpoint first. ultralytics's trained model has a limitation that their model must load in the root path of ultralytics, so a important thing is to desensitize the path dependence as follows:
 
   ```python
-  # Noted that current path is the root of ultralytics/yolov5
-  # and the weights is downloaded from <https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt>
-  ultralytic_weights = 'https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt'
-  checkpoints_ = torch.load(weights, map_location='cpu')['model']
-  torch.save(checkpoints_.state_dict(), ultralytics_weights)
+  # Noted that current path is the root of ultralytics/yolov5, and the checkpoint is
+  # downloaded from <https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt>
+  ultralytics_weights = 'https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt'
+  checkpoints_ = torch.load(ultralytics_weights, map_location='cpu')['model']
+  torch.save(checkpoints_.state_dict(), desensitize_ultralytics_weights)
   ```
 
 - Load `yolov5rt` model as follows:
@@ -88,7 +88,8 @@ The module state of `yolov5rt` has some differences comparing to `ultralytics/yo
   ```python
   from utils.updated_checkpoint import update_ultralytics_checkpoints
 
-  model = update_ultralytics_checkpoints(model, checkpoint_path_ultralytics)
+  model = update_ultralytics_checkpoints(model, desensitize_ultralytics_weights)
+  # updated checkpint is saved to checkpoint_path_rt_stack
   torch.save(model.state_dict(), checkpoint_path_rt_stack)
   ```
 
