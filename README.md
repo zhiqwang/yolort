@@ -60,11 +60,11 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### Updating weights from ultralytics/yolov5 to `yolov5rt`
 
-The module state of `yolov5rt` has minor difference comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest released [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
+The module state of `yolov5rt` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest release [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
 
 <details><summary>Expand to see more information of how to update ultralytics's trained (or your own) model checkpoint.</summary><br/>
 
-- If you train your model using ultralytics's repo, you should update the model checkpoint first. ultralytics's trained model has a limitation that their model must load in the root path of ultralytics, so a important thing is to desensitize the path dependence befor updating ultralytics's trained model as follows:
+- If you train your model using ultralytics's repo, you should update the model checkpoint first. ultralytics's trained model has a limitation that their model must load in the root path of ultralytics, so a important thing is to desensitize the path dependence as follows:
 
   ```python
   # Noted that current path is the root of ultralytics/yolov5
@@ -83,7 +83,7 @@ The module state of `yolov5rt` has minor difference comparing to [ultralytics's]
   model.eval()
   ```
 
-- Then let's update ultralytics/yolov5 weights, see the [conversion script](utils/updated_checkpoint.py) for more information:
+- Now let's update ultralytics/yolov5 weights, see the [conversion script](utils/updated_checkpoint.py) for more information:
 
   ```python
   from utils.updated_checkpoint import update_ultralytics_checkpoints
