@@ -60,7 +60,7 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### Updating weights from ultralytics/yolov5 to `yolov5rt`
 
-The module structure of `yolov5rt` has minor difference comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest released [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
+The module state of `yolov5rt` has minor difference comparing to [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/yolo.py) implementation. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest released [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
 
 <details><summary>Expand to see more information of how to update ultralytics's trained (or your own) model checkpoint.</summary><br/>
 
