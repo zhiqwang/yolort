@@ -44,7 +44,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('YOLO checkpoint configures', add_help=False)
     parser.add_argument('--checkpoint_path_ultralytics', default='.checkpoints/yolov5s_ultralytics.pt',
                         help='Path of ultralytics trained yolov5 checkpoint model')
-    parser.add_argument('--checkpoint_path_rt_stack', default='./checkpoints/yolov5s_updated.pt',
+    parser.add_argument('--checkpoint_path_rt_stack', default='./checkpoints/yolov5s_rt.pt',
                         help='Path of updated yolov5 checkpoint model')
 
     return parser
