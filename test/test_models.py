@@ -59,8 +59,8 @@ class EngineTester(TestCase):
         labels = torch.tensor([1, 2, 3, 4], dtype=torch.int64)
         targets = [{"boxes": boxes, "labels": labels}]
 
-        yolov5 = yolov5s(num_classes=5)
-        out = yolov5(img_tensor, targets)
+        model = yolov5s(num_classes=5)
+        out = model(img_tensor, targets)
         self.assertIsInstance(out, Dict)
         self.assertIsInstance(out["loss_classifier"], torch.Tensor)
         self.assertIsInstance(out["loss_box_reg"], torch.Tensor)
@@ -72,10 +72,10 @@ class EngineTester(TestCase):
         img_input = image_preprocess(img_name)
         self.assertEqual(img_input.ndim, 3)
 
-        yolov5 = yolov5s(pretrained=True)
-        yolov5.eval()
+        model = yolov5s(pretrained=True)
+        model.eval()
 
-        out = yolov5([img_input])
+        out = model([img_input])
         self.assertIsInstance(out, list)
         self.assertIsInstance(out[0], Dict)
         self.assertIsInstance(out[0]["boxes"], torch.Tensor)
