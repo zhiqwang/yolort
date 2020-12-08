@@ -6,7 +6,8 @@ from torch.jit.annotations import Tuple, List, Dict, Optional
 from torchvision.ops import batched_nms, box_iou
 
 from . import _utils as det_utils
-from utils.box_ops import bbox_iou, FocalLoss
+from ._utils import FocalLoss
+from utils.box_ops import bbox_iou
 
 
 def _sum(x: List[Tensor]) -> Tensor:
