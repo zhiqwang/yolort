@@ -86,7 +86,8 @@ class SetCriterion(nn.Module):
         cls_pw: float = 1.0,  # cls BCELoss positive_weight
         obj: float = 1.0,  # obj loss gain (scale with pixels)
         obj_pw: float = 1.0,  # obj BCELoss positive_weight
-        anchor_t: float = 1.0,
+        anchor_t: Tuple[float] = (1.0, 2.0, 8.0),  # anchor-multiple threshold
+        gr: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
         fl_gamma: float = 0.0,  # focal loss gamma
         allow_low_quality_matches: bool = True,
     ) -> None:
@@ -160,7 +161,7 @@ class SetCriterion(nn.Module):
             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
 
         # Losses
-        nt = 0  # number of targets
+        num_targets = 0  # number of targets
         no = len(bbox_regression)  # number of outputs
         balance = [4.0, 1.0, 0.4] if no == 3 else [4.0, 1.0, 0.4, 0.1]  # P3-5 or P3-6
         for i, pi in enumerate(bbox_regression):  # layer index, layer predictions
@@ -169,7 +170,7 @@ class SetCriterion(nn.Module):
 
             n = b.shape[0]  # number of targets
             if n:
-                nt += n  # cumulative targets
+                num_targets += n  # cumulative targets
                 ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
 
                 # Regression
@@ -180,10 +181,10 @@ class SetCriterion(nn.Module):
                 lbox += (1.0 - iou).mean()  # iou loss
 
                 # Objectness
-                tobj[b, a, gj, gi] = (1.0 - model.gr) + model.gr * iou.detach().clamp(0).type(tobj.dtype)  # iou ratio
+                tobj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * iou.detach().clamp(0).type(tobj.dtype)  # iou ratio
 
                 # Classification
-                if model.nc > 1:  # cls loss (only if multiple classes)
+                if num_classes > 1:  # cls loss (only if multiple classes)
                     t = torch.full_like(ps[:, 5:], cn, device=device)  # targets
                     t[range(n), targets['classes'][i]] = cp
                     lcls += BCEcls(ps[:, 5:], t)  # BCE
@@ -205,11 +206,12 @@ class SetCriterion(nn.Module):
 
     def build_targets(self, predictions, targets):
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
-        na, nt = det.na, targets.shape[0]  # number of anchors, targets
+        num_anchors, num_targets = det.num_anchors, targets.shape[0]  # number of anchors, targets
         tcls, tbox, indices, anch = [], [], [], []
         gain = torch.ones(7, device=targets.device)  # normalized to gridspace gain
-        ai = torch.arange(na, device=targets.device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt)
-        targets = torch.cat((targets.repeat(na, 1, 1), ai[:, :, None]), 2)  # append anchor indices
+        # same as .repeat_interleave(num_targets)
+        ai = torch.arange(num_anchors, device=targets.device).float().view(num_anchors, 1).repeat(1, num_targets)
+        targets = torch.cat((targets.repeat(num_anchors, 1, 1), ai[:, :, None]), 2)  # append anchor indices
 
         g = 0.5  # bias
         off = torch.tensor([[0, 0],
@@ -223,7 +225,7 @@ class SetCriterion(nn.Module):
 
             # Match targets to anchors
             t = targets * gain
-            if nt:
+            if num_targets:
                 # Matches
                 r = t[:, :, 4:6] / anchors[:, None]  # wh ratio
                 j = torch.max(r, 1. / r).max(2)[0] < self.anchor_t  # compare
