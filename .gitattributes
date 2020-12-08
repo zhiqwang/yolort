@@ -1,2 +1,33 @@
 # this drop notebooks from GitHub language stats
 *.ipynb linguist-documentation
+
+# Graphics
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.tif      binary
+*.tiff     binary
+*.ico      binary
+# SVG treated as an asset (binary) by default.
+*.svg      text
+# If you want to treat it as binary,
+# use the following line instead.
+# *.svg    binary
+*.eps      binary
+
+# Scripts
+*.bash     text eol=lf
+*.fish     text eol=lf
+*.sh       text eol=lf
+# These are explicitly windows files and should use crlf
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.ps1      text eol=crlf
+
+# Serialisation
+*.json     text
+*.toml     text
+*.xml      text
+*.yaml     text
+*.yml      text
