@@ -1,7 +1,12 @@
+import unittest
 import torch
 
 from models.anchor_utils import AnchorGenerator
+from models import yolov5s
 from .common_utils import TestCase
+from .torch_utils import image_preprocess
+
+from typing import Dict
 
 
 class ModelTester(TestCase):
@@ -36,3 +41,43 @@ class ModelTester(TestCase):
         self.assertEqual(anchors[0], anchor_output)
         self.assertEqual(anchors[1], wh_output)
         self.assertEqual(anchors[2], xy_output)
+
+
+class EngineTester(TestCase):
+    @unittest.skip("Current it isn't well implemented")
+    def test_train(self):
+        # Read Image using TorchVision.io Here
+        # Do forward over image
+        img_name = "test/assets/zidane.jpg"
+        img_tensor = image_preprocess(img_name)
+        self.assertEqual(img_tensor.ndim, 3)
+
+        boxes = torch.tensor([[0, 0, 100, 100],
+                              [0, 12, 25, 225],
+                              [10, 15, 30, 35],
+                              [23, 35, 93, 95]], dtype=torch.float)
+        labels = torch.tensor([1, 2, 3, 4], dtype=torch.int64)
+        targets = [{"boxes": boxes, "labels": labels}]
+
+        yolov5 = yolov5s(num_classes=5)
+        out = yolov5(img_tensor, targets)
+        self.assertIsInstance(out, Dict)
+        self.assertIsInstance(out["loss_classifier"], torch.Tensor)
+        self.assertIsInstance(out["loss_box_reg"], torch.Tensor)
+        self.assertIsInstance(out["loss_objectness"], torch.Tensor)
+
+    def test_inference(self):
+        # Infer over an image
+        img_name = "test/assets/zidane.jpg"
+        img_input = image_preprocess(img_name)
+        self.assertEqual(img_input.ndim, 3)
+
+        yolov5 = yolov5s(pretrained=True)
+        yolov5.eval()
+
+        out = yolov5([img_input])
+        self.assertIsInstance(out, list)
+        self.assertIsInstance(out[0], Dict)
+        self.assertIsInstance(out[0]["boxes"], torch.Tensor)
+        self.assertIsInstance(out[0]["labels"], torch.Tensor)
+        self.assertIsInstance(out[0]["scores"], torch.Tensor)
