@@ -122,9 +122,6 @@ class SetCriterion(nn.Module):
         """
         matched_idxs = []
         for targets_per_image in targets:
-            if targets_per_image['boxes'].numel() == 0:
-                matched_idxs.append(torch.full((anchors.size(0),), -1, dtype=torch.int64))
-                continue
 
             match_quality_matrix = box_iou(targets_per_image['boxes'], anchors)
             matched_idxs.append(self.proposal_matcher(match_quality_matrix))
@@ -162,8 +159,8 @@ class SetCriterion(nn.Module):
 
         # Losses
         num_targets = 0  # number of targets
-        no = len(head_outputs)  # number of outputs
-        balance = [4.0, 1.0, 0.4] if no == 3 else [4.0, 1.0, 0.4, 0.1]  # P3-5 or P3-6
+        num_output = len(head_outputs)  # number of outputs
+        balance = [4.0, 1.0, 0.4] if num_output == 3 else [4.0, 1.0, 0.4, 0.1]  # P3-5 or P3-6
         for i, pi in enumerate(head_outputs):  # layer index, layer predictions
             b, a, gj, gi = matched_idxs[i]  # image, anchor, gridy, gridx
             tobj = torch.zeros_like(pi[..., 0], device=device)  # target obj
@@ -186,7 +183,7 @@ class SetCriterion(nn.Module):
                 # Classification
                 if num_classes > 1:  # cls loss (only if multiple classes)
                     t = torch.full_like(ps[:, 5:], cn, device=device)  # targets
-                    t[range(n), targets['classes'][i]] = cp
+                    t[range(n), targets['labels'][i]] = cp
                     lcls += BCEcls(ps[:, 5:], t)  # BCE
 
                 # Append targets to text file
@@ -195,10 +192,10 @@ class SetCriterion(nn.Module):
 
             lobj += BCEobj(pi[..., 4], tobj) * balance[i]  # obj loss
 
-        s = 3 / no  # output count scaling
-        lbox *= self.box * s
-        lobj *= self.obj * s * (1.4 if no == 4 else 1.)
-        lcls *= self.cls * s
+        out_scaling = 3 / num_output  # output count scaling
+        lbox *= self.box * out_scaling
+        lobj *= self.obj * out_scaling * (1.4 if num_output == 4 else 1.)
+        lcls *= self.cls * out_scaling
         bs = tobj.shape[0]  # batch size
 
         loss = lbox + lobj + lcls
