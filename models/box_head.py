@@ -10,13 +10,6 @@ from ._utils import FocalLoss
 from utils.box_ops import bbox_iou
 
 
-def _sum(x: List[Tensor]) -> Tensor:
-    res = x[0]
-    for i in x[1:]:
-        res = res + i
-    return res
-
-
 class YoloHead(nn.Module):
     def __init__(self, in_channels: List[int], num_anchors: int, num_classes: int):
         super().__init__()
@@ -116,9 +109,9 @@ class SetCriterion(nn.Module):
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
-             head_outputs: dict of tensors, see the output specification of the model for the format
-             targets: list of dicts, such that len(targets) == batch_size.
-                      The expected keys in each dict depends on the losses applied, see each loss' doc
+            head_outputs: dict of tensors, see the output specification of the model for the format
+            targets: list of dicts, such that len(targets) == batch_size.
+                    The expected keys in each dict depends on the losses applied, see each loss' doc
         """
         regression_targets, labels = self.select_training_samples(targets, head_outputs, anchors_tuple)
         losses = self.compute_loss(head_outputs, regression_targets, labels)
@@ -131,10 +124,8 @@ class SetCriterion(nn.Module):
         head_outputs: Tensor,
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> Tuple[Tensor, Tensor]:
-
-        priors_xyxy = det_utils.box_cxcywh_to_xyxy(anchors_tuple[0])
         # get boxes indices for each anchors
-        boxes, labels = self.assign_targets_to_anchors(head_outputs, targets, priors_xyxy)
+        boxes, labels = self.assign_targets_to_anchors(head_outputs, targets, anchors_tuple[0])
 
         gt_locations = []
         for img_id in range(len(targets)):
@@ -221,8 +212,8 @@ class SetCriterion(nn.Module):
 
     def compute_loss(
         self,
-        targets: List[Dict[str, Tensor]],
         head_outputs: Tensor,
+        targets: List[Dict[str, Tensor]],
         anchors: Tensor,
         matched_idxs: List[Tensor],
     ) -> Dict[str, Tensor]:
