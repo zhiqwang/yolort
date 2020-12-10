@@ -144,9 +144,8 @@ class YOLO(nn.Module):
 
         if self.training:
             assert targets is not None
-
             # compute the losses
-            losses = self.compute_loss(targets, head_outputs, anchors_tuple[0])
+            losses = self.compute_loss(targets, head_outputs, anchors_tuple)
         else:
             # compute the detections
             detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)

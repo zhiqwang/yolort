@@ -3,7 +3,7 @@ import torch
 from torch import nn, Tensor
 
 from torch.jit.annotations import Tuple, List, Dict, Optional
-from torchvision.ops import batched_nms, box_iou
+from torchvision.ops import batched_nms
 
 from . import _utils as det_utils
 from ._utils import FocalLoss
@@ -110,23 +110,114 @@ class SetCriterion(nn.Module):
 
     def forward(
         self,
+        head_outputs: Tensor,
+        targets: List[Dict[str, Tensor]],
+        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+    ) -> Dict[str, Tensor]:
+        """ This performs the loss computation.
+        Parameters:
+             head_outputs: dict of tensors, see the output specification of the model for the format
+             targets: list of dicts, such that len(targets) == batch_size.
+                      The expected keys in each dict depends on the losses applied, see each loss' doc
+        """
+        regression_targets, labels = self.select_training_samples(targets, head_outputs, anchors_tuple)
+        losses = self.compute_loss(head_outputs, regression_targets, labels)
+
+        return losses
+
+    def select_training_samples(
+        self,
         targets: List[Dict[str, Tensor]],
         head_outputs: Tensor,
+        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+    ) -> Tuple[Tensor, Tensor]:
+
+        priors_xyxy = det_utils.box_cxcywh_to_xyxy(anchors_tuple[0])
+        # get boxes indices for each anchors
+        boxes, labels = self.assign_targets_to_anchors(head_outputs, targets, priors_xyxy)
+
+        gt_locations = []
+        for img_id in range(len(targets)):
+            locations = self.box_coder.encode(boxes[img_id], anchors_tuple[0])
+            gt_locations.append(locations)
+
+        regression_targets = torch.stack(gt_locations, 0)
+        labels = torch.stack(labels, 0)
+
+        return regression_targets, labels
+
+    def assign_targets_to_anchors(
+        self,
+        head_outputs: Tensor,
+        targets: List[Dict[str, Tensor]],
         anchors: Tensor,
-    ) -> Dict[str, Tensor]:
+    ) -> Tuple[List[Tensor], List[Tensor]]:
+        """Assign ground truth boxes and targets to anchors.
+        Args:
+            gt_boxes (List[Tensor]): with shape num_targets x 4, ground truth boxes
+            gt_labels (List[Tensor]): with shape num_targets, labels of targets
+            anchors (Tensor): with shape num_priors x 4, XYXY_REL BoxMode
+        Returns:
+            boxes (List[Tensor]): with shape num_priors x 4 real values for anchors.
+            labels (List[Tensor]): with shape num_priros, labels for anchors.
         """
-        Arguments:
-            targets (List[Dict[Tensor]]): ground-truth boxes present in the image
-            head_outputs (Dict[Tensor])
-            anchor (List[Tensor])
-        """
-        matched_idxs = []
-        for targets_per_image in targets:
+        device = anchors.device
+        num_layers = len(anchors)
+        # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
+        num_anchors = anchors.shape[0]  # number of anchors
+        num_targets = targets.shape[0]  # number of targets
+        tcls, tbox, indices, anch = [], [], [], []
+        gain = torch.ones(7, device=device)  # normalized to gridspace gain
+        # same as .repeat_interleave(num_targets)
+        ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
+        targets = torch.cat((targets.repeat(num_anchors, 1, 1), ai[:, :, None]), 2)  # append anchor indices
 
-            match_quality_matrix = box_iou(targets_per_image['boxes'], anchors)
-            matched_idxs.append(self.proposal_matcher(match_quality_matrix))
+        g = 0.5  # bias
+        off = torch.tensor([[0, 0],
+                            [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
+                            # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
+                            ], device=targets.device).float() * g  # offsets
 
-        return self.compute_loss(targets, head_outputs, anchors, matched_idxs)
+        for i in range(num_layers):
+            anchors_per_layer = anchors[i]
+            gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
+
+            # Match targets to anchors
+            t = targets * gain
+            if num_targets:
+                # Matches
+                r = t[:, :, 4:6] / anchors[:, None]  # wh ratio
+                j = torch.max(r, 1. / r).max(2)[0] < self.anchor_t  # compare
+                # j = wh_iou(anchors, t[:, 4:6]) > self.iou_t  # iou(3,n)=wh_iou(anchors(3,2), gwh(n,2))
+                t = t[j]  # filter
+
+                # Offsets
+                gxy = t[:, 2:4]  # grid xy
+                gxi = gain[[2, 3]] - gxy  # inverse
+                j, k = ((gxy % 1. < g) & (gxy > 1.)).T
+                l, m = ((gxi % 1. < g) & (gxi > 1.)).T
+                j = torch.stack((torch.ones_like(j), j, k, l, m))
+                t = t.repeat((5, 1, 1))[j]
+                offsets = (torch.zeros_like(gxy)[None] + off[:, None])[j]
+            else:
+                t = targets[0]
+                offsets = 0
+
+            # Define
+            b, c = t[:, :2].long().T  # image, class
+            gxy = t[:, 2:4]  # grid xy
+            gwh = t[:, 4:6]  # grid wh
+            gij = (gxy - offsets).long()
+            gi, gj = gij.T  # grid xy indices
+
+            # Append
+            a = t[:, 6].long()  # anchor indices
+            indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))  # image, anchor, grid indices
+            tbox.append(torch.cat((gxy - gij, gwh), 1))  # box
+            anch.append(anchors_per_layer[a])  # anchors
+            tcls.append(c)  # class
+
+        return tcls, tbox, indices, anch
 
     def compute_loss(
         self,
@@ -196,10 +287,12 @@ class SetCriterion(nn.Module):
         lbox *= self.box * out_scaling
         lobj *= self.obj * out_scaling * (1.4 if num_output == 4 else 1.)
         lcls *= self.cls * out_scaling
-        bs = tobj.shape[0]  # batch size
 
-        loss = lbox + lobj + lcls
-        return loss * bs, torch.cat((lbox, lobj, lcls, loss)).detach()
+        return {
+            'cls_logits': lcls,
+            'bbox_regression': lbox,
+            'object': lobj,
+        }
 
 
 class PostProcess(nn.Module):
