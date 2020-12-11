@@ -50,7 +50,7 @@ There are no extra compiled components in `yolov5rt` and package dependencies ar
 
 </details>
 
-### Loading via `torch.hub` 🔥
+### Loading via `torch.hub`
 
 The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
 
@@ -95,7 +95,7 @@ The module state of `yolov5rt` has some differences comparing to `ultralytics/yo
 
 </details>
 
-### Inference on `PyTorch` backend
+### Inference on `PyTorch` backend 🔥
 
 To read a source image and detect its objects run:
 
@@ -111,7 +111,7 @@ python -m detect [--input_source YOUR_IMAGE_SOURCE_DIR]
 
 You can also see the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more information.
 
-### 🚀 Inference on `LibTorch` backend
+### Inference on `LibTorch` backend 🚀
 
 We provide an [example](./deployment) of getting `LibTorch` inference to work. For details see the [GitHub actions](.github/workflows/nightly.yml).
 
