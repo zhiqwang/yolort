@@ -30,34 +30,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Install PyTorch 1.7
+    - name: Install PyTorch 1.7.1
       run: |
-        pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        pip install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        pip install onnxruntime
     - name: Test with pytest
       run: |
         pytest test
-    - name: Build TorchVision Cpp 0.8.0
-      run: |
-        export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
-        cd ..
-        git clone https://github.com/pytorch/vision.git vision
-        cd vision
-        git checkout release/0.8.0
-        mkdir build && cd build
-        cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
-        make -j4
-        sudo make install
-    - name: Export torchscript model
-      run: |
-        python -m test.tracing.trace_model
-    - name: Test libtorch tracing
-      run: |
-        export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
-        cd test/tracing
-        mkdir build && cd build
-        cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
-        make
-        mv ../yolov5s.torchscript.pt ./
-        echo ">> Test libtorch tracing"
-        ./test_tracing
