@@ -1,9 +1,8 @@
-#include <ATen/ATen.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
 #include <torchvision/vision.h>
-#include <torchvision/ops/nms.h>
+#include <torchvision/nms.h>
 
 
 int main() {
