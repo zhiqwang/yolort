@@ -3,7 +3,6 @@
 #include <torch/torch.h>
 
 #include <torchvision/vision.h>
-#include <torchvision/ROIPool.h>
 #include <torchvision/nms.h>
 
 
