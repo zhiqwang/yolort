@@ -50,7 +50,7 @@ There are no extra compiled components in `yolov5rt` and package dependencies ar
 
 </details>
 
-### 🔥 Loading via `torch.hub`
+### Loading via `torch.hub` 🔥
 
 The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
 
@@ -58,7 +58,7 @@ The models are also available via torch hub, to load `yolov5s` with pretrained w
 model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 ```
 
-### ↕️ Updating checkpoint from ultralytics/yolov5
+### Updating checkpoint from ultralytics/yolov5
 
 The module state of `yolov5rt` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest release [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
 
@@ -95,7 +95,7 @@ The module state of `yolov5rt` has some differences comparing to `ultralytics/yo
 
 </details>
 
-### ✨ Inference on `PyTorch` backend
+### Inference on `PyTorch` backend
 
 To read a source image and detect its objects run:
 
@@ -113,7 +113,7 @@ You can also see the [inference-pytorch-export-libtorch](notebooks/inference-pyt
 
 ### 🚀 Inference on `LibTorch` backend
 
-We provide an [example](./deployment) of getting `LibTorch` inference to work. For details see the [CI](.github/workflows/stable.yml).
+We provide an [example](./deployment) of getting `LibTorch` inference to work. For details see the [GitHub actions](.github/workflows/nightly.yml).
 
 ## 🎨 Model Graph Visualization
 
