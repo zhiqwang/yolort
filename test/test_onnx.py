@@ -102,12 +102,12 @@ class ONNXExporterTester(unittest.TestCase):
         # Test exported model on images of different size, or dummy input
         self.run_model(model, [(images,), (test_images,), (dummy_image,)], input_names=["images_tensors"],
                        output_names=["outputs"],
-                       dynamic_axes={"images_tensors": [0, 1, 2, 3], "outputs": [0, 1, 2, 3]},
+                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
                        tolerate_small_mismatch=True)
         # Test exported model for an image with no detections on other images
         self.run_model(model, [(dummy_image,), (images,)], input_names=["images_tensors"],
                        output_names=["outputs"],
-                       dynamic_axes={"images_tensors": [0, 1, 2, 3], "outputs": [0, 1, 2, 3]},
+                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
                        tolerate_small_mismatch=True)
 
 
