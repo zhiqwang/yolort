@@ -2,7 +2,7 @@
 #include <torch/torch.h>
 
 #include <torchvision/vision.h>
-#include <torchvision/nms.h>
+#include <torchvision/ops/nms.h>
 
 
 int main() {
