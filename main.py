@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, DistributedSampler
 import utils.misc as utils
 
 from datasets import build_dataset, get_coco_api_from_dataset
-from models import build_model
+from models import yolov5s
 from engine import train_one_epoch, evaluate
 
 
@@ -134,9 +134,8 @@ def main(args):
 
     print('Creating model, always set args.return_criterion be True')
     args.return_criterion = True
-    model, criterion = build_model(args)
+    model = yolov5s()
     model.to(device)
-    criterion.to(device)
 
     model_without_ddp = model
     if args.distributed:
@@ -182,7 +181,7 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             sampler_train.set_epoch(epoch)
-        train_one_epoch(model, criterion, optimizer, data_loader_train, device, epoch, args.print_freq)
+        train_one_epoch(model, optimizer, data_loader_train, device, epoch, args.print_freq)
 
         lr_scheduler.step()
         if args.output_dir:

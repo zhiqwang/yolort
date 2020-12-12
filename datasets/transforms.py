@@ -9,8 +9,6 @@ import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 
-from util.misc import interpolate
-
 
 def crop(image, target, region):
     cropped_image = F.crop(image, *region)
@@ -125,7 +123,7 @@ def resize(image, target, size, max_size=None):
     target["size"] = torch.tensor([h, w])
 
     if "masks" in target:
-        target['masks'] = interpolate(
+        target['masks'] = torch.nn.functional.interpolate(
             target['masks'][:, None].float(), size, mode="nearest")[:, 0] > 0.5
 
     return rescaled_image, target
