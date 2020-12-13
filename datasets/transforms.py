@@ -9,6 +9,8 @@ import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 
+from torchvision.ops.boxes import box_convert
+
 
 def crop(image, target, region):
     cropped_image = F.crop(image, *region)
@@ -136,7 +138,7 @@ def pad(image, target, padding):
         return padded_image, None
     target = target.copy()
     # should we do something wrt the original size?
-    target["size"] = torch.tensor(padded_image[::-1])
+    target["size"] = torch.tensor(padded_image.size[::-1])
     if "masks" in target:
         target['masks'] = torch.nn.functional.pad(target['masks'], (0, padding[0], 0, padding[1]))
     return padded_image, target
@@ -157,14 +159,10 @@ class RandomSizeCrop(object):
         self.max_size = max_size
 
     def __call__(self, img: PIL.Image.Image, target: dict):
-        while True:
-            w = random.randint(self.min_size, min(img.width, self.max_size))
-            h = random.randint(self.min_size, min(img.height, self.max_size))
-            region = T.RandomCrop.get_params(img, [h, w])
-
-            croped_img, croped_target = crop(img, target, region)
-            if len(croped_target['labels']) > 0:
-                return croped_img, croped_target
+        w = random.randint(self.min_size, min(img.width, self.max_size))
+        h = random.randint(self.min_size, min(img.height, self.max_size))
+        region = T.RandomCrop.get_params(img, [h, w])
+        return crop(img, target, region)
 
 
 class CenterCrop(object):
@@ -198,20 +196,6 @@ class RandomResize(object):
     def __call__(self, img, target=None):
         size = random.choice(self.sizes)
         return resize(img, target, size, self.max_size)
-
-
-class Resize(object):
-    def __init__(self, size):
-        if isinstance(size, tuple):
-            sizes = size
-            assert len(sizes) == 2, "The length of sizes must be 2"
-        else:
-            sizes = (size, size)
-
-        self.sizes = sizes
-
-    def __call__(self, img, target=None):
-        return resize(img, target, self.sizes)
 
 
 class RandomPad(object):
@@ -267,7 +251,7 @@ class Normalize(object):
         h, w = image.shape[-2:]
         if "boxes" in target:
             boxes = target["boxes"]
-            # converted to XYXY_REL BoxMode
+            boxes = box_convert(boxes, in_fmt='xyxy', out_fmt='cxcywh')
             boxes = boxes / torch.tensor([w, h, w, h], dtype=torch.float32)
             target["boxes"] = boxes
         return image, target
@@ -289,3 +273,35 @@ class Compose(object):
             format_string += "    {0}".format(t)
         format_string += "\n)"
         return format_string
+
+
+def make_transforms(image_set='train'):
+
+    normalize = Compose([
+        ToTensor(),
+        Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+    ])
+
+    scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
+
+    if image_set == 'train' or image_set == 'trainval':
+        return Compose([
+            RandomHorizontalFlip(),
+            RandomSelect(
+                RandomResize(scales, max_size=1333),
+                Compose([
+                    RandomResize([400, 500, 600]),
+                    RandomSizeCrop(384, 600),
+                    RandomResize(scales, max_size=1333),
+                ])
+            ),
+            normalize,
+        ])
+
+    if image_set == 'val' or image_set == 'test':
+        return Compose([
+            RandomResize([800], max_size=1333),
+            normalize,
+        ])
+
+    raise ValueError(f'unknown {image_set}')

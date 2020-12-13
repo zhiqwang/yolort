@@ -2,7 +2,6 @@
 # Modified by Zhiqiang Wang (zhiqwang@foxmail.com)
 
 import datetime
-import os
 import argparse
 import time
 from pathlib import Path
@@ -193,7 +192,7 @@ def main(args):
                     'args': args,
                     'epoch': epoch,
                 },
-                os.path.join(output_dir, 'model_{}.pth'.format(epoch)),
+                output_dir.joinpath(f'model_{epoch}.pth'),
             )
 
         # evaluate after every epoch
