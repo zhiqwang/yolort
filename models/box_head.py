@@ -282,7 +282,7 @@ class SetCriterion(nn.Module):
         return {
             'cls_logits': lcls,
             'bbox_regression': lbox,
-            'object': lobj,
+            'objectness': lobj,
         }
 
 

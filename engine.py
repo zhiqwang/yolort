@@ -6,7 +6,6 @@ import torch
 
 import torchvision.models
 
-from datasets import get_coco_api_from_dataset
 from datasets.coco_eval import CocoEvaluator
 
 import utils.misc as utils

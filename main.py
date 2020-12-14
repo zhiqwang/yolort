@@ -19,7 +19,7 @@ from engine import train_one_epoch, evaluate
 def get_args_parser():
     parser = argparse.ArgumentParser('You only look once detector', add_help=False)
 
-    parser.add_argument('--arch', default='ssd_lite_mobilenet_v2',
+    parser.add_argument('--arch', default='yolov5s',
                         help='model architecture')
     parser.add_argument('--return-criterion', action='store_true',
                         help='Should be enabled in training mode')
@@ -152,14 +152,14 @@ def main(args):
         weight_decay=args.weight_decay,
     )
 
-    if args.lr_scheduler == 'multi-step':
+    if args.lr_scheduler == 'cosine':
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.t_max)
+    elif args.lr_scheduler == 'multi-step':
         lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             milestones=args.lr_steps,
             gamma=args.lr_gamma,
         )
-    elif args.lr_scheduler == 'cosine':
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.t_max)
     else:
         raise ValueError(f'scheduler {args.lr_scheduler} not supported')
 
