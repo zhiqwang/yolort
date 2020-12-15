@@ -122,7 +122,7 @@ class YOLO(nn.Module):
                 like `scores` and `labels`.
         """
         # get the original image sizes
-        original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])
+        original_image_sizes: List[Tuple[int, int]] = []
         for img in images:
             val = img.shape[-2:]
             assert len(val) == 2

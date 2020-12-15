@@ -2,12 +2,13 @@
 import torch
 from torch import nn, Tensor
 
-from torch.jit.annotations import Tuple, List, Dict, Optional
 from torchvision.ops import batched_nms
 
 from . import _utils as det_utils
 from ._utils import FocalLoss
 from utils.box_ops import bbox_iou
+
+from typing import Tuple, List, Dict, Optional
 
 
 class YoloHead(nn.Module):
@@ -38,7 +39,7 @@ class YoloHead(nn.Module):
         return out
 
     def forward(self, x: List[Tensor]) -> Tensor:
-        all_pred_logits = torch.jit.annotate(List[Tensor], [])  # inference output
+        all_pred_logits: List[Tensor] = []  # inference output
 
         for i, features in enumerate(x):
             pred_logits = self.get_result_from_head(features, i)
@@ -327,7 +328,7 @@ class PostProcess(nn.Module):
                           For visualization, this should be the image size after data augment, but before padding
         """
         num_images = len(image_shapes)
-        detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
+        detections: List[Dict[str, Tensor]] = []
 
         for index in range(num_images):  # image index, image inference
             pred_logits = torch.sigmoid(head_outputs[index])

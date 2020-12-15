@@ -2,8 +2,9 @@ import math
 
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import Tuple, List
 from torchvision.ops import box_convert
+
+from typing import Tuple, List
 
 
 class BalancedPositiveNegativeSampler(object):
