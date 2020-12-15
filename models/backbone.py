@@ -6,7 +6,7 @@ import yaml
 
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import List, Dict, Optional
+from typing import List, Dict, Optional
 
 from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
 from .experimental import MixConv2d, CrossConv, C3
@@ -54,7 +54,7 @@ class YoloBody(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         out = x
-        y = torch.jit.annotate(List[Tensor], [])
+        y: List[Tensor] = []
 
         for i, m in enumerate(self.model):
             if m.f > 0:  # Concat layer
@@ -172,7 +172,7 @@ class IntermediateLayerGetter(nn.ModuleDict):
 
     def forward(self, x):
         out = OrderedDict()
-        y = torch.jit.annotate(List[Tensor], [])
+        y: List[Tensor] = []
 
         for i, (name, module) in enumerate(self.items()):
             if module.f > 0:  # Concat layer
