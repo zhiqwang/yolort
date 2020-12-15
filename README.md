@@ -100,7 +100,7 @@ The module state of `yolov5rt` has some differences comparing to `ultralytics/yo
 To read a source image and detect its objects run:
 
 ```bash
-python -m detect [--input_source YOUR_IMAGE_SOURCE_DIR]
+python -m detect [--input_source ./test/assets/zidane.jpg]
                  [--labelmap ./notebooks/assets/coco.names]
                  [--output_dir ./data-bin/output]
                  [--min_size 640]

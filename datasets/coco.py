@@ -11,7 +11,7 @@ import torch.utils.data
 import torchvision
 from pycocotools import mask as coco_mask
 
-from . import transforms as T
+from .transforms import make_transforms
 
 
 class ConvertCocoPolysToMask(object):
@@ -153,35 +153,6 @@ def _coco_remove_images_without_annotations(dataset, cat_list=None):
     return dataset
 
 
-def make_coco_transforms(image_set, image_size=300):
-
-    normalize = T.Compose([
-        T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-    ])
-
-    if image_set == 'train' or image_set == 'trainval':
-        return T.Compose([
-            T.RandomHorizontalFlip(),
-            T.RandomSelect(
-                T.Resize(image_size),
-                T.Compose([
-                    T.RandomResize([400, 500, 600]),
-                    T.RandomSizeCrop(384, 600),
-                    T.Resize(image_size),
-                ])
-            ),
-            normalize,
-        ])
-    elif image_set == 'val' or image_set == 'test':
-        return T.Compose([
-            T.Resize(image_size),
-            normalize,
-        ])
-    else:
-        raise ValueError(f'unknown {image_set}')
-
-
 def build(image_set, year, args):
     root = Path(args.data_path)
     assert root.exists(), f'provided COCO path {root} does not exist'
@@ -194,7 +165,7 @@ def build(image_set, year, args):
     dataset = CocoDetection(
         img_folder,
         ann_file,
-        transforms=make_coco_transforms(image_set, image_size=args.image_size),
+        transforms=make_transforms(image_set=image_set),
         return_masks=args.masks,
     )
 

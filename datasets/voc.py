@@ -1,7 +1,7 @@
 import torch
 import torchvision
 
-from . import transforms as T
+from .transforms import make_transforms
 
 
 class ConvertVOCtoCOCO(object):
@@ -73,45 +73,13 @@ class VOCDetection(torchvision.datasets.VOCDetection):
         return img, target
 
 
-def make_voc_transforms(image_set='train', image_size=300):
-
-    normalize = T.Compose([
-        T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-    ])
-
-    if image_set == 'train' or image_set == 'trainval':
-        return T.Compose([
-            T.RandomHorizontalFlip(),
-            T.RandomSelect(
-                T.Resize(image_size),
-                T.Compose([
-                    T.RandomResize([400, 500, 600]),
-                    T.RandomSizeCrop(384, 600),
-                    T.Resize(image_size),
-                ])
-            ),
-            normalize,
-        ])
-    elif image_set == 'val' or image_set == 'test':
-        return T.Compose([
-            T.Resize(image_size),
-            normalize,
-        ])
-    else:
-        raise ValueError(f'unknown {image_set}')
-
-
 def build(image_set, year, args):
 
     dataset = VOCDetection(
         img_folder=args.data_path,
         year=year,
         image_set=image_set,
-        transforms=make_voc_transforms(
-            image_set=image_set,
-            image_size=args.image_size,
-        ),
+        transforms=make_transforms(image_set=image_set),
     )
 
     return dataset

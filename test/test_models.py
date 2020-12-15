@@ -1,3 +1,4 @@
+import unittest
 import torch
 
 from models.anchor_utils import AnchorGenerator
@@ -36,3 +37,7 @@ class ModelTester(TestCase):
         self.assertEqual(anchors[0], anchor_output)
         self.assertEqual(anchors[1], wh_output)
         self.assertEqual(anchors[2], xy_output)
+
+
+if __name__ == '__main__':
+    unittest.main()

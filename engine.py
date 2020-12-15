@@ -11,7 +11,7 @@ from datasets.coco_eval import CocoEvaluator
 import utils.misc as utils
 
 
-def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, print_freq):
+def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
     metric_logger = utils.MetricLogger(delimiter='  ')
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -24,12 +24,11 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
 
         lr_scheduler = utils.warmup_lr_scheduler(optimizer, warmup_iters, warmup_factor)
 
-    for samples, targets in metric_logger.log_every(data_loader, print_freq, header):
-        samples = samples.to(device)
+    for images, targets in metric_logger.log_every(data_loader, print_freq, header):
+        images = list(image.to(device) for image in images)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-        outputs = model(samples)
-        loss_dict = criterion(outputs, targets)
+        loss_dict = model(images, targets)
 
         losses = sum(loss for loss in loss_dict.values())
 
@@ -70,7 +69,7 @@ def _get_iou_types(model):
 
 
 @torch.no_grad()
-def evaluate(model, criterion, data_loader, base_ds, device):
+def evaluate(model, data_loader, base_ds, device):
     model.eval()
     metric_logger = utils.MetricLogger(delimiter='  ')
     header = 'Test:'
@@ -78,12 +77,12 @@ def evaluate(model, criterion, data_loader, base_ds, device):
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(base_ds, iou_types)
 
-    for samples, targets in metric_logger.log_every(data_loader, 20, header):
-        samples = samples.to(device)
+    for images, targets in metric_logger.log_every(data_loader, 20, header):
+        images = images.to(device)
 
         model_time = time.time()
         target_sizes = torch.stack([t['orig_size'] for t in targets], dim=0).to(device)
-        results = model(samples, target_sizes=target_sizes)
+        results = model(images, target_sizes=target_sizes)
 
         model_time = time.time() - model_time
 
@@ -98,7 +97,7 @@ def evaluate(model, criterion, data_loader, base_ds, device):
     print(f'Averaged stats: {metric_logger}')
     coco_evaluator.synchronize_between_processes()
 
-    # accumulate predictions from all samples
+    # accumulate predictions from all images
     coco_evaluator.accumulate()
     coco_evaluator.summarize()
     return coco_evaluator
