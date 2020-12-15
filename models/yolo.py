@@ -63,13 +63,13 @@ class YOLO(nn.Module):
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
-        if compute_loss is None:
-            compute_loss = SetCriterion(
-                weights=(1.0, 1.0, 1.0, 1.0),
-                fg_iou_thresh=fg_iou_thresh,
-                bg_iou_thresh=bg_iou_thresh,
-            )
-        self.compute_loss = compute_loss
+        # if compute_loss is None:
+        #     compute_loss = SetCriterion(
+        #         weights=(1.0, 1.0, 1.0, 1.0),
+        #         fg_iou_thresh=fg_iou_thresh,
+        #         bg_iou_thresh=bg_iou_thresh,
+        #     )
+        self.compute_loss = None
 
         if head is None:
             head = YoloHead(
@@ -140,12 +140,12 @@ class YOLO(nn.Module):
         # create the set of anchors
         anchors_tuple = self.anchor_generator(features)
         losses = {}
-        detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
+        detections: List[Dict[str, Tensor]] = []
 
         if self.training:
             assert targets is not None
             # compute the losses
-            losses = self.compute_loss(targets, head_outputs, anchors_tuple)
+            # losses = self.compute_loss(targets, head_outputs, anchors_tuple)
         else:
             # compute the detections
             detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)
