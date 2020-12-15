@@ -38,21 +38,20 @@ class YoloHead(nn.Module):
             i += 1
         return out
 
-    def forward(self, x: List[Tensor]) -> Tensor:
+    def forward(self, x: List[Tensor]) -> List[Tensor]:
         all_pred_logits: List[Tensor] = []  # inference output
 
         for i, features in enumerate(x):
             pred_logits = self.get_result_from_head(features, i)
 
-            # Permute output from (N, A * K, H, W) to (N, HWA, K)
+            # Permute output from (N, A * K, H, W) to (N, A, H, W, K)
             N, _, H, W = pred_logits.shape
             pred_logits = pred_logits.view(N, self.num_anchors, -1, H, W)
-            pred_logits = pred_logits.permute(0, 1, 3, 4, 2)
-            pred_logits = pred_logits.reshape(N, -1, self.num_outputs)  # Size=(N, HWA, K)
+            pred_logits = pred_logits.permute(0, 1, 3, 4, 2)  # Size=(N, A, H, W, K)
 
             all_pred_logits.append(pred_logits)
 
-        return torch.cat(all_pred_logits, dim=1)
+        return all_pred_logits
 
 
 def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
@@ -104,7 +103,7 @@ class SetCriterion(nn.Module):
 
     def forward(
         self,
-        head_outputs: Tensor,
+        head_outputs: List[Tensor],
         targets: List[Dict[str, Tensor]],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> Dict[str, Tensor]:
@@ -122,7 +121,7 @@ class SetCriterion(nn.Module):
     def select_training_samples(
         self,
         targets: List[Dict[str, Tensor]],
-        head_outputs: Tensor,
+        head_outputs: List[Tensor],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> Tuple[Tensor, Tensor]:
         # get boxes indices for each anchors
@@ -140,7 +139,7 @@ class SetCriterion(nn.Module):
 
     def assign_targets_to_anchors(
         self,
-        head_outputs: Tensor,
+        head_outputs: List[Tensor],
         targets: List[Dict[str, Tensor]],
         anchors: Tensor,
     ) -> Tuple[List[Tensor], List[Tensor]]:
@@ -213,7 +212,7 @@ class SetCriterion(nn.Module):
 
     def compute_loss(
         self,
-        head_outputs: Tensor,
+        head_outputs: List[Tensor],
         targets: List[Dict[str, Tensor]],
         anchors: Tensor,
         matched_idxs: List[Tensor],
@@ -312,7 +311,7 @@ class PostProcess(nn.Module):
 
     def forward(
         self,
-        head_outputs: Tensor,
+        head_outputs: List[Tensor],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
         image_shapes: Optional[List[Tuple[int, int]]] = None,
     ) -> List[Dict[str, Tensor]]:
@@ -327,11 +326,21 @@ class PostProcess(nn.Module):
                           For evaluation, this must be the original image size (before any data augmentation)
                           For visualization, this should be the image size after data augment, but before padding
         """
-        num_images = len(image_shapes)
+        N, _, _, _, K = head_outputs[0].shape
+        all_pred_logits: List[Tensor] = []
+        for pred_logits in head_outputs:
+            pred_logits = pred_logits.reshape(N, -1, K)  # Size=(N, HWA, K)
+            all_pred_logits.append(pred_logits)
+
+        all_pred_logits = torch.cat(all_pred_logits, dim=1)
+
         detections: List[Dict[str, Tensor]] = []
 
+        num_images = len(image_shapes)
+        assert num_images == N
+
         for index in range(num_images):  # image index, image inference
-            pred_logits = torch.sigmoid(head_outputs[index])
+            pred_logits = torch.sigmoid(all_pred_logits[index])
 
             # Compute conf
             # box_conf x class_conf, w/ shape: num_anchors x num_classes
