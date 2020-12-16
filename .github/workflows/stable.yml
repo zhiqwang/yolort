@@ -37,7 +37,7 @@ jobs:
         pip install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
     - name: Generate coverage report
       run: |
-        pytest --cov=./ --cov-report=xml
+        PYTORCH_TEST_WITH_SLOW=1 pytest --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:

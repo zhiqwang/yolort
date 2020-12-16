@@ -8,6 +8,7 @@ from .torch_utils import image_preprocess
 
 
 class EngineTester(unittest.TestCase):
+    @unittest.skip("Current it isn't well implemented")
     def test_train(self):
         # Read Image using TorchVision.io Here
         # Do forward over image
