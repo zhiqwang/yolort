@@ -6,7 +6,6 @@ from models import yolov5s, yolov5m, yolov5l
 
 
 class TorchScriptTester(unittest.TestCase):
-    @unittest.skip("Current it isn't well implemented")
     def test_yolov5s_script(self):
         model = yolov5s(pretrained=True)
         model.eval()
@@ -22,7 +21,6 @@ class TorchScriptTester(unittest.TestCase):
         self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
 
-    @unittest.skip("Current it isn't well implemented")
     def test_yolov5m_script(self):
         model = yolov5m(pretrained=True)
         model.eval()
@@ -38,7 +36,6 @@ class TorchScriptTester(unittest.TestCase):
         self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
 
-    @unittest.skip("Current it isn't well implemented")
     def test_yolov5l_script(self):
         model = yolov5l(pretrained=True)
         model.eval()
