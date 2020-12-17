@@ -30,6 +30,12 @@ class ModelTester(TestCase):
             [116,  90, 156, 198, 373, 326],
         ]
 
+    def _get_num_classes(self):
+        return 80
+
+    def _get_num_anchors(self):
+        return len(self._get_anchor_grids())
+
     def _get_head_in_shape(self, h, w):
         strides = self._get_strides()
         in_channels = self._get_in_channels()
@@ -74,14 +80,26 @@ class ModelTester(TestCase):
 
     def _init_test_yolo_head(self):
         in_channels = self._get_in_channels()
-        num_anchors = 3
-        num_classes = 80
+        num_anchors = self._get_num_anchors()
+        num_classes = self._get_num_classes()
         box_head = YoloHead(in_channels, num_anchors, num_classes)
         return box_head
 
     def test_yolo_head(self):
+        N, H, W = 4, 416, 352
+        feature_shapes = self._get_head_in_shape(H, W)
+        feature_maps = [torch.rand(N, *f_shape) for f_shape in feature_shapes]
         model = self._init_test_yolo_head()
-        scripted_model = torch.jit.script(model)  # noqa
+        head_outputs = model(feature_maps)
+
+        num_anchors = self._get_num_anchors()
+        num_outputs = self._get_num_classes() + 5
+        self.assertEqual(len(head_outputs), 3)
+        target_head_outputs = [(N, num_anchors, *f_shape[1:], num_outputs) for f_shape in feature_shapes]
+        self.assertEqual(tuple(head_outputs[0].shape), target_head_outputs[0])
+        self.assertEqual(tuple(head_outputs[1].shape), target_head_outputs[1])
+        self.assertEqual(tuple(head_outputs[2].shape), target_head_outputs[2])
+        self.check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_postprocessors(self):
         score_thresh = 0.5
