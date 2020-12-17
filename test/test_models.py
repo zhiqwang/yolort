@@ -30,21 +30,28 @@ class ModelTester(TestCase):
             [116,  90, 156, 198, 373, 326],
         ]
 
+    def _get_head_in_shape(self, h, w):
+        strides = self._get_strides()
+        in_channels = self._get_in_channels()
+
+        return [(c, h // s, w // s) for (c, s) in zip(in_channels, strides)]
+
     def _init_test_backbone(self):
         backbone = darknet()
         return backbone
 
-    def test_yolo_backbone_script(self):
+    def test_yolo_backbone(self):
         model, _ = self._init_test_backbone()
         N, H, W = 8, 416, 352
+        out_shape = self._get_head_in_shape(H, W)
+
         x = torch.rand(N, 3, H, W)
         out = model(x)
-        strides = self._get_strides()
-        grid_sizes = [(H // s, W // s) for s in strides]
+
         self.assertEqual(len(out), 3)
-        self.assertEqual(tuple(out[0].shape[-2:]), grid_sizes[0])
-        self.assertEqual(tuple(out[1].shape[-2:]), grid_sizes[1])
-        self.assertEqual(tuple(out[2].shape[-2:]), grid_sizes[2])
+        self.assertEqual(tuple(out[0].shape), (N, *out_shape[0]))
+        self.assertEqual(tuple(out[1].shape), (N, *out_shape[1]))
+        self.assertEqual(tuple(out[2].shape), (N, *out_shape[2]))
         self.check_jit_scriptable(model, (x,))
 
     def _init_test_anchor_generator(self):
@@ -53,7 +60,11 @@ class ModelTester(TestCase):
         anchor_generator = AnchorGenerator(strides, anchor_grids)
         return anchor_generator
 
-    def test_anchor_generator_script(self):
+    def test_anchor_generator(self):
+        N, H, W = 8, 416, 352
+        strides = self._get_strides()
+        grid_sizes = [(H // s, W // s) for s in strides]
+
         model = self._init_test_anchor_generator()
         scripted_model = torch.jit.script(model)  # noqa
 
@@ -64,7 +75,7 @@ class ModelTester(TestCase):
         box_head = YoloHead(in_channels, num_anchors, num_classes)
         return box_head
 
-    def test_yolo_head_script(self):
+    def test_yolo_head(self):
         model = self._init_test_yolo_head()
         scripted_model = torch.jit.script(model)  # noqa
 
@@ -75,7 +86,7 @@ class ModelTester(TestCase):
         postprocessors = PostProcess(score_thresh, nms_thresh, detections_per_img)
         return postprocessors
 
-    def test_postprocessors_script(self):
+    def test_postprocessors(self):
         model = self._init_test_postprocessors()
         scripted_model = torch.jit.script(model)  # noqa
 
@@ -88,7 +99,7 @@ class ModelTester(TestCase):
         return criterion
 
     @unittest.skip("Current it isn't well implemented")
-    def test_criterion_script(self):
+    def test_criterion(self):
         model = self._init_test_criterion()
         scripted_model = torch.jit.script(model)  # noqa
 
