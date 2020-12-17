@@ -195,11 +195,11 @@ def darknet(cfg_path='yolov5s.yaml'):
 
     layers, save_list, head_info = parse_model(model_dict, in_channels=3)
 
-    backbone = YoloBody(layers, save_list)
+    body = YoloBody(layers, save_list)
 
-    body = YoloBackbone(
-        yolo_body=backbone,
+    backbone = YoloBackbone(
+        yolo_body=body,
         return_layers={str(key): str(i) for i, key in enumerate(head_info[2])},
         out_channels=head_info[0],
     )
-    return body, head_info[1]
+    return backbone, head_info[1]

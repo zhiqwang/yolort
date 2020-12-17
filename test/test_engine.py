@@ -25,6 +25,7 @@ class EngineTester(unittest.TestCase):
         targets = [{"boxes": boxes, "labels": labels}]
 
         model = yolov5s(num_classes=12)
+        model.train()
         out = model(images, targets)
         self.assertIsInstance(out, Dict)
         self.assertIsInstance(out["loss_classifier"], torch.Tensor)
