@@ -69,7 +69,7 @@ class ModelTester(TestCase):
         backbone = darknet()
         return backbone
 
-    def test_yolo_backbone(self):
+    def test_backbone(self):
         N, H, W = 4, 416, 352
         out_shape = self._get_feature_shapes(H, W)
 
