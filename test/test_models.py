@@ -41,11 +41,11 @@ class ModelTester(TestCase):
         return backbone
 
     def test_yolo_backbone(self):
-        model, _ = self._init_test_backbone()
-        N, H, W = 8, 416, 352
+        N, H, W = 4, 416, 352
         out_shape = self._get_head_in_shape(H, W)
 
         x = torch.rand(N, 3, H, W)
+        model, _ = self._init_test_backbone()
         out = model(x)
 
         self.assertEqual(len(out), 3)
@@ -61,12 +61,16 @@ class ModelTester(TestCase):
         return anchor_generator
 
     def test_anchor_generator(self):
-        N, H, W = 8, 416, 352
-        strides = self._get_strides()
-        grid_sizes = [(H // s, W // s) for s in strides]
-
+        N, H, W = 4, 416, 352
+        feature_shapes = self._get_head_in_shape(H, W)
+        feature_maps = [torch.rand(N, *f_shape) for f_shape in feature_shapes]
         model = self._init_test_anchor_generator()
-        scripted_model = torch.jit.script(model)  # noqa
+        anchors = model(feature_maps)
+        self.assertEqual(len(anchors), 3)
+        self.assertEqual(tuple(anchors[0].shape), (9009, 2))
+        self.assertEqual(tuple(anchors[1].shape), (9009, 1))
+        self.assertEqual(tuple(anchors[2].shape), (9009, 2))
+        self.check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_yolo_head(self):
         in_channels = self._get_in_channels()
