@@ -7,6 +7,8 @@ from models.box_head import YoloHead, PostProcess, SetCriterion
 
 from .common_utils import TestCase
 
+from typing import Dict
+
 
 # If 'unwrapper' is provided it will be called with the script model outputs
 # before they are compared to the eager model outputs. This is useful if the
@@ -33,14 +35,35 @@ class ModelTester(TestCase):
     def _get_num_classes(self):
         return 80
 
+    def _get_num_outputs(self):
+        return self._get_num_classes() + 5
+
     def _get_num_anchors(self):
         return len(self._get_anchor_grids())
 
-    def _get_head_in_shape(self, h, w):
+    def _get_anchors_shape(self):
+        return [(9009, 2), (9009, 1), (9009, 2)]
+
+    def _get_feature_shapes(self, h, w):
         strides = self._get_strides()
         in_channels = self._get_in_channels()
 
         return [(c, h // s, w // s) for (c, s) in zip(in_channels, strides)]
+
+    def _get_feature_maps(self, batch_size, h, w):
+        feature_shapes = self._get_feature_shapes(h, w)
+        feature_maps = [torch.rand(batch_size, *f_shape) for f_shape in feature_shapes]
+        return feature_maps
+
+    def _get_head_outputs(self, batch_size, h, w):
+        feature_shapes = self._get_feature_shapes(h, w)
+
+        num_anchors = self._get_num_anchors()
+        num_outputs = self._get_num_outputs()
+        head_shapes = [(batch_size, num_anchors, *f_shape[1:], num_outputs) for f_shape in feature_shapes]
+        head_outputs = [torch.rand(*h_shape) for h_shape in head_shapes]
+
+        return head_outputs
 
     def _init_test_backbone(self):
         backbone = darknet()
@@ -48,7 +71,7 @@ class ModelTester(TestCase):
 
     def test_yolo_backbone(self):
         N, H, W = 4, 416, 352
-        out_shape = self._get_head_in_shape(H, W)
+        out_shape = self._get_feature_shapes(H, W)
 
         x = torch.rand(N, 3, H, W)
         model, _ = self._init_test_backbone()
@@ -68,10 +91,10 @@ class ModelTester(TestCase):
 
     def test_anchor_generator(self):
         N, H, W = 4, 416, 352
-        feature_shapes = self._get_head_in_shape(H, W)
-        feature_maps = [torch.rand(N, *f_shape) for f_shape in feature_shapes]
+        feature_maps = self._get_feature_maps(N, H, W)
         model = self._init_test_anchor_generator()
         anchors = model(feature_maps)
+
         self.assertEqual(len(anchors), 3)
         self.assertEqual(tuple(anchors[0].shape), (9009, 2))
         self.assertEqual(tuple(anchors[1].shape), (9009, 1))
@@ -87,18 +110,16 @@ class ModelTester(TestCase):
 
     def test_yolo_head(self):
         N, H, W = 4, 416, 352
-        feature_shapes = self._get_head_in_shape(H, W)
-        feature_maps = [torch.rand(N, *f_shape) for f_shape in feature_shapes]
+        feature_maps = self._get_feature_maps(N, H, W)
         model = self._init_test_yolo_head()
         head_outputs = model(feature_maps)
-
-        num_anchors = self._get_num_anchors()
-        num_outputs = self._get_num_classes() + 5
         self.assertEqual(len(head_outputs), 3)
-        target_head_outputs = [(N, num_anchors, *f_shape[1:], num_outputs) for f_shape in feature_shapes]
-        self.assertEqual(tuple(head_outputs[0].shape), target_head_outputs[0])
-        self.assertEqual(tuple(head_outputs[1].shape), target_head_outputs[1])
-        self.assertEqual(tuple(head_outputs[2].shape), target_head_outputs[2])
+
+        target_head_outputs = self._get_head_outputs(N, H, W)
+
+        self.assertEqual(head_outputs[0].shape, target_head_outputs[0].shape)
+        self.assertEqual(head_outputs[1].shape, target_head_outputs[1].shape)
+        self.assertEqual(head_outputs[2].shape, target_head_outputs[2].shape)
         self.check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_postprocessors(self):
@@ -109,8 +130,21 @@ class ModelTester(TestCase):
         return postprocessors
 
     def test_postprocessors(self):
+        N, H, W = 4, 416, 352
+        feature_maps = self._get_feature_maps(N, H, W)
+        head_outputs = self._get_head_outputs(N, H, W)
+
+        anchor_generator = self._init_test_anchor_generator()
+        anchors_tuple = anchor_generator(feature_maps)
         model = self._init_test_postprocessors()
-        scripted_model = torch.jit.script(model)  # noqa
+        out = model(head_outputs, anchors_tuple)
+
+        self.assertEqual(len(out), N)
+        self.assertIsInstance(out[0], Dict)
+        self.assertIsInstance(out[0]["boxes"], torch.Tensor)
+        self.assertIsInstance(out[0]["labels"], torch.Tensor)
+        self.assertIsInstance(out[0]["scores"], torch.Tensor)
+        self.check_jit_scriptable(model, (head_outputs, anchors_tuple))
 
     def _init_test_criterion(self):
         weights = (1.0, 1.0, 1.0, 1.0)

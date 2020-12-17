@@ -336,10 +336,7 @@ class PostProcess(nn.Module):
 
         detections: List[Dict[str, Tensor]] = []
 
-        num_images = len(image_shapes)
-        assert num_images == N
-
-        for index in range(num_images):  # image index, image inference
+        for index in range(N):  # image index, image inference
             pred_logits = torch.sigmoid(all_pred_logits[index])
 
             # Compute conf
