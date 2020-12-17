@@ -1,6 +1,6 @@
 # Modified from ultralytics/yolov5 by Zhiqiang Wang
 import torch
-from torch import nn, Tensor
+from torch import device, nn, Tensor
 
 from torchvision.ops import batched_nms
 
@@ -71,9 +71,8 @@ class SetCriterion(nn.Module):
 
     def __init__(
         self,
-        weights: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
-        fg_iou_thresh: float = 0.5,
-        bg_iou_thresh: float = 0.4,
+        strides: List[int],
+        anchor_grids: List[List[int]],
         box: float = 0.05,  # box loss gain
         cls: float = 0.5,  # cls loss gain
         cls_pw: float = 1.0,  # cls BCELoss positive_weight
@@ -92,14 +91,8 @@ class SetCriterion(nn.Module):
             allow_low_quality_matches (bool)
         """
         super().__init__()
-
-        self.proposal_matcher = det_utils.Matcher(
-            fg_iou_thresh,
-            bg_iou_thresh,
-            allow_low_quality_matches=allow_low_quality_matches,
-        )
-
-        self.box_coder = det_utils.BoxCoder(weights=weights)
+        self.strides = strides
+        self.anchor_grids = anchor_grids
 
     def forward(
         self,
@@ -120,16 +113,20 @@ class SetCriterion(nn.Module):
 
     def select_training_samples(
         self,
-        targets: List[Dict[str, Tensor]],
         head_outputs: List[Tensor],
-        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+        targets: List[Dict[str, Tensor]],
     ) -> Tuple[Tensor, Tensor]:
         # get boxes indices for each anchors
-        boxes, labels = self.assign_targets_to_anchors(head_outputs, targets, anchors_tuple[0])
+        device = head_outputs[0].device
+        num_layers = len(head_outputs)
+        anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
+        strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
+        anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
+        boxes, labels = self.assign_targets_to_anchors(head_outputs, targets, anchors)
 
         gt_locations = []
         for img_id in range(len(targets)):
-            locations = self.box_coder.encode(boxes[img_id], anchors_tuple[0])
+            locations = self.box_coder.encode(boxes[img_id], self.anchor_grids[0])
             gt_locations.append(locations)
 
         regression_targets = torch.stack(gt_locations, 0)
@@ -152,11 +149,12 @@ class SetCriterion(nn.Module):
             boxes (List[Tensor]): with shape num_priors x 4 real values for anchors.
             labels (List[Tensor]): with shape num_priros, labels for anchors.
         """
-        device = anchors.device
-        num_layers = len(anchors)
+        device = head_outputs[0].device
+        num_layers = len(head_outputs)
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
-        num_anchors = anchors.shape[0]  # number of anchors
+        num_anchors = len(self.anchor_grids)  # number of anchors
         num_targets = targets.shape[0]  # number of targets
+
         tcls, tbox, indices, anch = [], [], [], []
         gain = torch.ones(7, device=device)  # normalized to gridspace gain
         # same as .repeat_interleave(num_targets)
