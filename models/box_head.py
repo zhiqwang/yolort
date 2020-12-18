@@ -54,6 +54,10 @@ class YoloHead(nn.Module):
         return all_pred_logits
 
 
+# necessary for backwards compatibility
+Detect = YoloHead
+
+
 def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
     # return positive, negative label smoothing BCE targets
     return 1.0 - 0.5 * eps, 0.5 * eps
@@ -118,11 +122,15 @@ class SetCriterion(nn.Module):
     ) -> Tuple[Tensor, Tensor]:
         # get boxes indices for each anchors
         device = head_outputs[0].device
+
+        gt_boxes = [t["boxes"].to(device) for t in targets]
+        gt_labels = [t["labels"] for t in targets]
+
         num_layers = len(head_outputs)
         anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
         anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
-        boxes, labels = self.assign_targets_to_anchors(head_outputs, targets, anchors)
+        boxes, labels = self.assign_targets_to_anchors(head_outputs, anchors, gt_boxes, gt_labels)
 
         gt_locations = []
         for img_id in range(len(targets)):
@@ -137,8 +145,9 @@ class SetCriterion(nn.Module):
     def assign_targets_to_anchors(
         self,
         head_outputs: List[Tensor],
-        targets: List[Dict[str, Tensor]],
         anchors: Tensor,
+        gt_boxes: List[Tensor],
+        gt_labels: List[Tensor],
     ) -> Tuple[List[Tensor], List[Tensor]]:
         """Assign ground truth boxes and targets to anchors.
         Args:
@@ -153,7 +162,7 @@ class SetCriterion(nn.Module):
         num_layers = len(head_outputs)
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
         num_anchors = len(self.anchor_grids)  # number of anchors
-        num_targets = targets.shape[0]  # number of targets
+        num_targets = len(targets)  # number of targets
 
         tcls, tbox, indices, anch = [], [], [], []
         gain = torch.ones(7, device=device)  # normalized to gridspace gain
@@ -165,7 +174,7 @@ class SetCriterion(nn.Module):
         off = torch.tensor([[0, 0],
                             [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
                             # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
-                            ], device=targets.device).float() * g  # offsets
+                            ], device=device).float() * g  # offsets
 
         for i in range(num_layers):
             anchors_per_layer = anchors[i]

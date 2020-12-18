@@ -10,7 +10,7 @@ from typing import List, Dict, Optional
 
 from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
 from .experimental import MixConv2d, CrossConv, C3
-from .box_head import YoloHead as Detect
+from .box_head import Detect
 
 
 class YoloBackbone(nn.Module):
