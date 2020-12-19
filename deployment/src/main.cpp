@@ -45,6 +45,12 @@ torch::Tensor ReadImage(const std::string& loc) {
   return img_tensor.clone();
 };
 
+struct Detection {
+  cv::Rect bbox;
+  float score;
+  int class_idx;
+};
+
 void OverlayBoxes(cv::Mat& img,
     const std::vector<Detection>& detections,
     const std::vector<std::string>& class_names,
