@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(yolo_inference)
+project(YOLOv5_LibTorch_Example VERSION 0.2.4 LANGUAGES CXX)
 
 find_package(Torch REQUIRED)
 find_package(TorchVision REQUIRED)

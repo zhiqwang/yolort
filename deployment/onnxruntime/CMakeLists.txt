@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(ONNXRuntime_Example VERSION 0.0.1 LANGUAGES CXX)
+project(YOLOv5_ORT_Example VERSION 0.2.4 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
@@ -19,9 +19,7 @@ find_library(
   HINTS /usr/local/lib
 )
 
-# If the package has been found, several variables will
-# be set, you can find the full list with descriptions
-# in the ONNXRuntimeConfig.cmake file.
+# If the package has been found, several variables will be set
 message(STATUS "ONNXRuntime library status:")
 message(STATUS "    include path: ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
 message(STATUS "    libraries: ${ONNX_RUNTIME_LIB}")

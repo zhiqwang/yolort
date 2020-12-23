@@ -160,10 +160,10 @@ int main(int argc, char* argv[])
     std::cout << "Inference Execution Provider: CPU" << std::endl;
   }
 
-  std::string instanceName{"image-classification-inference"};
-  std::string modelFilepath{"../data/models/squeezenet1.1-7.onnx"};
-  std::string imageFilepath{"../data/images/european-bee-eater-2115564_1920.jpg"};
-  std::string labelFilepath{"../data/labels/synset.txt"};
+  std::string instanceName{"object-detection-inference"};
+  std::string modelFilepath{"../data/models/yolov5s.onnx"};
+  std::string imageFilepath{"../../../test/assets/zidane.jpg"};
+  std::string labelFilepath{"../../../notebooks/assets/coco.names"};
 
   std::vector<std::string> labels{readLabels(labelFilepath)};
 
@@ -172,12 +172,12 @@ int main(int argc, char* argv[])
   Ort::SessionOptions sessionOptions;
   sessionOptions.SetIntraOpNumThreads(1);
 
-  // Sets graph optimization level
-  // Available levels are
+  // Sets graph optimization level, Available levels are:
   // ORT_DISABLE_ALL -> To disable all optimizations
-  // ORT_ENABLE_BASIC -> To enable basic optimizations (Such as redundant node
-  // removals) ORT_ENABLE_EXTENDED -> To enable extended optimizations
-  // (Includes level 1 + more complex optimizations like node fusions)
+  // ORT_ENABLE_BASIC -> To enable basic optimizations
+  //     (Such as redundant node removals)
+  // ORT_ENABLE_EXTENDED -> To enable extended optimizations
+  //     (Includes level 1 + more complex optimizations like node fusions)
   // ORT_ENABLE_ALL -> To Enable All possible optimizations
   sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
@@ -216,26 +216,10 @@ int main(int argc, char* argv[])
   std::vector<int64_t> outputDims = outputTensorInfo.GetShape();
   std::cout << "Output Dimensions: " << outputDims << std::endl;
 
-  cv::Mat imageBGR = cv::imread(imageFilepath, cv::ImreadModes::IMREAD_COLOR);
-  cv::Mat resizedImageBGR, resizedImageRGB, resizedImage, preprocessedImage;
-  cv::resize(imageBGR, resizedImageBGR,
-      cv::Size(inputDims.at(2), inputDims.at(3)),
-      cv::InterpolationFlags::INTER_CUBIC);
-  cv::cvtColor(resizedImageBGR, resizedImageRGB,
-      cv::ColorConversionCodes::COLOR_BGR2RGB);
-  resizedImageRGB.convertTo(resizedImage, CV_32F, 1.0 / 255);
-
-  cv::Mat channels[3];
-  cv::split(resizedImage, channels);
-  // Normalization per channel
-  // Normalization parameters obtained from
-  // https://github.com/onnx/models/tree/master/vision/classification/squeezenet
-  channels[0] = (channels[0] - 0.485) / 0.229;
-  channels[1] = (channels[1] - 0.456) / 0.224;
-  channels[2] = (channels[2] - 0.406) / 0.225;
-  cv::merge(channels, 3, resizedImage);
-  // HWC to CHW
-  cv::dnn::blobFromImage(resizedImage, preprocessedImage);
+  cv::Mat imageRead = cv::imread(imageFilepath);
+  imageRead.convertTo(imageRead, CV_32FC3, 1.0f / 255.0f); // normalization 1/255
+  cv::Mat preprocessedImage;
+  cv::dnn::blobFromImage(imageRead, preprocessedImage); // HWC to CHW
 
   size_t inputTensorSize = vectorProduct(inputDims);
   std::vector<float> inputTensorValues(inputTensorSize);
@@ -243,8 +227,6 @@ int main(int argc, char* argv[])
       preprocessedImage.end<float>());
 
   size_t outputTensorSize = vectorProduct(outputDims);
-  assert(("Output tensor size should equal to the label set size.",
-      labels.size() == outputTensorSize));
   std::vector<float> outputTensorValues(outputTensorSize);
 
   std::vector<const char*> inputNames{inputName};
