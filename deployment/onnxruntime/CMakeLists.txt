@@ -7,31 +7,24 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 find_package(OpenCV REQUIRED)
 
-find_package(ONNX_RUNTIME REQUIRED)
+find_path(
+  ONNX_RUNTIME_SESSION_INCLUDE_DIRS
+  onnxruntime_cxx_api.h
+  HINTS /usr/local/include/onnxruntime/core/session/
+)
+
+find_library(
+  ONNX_RUNTIME_LIB
+  onnxruntime
+  HINTS /usr/local/lib
+)
 
 # If the package has been found, several variables will
 # be set, you can find the full list with descriptions
 # in the ONNXRuntimeConfig.cmake file.
 message(STATUS "ONNXRuntime library status:")
-message(STATUS "    session path: ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
+message(STATUS "    include path: ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
 message(STATUS "    libraries: ${ONNX_RUNTIME_LIB}")
-message(STATUS "    include path: ${ONNX_RUNTIME_PROVIDERS_INCLUDE_DIRS}")
-
-# find_path(
-#   ONNX_RUNTIME_SESSION_INCLUDE_DIRS
-#   onnxruntime_cxx_api.h
-#   HINTS /usr/local/include/onnxruntime/core/session/
-# )
-# find_path(
-#   ONNX_RUNTIME_PROVIDERS_INCLUDE_DIRS
-#   cuda_provider_factory.h
-#   HINTS /usr/local/include/onnxruntime/core/providers/cuda/
-# )
-# find_library(
-#   ONNX_RUNTIME_LIB
-#   onnxruntime
-#   HINTS /usr/local/lib
-# )
 
 FILE(GLOB YOLO_SOURCE_FILES src/*.cpp)
 

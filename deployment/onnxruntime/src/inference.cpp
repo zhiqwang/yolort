@@ -1,10 +1,3 @@
-#include <cuda_provider_factory.h>
-#include <onnxruntime_cxx_api.h>
-
-#include <opencv2/dnn/dnn.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-
 #include <chrono>
 #include <cmath>
 #include <exception>
@@ -14,6 +7,12 @@
 #include <numeric>
 #include <string>
 #include <vector>
+
+#include <onnxruntime_cxx_api.h>
+
+#include <opencv2/dnn/dnn.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 
 template <typename T>
 T vectorProduct(const std::vector<T>& v)
@@ -128,7 +127,7 @@ std::vector<std::string> readLabels(std::string& labelFilepath)
 
 int main(int argc, char* argv[])
 {
-  bool useCUDA{true};
+  bool useCUDA{false};
   const char* useCUDAFlag = "--use_cuda";
   const char* useCPUFlag = "--use_cpu";
   if (argc == 1)
@@ -162,9 +161,9 @@ int main(int argc, char* argv[])
   }
 
   std::string instanceName{"image-classification-inference"};
-  std::string modelFilepath{"../../data/models/squeezenet1.1-7.onnx"};
-  std::string imageFilepath{"../../data/images/european-bee-eater-2115564_1920.jpg"};
-  std::string labelFilepath{"../../data/labels/synset.txt"};
+  std::string modelFilepath{"../data/models/squeezenet1.1-7.onnx"};
+  std::string imageFilepath{"../data/images/european-bee-eater-2115564_1920.jpg"};
+  std::string labelFilepath{"../data/labels/synset.txt"};
 
   std::vector<std::string> labels{readLabels(labelFilepath)};
 
@@ -172,11 +171,6 @@ int main(int argc, char* argv[])
       instanceName.c_str());
   Ort::SessionOptions sessionOptions;
   sessionOptions.SetIntraOpNumThreads(1);
-  if (useCUDA)
-  {
-    // Using CUDA backend
-    OrtStatus* status = OrtSessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0);
-  }
 
   // Sets graph optimization level
   // Available levels are
@@ -300,7 +294,7 @@ int main(int argc, char* argv[])
         outputTensors.data(), 1);
   }
   std::chrono::steady_clock::time_point end =
-    std::chrono::steady_clock::now();
+      std::chrono::steady_clock::now();
   std::cout << "Minimum Inference Latency: "
       << std::chrono::duration_cast<std::chrono::milliseconds>(
           end - begin).count() / static_cast<float>(numTests)
