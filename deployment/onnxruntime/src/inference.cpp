@@ -15,8 +15,7 @@
 #include <opencv2/imgproc.hpp>
 
 template <typename T>
-T vectorProduct(const std::vector<T>& v)
-{
+T vectorProduct(const std::vector<T>& v) {
   return accumulate(v.begin(), v.end(), 1, std::multiplies<T>());
 }
 
@@ -28,11 +27,9 @@ T vectorProduct(const std::vector<T>& v)
  * @return std::ostream&
  */
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
-{
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
   os << "[";
-  for (int i = 0; i < v.size(); ++i)
-  {
+  for (int i = 0; i < v.size(); ++i) {
     os << v[i];
     if (i != v.size() - 1)
     {
@@ -50,10 +47,8 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
  * @return std::ostream&
  */
 std::ostream& operator<<(std::ostream& os,
-    const ONNXTensorElementDataType& type)
-{
-  switch (type)
-  {
+    const ONNXTensorElementDataType& type) {
+  switch (type) {
     case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED:
       os << "undefined";
       break;
@@ -113,50 +108,35 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-std::vector<std::string> readLabels(std::string& labelFilepath)
-{
+std::vector<std::string> readLabels(std::string& labelFilepath) {
   std::vector<std::string> labels;
   std::string line;
   std::ifstream fp(labelFilepath);
-  while (std::getline(fp, line))
-  {
+  while (std::getline(fp, line)) {
     labels.push_back(line);
   }
   return labels;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   bool useCUDA{false};
   const char* useCUDAFlag = "--use_cuda";
   const char* useCPUFlag = "--use_cpu";
-  if (argc == 1)
-  {
+  if (argc == 1) {
     useCUDA = false;
-  }
-  else if ((argc == 2) && (strcmp(argv[1], useCUDAFlag) == 0))
-  {
+  } else if ((argc == 2) && (strcmp(argv[1], useCUDAFlag) == 0)) {
     useCUDA = true;
-  }
-  else if ((argc == 2) && (strcmp(argv[1], useCPUFlag) == 0))
-  {
+  } else if ((argc == 2) && (strcmp(argv[1], useCPUFlag) == 0)) {
     useCUDA = false;
-  }
-  else if ((argc == 2) && (strcmp(argv[1], useCUDAFlag) != 0))
-  {
+  } else if ((argc == 2) && (strcmp(argv[1], useCUDAFlag) != 0)) {
     useCUDA = false;
-  }
-  else
-  {
+  } else {
     throw std::runtime_error{"Too many arguments."};
   }
 
-  if (useCUDA)
-  {
+  if (useCUDA) {
     std::cout << "Inference Execution Provider: CUDA" << std::endl;
-  }
-  else
-  {
+  } else {
     std::cout << "Inference Execution Provider: CPU" << std::endl;
   }
 
@@ -251,8 +231,7 @@ int main(int argc, char* argv[])
   float activation = 0;
   float maxActivation = std::numeric_limits<float>::lowest();
   float expSum = 0;
-  for (int i = 0; i < labels.size(); i++)
-  {
+  for (int i = 0; i < labels.size(); i++) {
     activation = outputTensorValues.at(i);
     expSum += std::exp(activation);
     if (activation > maxActivation)
@@ -269,8 +248,7 @@ int main(int argc, char* argv[])
   int numTests{100};
   std::chrono::steady_clock::time_point begin =
       std::chrono::steady_clock::now();
-  for (int i = 0; i < numTests; i++)
-  {
+  for (int i = 0; i < numTests; i++) {
     session.Run(Ort::RunOptions{nullptr}, inputNames.data(),
         inputTensors.data(), 1, outputNames.data(),
         outputTensors.data(), 1);
