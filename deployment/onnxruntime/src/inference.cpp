@@ -197,9 +197,19 @@ int main(int argc, char* argv[]) {
   std::cout << "Output Dimensions: " << outputDims << std::endl;
 
   cv::Mat imageRead = cv::imread(imageFilepath);
-  imageRead.convertTo(imageRead, CV_32FC3, 1.0f / 255.0f); // normalization 1/255
-  cv::Mat preprocessedImage;
-  cv::dnn::blobFromImage(imageRead, preprocessedImage); // HWC to CHW
+  imageRead.convertTo(imageRead, CV_32FC3, 1.0f / 255.0f); // uint8_t -> float, divide by 255
+  // HWC to CHW
+  auto h = imageRead.rows;
+  auto w = imageRead.cols;
+  auto channels = imageRead.channels();
+  int imageSize[] = {channels, h, w};
+  cv::Mat preprocessedImage(channels, imageSize, imageRead.depth());
+  // here's the trick: split it into existing, preallocated input_channels:
+  std::vector<cv::Mat> planes(channels);
+  for (size_t i = 0; i < channels; ++i) {
+    planes[i] = cv::Mat(h, w, preprocessedImage.depth(), preprocessedImage.ptr<float>(i));
+  }
+  cv::split(imageRead, planes);
 
   size_t inputTensorSize = vectorProduct(inputDims);
   std::vector<float> inputTensorValues(inputTensorSize);
