@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
   }
 
   std::string instanceName{"object-detection-inference"};
-  std::string modelFilepath{"../data/models/yolov5s.onnx"};
+  std::string modelFilepath{"../../../checkpoints/models/yolov5s.onnx"};
   std::string imageFilepath{"../../../test/assets/zidane.jpg"};
   std::string labelFilepath{"../../../notebooks/assets/coco.names"};
 
