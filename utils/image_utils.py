@@ -5,6 +5,8 @@ import cv2
 from IPython.display import display
 from PIL import Image
 
+from torchvision.ops.boxes import box_convert
+
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=None):
     # Plots one bounding box on image img
@@ -61,19 +63,20 @@ def box_cxcywh_to_xyxy(bbox):
     return y
 
 
-def decode_image(images):
+def parse_images(images):
     images = images.permute(0, 2, 3, 1)
-    images = to_numpy(images)
+    images = to_numpy(images).copy()
     images = images * 255
+    images = images.clip(0, 255).astype('uint8')
+
     return images
 
 
-def decode_target(targets, sizes):
-    h, w = sizes
-    gain = np.ones(6)
-    gain[2:6] = np.array([w, h, w, h])
-    targets = targets * gain
-    return targets
+def parse_target(target, sizes):
+    boxes = box_convert(target['boxes'], in_fmt="cxcywh", out_fmt="xyxy")
+    boxes = to_numpy(boxes)
+    boxes = boxes * np.tile(sizes[1::-1], 2)
+    return boxes
 
 
 def to_numpy(tensor):
@@ -106,7 +109,7 @@ def restore_anchor(anchor, grid_x, grid_y, stride, feature_map_size, image_sizes
 
 def anchor_match_visualize(images, targets, indices, anchors, pred):
     image_sizes = images.shape[-2:]
-    images = decode_image(images)
+    images = parse_images(images)
 
     strdie = [8, 16, 32]
 
