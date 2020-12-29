@@ -225,7 +225,8 @@ class RandomSelect(object):
 
 
 class ToTensor(object):
-    def __call__(self, img, target):
+    @staticmethod
+    def __call__(img, target):
         return F.to_tensor(img), target
 
 
@@ -239,12 +240,9 @@ class RandomErasing(object):
 
 
 class Normalize(object):
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
+    @staticmethod
+    def __call__(image, target=None):
 
-    def __call__(self, image, target=None):
-        image = F.normalize(image, mean=self.mean, std=self.std)
         if target is None:
             return image, None
         target = target.copy()
@@ -279,7 +277,7 @@ def make_transforms(image_set='train'):
 
     normalize = Compose([
         ToTensor(),
-        Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        Normalize(),
     ])
 
     scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]

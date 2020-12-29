@@ -25,16 +25,17 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
         )
 
 
-def cv2_imshow(a):
+def cv2_imshow(a, convert_bgr_to_rgb=True):
     """A replacement for cv2.imshow() for use in Jupyter notebooks.
     Args:
-        a : np.ndarray. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape
-        (N, M, 3) is an NxM BGR color image. shape (N, M, 4) is an NxM BGRA color
-        image.
+        a: np.ndarray. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape
+            (N, M, 3) is an NxM BGR color image. shape (N, M, 4) is an NxM BGRA color
+            image.
+        convert_bgr_to_rgb: switch to convert BGR to RGB channel.
     """
     a = a.clip(0, 255).astype('uint8')
     # cv2 stores colors as BGR; convert to RGB
-    if a.ndim == 3:
+    if convert_bgr_to_rgb and a.ndim == 3:
         if a.shape[2] == 4:
             a = cv2.cvtColor(a, cv2.COLOR_BGRA2RGBA)
         else:
