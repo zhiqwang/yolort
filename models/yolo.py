@@ -7,11 +7,11 @@ import torch
 from torch import nn, Tensor
 
 from torchvision.models.utils import load_state_dict_from_url
-from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
 from .backbone import darknet
 from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
+from .transform import NestedTensor, nested_tensor_from_tensor_list
 
 from typing import Tuple, Any, List, Dict, Optional
 
@@ -32,11 +32,6 @@ class YOLO(nn.Module):
         backbone: nn.Module,
         num_classes: int,
         anchor_grids: List[List[int]],
-        # transform parameters
-        min_size: int = 320,
-        max_size: int = 416,
-        image_mean: Optional[List[float]] = None,
-        image_std: Optional[List[float]] = None,
         # Anchor parameters
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
@@ -76,13 +71,6 @@ class YOLO(nn.Module):
             )
         self.head = head
 
-        if image_mean is None:
-            image_mean = [0., 0., 0.]
-        if image_std is None:
-            image_std = [1., 1., 1.]
-
-        self.transform = GeneralizedRCNNTransform(min_size, max_size, image_mean, image_std)
-
         if postprocess_detections is None:
             postprocess_detections = PostProcess(score_thresh, nms_thresh, detections_per_img)
         self.postprocess_detections = postprocess_detections
@@ -103,33 +91,26 @@ class YOLO(nn.Module):
 
     def forward(
         self,
-        images: List[Tensor],
+        samples: NestedTensor,
         targets: Optional[List[Dict[str, Tensor]]] = None,
+        target_sizes: Optional[Tensor] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         Arguments:
-            images (list[Tensor]): images to be processed
+            samples (NestedTensor): Expects a NestedTensor, which consists of:
+               - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
             targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
-
         Returns:
             result (list[BoxList] or dict[Tensor]): the output from the model.
-                During Training, it returns a dict[Tensor] which contains the losses
-                TODO, currently this repo doesn't support training.
-                During Testing, it returns list[BoxList] contains additional fields
-                like `scores` and `labels`.
+                During training, it returns a dict[Tensor] which contains the losses.
+                During testing, it returns list[BoxList] contains additional fields
+                like `scores`, `labels` and `mask` (for Mask R-CNN models).
         """
-        # get the original image sizes
-        original_image_sizes: List[Tuple[int, int]] = []
-        for img in images:
-            val = img.shape[-2:]
-            assert len(val) == 2
-            original_image_sizes.append((val[0], val[1]))
-
-        # transform the input
-        images, targets = self.transform(images, targets)
+        if isinstance(samples, (list, torch.Tensor)):
+            samples = nested_tensor_from_tensor_list(samples)
 
         # get the features from the backbone
-        features = self.backbone(images.tensors)
+        features = self.backbone(samples)
 
         # compute the yolo heads outputs using the features
         head_outputs = self.head(features)
@@ -145,8 +126,7 @@ class YOLO(nn.Module):
             losses = self.compute_loss(targets, head_outputs)
         else:
             # compute the detections
-            detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)
-            detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
+            detections = self.postprocess_detections(head_outputs, anchors_tuple, target_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:

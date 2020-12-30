@@ -6,14 +6,15 @@ from IPython.display import display
 from PIL import Image
 
 from torchvision.ops.boxes import box_convert
+from torchvision.models.detection.transform import resize_boxes
 
 
-def plot_one_box(x, img, color=None, label=None, line_thickness=None):
+def plot_one_box(box, img, color=None, label=None, line_thickness=None):
     # Plots one bounding box on image img
     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
     COLORS = color_list()  # list of COLORS
     color = color or COLORS[np.random.randint(0, len(COLORS))]
-    c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
+    c1, c2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
 
     if label:
@@ -63,19 +64,34 @@ def box_cxcywh_to_xyxy(bbox):
     return y
 
 
-def parse_images(images):
-    images = images.permute(0, 2, 3, 1)
+def cast_image_tensor_to_numpy(images):
+    """
+    Cast image from torch.Tensor to opencv
+    """
     images = to_numpy(images).copy()
     images = images * 255
     images = images.clip(0, 255).astype('uint8')
+    return images
+
+
+def parse_images(images):
+    images = images.permute(0, 2, 3, 1)
+    images = cast_image_tensor_to_numpy(images)
 
     return images
 
 
-def parse_target(target, sizes):
-    boxes = box_convert(target['boxes'], in_fmt="cxcywh", out_fmt="xyxy")
-    boxes = to_numpy(boxes)
-    boxes = boxes * np.tile(sizes[1::-1], 2)
+def parse_single_image(image):
+    image = image.permute(1, 2, 0)
+    image = cast_image_tensor_to_numpy(image)
+    return image
+
+
+def parse_single_target(target, sizes):
+    # boxes = box_convert(target['boxes'], in_fmt="cxcywh", out_fmt="xyxy")
+    # boxes = resize_boxes(boxes, original_size, sizes)
+    boxes = to_numpy(target['boxes'])
+    # boxes = boxes * np.tile(sizes[1::-1], 2)
     return boxes
 
 

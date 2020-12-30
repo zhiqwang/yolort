@@ -1,6 +1,6 @@
 # Modified from ultralytics/yolov5 by Zhiqiang Wang
 import torch
-from torch import device, nn, Tensor
+from torch import nn, Tensor
 
 from torchvision.ops import batched_nms
 
@@ -320,7 +320,7 @@ class PostProcess(nn.Module):
         self,
         head_outputs: List[Tensor],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
-        image_shapes: Optional[List[Tuple[int, int]]] = None,
+        target_sizes: Optional[Tensor] = None,
     ) -> List[Dict[str, Tensor]]:
         """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
         Decode location preds, apply non-maximum suppression to location predictions based on conf
@@ -333,24 +333,29 @@ class PostProcess(nn.Module):
                           For evaluation, this must be the original image size (before any data augmentation)
                           For visualization, this should be the image size after data augment, but before padding
         """
-        N, _, _, _, K = head_outputs[0].shape
+        device = head_outputs[0].device
+        batch_size, _, _, _, K = head_outputs[0].shape
+
         all_pred_logits: List[Tensor] = []
         for pred_logits in head_outputs:
-            pred_logits = pred_logits.reshape(N, -1, K)  # Size=(N, HWA, K)
+            pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(NN, HWA, K)
             all_pred_logits.append(pred_logits)
 
         all_pred_logits = torch.cat(all_pred_logits, dim=1)
 
         detections: List[Dict[str, Tensor]] = []
+        if target_sizes is None:
+            target_sizes = torch.ones((batch_size, 2), device=device)
 
-        for index in range(N):  # image index, image inference
-            pred_logits = torch.sigmoid(all_pred_logits[index])
+        for idx in range(batch_size):  # image idx, image inference
+            pred_logits = torch.sigmoid(all_pred_logits[idx])
 
             # Compute conf
             # box_conf x class_conf, w/ shape: num_anchors x num_classes
             scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
 
             boxes = self.box_coder.decode_single(pred_logits[:, :4], anchors_tuple)
+            boxes = boxes * target_sizes[idx].flip(0).repeat(2)
 
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)
