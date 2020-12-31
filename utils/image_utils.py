@@ -6,7 +6,6 @@ from IPython.display import display
 from PIL import Image
 
 from torchvision.ops.boxes import box_convert
-from torchvision.models.detection.transform import resize_boxes
 
 
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
@@ -87,11 +86,11 @@ def parse_single_image(image):
     return image
 
 
-def parse_single_target(target, sizes):
-    # boxes = box_convert(target['boxes'], in_fmt="cxcywh", out_fmt="xyxy")
-    # boxes = resize_boxes(boxes, original_size, sizes)
-    boxes = to_numpy(target['boxes'])
-    # boxes = boxes * np.tile(sizes[1::-1], 2)
+def parse_single_target(target):
+    boxes = box_convert(target['boxes'], in_fmt="cxcywh", out_fmt="xyxy")
+    boxes = to_numpy(boxes)
+    sizes = np.tile(to_numpy(target['size'])[1::-1], 2)
+    boxes = boxes * sizes
     return boxes
 
 

@@ -13,6 +13,8 @@ import pickle
 import torch
 import torch.distributed as dist
 
+from models.transform import nested_tensor_from_tensor_list
+
 
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a
@@ -237,7 +239,9 @@ class MetricLogger(object):
 
 
 def collate_fn(batch):
-    return list(zip(*batch))
+    batch = list(zip(*batch))
+    batch[0] = nested_tensor_from_tensor_list(batch[0])
+    return tuple(batch)
 
 
 def warmup_lr_scheduler(optimizer, warmup_iters, warmup_factor):
