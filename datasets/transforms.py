@@ -280,17 +280,18 @@ def make_transforms(image_set='train'):
         Normalize(),
     ])
 
-    scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
+    scales = [384, 416, 448, 480, 512, 544, 576, 608, 640, 672]
+    scales_for_training = [(640, 640)]
 
     if image_set == 'train' or image_set == 'trainval':
         return Compose([
             RandomHorizontalFlip(),
             RandomSelect(
-                RandomResize(scales, max_size=1333),
+                RandomResize(scales_for_training),
                 Compose([
-                    RandomResize([400, 500, 600]),
-                    RandomSizeCrop(384, 600),
-                    RandomResize(scales, max_size=1333),
+                    RandomResize(scales),
+                    RandomSizeCrop(384, 480),
+                    RandomResize(scales_for_training),
                 ])
             ),
             normalize,
