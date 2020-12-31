@@ -240,8 +240,19 @@ class MetricLogger(object):
 
 def collate_fn(batch):
     batch = list(zip(*batch))
-    batch[0] = nested_tensor_from_tensor_list(batch[0])
-    return tuple(batch)
+    samples = nested_tensor_from_tensor_list(batch[0])
+
+    targets = []
+    for i, target in enumerate(batch[1]):
+        num_objects = len(target['labels'])
+        if num_objects > 0:
+            targets_merged = torch.full((num_objects, 6), i, dtype=torch.float32)
+            targets_merged[:, 1] = target['labels']
+            targets_merged[:, 2:] = target['boxes']
+            targets.append(targets_merged)
+    targets = torch.cat(targets, dim=0)
+
+    return samples, targets
 
 
 def warmup_lr_scheduler(optimizer, warmup_iters, warmup_factor):

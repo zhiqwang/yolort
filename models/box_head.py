@@ -82,7 +82,7 @@ class SetCriterion(nn.Module):
         cls_pw: float = 1.0,  # cls BCELoss positive_weight
         obj: float = 1.0,  # obj loss gain (scale with pixels)
         obj_pw: float = 1.0,  # obj BCELoss positive_weight
-        anchor_t: Tuple[float] = (1.0, 2.0, 8.0),  # anchor-multiple threshold
+        anchor_t: float = 4.0,  # anchor-multiple threshold
         gr: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
         fl_gamma: float = 0.0,  # focal loss gamma
         allow_low_quality_matches: bool = True,
@@ -97,6 +97,7 @@ class SetCriterion(nn.Module):
         super().__init__()
         self.strides = strides
         self.anchor_grids = anchor_grids
+        self.anchor_t = anchor_t
 
     def forward(
         self,
@@ -118,19 +119,16 @@ class SetCriterion(nn.Module):
     def select_training_samples(
         self,
         head_outputs: List[Tensor],
-        targets: List[Dict[str, Tensor]],
+        targets: Tensor,
     ) -> Tuple[Tensor, Tensor]:
         # get boxes indices for each anchors
         device = head_outputs[0].device
-
-        gt_boxes = [t["boxes"].to(device) for t in targets]
-        gt_labels = [t["labels"] for t in targets]
 
         num_layers = len(head_outputs)
         anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
         anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
-        boxes, labels = self.assign_targets_to_anchors(head_outputs, anchors, gt_boxes, gt_labels)
+        boxes, labels = self.assign_targets_to_anchors(head_outputs, anchors, targets)
 
         gt_locations = []
         for img_id in range(len(targets)):
@@ -146,8 +144,7 @@ class SetCriterion(nn.Module):
         self,
         head_outputs: List[Tensor],
         anchors: Tensor,
-        gt_boxes: List[Tensor],
-        gt_labels: List[Tensor],
+        targets: Tensor,
     ) -> Tuple[List[Tensor], List[Tensor]]:
         """Assign ground truth boxes and targets to anchors.
         Args:
@@ -184,7 +181,7 @@ class SetCriterion(nn.Module):
             t = targets * gain
             if num_targets:
                 # Matches
-                r = t[:, :, 4:6] / anchors[:, None]  # wh ratio
+                r = t[:, :, 4:6] / anchors_per_layer[:, None]  # wh ratio
                 j = torch.max(r, 1. / r).max(2)[0] < self.anchor_t  # compare
                 # j = wh_iou(anchors, t[:, 4:6]) > self.iou_t  # iou(3,n)=wh_iou(anchors(3,2), gwh(n,2))
                 t = t[j]  # filter
