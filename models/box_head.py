@@ -5,7 +5,6 @@ from torch import nn, Tensor
 from torchvision.ops import batched_nms
 
 from . import _utils as det_utils
-from ._utils import FocalLoss
 from utils.box_ops import bbox_iou
 
 from typing import Tuple, List, Dict, Optional
@@ -58,11 +57,6 @@ class YoloHead(nn.Module):
 Detect = YoloHead
 
 
-def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
-    # return positive, negative label smoothing BCE targets
-    return 1.0 - 0.5 * eps, 0.5 * eps
-
-
 class SetCriterion(nn.Module):
     """This class computes the loss for YOLOv5.
     Arguments:
@@ -86,6 +80,7 @@ class SetCriterion(nn.Module):
         gr: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
         fl_gamma: float = 0.0,  # focal loss gamma
         allow_low_quality_matches: bool = True,
+        layer_balance: List[float] = [4.0, 1.0, 0.4],
     ) -> None:
         """
         Arguments:
@@ -98,12 +93,19 @@ class SetCriterion(nn.Module):
         self.strides = strides
         self.anchor_grids = anchor_grids
         self.anchor_t = anchor_t
+        self.fl_gamma = fl_gamma
+        self.layer_balance = layer_balance
+
+        self.cls_pw = cls_pw
+        self.obj_pw = obj_pw
+        self.cls = cls
+        self.obj = obj
+        self.box = box
 
     def forward(
         self,
         head_outputs: List[Tensor],
         targets: List[Dict[str, Tensor]],
-        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
@@ -111,8 +113,8 @@ class SetCriterion(nn.Module):
             targets: list of dicts, such that len(targets) == batch_size.
                     The expected keys in each dict depends on the losses applied, see each loss' doc
         """
-        regression_targets, labels = self.select_training_samples(targets, head_outputs, anchors_tuple)
-        losses = self.compute_loss(head_outputs, regression_targets, labels)
+        tcls, tbox, indices, anchors = self.select_training_samples(head_outputs, targets)
+        losses = self.compute_loss(head_outputs, tcls, tbox, indices, anchors)
 
         return losses
 
@@ -120,7 +122,7 @@ class SetCriterion(nn.Module):
         self,
         head_outputs: List[Tensor],
         targets: Tensor,
-    ) -> Tuple[Tensor, Tensor]:
+    ):
         # get boxes indices for each anchors
         device = head_outputs[0].device
 
@@ -128,24 +130,16 @@ class SetCriterion(nn.Module):
         anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
         anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
-        boxes, labels = self.assign_targets_to_anchors(head_outputs, anchors, targets)
+        tcls, tbox, indices, anch = self.assign_targets_to_anchors(head_outputs, anchors, targets)
 
-        gt_locations = []
-        for img_id in range(len(targets)):
-            locations = self.box_coder.encode(boxes[img_id], self.anchor_grids[0])
-            gt_locations.append(locations)
-
-        regression_targets = torch.stack(gt_locations, 0)
-        labels = torch.stack(labels, 0)
-
-        return regression_targets, labels
+        return tcls, tbox, indices, anch
 
     def assign_targets_to_anchors(
         self,
         head_outputs: List[Tensor],
         anchors: Tensor,
         targets: Tensor,
-    ) -> Tuple[List[Tensor], List[Tensor]]:
+    ):
         """Assign ground truth boxes and targets to anchors.
         Args:
             gt_boxes (List[Tensor]): with shape num_targets x 4, ground truth boxes
@@ -207,86 +201,95 @@ class SetCriterion(nn.Module):
 
             # Append
             a = t[:, 6].long()  # anchor indices
-            indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))  # image, anchor, grid indices
+            # image, anchor, grid indices
+            indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))
             tbox.append(torch.cat((gxy - gij, gwh), 1))  # box
             anch.append(anchors_per_layer[a])  # anchors
             tcls.append(c)  # class
 
         return tcls, tbox, indices, anch
 
+    @staticmethod
+    def label_smooth_bce(eps=0.1):
+        '''
+        Return positive, negative label smoothing BCE targets
+        <https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441>
+        '''
+        return 1.0 - 0.5 * eps, 0.5 * eps
+
     def compute_loss(
         self,
         head_outputs: List[Tensor],
-        targets: List[Dict[str, Tensor]],
-        anchors: Tensor,
-        matched_idxs: List[Tensor],
+        cls_target,
+        tbox,
+        matched_idxs,
+        anchors,
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
-             outputs: dict of tensors, see the output specification of the model for the format
-             targets: list of dicts, such that len(targets) == batch_size.
-                      The expected keys in each dict depends on the losses applied, see each loss' doc
+            outputs: dict of tensors, see the output specification of the model for the format
+            targets: list of dicts, such that len(targets) == batch_size.
+                The expected keys in each dict depends on the losses applied, see each loss' doc
         """
         device = anchors.device
-        num_classes = head_outputs.shape[2] - 5
-        lcls, lbox, lobj = torch.zeros(1, device=device), torch.zeros(1, device=device), torch.zeros(1, device=device)
-
-        # Define criteria
-        BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([self.cls_pw])).to(device)
-        BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([self.obj_pw])).to(device)
+        num_classes = head_outputs[0].shape[-1] - 5
+        loss_cls = torch.zeros(1, device=device)
+        loss_box = torch.zeros(1, device=device)
+        loss_obj = torch.zeros(1, device=device)
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
-        cp, cn = smooth_BCE(eps=0.0)
+        cls_positive, cls_negative = self.label_smooth_bce(eps=0.0)
 
-        # Focal loss
-        g = self.fl_gamma  # focal loss gamma
-        if g > 0:
-            BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
-
+        assert len(head_outputs) == len(self.layer_balance)
         # Losses
         num_targets = 0  # number of targets
         num_output = len(head_outputs)  # number of outputs
-        balance = [4.0, 1.0, 0.4] if num_output == 3 else [4.0, 1.0, 0.4, 0.1]  # P3-5 or P3-6
-        for i, pi in enumerate(head_outputs):  # layer index, layer predictions
+
+        cls_pw = torch.Tensor([self.cls_pw]).to(device)
+        obj_pw = torch.Tensor([self.obj_pw]).to(device)
+
+        for i, pred_logits_per_layer in enumerate(head_outputs):  # layer index, layer predictions
             b, a, gj, gi = matched_idxs[i]  # image, anchor, gridy, gridx
-            tobj = torch.zeros_like(pi[..., 0], device=device)  # target obj
+            obj_logits = torch.zeros_like(pred_logits_per_layer[..., 0], device=device)  # target obj
 
-            n = b.shape[0]  # number of targets
-            if n:
-                num_targets += n  # cumulative targets
-                ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
+            num_target_per_layer = b.shape[0]  # number of targets
+            if num_target_per_layer:
+                num_targets += num_target_per_layer  # cumulative targets
+                pred_logits_matched = pred_logits_per_layer[b, a, gj, gi]  # prediction subset corresponding to targets
 
-                # Regression
-                pxy = ps[:, :2].sigmoid() * 2. - 0.5
-                pwh = (ps[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
-                pbox = torch.cat((pxy, pwh), 1).to(device)  # predicted box
-                iou = bbox_iou(pbox.T, targets['boxes'][i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
-                lbox += (1.0 - iou).mean()  # iou loss
+                # Regression head
+                bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
+                bbox_wh = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
+                bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
+                iou = bbox_iou(bbox_regression.T, tbox[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
+                loss_box += (1.0 - iou).mean()  # iou loss
 
-                # Objectness
-                tobj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * iou.detach().clamp(0).type(tobj.dtype)  # iou ratio
+                # Objectness head
+                # iou ratio
+                obj_logits[b, a, gj, gi] = (1.0 - self.gr) + self.gr * iou.detach().clamp(0).type(obj_logits.dtype)
 
-                # Classification
+                # Classification head
                 if num_classes > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(ps[:, 5:], cn, device=device)  # targets
-                    t[range(n), targets['labels'][i]] = cp
-                    lcls += BCEcls(ps[:, 5:], t)  # BCE
+                    cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)  # targets
+                    cls_logits[range(num_target_per_layer), cls_target[i]] = cls_positive
 
-                # Append targets to text file
-                # with open('targets.txt', 'a') as file:
-                #     [file.write('%11.5g ' * 4 % tuple(x) + '\n') for x in torch.cat((txy[i], twh[i]), 1)]
+                    loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)  # BCE
 
-            lobj += BCEobj(pi[..., 4], tobj) * balance[i]  # obj loss
+            loss_obj += det_utils.obj_loss(
+                pred_logits_per_layer[..., 4],
+                obj_logits,
+                pos_weight=obj_pw,
+            ) * self.layer_balance[i]  # obj loss
 
         out_scaling = 3 / num_output  # output count scaling
-        lbox *= self.box * out_scaling
-        lobj *= self.obj * out_scaling * (1.4 if num_output == 4 else 1.)
-        lcls *= self.cls * out_scaling
+        loss_box *= self.box * out_scaling
+        loss_obj *= self.obj * out_scaling * (1.4 if num_output == 4 else 1.)
+        loss_cls *= self.cls * out_scaling
 
         return {
-            'cls_logits': lcls,
-            'bbox_regression': lbox,
-            'objectness': lobj,
+            'cls_logits': loss_cls,
+            'bbox_regression': loss_box,
+            'objectness': loss_obj,
         }
 
 
