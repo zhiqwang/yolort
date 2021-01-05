@@ -77,9 +77,8 @@ class SetCriterion(nn.Module):
         obj: float = 1.0,  # obj loss gain (scale with pixels)
         obj_pw: float = 1.0,  # obj BCELoss positive_weight
         anchor_t: float = 4.0,  # anchor-multiple threshold
-        gr: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
+        iou_ratio: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
         fl_gamma: float = 0.0,  # focal loss gamma
-        allow_low_quality_matches: bool = True,
         layer_balance: List[float] = [4.0, 1.0, 0.4],
     ) -> None:
         """
@@ -101,6 +100,8 @@ class SetCriterion(nn.Module):
         self.cls = cls
         self.obj = obj
         self.box = box
+
+        self.iou_ratio = iou_ratio
 
     def forward(
         self,
@@ -231,7 +232,7 @@ class SetCriterion(nn.Module):
             targets: list of dicts, such that len(targets) == batch_size.
                 The expected keys in each dict depends on the losses applied, see each loss' doc
         """
-        device = anchors.device
+        device = head_outputs[0].device
         num_classes = head_outputs[0].shape[-1] - 5
         loss_cls = torch.zeros(1, device=device)
         loss_box = torch.zeros(1, device=device)
@@ -259,14 +260,15 @@ class SetCriterion(nn.Module):
 
                 # Regression head
                 bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
-                bbox_wh = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
+                bbox_inter = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2
+                bbox_wh = bbox_inter * anchors[i]
                 bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
                 iou = bbox_iou(bbox_regression.T, tbox[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
                 loss_box += (1.0 - iou).mean()  # iou loss
 
                 # Objectness head
                 # iou ratio
-                obj_logits[b, a, gj, gi] = (1.0 - self.gr) + self.gr * iou.detach().clamp(0).type(obj_logits.dtype)
+                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + self.iou_ratio * iou.detach().clamp(0).type(obj_logits.dtype)
 
                 # Classification head
                 if num_classes > 1:  # cls loss (only if multiple classes)
