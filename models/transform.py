@@ -13,7 +13,7 @@ class NestedTensor(object):
         self.tensors = tensors
         self.mask = mask
 
-    def to(self, device: torch.device) -> "NestedTensor":
+    def to(self, device) -> "NestedTensor":
         cast_tensor = self.tensors.to(device)
         mask = self.mask
         if mask is not None:

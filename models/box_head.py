@@ -267,7 +267,8 @@ class SetCriterion(nn.Module):
 
                 # Objectness head
                 # iou ratio
-                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + self.iou_ratio * iou.detach().clamp(0).type(obj_logits.dtype)
+                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + (
+                    self.iou_ratio * iou.detach().clamp(0).type(obj_logits.dtype))
 
                 # Classification head
                 if num_classes > 1:  # cls loss (only if multiple classes)
@@ -321,7 +322,6 @@ class PostProcess(nn.Module):
         self,
         head_outputs: List[Tensor],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
-        target_sizes: Optional[Tensor] = None,
     ) -> List[Dict[str, Tensor]]:
         """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
         Decode location preds, apply non-maximum suppression to location predictions based on conf
@@ -345,8 +345,6 @@ class PostProcess(nn.Module):
         all_pred_logits = torch.cat(all_pred_logits, dim=1)
 
         detections: List[Dict[str, Tensor]] = []
-        if target_sizes is None:
-            target_sizes = torch.ones((batch_size, 2), device=device)
 
         for idx in range(batch_size):  # image idx, image inference
             pred_logits = torch.sigmoid(all_pred_logits[idx])
@@ -356,7 +354,6 @@ class PostProcess(nn.Module):
             scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
 
             boxes = self.box_coder.decode_single(pred_logits[:, :4], anchors_tuple)
-            boxes = boxes * target_sizes[idx].flip(0).repeat(2)
 
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)

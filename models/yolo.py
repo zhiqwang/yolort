@@ -38,7 +38,7 @@ class YOLO(nn.Module):
         # Training parameter
         loss_calculator: Optional[nn.Module] = None,
         # Post Process parameter
-        postprocess_detections: Optional[nn.Module] = None,
+        post_process: Optional[nn.Module] = None,
         score_thresh: float = 0.05,
         nms_thresh: float = 0.5,
         detections_per_img: int = 300,
@@ -69,9 +69,9 @@ class YOLO(nn.Module):
             )
         self.head = head
 
-        if postprocess_detections is None:
-            postprocess_detections = PostProcess(score_thresh, nms_thresh, detections_per_img)
-        self.postprocess_detections = postprocess_detections
+        if post_process is None:
+            post_process = PostProcess(score_thresh, nms_thresh, detections_per_img)
+        self.post_process = post_process
 
         # used only on torchscript mode
         self._has_warned = False
@@ -91,7 +91,6 @@ class YOLO(nn.Module):
         self,
         samples: NestedTensor,
         targets: Optional[Tensor] = None,
-        target_sizes: Optional[Tensor] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         Arguments:
@@ -124,7 +123,7 @@ class YOLO(nn.Module):
             losses = self.compute_loss(head_outputs, targets)
         else:
             # compute the detections
-            detections = self.postprocess_detections(head_outputs, anchors_tuple, target_sizes)
+            detections = self.post_process(head_outputs, anchors_tuple)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
