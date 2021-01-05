@@ -90,7 +90,7 @@ class YOLO(nn.Module):
     def forward(
         self,
         samples: NestedTensor,
-        targets: Optional[List[Dict[str, Tensor]]] = None,
+        targets: Optional[Tensor] = None,
         target_sizes: Optional[Tensor] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
@@ -121,7 +121,7 @@ class YOLO(nn.Module):
         if self.training:
             assert targets is not None
             # compute the losses
-            losses = self.compute_loss(targets, head_outputs)
+            losses = self.compute_loss(head_outputs, targets)
         else:
             # compute the detections
             detections = self.postprocess_detections(head_outputs, anchors_tuple, target_sizes)

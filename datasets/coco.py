@@ -3,7 +3,6 @@
 COCO dataset which returns image_id for evaluation.
 Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references/detection/coco_utils.py
 """
-import os
 from pathlib import Path
 
 import torch
@@ -164,9 +163,8 @@ def build(image_set, year, args):
     assert root.exists(), f'provided COCO path {root} does not exist'
     mode = args.dataset_mode
 
-    img_folder = os.path.join(root, 'images')
-    ann_file = os.path.join("annotations", f'{mode}_{image_set}{year}.json')
-    ann_file = os.path.join(root, ann_file)
+    img_folder = Path(root)
+    ann_file = img_folder.joinpath("annotations").joinpath(f"{mode}_{image_set}{year}.json")
 
     dataset = CocoDetection(
         img_folder,
