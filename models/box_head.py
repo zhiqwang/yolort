@@ -106,7 +106,7 @@ class SetCriterion(nn.Module):
     def forward(
         self,
         head_outputs: List[Tensor],
-        targets: List[Dict[str, Tensor]],
+        targets: Tensor,
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
@@ -114,8 +114,8 @@ class SetCriterion(nn.Module):
             targets: list of dicts, such that len(targets) == batch_size.
                     The expected keys in each dict depends on the losses applied, see each loss' doc
         """
-        tcls, tbox, indices, anchors = self.select_training_samples(head_outputs, targets)
-        losses = self.compute_loss(head_outputs, tcls, tbox, indices, anchors)
+        targets_cls, targets_box, indices, anchors = self.select_training_samples(head_outputs, targets)
+        losses = self.compute_loss(head_outputs, targets_cls, targets_box, indices, anchors)
 
         return losses
 
@@ -131,9 +131,9 @@ class SetCriterion(nn.Module):
         anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
         anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
-        tcls, tbox, indices, anch = self.assign_targets_to_anchors(head_outputs, anchors, targets)
+        targets_cls, targets_box, indices, anchors_encode = self.assign_targets_to_anchors(head_outputs, anchors, targets)
 
-        return tcls, tbox, indices, anch
+        return targets_cls, targets_box, indices, anchors_encode
 
     def assign_targets_to_anchors(
         self,
@@ -156,7 +156,7 @@ class SetCriterion(nn.Module):
         num_anchors = len(self.anchor_grids)  # number of anchors
         num_targets = len(targets)  # number of targets
 
-        tcls, tbox, indices, anch = [], [], [], []
+        targets_cls, targets_box, indices, anchors_encode = [], [], [], []
         gain = torch.ones(7, device=device)  # normalized to gridspace gain
         # same as .repeat_interleave(num_targets)
         ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
@@ -204,11 +204,11 @@ class SetCriterion(nn.Module):
             a = t[:, 6].long()  # anchor indices
             # image, anchor, grid indices
             indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))
-            tbox.append(torch.cat((gxy - gij, gwh), 1))  # box
-            anch.append(anchors_per_layer[a])  # anchors
-            tcls.append(c)  # class
+            targets_box.append(torch.cat((gxy - gij, gwh), 1))  # box
+            anchors_encode.append(anchors_per_layer[a])  # anchors
+            targets_cls.append(c)  # class
 
-        return tcls, tbox, indices, anch
+        return targets_cls, targets_box, indices, anchors_encode
 
     @staticmethod
     def label_smooth_bce(eps=0.1):
@@ -221,10 +221,10 @@ class SetCriterion(nn.Module):
     def compute_loss(
         self,
         head_outputs: List[Tensor],
-        cls_target,
-        tbox,
-        matched_idxs,
-        anchors,
+        targets_cls: List[Tensor],
+        targets_box: List[Tensor],
+        matched_idxs: List[Tuple[Tensor, Tensor, Tensor, Tensor]],
+        anchors: Tensor,
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
@@ -260,10 +260,9 @@ class SetCriterion(nn.Module):
 
                 # Regression head
                 bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
-                bbox_inter = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2
-                bbox_wh = bbox_inter * anchors[i]
+                bbox_wh = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
                 bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
-                iou = bbox_iou(bbox_regression.T, tbox[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
+                iou = bbox_iou(bbox_regression.T, targets_box[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
                 loss_box += (1.0 - iou).mean()  # iou loss
 
                 # Objectness head
@@ -273,7 +272,7 @@ class SetCriterion(nn.Module):
                 # Classification head
                 if num_classes > 1:  # cls loss (only if multiple classes)
                     cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)  # targets
-                    cls_logits[range(num_target_per_layer), cls_target[i]] = cls_positive
+                    cls_logits[range(num_target_per_layer), targets_cls[i]] = cls_positive
 
                     loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)  # BCE
 

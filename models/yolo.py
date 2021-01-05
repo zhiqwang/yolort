@@ -37,8 +37,6 @@ class YOLO(nn.Module):
         head: Optional[nn.Module] = None,
         # Training parameter
         loss_calculator: Optional[nn.Module] = None,
-        fg_iou_thresh: float = 0.5,
-        bg_iou_thresh: float = 0.4,
         # Post Process parameter
         postprocess_detections: Optional[nn.Module] = None,
         score_thresh: float = 0.05,
