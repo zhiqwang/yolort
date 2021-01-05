@@ -1,8 +1,11 @@
-from typing import Optional, List
-
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+# Modified by Zhiqiang Wang (zhiqwang@outlook.com)
+import math
 import torch
 from torch import Tensor
 import torchvision
+
+from typing import Optional, List
 
 
 class NestedTensor(object):
@@ -27,16 +30,20 @@ class NestedTensor(object):
         return str(self.tensors)
 
 
-def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
+def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32):
     # TODO make this more general
     if tensor_list[0].ndim == 3:
         if torchvision._is_tracing():
             # nested_tensor_from_tensor_list() does not export well to ONNX
             # call _onnx_nested_tensor_from_tensor_list() instead
-            return _onnx_nested_tensor_from_tensor_list(tensor_list)
+            return _onnx_nested_tensor_from_tensor_list(tensor_list, size_divisible)
 
         # TODO make it support different-sized images
         max_size = _max_by_axis([list(img.shape) for img in tensor_list])
+        stride = float(size_divisible)
+        max_size = list(max_size)
+        max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
+        max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
         # min_size = tuple(min(s) for s in zip(*[img.shape for img in tensor_list]))
         batch_shape = [len(tensor_list)] + max_size
         b, _, h, w = batch_shape
@@ -63,11 +70,14 @@ def _max_by_axis(the_list: List[List[int]]) -> List[int]:
 # _onnx_nested_tensor_from_tensor_list() is an implementation of
 # nested_tensor_from_tensor_list() that is supported by ONNX tracing.
 @torch.jit.unused
-def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor]) -> NestedTensor:
+def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32) -> NestedTensor:
     max_size = []
     for i in range(tensor_list[0].dim()):
         max_size_i = torch.max(torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)).to(torch.int64)
         max_size.append(max_size_i)
+    stride = size_divisible
+    max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
+    max_size[2] = (torch.ceil((max_size[2].to(torch.float32)) / stride) * stride).to(torch.int64)
     max_size = tuple(max_size)
 
     # work around for
