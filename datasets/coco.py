@@ -15,7 +15,8 @@ from .transforms import make_transforms
 
 
 class ConvertCocoPolysToMask(object):
-    def __init__(self, return_masks=False):
+    def __init__(self, json_category_id_maps, return_masks=False):
+        self.json_category_id_to_contiguous_id = json_category_id_maps
         self.return_masks = return_masks
 
     def __call__(self, image, target):
@@ -37,6 +38,7 @@ class ConvertCocoPolysToMask(object):
         boxes[:, 1::2].clamp_(min=0, max=h)
 
         classes = [obj["category_id"] for obj in anno]
+        classes = [self.json_category_id_to_contiguous_id[c] for c in classes]
         classes = torch.tensor(classes, dtype=torch.int64)
 
         if self.return_masks:
@@ -84,7 +86,11 @@ class CocoDetection(torchvision.datasets.CocoDetection):
     def __init__(self, img_folder, ann_file, transforms, return_masks):
         super().__init__(img_folder, ann_file)
         self._transforms = transforms
-        self.prepare = ConvertCocoPolysToMask(return_masks)
+
+        json_category_id_to_contiguous_id = {
+            v: i for i, v in enumerate(self.coco.getCatIds())
+        }
+        self.prepare = ConvertCocoPolysToMask(json_category_id_to_contiguous_id, return_masks)
 
     def __getitem__(self, idx):
         img, target = super().__getitem__(idx)
