@@ -71,19 +71,19 @@ class ModelTester(TestCase):
         return backbone
 
     def test_backbone(self):
-        N, H, W = 4, 416, 352
+        H, W = 416, 352
         out_shape = self._get_feature_shapes(H, W)
 
-        x = torch.rand(N, 3, H, W)
+        x = [torch.rand(3, H, W)]
         model, _ = self._init_test_backbone()
-        wrapped_model = WrappedNestedTensor(model)
-        out = wrapped_model(x)
+        model = WrappedNestedTensor(model)
+        out = model(x)
 
         self.assertEqual(len(out), 3)
-        self.assertEqual(tuple(out[0].shape), (N, *out_shape[0]))
-        self.assertEqual(tuple(out[1].shape), (N, *out_shape[1]))
-        self.assertEqual(tuple(out[2].shape), (N, *out_shape[2]))
-        self.check_jit_scriptable(wrapped_model, (x,))
+        self.assertEqual(tuple(out[0].shape), (1, *out_shape[0]))
+        self.assertEqual(tuple(out[1].shape), (1, *out_shape[1]))
+        self.assertEqual(tuple(out[2].shape), (1, *out_shape[2]))
+        self.check_jit_scriptable(model, (x,))
 
     def _init_test_anchor_generator(self):
         strides = self._get_strides()
