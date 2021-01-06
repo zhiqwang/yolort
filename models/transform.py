@@ -2,7 +2,7 @@
 # Modified by Zhiqiang Wang (zhiqwang@outlook.com)
 import math
 import torch
-from torch import Tensor
+from torch import nn, Tensor
 import torchvision
 
 from typing import Optional, List
@@ -99,3 +99,13 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
     mask = torch.stack(padded_masks)
 
     return NestedTensor(tensor, mask=mask)
+
+
+class WrappedNestedTensor(nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def forward(self, inputs: List[Tensor]):
+        sample = nested_tensor_from_tensor_list(inputs)
+        return self.model(sample)

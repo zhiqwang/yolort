@@ -4,6 +4,7 @@ import torch
 from models.backbone import darknet
 from models.anchor_utils import AnchorGenerator
 from models.box_head import YoloHead, PostProcess, SetCriterion
+from models.transform import WrappedNestedTensor
 
 from .common_utils import TestCase
 
@@ -75,13 +76,14 @@ class ModelTester(TestCase):
 
         x = torch.rand(N, 3, H, W)
         model, _ = self._init_test_backbone()
-        out = model(x)
+        wrapped_model = WrappedNestedTensor(model)
+        out = wrapped_model(x)
 
         self.assertEqual(len(out), 3)
         self.assertEqual(tuple(out[0].shape), (N, *out_shape[0]))
         self.assertEqual(tuple(out[1].shape), (N, *out_shape[1]))
         self.assertEqual(tuple(out[2].shape), (N, *out_shape[2]))
-        self.check_jit_scriptable(model, (x,))
+        self.check_jit_scriptable(wrapped_model, (x,))
 
     def _init_test_anchor_generator(self):
         strides = self._get_strides()
