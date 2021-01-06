@@ -121,7 +121,7 @@ class SetCriterion(nn.Module):
         self,
         head_outputs: List[Tensor],
         targets: Tensor,
-    ):
+    ) -> Tuple[List[Tensor], List[Tensor], List[Tuple[Tensor, Tensor, Tensor, Tensor]], List[Tensor]]:
         # get boxes indices for each anchors
         device = head_outputs[0].device
 
@@ -129,7 +129,8 @@ class SetCriterion(nn.Module):
         anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
         anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
-        targets_cls, targets_box, indices, anchors_encode = self.assign_targets_to_anchors(head_outputs, anchors, targets)
+        targets_cls, targets_box, indices, anchors_encode = self.assign_targets_to_anchors(
+            head_outputs, anchors, targets)
 
         return targets_cls, targets_box, indices, anchors_encode
 
@@ -172,38 +173,38 @@ class SetCriterion(nn.Module):
             gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
 
             # Match targets to anchors
+            targets_with_gain = targets * gain
             if num_targets:
-                targets = targets * gain
                 # Matches
-                ratios_wh = targets[:, :, 4:6] / anchors_per_layer[:, None]  # wh ratio
+                ratios_wh = targets_with_gain[:, :, 4:6] / anchors_per_layer[:, None]  # wh ratio
                 ratios_filtering = torch.max(ratios_wh, 1. / ratios_wh).max(2)[0]
                 inds = torch.where(ratios_filtering < self.anchor_threshold)
-                targets = targets[inds]  # filter
+                targets_with_gain = targets_with_gain[inds]  # filter
 
                 # Offsets
-                grid_xy = targets[:, 2:4]  # grid xy
+                grid_xy = targets_with_gain[:, 2:4]  # grid xy
                 grid_xy_inverse = gain[[2, 3]] - grid_xy  # inverse
                 inds_jk = (grid_xy % 1. < g) & (grid_xy > 1.)
                 inds_lm = (grid_xy_inverse % 1. < g) & (grid_xy_inverse > 1.)
                 inds_ones = torch.ones_like(inds_jk[:, 0])[:, None]
                 inds = torch.cat((inds_ones, inds_jk, inds_lm), dim=1).T
-                targets = targets.repeat((5, 1, 1))[inds]
+                targets_with_gain = targets_with_gain.repeat((5, 1, 1))[inds]
                 offsets = (torch.zeros_like(grid_xy)[None] + off[:, None])[inds]
             else:
-                targets = targets[0]
+                targets_with_gain = targets[0]
                 offsets = torch.tensor(0, device=device)
 
             # Define
-            bc = targets[:, :2].long().T  # image, class
-            grid_xy = targets[:, 2:4]  # grid xy
-            gwh = targets[:, 4:6]  # grid wh
-            gij = (grid_xy - offsets).long().T
+            bc = targets_with_gain[:, :2].long().T  # image, class
+            grid_xy = targets_with_gain[:, 2:4]  # grid xy
+            grid_wh = targets_with_gain[:, 4:6]  # grid wh
+            grid_ij = (grid_xy - offsets).long()
 
             # Append
-            a = targets[:, 6].long()  # anchor indices
+            a = targets_with_gain[:, 6].long()  # anchor indices
             # image, anchor, grid indices
-            indices.append((bc[0], a, gij[1].clamp_(0, gain[3] - 1), gij[0].clamp_(0, gain[2] - 1)))
-            targets_box.append(torch.cat((grid_xy - gij, gwh), 1))  # box
+            indices.append((bc[0], a, grid_ij[:, 1].clamp_(0, gain[3] - 1), grid_ij[:, 0].clamp_(0, gain[2] - 1)))
+            targets_box.append(torch.cat((grid_xy - grid_ij, grid_wh), 1))  # box
             anchors_encode.append(anchors_per_layer[a])  # anchors
             targets_cls.append(bc[1])  # class
 
@@ -223,7 +224,7 @@ class SetCriterion(nn.Module):
         targets_cls: List[Tensor],
         targets_box: List[Tensor],
         matched_idxs: List[Tuple[Tensor, Tensor, Tensor, Tensor]],
-        anchors: Tensor,
+        anchors: List[Tensor],
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
@@ -261,18 +262,18 @@ class SetCriterion(nn.Module):
                 bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
                 bbox_wh = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
                 bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
-                iou = det_utils.bbox_iou(bbox_regression.T, targets_box[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
-                loss_box += (1.0 - iou).mean()  # iou loss
+                ciou = det_utils.bbox_ciou(bbox_regression.T, targets_box[i])
+                loss_box += (1.0 - ciou).mean()  # iou loss
 
                 # Objectness head
                 # iou ratio
-                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + (
-                    self.iou_ratio * iou.detach().clamp(0).type(obj_logits.dtype))
+                ciou_vals = torch.tensor(ciou.detach().clamp(0), dtype=obj_logits.dtype)
+                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + (self.iou_ratio * ciou_vals)
 
                 # Classification head
                 if num_classes > 1:  # cls loss (only if multiple classes)
                     cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)  # targets
-                    cls_logits[range(num_target_per_layer), targets_cls[i]] = cls_positive
+                    cls_logits[torch.arange(num_target_per_layer), targets_cls[i]] = cls_positive
 
                     loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)  # BCE
 
