@@ -76,7 +76,7 @@ class SetCriterion(nn.Module):
         cls_pw: float = 1.0,  # cls BCELoss positive_weight
         obj: float = 1.0,  # obj loss gain (scale with pixels)
         obj_pw: float = 1.0,  # obj BCELoss positive_weight
-        anchor_t: float = 4.0,  # anchor-multiple threshold
+        anchor_threshold: float = 4.0,  # anchor-multiple threshold
         iou_ratio: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
         fl_gamma: float = 0.0,  # focal loss gamma
         layer_balance: List[float] = [4.0, 1.0, 0.4],
@@ -91,7 +91,7 @@ class SetCriterion(nn.Module):
         super().__init__()
         self.strides = strides
         self.anchor_grids = anchor_grids
-        self.anchor_t = anchor_t
+        self.anchor_threshold = anchor_threshold
         self.fl_gamma = fl_gamma
         self.layer_balance = layer_balance
 
@@ -156,7 +156,8 @@ class SetCriterion(nn.Module):
         num_anchors = len(self.anchor_grids)  # number of anchors
         num_targets = len(targets)  # number of targets
 
-        targets_cls, targets_box, indices, anchors_encode = [], [], [], []
+        targets_cls, targets_box, anchors_encode = [], [], []
+        indices: List[Tuple[Tensor, Tensor, Tensor, Tensor]] = []
         gain = torch.ones(7, device=device)  # normalized to gridspace gain
         # same as .repeat_interleave(num_targets)
         ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
@@ -173,45 +174,45 @@ class SetCriterion(nn.Module):
             gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
 
             # Match targets to anchors
-            t = targets * gain
             if num_targets:
+                targets = targets * gain
                 # Matches
-                r = t[:, :, 4:6] / anchors_per_layer[:, None]  # wh ratio
-                j = torch.max(r, 1. / r).max(2)[0] < self.anchor_t  # compare
-                # j = wh_iou(anchors, t[:, 4:6]) > self.iou_t  # iou(3,n)=wh_iou(anchors(3,2), gwh(n,2))
-                t = t[j]  # filter
+                ratios_wh = targets[:, :, 4:6] / anchors_per_layer[:, None]  # wh ratio
+                ratios_filtering = torch.max(ratios_wh, 1. / ratios_wh).max(2)[0]
+                inds = torch.where(ratios_filtering < self.anchor_threshold)
+                targets = targets[inds]  # filter
 
                 # Offsets
-                gxy = t[:, 2:4]  # grid xy
-                gxi = gain[[2, 3]] - gxy  # inverse
-                j, k = ((gxy % 1. < g) & (gxy > 1.)).T
-                l, m = ((gxi % 1. < g) & (gxi > 1.)).T
-                j = torch.stack((torch.ones_like(j), j, k, l, m))
-                t = t.repeat((5, 1, 1))[j]
-                offsets = (torch.zeros_like(gxy)[None] + off[:, None])[j]
+                grid_xy = targets[:, 2:4]  # grid xy
+                grid_xy_inverse = gain[[2, 3]] - grid_xy  # inverse
+                inds_jk = (grid_xy % 1. < g) & (grid_xy > 1.)
+                inds_lm = (grid_xy_inverse % 1. < g) & (grid_xy_inverse > 1.)
+                inds_ones = torch.ones_like(inds_jk[:, 0])[:, None]
+                inds = torch.cat((inds_ones, inds_jk, inds_lm), dim=1).T
+                targets = targets.repeat((5, 1, 1))[inds]
+                offsets = (torch.zeros_like(grid_xy)[None] + off[:, None])[inds]
             else:
-                t = targets[0]
-                offsets = 0
+                targets = targets[0]
+                offsets = torch.tensor(0, device=device)
 
             # Define
-            b, c = t[:, :2].long().T  # image, class
-            gxy = t[:, 2:4]  # grid xy
-            gwh = t[:, 4:6]  # grid wh
-            gij = (gxy - offsets).long()
-            gi, gj = gij.T  # grid xy indices
+            bc = targets[:, :2].long().T  # image, class
+            grid_xy = targets[:, 2:4]  # grid xy
+            gwh = targets[:, 4:6]  # grid wh
+            gij = (grid_xy - offsets).long().T
 
             # Append
-            a = t[:, 6].long()  # anchor indices
+            a = targets[:, 6].long()  # anchor indices
             # image, anchor, grid indices
-            indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))
-            targets_box.append(torch.cat((gxy - gij, gwh), 1))  # box
+            indices.append((bc[0], a, gij[1].clamp_(0, gain[3] - 1), gij[0].clamp_(0, gain[2] - 1)))
+            targets_box.append(torch.cat((grid_xy - gij, gwh), 1))  # box
             anchors_encode.append(anchors_per_layer[a])  # anchors
-            targets_cls.append(c)  # class
+            targets_cls.append(bc[1])  # class
 
         return targets_cls, targets_box, indices, anchors_encode
 
     @staticmethod
-    def label_smooth_bce(eps=0.1):
+    def label_smooth_bce(eps: float = 0.1):
         '''
         Return positive, negative label smoothing BCE targets
         <https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441>
