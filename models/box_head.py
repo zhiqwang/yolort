@@ -5,7 +5,6 @@ from torch import nn, Tensor
 from torchvision.ops import batched_nms
 
 from . import _utils as det_utils
-from utils.box_ops import bbox_iou
 
 from typing import Tuple, List, Dict, Optional
 
@@ -64,7 +63,6 @@ class SetCriterion(nn.Module):
     """
     __annotations__ = {
         'box_coder': det_utils.BoxCoder,
-        'proposal_matcher': det_utils.Matcher,
     }
 
     def __init__(
@@ -247,8 +245,8 @@ class SetCriterion(nn.Module):
         num_targets = 0  # number of targets
         num_output = len(head_outputs)  # number of outputs
 
-        cls_pw = torch.Tensor([self.cls_pw]).to(device)
-        obj_pw = torch.Tensor([self.obj_pw]).to(device)
+        cls_pw = torch.tensor([self.cls_pw], device=device)
+        obj_pw = torch.tensor([self.obj_pw], device=device)
 
         for i, pred_logits_per_layer in enumerate(head_outputs):  # layer index, layer predictions
             b, a, gj, gi = matched_idxs[i]  # image, anchor, gridy, gridx
@@ -263,7 +261,7 @@ class SetCriterion(nn.Module):
                 bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
                 bbox_wh = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
                 bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
-                iou = bbox_iou(bbox_regression.T, targets_box[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
+                iou = det_utils.bbox_iou(bbox_regression.T, targets_box[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
                 loss_box += (1.0 - iou).mean()  # iou loss
 
                 # Objectness head
