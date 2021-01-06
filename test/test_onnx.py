@@ -96,7 +96,7 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolov5s(self):
         images, test_images = self.get_test_images()
         dummy_image = [torch.ones(3, 100, 100) * 0.3]
-        model = yolov5_onnx(pretrained=True, min_size=200, max_size=300)
+        model = yolov5_onnx(pretrained=True)
         model.eval()
         model(images)
         # Test exported model on images of different size, or dummy input

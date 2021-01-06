@@ -3,11 +3,13 @@ import unittest
 import torch
 
 from models import yolov5s, yolov5m, yolov5l
+from models.transform import WrappedNestedTensor
 
 
 class TorchScriptTester(unittest.TestCase):
     def test_yolov5s_script(self):
         model = yolov5s(pretrained=True)
+        model = WrappedNestedTensor(model)
         model.eval()
 
         scripted_model = torch.jit.script(model)
@@ -23,6 +25,7 @@ class TorchScriptTester(unittest.TestCase):
 
     def test_yolov5m_script(self):
         model = yolov5m(pretrained=True)
+        model = WrappedNestedTensor(model)
         model.eval()
 
         scripted_model = torch.jit.script(model)
@@ -38,6 +41,7 @@ class TorchScriptTester(unittest.TestCase):
 
     def test_yolov5l_script(self):
         model = yolov5l(pretrained=True)
+        model = WrappedNestedTensor(model)
         model.eval()
 
         scripted_model = torch.jit.script(model)

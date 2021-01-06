@@ -1,8 +1,8 @@
 import time
 from pathlib import Path
 
-from numpy import random
 import numpy as np
+from numpy import random
 
 import cv2
 import torch
@@ -70,7 +70,13 @@ def overlay_boxes(detections, path, time_consume, args):
 
                 if args.save_img:  # Add bbox to image
                     label = '%s %.2f' % (args.names[int(cls_name)], conf)
-                    plot_one_box(xyxy, img, label=label, color=args.colors[int(cls_name)], line_thickness=3)
+                    plot_one_box(
+                        xyxy,
+                        img,
+                        label=label,
+                        color=args.colors[int(cls_name) % len(args.colors)],
+                        line_thickness=3,
+                    )
 
         # Print inference time
         print('%sDone. (%.3fs)' % (det_logs, time_consume))

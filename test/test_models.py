@@ -4,6 +4,7 @@ import torch
 from models.backbone import darknet
 from models.anchor_utils import AnchorGenerator
 from models.box_head import YoloHead, PostProcess, SetCriterion
+from models.transform import WrappedNestedTensor
 
 from .common_utils import TestCase
 
@@ -69,18 +70,19 @@ class ModelTester(TestCase):
         backbone = darknet()
         return backbone
 
-    def test_yolo_backbone(self):
-        N, H, W = 4, 416, 352
+    def test_backbone(self):
+        H, W = 416, 352
         out_shape = self._get_feature_shapes(H, W)
 
-        x = torch.rand(N, 3, H, W)
+        x = [torch.rand(3, H, W)]
         model, _ = self._init_test_backbone()
+        model = WrappedNestedTensor(model)
         out = model(x)
 
         self.assertEqual(len(out), 3)
-        self.assertEqual(tuple(out[0].shape), (N, *out_shape[0]))
-        self.assertEqual(tuple(out[1].shape), (N, *out_shape[1]))
-        self.assertEqual(tuple(out[2].shape), (N, *out_shape[2]))
+        self.assertEqual(tuple(out[0].shape), (1, *out_shape[0]))
+        self.assertEqual(tuple(out[1].shape), (1, *out_shape[1]))
+        self.assertEqual(tuple(out[2].shape), (1, *out_shape[2]))
         self.check_jit_scriptable(model, (x,))
 
     def _init_test_anchor_generator(self):
