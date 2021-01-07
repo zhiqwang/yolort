@@ -7,13 +7,23 @@ import torch
 from torch import nn, Tensor
 
 from torchvision.models.utils import load_state_dict_from_url
-from torchvision.models.detection.transform import GeneralizedRCNNTransform
-
-from torch.jit.annotations import Tuple, List, Dict, Optional
 
 from .backbone import darknet
 from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
+from .transform import NestedTensor, nested_tensor_from_tensor_list
+
+from typing import Tuple, Any, List, Dict, Optional
+
+
+__all__ = ['yolov5', 'yolov5s', 'yolov5m', 'yolov5l']
+
+
+model_urls = {
+    'yolov5s': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
+    'yolov5m': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5m.pt',
+    'yolov5l': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5l.pt',
+}
 
 
 class YOLO(nn.Module):
@@ -22,20 +32,13 @@ class YOLO(nn.Module):
         backbone: nn.Module,
         num_classes: int,
         anchor_grids: List[List[int]],
-        # transform parameters
-        min_size: int = 320,
-        max_size: int = 416,
-        image_mean: Optional[List[float]] = None,
-        image_std: Optional[List[float]] = None,
         # Anchor parameters
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
         # Training parameter
-        compute_loss: Optional[nn.Module] = None,
-        fg_iou_thresh: float = 0.5,
-        bg_iou_thresh: float = 0.4,
+        loss_calculator: Optional[nn.Module] = None,
         # Post Process parameter
-        postprocess_detections: Optional[nn.Module] = None,
+        post_process: Optional[nn.Module] = None,
         score_thresh: float = 0.05,
         nms_thresh: float = 0.5,
         detections_per_img: int = 300,
@@ -53,13 +56,10 @@ class YOLO(nn.Module):
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
-        if compute_loss is None:
-            compute_loss = SetCriterion(
-                weights=(1.0, 1.0, 1.0, 1.0),
-                fg_iou_thresh=fg_iou_thresh,
-                bg_iou_thresh=bg_iou_thresh,
-            )
-        self.compute_loss = compute_loss
+        if loss_calculator is None:
+            strides: List[int] = [8, 16, 32]
+            loss_calculator = SetCriterion(strides, anchor_grids)
+        self.compute_loss = loss_calculator
 
         if head is None:
             head = YoloHead(
@@ -69,16 +69,9 @@ class YOLO(nn.Module):
             )
         self.head = head
 
-        if image_mean is None:
-            image_mean = [0., 0., 0.]
-        if image_std is None:
-            image_std = [1., 1., 1.]
-
-        self.transform = GeneralizedRCNNTransform(min_size, max_size, image_mean, image_std)
-
-        if postprocess_detections is None:
-            postprocess_detections = PostProcess(score_thresh, nms_thresh, detections_per_img)
-        self.postprocess_detections = postprocess_detections
+        if post_process is None:
+            post_process = PostProcess(score_thresh, nms_thresh, detections_per_img)
+        self.post_process = post_process
 
         # used only on torchscript mode
         self._has_warned = False
@@ -96,33 +89,25 @@ class YOLO(nn.Module):
 
     def forward(
         self,
-        images: List[Tensor],
-        targets: Optional[List[Dict[str, Tensor]]] = None,
+        samples: NestedTensor,
+        targets: Optional[Tensor] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         Arguments:
-            images (list[Tensor]): images to be processed
+            samples (NestedTensor): Expects a NestedTensor, which consists of:
+               - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
             targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
-
         Returns:
             result (list[BoxList] or dict[Tensor]): the output from the model.
-                During Training, it returns a dict[Tensor] which contains the losses
-                TODO, currently this repo doesn't support training.
-                During Testing, it returns list[BoxList] contains additional fields
-                like `scores` and `labels`.
+                During training, it returns a dict[Tensor] which contains the losses.
+                During testing, it returns list[BoxList] contains additional fields
+                like `scores`, `labels` and `mask` (for Mask R-CNN models).
         """
-        # get the original image sizes
-        original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])
-        for img in images:
-            val = img.shape[-2:]
-            assert len(val) == 2
-            original_image_sizes.append((val[0], val[1]))
-
-        # transform the input
-        images, targets = self.transform(images, targets)
+        if isinstance(samples, (list, torch.Tensor)):
+            samples = nested_tensor_from_tensor_list(samples)
 
         # get the features from the backbone
-        features = self.backbone(images.tensors)
+        features = self.backbone(samples)
 
         # compute the yolo heads outputs using the features
         head_outputs = self.head(features)
@@ -130,17 +115,15 @@ class YOLO(nn.Module):
         # create the set of anchors
         anchors_tuple = self.anchor_generator(features)
         losses = {}
-        detections = torch.jit.annotate(List[Dict[str, Tensor]], [])
+        detections: List[Dict[str, Tensor]] = []
 
         if self.training:
             assert targets is not None
-
             # compute the losses
-            losses = self.compute_loss(targets, head_outputs, anchors_tuple[0])
+            losses = self.compute_loss(head_outputs, targets)
         else:
             # compute the detections
-            detections = self.postprocess_detections(head_outputs, anchors_tuple, images.image_sizes)
-            detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
+            detections = self.post_process(head_outputs, anchors_tuple)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
@@ -151,15 +134,13 @@ class YOLO(nn.Module):
             return self.eager_outputs(losses, detections)
 
 
-model_urls = {
-    'yolov5s': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
-    'yolov5m': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5m.pt',
-    'yolov5l': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5l.pt',
-}
-
-
-def yolov5(cfg_path='yolov5s.yaml', pretrained=False, progress=True,
-           num_classes=80, pretrained_backbone=True, **kwargs):
+def yolov5(
+    cfg_path: str = 'yolov5s.yaml',
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     """
     Constructs a YOLO model.
 
@@ -196,13 +177,39 @@ def yolov5(cfg_path='yolov5s.yaml', pretrained=False, progress=True,
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    if pretrained:
-        # no need to download the backbone if pretrained is set
-        pretrained_backbone = False
-    # skip P2 because it generates too many anchors (according to their paper)
-    backbone, anchor_grids = darknet(cfg_path=cfg_path, pretrained=pretrained_backbone)
+    backbone, anchor_grids = darknet(cfg_path=cfg_path)
     model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[Path(cfg_path).stem], progress=progress)
         model.load_state_dict(state_dict)
     return model
+
+
+def yolov5s(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+    r"""yolov5s model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return yolov5('yolov5s.yaml', pretrained, progress, **kwargs)
+
+
+def yolov5m(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+    r"""yolov5m model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return yolov5('yolov5m.yaml', pretrained, progress, **kwargs)
+
+
+def yolov5l(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+    r"""yolov5l model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return yolov5('yolov5l.yaml', pretrained, progress, **kwargs)

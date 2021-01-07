@@ -8,6 +8,21 @@ yolov5s.pt
 
 # macOS dir files
 .DS_Store
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
 ## General
 
 # Compiled Object files

@@ -3,7 +3,6 @@
 COCO dataset which returns image_id for evaluation.
 Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references/detection/coco_utils.py
 """
-import os
 from pathlib import Path
 
 import torch
@@ -11,11 +10,12 @@ import torch.utils.data
 import torchvision
 from pycocotools import mask as coco_mask
 
-from . import transforms as T
+from .transforms import make_transforms
 
 
 class ConvertCocoPolysToMask(object):
-    def __init__(self, return_masks=False):
+    def __init__(self, json_category_id_maps, return_masks=False):
+        self.json_category_id_to_contiguous_id = json_category_id_maps
         self.return_masks = return_masks
 
     def __call__(self, image, target):
@@ -37,6 +37,7 @@ class ConvertCocoPolysToMask(object):
         boxes[:, 1::2].clamp_(min=0, max=h)
 
         classes = [obj["category_id"] for obj in anno]
+        classes = [self.json_category_id_to_contiguous_id[c] for c in classes]
         classes = torch.tensor(classes, dtype=torch.int64)
 
         if self.return_masks:
@@ -84,7 +85,11 @@ class CocoDetection(torchvision.datasets.CocoDetection):
     def __init__(self, img_folder, ann_file, transforms, return_masks):
         super().__init__(img_folder, ann_file)
         self._transforms = transforms
-        self.prepare = ConvertCocoPolysToMask(return_masks)
+
+        json_category_id_to_contiguous_id = {
+            v: i for i, v in enumerate(self.coco.getCatIds())
+        }
+        self.prepare = ConvertCocoPolysToMask(json_category_id_to_contiguous_id, return_masks)
 
     def __getitem__(self, idx):
         img, target = super().__getitem__(idx)
@@ -153,48 +158,18 @@ def _coco_remove_images_without_annotations(dataset, cat_list=None):
     return dataset
 
 
-def make_coco_transforms(image_set, image_size=300):
-
-    normalize = T.Compose([
-        T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-    ])
-
-    if image_set == 'train' or image_set == 'trainval':
-        return T.Compose([
-            T.RandomHorizontalFlip(),
-            T.RandomSelect(
-                T.Resize(image_size),
-                T.Compose([
-                    T.RandomResize([400, 500, 600]),
-                    T.RandomSizeCrop(384, 600),
-                    T.Resize(image_size),
-                ])
-            ),
-            normalize,
-        ])
-    elif image_set == 'val' or image_set == 'test':
-        return T.Compose([
-            T.Resize(image_size),
-            normalize,
-        ])
-    else:
-        raise ValueError(f'unknown {image_set}')
-
-
 def build(image_set, year, args):
     root = Path(args.data_path)
     assert root.exists(), f'provided COCO path {root} does not exist'
     mode = args.dataset_mode
 
-    img_folder = os.path.join(root, 'images')
-    ann_file = os.path.join("annotations", f'{mode}_{image_set}{year}.json')
-    ann_file = os.path.join(root, ann_file)
+    img_folder = Path(root)
+    ann_file = img_folder.joinpath("annotations").joinpath(f"{mode}_{image_set}{year}.json")
 
     dataset = CocoDetection(
         img_folder,
         ann_file,
-        transforms=make_coco_transforms(image_set, image_size=args.image_size),
+        transforms=make_transforms(image_set=image_set),
         return_masks=args.masks,
     )
 

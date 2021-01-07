@@ -1,0 +1,98 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) Facebook, Inc. and its affiliates.
+
+"""
+Note:
+For your custom dataset, there is no need to hard-code metadata anywhere in the code.
+For example, for COCO-format dataset, metadata will be obtained automatically
+when calling `load_coco_json`. For other dataset, metadata may also be obtained in other ways
+during loading.
+However, we hard-coded metadata for a few common dataset here.
+The only goal is to allow users who don't have these dataset to use pre-trained models.
+Users don't have to download a COCO json (which contains metadata), in order to visualize a
+COCO model (with correct class names and colors).
+"""
+
+
+COCO_CATEGORIES = [
+    {"id": 1, "color": [220, 20, 60], "isthing": 1, "name": "person", "supercategory": "person"},
+    {"id": 2, "color": [119, 11, 32], "isthing": 1, "name": "bicycle", "supercategory": "vehicle"},
+    {"id": 3, "color": [0, 0, 142], "isthing": 1, "name": "car", "supercategory": "vehicle"},
+    {"id": 4, "color": [0, 0, 230], "isthing": 1, "name": "motorcycle", "supercategory": "vehicle"},
+    {"id": 5, "color": [106, 0, 228], "isthing": 1, "name": "airplane", "supercategory": "vehicle"},
+    {"id": 6, "color": [0, 60, 100], "isthing": 1, "name": "bus", "supercategory": "vehicle"},
+    {"id": 7, "color": [0, 80, 100], "isthing": 1, "name": "train", "supercategory": "vehicle"},
+    {"id": 8, "color": [0, 0, 70], "isthing": 1, "name": "truck", "supercategory": "vehicle"},
+    {"id": 9, "color": [0, 0, 192], "isthing": 1, "name": "boat", "supercategory": "vehicle"},
+    {"id": 10, "color": [250, 170, 30], "isthing": 1, "name": "traffic light", "supercategory": "outdoor"},
+    {"id": 11, "color": [100, 170, 30], "isthing": 1, "name": "fire hydrant", "supercategory": "outdoor"},
+    {"id": 13, "color": [220, 220, 0], "isthing": 1, "name": "stop sign", "supercategory": "outdoor"},
+    {"id": 14, "color": [175, 116, 175], "isthing": 1, "name": "parking meter", "supercategory": "outdoor"},
+    {"id": 15, "color": [250, 0, 30], "isthing": 1, "name": "bench", "supercategory": "outdoor"},
+    {"id": 16, "color": [165, 42, 42], "isthing": 1, "name": "bird", "supercategory": "animal"},
+    {"id": 17, "color": [255, 77, 255], "isthing": 1, "name": "cat", "supercategory": "animal"},
+    {"id": 18, "color": [0, 226, 252], "isthing": 1, "name": "dog", "supercategory": "animal"},
+    {"id": 19, "color": [182, 182, 255], "isthing": 1, "name": "horse", "supercategory": "animal"},
+    {"id": 20, "color": [0, 82, 0], "isthing": 1, "name": "sheep", "supercategory": "animal"},
+    {"id": 21, "color": [120, 166, 157], "isthing": 1, "name": "cow", "supercategory": "animal"},
+    {"id": 22, "color": [110, 76, 0], "isthing": 1, "name": "elephant", "supercategory": "animal"},
+    {"id": 23, "color": [174, 57, 255], "isthing": 1, "name": "bear", "supercategory": "animal"},
+    {"id": 24, "color": [199, 100, 0], "isthing": 1, "name": "zebra", "supercategory": "animal"},
+    {"id": 25, "color": [72, 0, 118], "isthing": 1, "name": "giraffe", "supercategory": "animal"},
+    {"id": 27, "color": [255, 179, 240], "isthing": 1, "name": "backpack", "supercategory": "accessory"},
+    {"id": 28, "color": [0, 125, 92], "isthing": 1, "name": "umbrella", "supercategory": "accessory"},
+    {"id": 31, "color": [209, 0, 151], "isthing": 1, "name": "handbag", "supercategory": "accessory"},
+    {"id": 32, "color": [188, 208, 182], "isthing": 1, "name": "tie", "supercategory": "accessory"},
+    {"id": 33, "color": [0, 220, 176], "isthing": 1, "name": "suitcase", "supercategory": "accessory"},
+    {"id": 34, "color": [255, 99, 164], "isthing": 1, "name": "frisbee", "supercategory": "sports"},
+    {"id": 35, "color": [92, 0, 73], "isthing": 1, "name": "skis", "supercategory": "sports"},
+    {"id": 36, "color": [133, 129, 255], "isthing": 1, "name": "snowboard", "supercategory": "sports"},
+    {"id": 37, "color": [78, 180, 255], "isthing": 1, "name": "sports ball", "supercategory": "sports"},
+    {"id": 38, "color": [0, 228, 0], "isthing": 1, "name": "kite", "supercategory": "sports"},
+    {"id": 39, "color": [174, 255, 243], "isthing": 1, "name": "baseball bat", "supercategory": "sports"},
+    {"id": 40, "color": [45, 89, 255], "isthing": 1, "name": "baseball glove", "supercategory": "sports"},
+    {"id": 41, "color": [134, 134, 103], "isthing": 1, "name": "skateboard", "supercategory": "sports"},
+    {"id": 42, "color": [145, 148, 174], "isthing": 1, "name": "surfboard", "supercategory": "sports"},
+    {"id": 43, "color": [255, 208, 186], "isthing": 1, "name": "tennis racket", "supercategory": "sports"},
+    {"id": 44, "color": [197, 226, 255], "isthing": 1, "name": "bottle", "supercategory": "kitchen"},
+    {"id": 46, "color": [171, 134, 1], "isthing": 1, "name": "wine glass", "supercategory": "kitchen"},
+    {"id": 47, "color": [109, 63, 54], "isthing": 1, "name": "cup", "supercategory": "kitchen"},
+    {"id": 48, "color": [207, 138, 255], "isthing": 1, "name": "fork", "supercategory": "kitchen"},
+    {"id": 49, "color": [151, 0, 95], "isthing": 1, "name": "knife", "supercategory": "kitchen"},
+    {"id": 50, "color": [9, 80, 61], "isthing": 1, "name": "spoon", "supercategory": "kitchen"},
+    {"id": 51, "color": [84, 105, 51], "isthing": 1, "name": "bowl", "supercategory": "kitchen"},
+    {"id": 52, "color": [74, 65, 105], "isthing": 1, "name": "banana", "supercategory": "food"},
+    {"id": 53, "color": [166, 196, 102], "isthing": 1, "name": "apple", "supercategory": "food"},
+    {"id": 54, "color": [208, 195, 210], "isthing": 1, "name": "sandwich", "supercategory": "food"},
+    {"id": 55, "color": [255, 109, 65], "isthing": 1, "name": "orange", "supercategory": "food"},
+    {"id": 56, "color": [0, 143, 149], "isthing": 1, "name": "broccoli", "supercategory": "food"},
+    {"id": 57, "color": [179, 0, 194], "isthing": 1, "name": "carrot", "supercategory": "food"},
+    {"id": 58, "color": [209, 99, 106], "isthing": 1, "name": "hot dog", "supercategory": "food"},
+    {"id": 59, "color": [5, 121, 0], "isthing": 1, "name": "pizza", "supercategory": "food"},
+    {"id": 60, "color": [227, 255, 205], "isthing": 1, "name": "donut", "supercategory": "food"},
+    {"id": 61, "color": [147, 186, 208], "isthing": 1, "name": "cake", "supercategory": "food"},
+    {"id": 62, "color": [153, 69, 1], "isthing": 1, "name": "chair", "supercategory": "furniture"},
+    {"id": 63, "color": [3, 95, 161], "isthing": 1, "name": "couch", "supercategory": "furniture"},
+    {"id": 64, "color": [163, 255, 0], "isthing": 1, "name": "potted plant", "supercategory": "furniture"},
+    {"id": 65, "color": [119, 0, 170], "isthing": 1, "name": "bed", "supercategory": "furniture"},
+    {"id": 67, "color": [0, 182, 199], "isthing": 1, "name": "dining table", "supercategory": "furniture"},
+    {"id": 70, "color": [0, 165, 120], "isthing": 1, "name": "toilet", "supercategory": "furniture"},
+    {"id": 72, "color": [183, 130, 88], "isthing": 1, "name": "tv", "supercategory": "electronic"},
+    {"id": 73, "color": [95, 32, 0], "isthing": 1, "name": "laptop", "supercategory": "electronic"},
+    {"id": 74, "color": [130, 114, 135], "isthing": 1, "name": "mouse", "supercategory": "electronic"},
+    {"id": 75, "color": [110, 129, 133], "isthing": 1, "name": "remote", "supercategory": "electronic"},
+    {"id": 76, "color": [166, 74, 118], "isthing": 1, "name": "keyboard", "supercategory": "electronic"},
+    {"id": 77, "color": [219, 142, 185], "isthing": 1, "name": "cell phone", "supercategory": "electronic"},
+    {"id": 78, "color": [79, 210, 114], "isthing": 1, "name": "microwave", "supercategory": "appliance"},
+    {"id": 79, "color": [178, 90, 62], "isthing": 1, "name": "oven", "supercategory": "appliance"},
+    {"id": 80, "color": [65, 70, 15], "isthing": 1, "name": "toaster", "supercategory": "appliance"},
+    {"id": 81, "color": [127, 167, 115], "isthing": 1, "name": "sink", "supercategory": "appliance"},
+    {"id": 82, "color": [59, 105, 106], "isthing": 1, "name": "refrigerator", "supercategory": "appliance"},
+    {"id": 84, "color": [142, 108, 45], "isthing": 1, "name": "book", "supercategory": "indoor"},
+    {"id": 85, "color": [196, 172, 0], "isthing": 1, "name": "clock", "supercategory": "indoor"},
+    {"id": 86, "color": [95, 54, 80], "isthing": 1, "name": "vase", "supercategory": "indoor"},
+    {"id": 87, "color": [128, 76, 255], "isthing": 1, "name": "scissors", "supercategory": "indoor"},
+    {"id": 88, "color": [201, 57, 1], "isthing": 1, "name": "teddy bear", "supercategory": "indoor"},
+    {"id": 89, "color": [246, 0, 122], "isthing": 1, "name": "hair drier", "supercategory": "indoor"},
+    {"id": 90, "color": [191, 162, 208], "isthing": 1, "name": "toothbrush", "supercategory": "indoor"},
+]

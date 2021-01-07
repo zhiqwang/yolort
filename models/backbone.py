@@ -6,11 +6,12 @@ import yaml
 
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import List, Dict, Optional
+from typing import List, Dict, Optional
 
 from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
 from .experimental import MixConv2d, CrossConv, C3
-from .box_head import YoloHead as Detect
+from .box_head import Detect
+from .transform import NestedTensor
 
 
 class YoloBackbone(nn.Module):
@@ -28,8 +29,8 @@ class YoloBackbone(nn.Module):
         )
         self.out_channels = out_channels
 
-    def forward(self, x: Tensor):
-        x = self.body(x)
+    def forward(self, x: NestedTensor):
+        x = self.body(x.tensors)
         out: List[Tensor] = []
 
         for name, feature in x.items():
@@ -54,7 +55,7 @@ class YoloBody(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         out = x
-        y = torch.jit.annotate(List[Tensor], [])
+        y: List[Tensor] = []
 
         for i, m in enumerate(self.model):
             if m.f > 0:  # Concat layer
@@ -172,7 +173,7 @@ class IntermediateLayerGetter(nn.ModuleDict):
 
     def forward(self, x):
         out = OrderedDict()
-        y = torch.jit.annotate(List[Tensor], [])
+        y: List[Tensor] = []
 
         for i, (name, module) in enumerate(self.items()):
             if module.f > 0:  # Concat layer
@@ -188,18 +189,18 @@ class IntermediateLayerGetter(nn.ModuleDict):
         return out
 
 
-def darknet(cfg_path='yolov5s.yaml', pretrained=False):
+def darknet(cfg_path='yolov5s.yaml'):
     cfg_path = Path(__file__).parent.absolute().joinpath(cfg_path)
     with open(cfg_path) as f:
         model_dict = yaml.load(f, Loader=yaml.FullLoader)
 
     layers, save_list, head_info = parse_model(model_dict, in_channels=3)
 
-    backbone = YoloBody(layers, save_list)
+    body = YoloBody(layers, save_list)
 
-    body = YoloBackbone(
-        yolo_body=backbone,
+    backbone = YoloBackbone(
+        yolo_body=body,
         return_layers={str(key): str(i) for i, key in enumerate(head_info[2])},
         out_channels=head_info[0],
     )
-    return body, head_info[1]
+    return backbone, head_info[1]

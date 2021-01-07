@@ -96,18 +96,18 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolov5s(self):
         images, test_images = self.get_test_images()
         dummy_image = [torch.ones(3, 100, 100) * 0.3]
-        model = yolov5_onnx(pretrained=True, min_size=200, max_size=300)
+        model = yolov5_onnx(pretrained=True)
         model.eval()
         model(images)
         # Test exported model on images of different size, or dummy input
         self.run_model(model, [(images,), (test_images,), (dummy_image,)], input_names=["images_tensors"],
                        output_names=["outputs"],
-                       dynamic_axes={"images_tensors": [0, 1, 2, 3], "outputs": [0, 1, 2, 3]},
+                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
                        tolerate_small_mismatch=True)
         # Test exported model for an image with no detections on other images
         self.run_model(model, [(dummy_image,), (images,)], input_names=["images_tensors"],
                        output_names=["outputs"],
-                       dynamic_axes={"images_tensors": [0, 1, 2, 3], "outputs": [0, 1, 2, 3]},
+                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
                        tolerate_small_mismatch=True)
 
 

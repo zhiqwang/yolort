@@ -9,7 +9,7 @@ import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 
-from util.misc import interpolate
+from torchvision.ops.boxes import box_convert
 
 
 def crop(image, target, region):
@@ -125,7 +125,7 @@ def resize(image, target, size, max_size=None):
     target["size"] = torch.tensor([h, w])
 
     if "masks" in target:
-        target['masks'] = interpolate(
+        target['masks'] = torch.nn.functional.interpolate(
             target['masks'][:, None].float(), size, mode="nearest")[:, 0] > 0.5
 
     return rescaled_image, target
@@ -138,7 +138,7 @@ def pad(image, target, padding):
         return padded_image, None
     target = target.copy()
     # should we do something wrt the original size?
-    target["size"] = torch.tensor(padded_image[::-1])
+    target["size"] = torch.tensor(padded_image.size[::-1])
     if "masks" in target:
         target['masks'] = torch.nn.functional.pad(target['masks'], (0, padding[0], 0, padding[1]))
     return padded_image, target
@@ -159,14 +159,10 @@ class RandomSizeCrop(object):
         self.max_size = max_size
 
     def __call__(self, img: PIL.Image.Image, target: dict):
-        while True:
-            w = random.randint(self.min_size, min(img.width, self.max_size))
-            h = random.randint(self.min_size, min(img.height, self.max_size))
-            region = T.RandomCrop.get_params(img, [h, w])
-
-            croped_img, croped_target = crop(img, target, region)
-            if len(croped_target['labels']) > 0:
-                return croped_img, croped_target
+        w = random.randint(self.min_size, min(img.width, self.max_size))
+        h = random.randint(self.min_size, min(img.height, self.max_size))
+        region = T.RandomCrop.get_params(img, [h, w])
+        return crop(img, target, region)
 
 
 class CenterCrop(object):
@@ -202,20 +198,6 @@ class RandomResize(object):
         return resize(img, target, size, self.max_size)
 
 
-class Resize(object):
-    def __init__(self, size):
-        if isinstance(size, tuple):
-            sizes = size
-            assert len(sizes) == 2, "The length of sizes must be 2"
-        else:
-            sizes = (size, size)
-
-        self.sizes = sizes
-
-    def __call__(self, img, target=None):
-        return resize(img, target, self.sizes)
-
-
 class RandomPad(object):
     def __init__(self, max_pad):
         self.max_pad = max_pad
@@ -243,7 +225,8 @@ class RandomSelect(object):
 
 
 class ToTensor(object):
-    def __call__(self, img, target):
+    @staticmethod
+    def __call__(img, target):
         return F.to_tensor(img), target
 
 
@@ -257,19 +240,16 @@ class RandomErasing(object):
 
 
 class Normalize(object):
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
+    @staticmethod
+    def __call__(image, target=None):
 
-    def __call__(self, image, target=None):
-        image = F.normalize(image, mean=self.mean, std=self.std)
         if target is None:
             return image, None
         target = target.copy()
         h, w = image.shape[-2:]
         if "boxes" in target:
             boxes = target["boxes"]
-            # converted to XYXY_REL BoxMode
+            boxes = box_convert(boxes, in_fmt='xyxy', out_fmt='cxcywh')
             boxes = boxes / torch.tensor([w, h, w, h], dtype=torch.float32)
             target["boxes"] = boxes
         return image, target
@@ -291,3 +271,36 @@ class Compose(object):
             format_string += "    {0}".format(t)
         format_string += "\n)"
         return format_string
+
+
+def make_transforms(image_set='train'):
+
+    normalize = Compose([
+        ToTensor(),
+        Normalize(),
+    ])
+
+    scales = [384, 416, 448, 480, 512, 544, 576, 608, 640, 672]
+    scales_for_training = [(640, 640)]
+
+    if image_set == 'train' or image_set == 'trainval':
+        return Compose([
+            RandomHorizontalFlip(),
+            RandomSelect(
+                RandomResize(scales_for_training),
+                Compose([
+                    RandomResize(scales),
+                    RandomSizeCrop(384, 480),
+                    RandomResize(scales_for_training),
+                ])
+            ),
+            normalize,
+        ])
+
+    if image_set == 'val' or image_set == 'test':
+        return Compose([
+            RandomResize([800], max_size=1333),
+            normalize,
+        ])
+
+    raise ValueError(f'unknown {image_set}')

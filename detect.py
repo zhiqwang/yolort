@@ -1,8 +1,8 @@
 import time
 from pathlib import Path
 
-from numpy import random
 import numpy as np
+from numpy import random
 
 import cv2
 import torch
@@ -10,7 +10,7 @@ import torch
 from torchvision.ops import box_convert
 
 from utils.image_utils import plot_one_box
-from hubconf import yolov5
+from hubconf import yolov5s
 
 
 def load_names(category_path):
@@ -70,7 +70,13 @@ def overlay_boxes(detections, path, time_consume, args):
 
                 if args.save_img:  # Add bbox to image
                     label = '%s %.2f' % (args.names[int(cls_name)], conf)
-                    plot_one_box(xyxy, img, label=label, color=args.colors[int(cls_name)], line_thickness=3)
+                    plot_one_box(
+                        xyxy,
+                        img,
+                        label=label,
+                        color=args.colors[int(cls_name) % len(args.colors)],
+                        line_thickness=3,
+                    )
 
         # Print inference time
         print('%sDone. (%.3fs)' % (det_logs, time_consume))
@@ -86,7 +92,7 @@ def main(args):
     print(args)
     device = torch.device("cuda") if torch.cuda.is_available() and args.gpu else torch.device("cpu")
 
-    model = yolov5(
+    model = yolov5s(
         pretrained=True,
         min_size=args.min_size,
         max_size=args.max_size,
@@ -132,11 +138,9 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('--model_cfg', type=str, default='yolov5s.yaml',
-                        help='path where the model cfg in')
     parser.add_argument('--labelmap', type=str, default='./notebooks/assets/coco.names',
                         help='path where the coco category in')
-    parser.add_argument('--input_source', type=str, default='./notebooks/assets/zidane.jpg',
+    parser.add_argument('--input_source', type=str, default='./test/assets/zidane.jpg',
                         help='path where the source images in')
     parser.add_argument('--output_dir', type=str, default='./data-bin/output',
                         help='path where to save')

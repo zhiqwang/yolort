@@ -1,7 +1,7 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import torch
 from torch import nn, Tensor
-from torch.jit.annotations import Tuple, List
+from typing import Tuple, List
 
 
 class AnchorGenerator(nn.Module):

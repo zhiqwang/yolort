@@ -2,7 +2,6 @@
 # Modified by Zhiqiang Wang (zhiqwang@foxmail.com)
 
 import datetime
-import os
 import argparse
 import time
 from pathlib import Path
@@ -13,14 +12,14 @@ from torch.utils.data import DataLoader, DistributedSampler
 import utils.misc as utils
 
 from datasets import build_dataset, get_coco_api_from_dataset
-from models import build_model
+from models import yolov5s
 from engine import train_one_epoch, evaluate
 
 
 def get_args_parser():
     parser = argparse.ArgumentParser('You only look once detector', add_help=False)
 
-    parser.add_argument('--arch', default='ssd_lite_mobilenet_v2',
+    parser.add_argument('--arch', default='yolov5s',
                         help='model architecture')
     parser.add_argument('--return-criterion', action='store_true',
                         help='Should be enabled in training mode')
@@ -134,9 +133,8 @@ def main(args):
 
     print('Creating model, always set args.return_criterion be True')
     args.return_criterion = True
-    model, criterion = build_model(args)
+    model = yolov5s()
     model.to(device)
-    criterion.to(device)
 
     model_without_ddp = model
     if args.distributed:
@@ -154,14 +152,14 @@ def main(args):
         weight_decay=args.weight_decay,
     )
 
-    if args.lr_scheduler == 'multi-step':
+    if args.lr_scheduler == 'cosine':
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.t_max)
+    elif args.lr_scheduler == 'multi-step':
         lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             milestones=args.lr_steps,
             gamma=args.lr_gamma,
         )
-    elif args.lr_scheduler == 'cosine':
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.t_max)
     else:
         raise ValueError(f'scheduler {args.lr_scheduler} not supported')
 
@@ -182,7 +180,7 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             sampler_train.set_epoch(epoch)
-        train_one_epoch(model, criterion, optimizer, data_loader_train, device, epoch, args.print_freq)
+        train_one_epoch(model, optimizer, data_loader_train, device, epoch, args.print_freq)
 
         lr_scheduler.step()
         if args.output_dir:
@@ -194,7 +192,7 @@ def main(args):
                     'args': args,
                     'epoch': epoch,
                 },
-                os.path.join(output_dir, 'model_{}.pth'.format(epoch)),
+                output_dir.joinpath(f'model_{epoch}.pth'),
             )
 
         # evaluate after every epoch
