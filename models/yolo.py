@@ -16,7 +16,7 @@ from .transform import WrappedModel
 from typing import Tuple, Any, List, Dict, Optional
 
 
-__all__ = ['yolov5', 'yolov5s', 'yolov5m', 'yolov5l']
+__all__ = ['yolov5', 'create_model', 'yolov5s', 'yolov5m', 'yolov5l']
 
 
 model_urls = {
