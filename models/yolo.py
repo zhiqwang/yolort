@@ -141,7 +141,7 @@ def yolov5(
     """
     Constructs a YOLO model.
 
-    The input to the model is expected to be a list of tensors, each of shape ``[C, H, W]``, one for each
+    The input to the model is expected to be a batched tensors, of shape ``[N, C, H, W]``, one for each
     image, and should be in ``0-1`` range. Different images can have different sizes.
 
     The behavior of the model changes depending if it is in training or evaluation mode.
@@ -167,7 +167,7 @@ def yolov5(
 
         >>> model = yolov5(pretrained=True)
         >>> model.eval()
-        >>> x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
+        >>> x = torch.rand(4, 3, 416, 320)
         >>> predictions = model(x)
 
     Arguments:
@@ -180,35 +180,58 @@ def yolov5(
         state_dict = load_state_dict_from_url(model_urls[Path(cfg_path).stem], progress=progress)
         model.load_state_dict(state_dict)
 
+    return model
+
+
+def create_model(
+    cfg_path: str = 'yolov5s.yaml',
+    pretrained: bool = False,
+    progress: bool = True,
+    **kwargs: Any,
+) -> WrappedModel:
+    """
+    Constructs a YOLO model.
+
+    The input to the model is expected to be a list of tensors, each of shape ``[C, H, W]``, one for each
+    image, and should be in ``0-1`` range. Different images can have different sizes.
+
+    Example::
+
+        >>> model = yolov5(pretrained=True)
+        >>> model.eval()
+        >>> x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
+        >>> predictions = model(x)
+    """
+    model = yolov5(cfg_path, pretrained, progress, **kwargs)
     model = WrappedModel(model)
     return model
 
 
-def yolov5s(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+def yolov5s(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
     r"""yolov5s model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return yolov5('yolov5s.yaml', pretrained, progress, **kwargs)
+    return create_model('yolov5s.yaml', pretrained, progress, **kwargs)
 
 
-def yolov5m(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+def yolov5m(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
     r"""yolov5m model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return yolov5('yolov5m.yaml', pretrained, progress, **kwargs)
+    return create_model('yolov5m.yaml', pretrained, progress, **kwargs)
 
 
-def yolov5l(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> YOLO:
+def yolov5l(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
     r"""yolov5l model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return yolov5('yolov5l.yaml', pretrained, progress, **kwargs)
+    return create_model('yolov5l.yaml', pretrained, progress, **kwargs)
