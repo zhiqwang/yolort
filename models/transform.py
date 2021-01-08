@@ -9,22 +9,18 @@ from typing import Optional, List
 
 
 class NestedTensor(object):
-    def __init__(self, tensors, mask: Optional[Tensor]):
+    """
+    Structure that holds a list of images (of possibly
+    varying sizes) as a single tensor.
+    This works by padding the images to the same size,
+    and storing in a field the original sizes of each image
+    """
+    def __init__(self, tensors):
         self.tensors = tensors
-        self.mask = mask
 
     def to(self, device) -> "NestedTensor":
         cast_tensor = self.tensors.to(device)
-        mask = self.mask
-        if mask is not None:
-            assert mask is not None
-            cast_mask = mask.to(device)
-        else:
-            cast_mask = None
-        return NestedTensor(cast_tensor, cast_mask)
-
-    def decompose(self):
-        return self.tensors, self.mask
+        return NestedTensor(cast_tensor)
 
     def __repr__(self):
         return str(self.tensors)
@@ -38,25 +34,19 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: in
             # call _onnx_nested_tensor_from_tensor_list() instead
             return _onnx_nested_tensor_from_tensor_list(tensor_list, size_divisible)
 
-        # TODO make it support different-sized images
         max_size = _max_by_axis([list(img.shape) for img in tensor_list])
         stride = float(size_divisible)
         max_size = list(max_size)
         max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
         max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
-        # min_size = tuple(min(s) for s in zip(*[img.shape for img in tensor_list]))
+
         batch_shape = [len(tensor_list)] + max_size
-        b, _, h, w = batch_shape
-        dtype = tensor_list[0].dtype
-        device = tensor_list[0].device
-        tensor = torch.zeros(batch_shape, dtype=dtype, device=device)
-        mask = torch.ones((b, h, w), dtype=torch.bool, device=device)
-        for img, pad_img, m in zip(tensor_list, tensor, mask):
+        tensor_batched = tensor_list[0].new_full(batch_shape, 0)
+        for img, pad_img in zip(tensor_list, tensor_batched):
             pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
-            m[: img.shape[1], :img.shape[2]] = False
     else:
         raise ValueError('not supported')
-    return NestedTensor(tensor, mask)
+    return NestedTensor(tensor_batched)
 
 
 def _max_by_axis(the_list: List[List[int]]) -> List[int]:
@@ -85,20 +75,15 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
     # m[: img.shape[1], :img.shape[2]] = False
     # which is not yet supported in onnx
     padded_imgs = []
-    padded_masks = []
+
     for img in tensor_list:
         padding = [(s1 - s2) for s1, s2 in zip(max_size, tuple(img.shape))]
         padded_img = torch.nn.functional.pad(img, (0, padding[2], 0, padding[1], 0, padding[0]))
         padded_imgs.append(padded_img)
 
-        m = torch.zeros_like(img[0], dtype=torch.int, device=img.device)
-        padded_mask = torch.nn.functional.pad(m, (0, padding[2], 0, padding[1]), "constant", 1)
-        padded_masks.append(padded_mask.to(torch.bool))
-
     tensor = torch.stack(padded_imgs)
-    mask = torch.stack(padded_masks)
 
-    return NestedTensor(tensor, mask=mask)
+    return NestedTensor(tensor)
 
 
 class WrappedNestedTensor(nn.Module):
