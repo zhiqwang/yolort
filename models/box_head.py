@@ -6,7 +6,7 @@ from torchvision.ops import batched_nms
 
 from . import _utils as det_utils
 
-from typing import Tuple, List, Dict, Optional
+from typing import Tuple, List, Dict
 
 
 class YoloHead(nn.Module):
@@ -334,7 +334,6 @@ class PostProcess(nn.Module):
                           For evaluation, this must be the original image size (before any data augmentation)
                           For visualization, this should be the image size after data augment, but before padding
         """
-        device = head_outputs[0].device
         batch_size, _, _, _, K = head_outputs[0].shape
 
         all_pred_logits: List[Tensor] = []
