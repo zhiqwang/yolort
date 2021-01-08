@@ -7,11 +7,10 @@ from .transforms import make_transforms
 class ConvertVOCtoCOCO(object):
 
     CLASSES = (
-        '__background__', 'aeroplane', 'bicycle',
-        'bird', 'boat', 'bottle', 'bus', 'car',
-        'cat', 'chair', 'cow', 'diningtable', 'dog',
-        'horse', 'motorbike', 'person', 'pottedplant',
-        'sheep', 'sofa', 'train', 'tvmonitor',
+        'aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
+        'bus', 'car', 'cat', 'chair', 'cow',
+        'diningtable', 'dog', 'horse', 'motorbike', 'person',
+        'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor',
     )
 
     def __call__(self, image, target):
