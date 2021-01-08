@@ -14,8 +14,9 @@ class EngineTester(unittest.TestCase):
         img_name = "test/assets/zidane.jpg"
         img_tensor = image_preprocess(img_name)
         self.assertEqual(img_tensor.ndim, 3)
+        img_dummy = torch.rand((3, 416, 360), dtype=torch.float32)
 
-        images = [img_tensor]
+        images = [img_tensor, img_dummy]
         targets = torch.tensor([[0, 7, 0.3790, 0.5487, 0.3220, 0.2047],
                                 [0, 2, 0.2680, 0.5386, 0.2200, 0.1779],
                                 [0, 3, 0.1720, 0.5403, 0.1960, 0.1409],

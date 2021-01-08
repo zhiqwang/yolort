@@ -11,7 +11,7 @@ from torchvision.models.utils import load_state_dict_from_url
 from .backbone import darknet
 from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
-from .transform import NestedTensor, nested_tensor_from_tensor_list
+from .transform import WrappedModel
 
 from typing import Tuple, Any, List, Dict, Optional
 
@@ -89,7 +89,7 @@ class YOLO(nn.Module):
 
     def forward(
         self,
-        samples: NestedTensor,
+        samples: Tensor,
         targets: Optional[Tensor] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
@@ -103,9 +103,6 @@ class YOLO(nn.Module):
                 During testing, it returns list[BoxList] contains additional fields
                 like `scores`, `labels` and `mask` (for Mask R-CNN models).
         """
-        if isinstance(samples, (list, torch.Tensor)):
-            samples = nested_tensor_from_tensor_list(samples)
-
         # get the features from the backbone
         features = self.backbone(samples)
 
@@ -182,6 +179,8 @@ def yolov5(
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[Path(cfg_path).stem], progress=progress)
         model.load_state_dict(state_dict)
+
+    model = WrappedModel(model)
     return model
 
 
