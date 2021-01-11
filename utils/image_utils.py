@@ -28,6 +28,8 @@ def plot_one_box(box, img, color=None, label=None, line_thickness=None):
             [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA,
         )
 
+    return img
+
 
 def cv2_imshow(a, convert_bgr_to_rgb=True):
     """A replacement for cv2.imshow() for use in Jupyter notebooks.
@@ -95,6 +97,29 @@ def letterbox(
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
     return img, ratio, (dw, dh)
+
+
+def scale_coords(coords, img_shape, img_shape_origin, ratio_pad=None):
+    # Rescale coords (xyxy) from img_shape to img_shape_origin
+    if ratio_pad is None:  # calculate from img_shape_origin
+        gain = min(img_shape[0] / img_shape_origin[0],
+                   img_shape[1] / img_shape_origin[1])  # gain  = old / new
+        pad = ((img_shape[1] - img_shape_origin[1] * gain) / 2,
+               (img_shape[0] - img_shape_origin[0] * gain) / 2)  # wh padding
+    else:
+        gain = ratio_pad[0][0]
+        pad = ratio_pad[1]
+
+    coords[:, [0, 2]] -= pad[0]  # x padding
+    coords[:, [1, 3]] -= pad[1]  # y padding
+    coords[:, :4] /= gain
+
+    # Clip bounding xyxy bounding boxes to image shape (height, width)
+    coords[:, 0].clamp_(0, img_shape_origin[1])  # x1
+    coords[:, 1].clamp_(0, img_shape_origin[0])  # y1
+    coords[:, 2].clamp_(0, img_shape_origin[1])  # x2
+    coords[:, 3].clamp_(0, img_shape_origin[0])  # y2
+    return coords
 
 
 def read_image(img, is_half: bool = False):
