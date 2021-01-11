@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
-import numpy as np
-import cv2
 
 from IPython.display import display
 from PIL import Image
 
+import numpy as np
+import cv2
+
+import torch
 from torchvision.ops.boxes import box_convert
 
 
@@ -93,6 +95,15 @@ def letterbox(
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
     return img, ratio, (dw, dh)
+
+
+def read_image(img, is_half: bool = False):
+    img = np.ascontiguousarray(img, dtype=np.float32)  # uint8 to float32
+    img /= 255.0  # 0 - 255 to 0.0 - 1.0
+    img = torch.from_numpy(img)
+    img = img.permute(2, 0, 1)
+    img = img.half() if is_half else img.float()
+    return img
 
 
 def box_cxcywh_to_xyxy(bbox):
