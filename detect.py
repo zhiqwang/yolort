@@ -9,7 +9,7 @@ import torch
 
 from torchvision.ops import box_convert
 
-from utils.image_utils import plot_one_box
+from utils.image_utils import plot_one_box, read_image
 from hubconf import yolov5s
 
 
@@ -21,19 +21,11 @@ def load_names(category_path):
     return names
 
 
-def read_image(img_name, is_half):
-    img = cv2.imread(img_name)
-    img = np.ascontiguousarray(img, dtype=np.float32)  # uint8 to float32
-    img /= 255.0  # 0 - 255 to 0.0 - 1.0
-    img = torch.from_numpy(img)
-    img = img.permute(2, 0, 1)
-    return img
-
-
 @torch.no_grad()
 def inference(model, img_name, device, is_half=False):
     model.eval()
-    img = read_image(img_name, is_half)
+    img = cv2.imread(img_name)
+    img = read_image(img, is_half=is_half)
     img = img.to(device)
     t1 = time.time()
     detections = model([img])

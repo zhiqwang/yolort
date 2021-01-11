@@ -45,7 +45,7 @@ def get_args_parser():
                         help='inference score threshold')
     parser.add_argument('--image-size', default=300, type=int,
                         help='input size of models')
-    parser.add_argument('--num-classes', default=21, type=int,
+    parser.add_argument('--num-classes', default=80, type=int,
                         help='number classes of datasets')
     parser.add_argument('--batch-size', default=32, type=int,
                         help='images per gpu, the total batch size is $NGPU x batch_size')
@@ -133,7 +133,7 @@ def main(args):
 
     print('Creating model, always set args.return_criterion be True')
     args.return_criterion = True
-    model = yolov5s()
+    model = yolov5s(num_classes=args.num_classes)
     model.to(device)
 
     model_without_ddp = model

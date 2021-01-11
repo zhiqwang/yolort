@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
-import numpy as np
-import cv2
 
 from IPython.display import display
 from PIL import Image
 
+import numpy as np
+import cv2
+
+import torch
 from torchvision.ops.boxes import box_convert
 
 
@@ -25,6 +27,8 @@ def plot_one_box(box, img, color=None, label=None, line_thickness=None):
             img, label, (c1[0], c1[1] - 2), 0, tl / 3,
             [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA,
         )
+
+    return img
 
 
 def cv2_imshow(a, convert_bgr_to_rgb=True):
@@ -52,6 +56,79 @@ def color_list():
         return tuple(int(h[1 + i:1 + i + 2], 16) for i in (0, 2, 4))
 
     return [hex2rgb(h) for h in plt.rcParams['axes.prop_cycle'].by_key()['color']]
+
+
+def letterbox(
+    img,
+    new_shape=(640, 640),
+    color=(114, 114, 114),
+    auto=True,
+    scaleFill=False,
+    scaleup=True,
+):
+    # Resize image to a 32-pixel-multiple rectangle
+    # Ref: <https://github.com/ultralytics/yolov3/issues/232>
+    shape = img.shape[:2]  # current shape [height, width]
+    if isinstance(new_shape, int):
+        new_shape = (new_shape, new_shape)
+
+    # Scale ratio (new / old)
+    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+    if not scaleup:  # only scale down, do not scale up (for better test mAP)
+        r = min(r, 1.0)
+
+    # Compute padding
+    ratio = r, r  # width, height ratios
+    new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
+    dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
+    if auto:  # minimum rectangle
+        dw, dh = np.mod(dw, 32), np.mod(dh, 32)  # wh padding
+    elif scaleFill:  # stretch
+        dw, dh = 0.0, 0.0
+        new_unpad = (new_shape[1], new_shape[0])
+        ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]  # width, height ratios
+
+    dw /= 2  # divide padding into 2 sides
+    dh /= 2
+
+    if shape[::-1] != new_unpad:  # resize
+        img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+    top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+    left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+    return img, ratio, (dw, dh)
+
+
+def scale_coords(coords, img_shape, img_shape_origin, ratio_pad=None):
+    # Rescale coords (xyxy) from img_shape to img_shape_origin
+    if ratio_pad is None:  # calculate from img_shape_origin
+        gain = min(img_shape[0] / img_shape_origin[0],
+                   img_shape[1] / img_shape_origin[1])  # gain  = old / new
+        pad = ((img_shape[1] - img_shape_origin[1] * gain) / 2,
+               (img_shape[0] - img_shape_origin[0] * gain) / 2)  # wh padding
+    else:
+        gain = ratio_pad[0][0]
+        pad = ratio_pad[1]
+
+    coords[:, [0, 2]] -= pad[0]  # x padding
+    coords[:, [1, 3]] -= pad[1]  # y padding
+    coords[:, :4] /= gain
+
+    # Clip bounding xyxy bounding boxes to image shape (height, width)
+    coords[:, 0].clamp_(0, img_shape_origin[1])  # x1
+    coords[:, 1].clamp_(0, img_shape_origin[0])  # y1
+    coords[:, 2].clamp_(0, img_shape_origin[1])  # x2
+    coords[:, 3].clamp_(0, img_shape_origin[0])  # y2
+    return coords
+
+
+def read_image(img, is_half: bool = False):
+    img = np.ascontiguousarray(img, dtype=np.float32)  # uint8 to float32
+    img /= 255.0  # 0 - 255 to 0.0 - 1.0
+    img = torch.from_numpy(img)
+    img = img.permute(2, 0, 1)
+    img = img.half() if is_half else img.float()
+    return img
 
 
 def box_cxcywh_to_xyxy(bbox):
