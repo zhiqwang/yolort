@@ -1,7 +1,7 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 # GH actions
 
-name: Nightly
+name: CI testing
 
 on:
   push:
@@ -14,8 +14,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.8]
         os: [ubuntu-latest]
+        torch: [Stable, Nightly]
 
     steps:
     - name: Clone repository
@@ -29,14 +30,35 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
+        pip install pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Install PyTorch Nightly
+    - name: Install PyTorch ${{ matrix.torch }} Version
+      if: matrix.torch == 'Nightly'
       run: |
         pip install --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
-    - name: Test with pytest
+      if: matrix.torch == 'Stable'
+      run: |
+        pip install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    - name: Test and Generate coverage report
+      if: matrix.torch == 'Stable'
+      run: |
+        PYTORCH_TEST_WITH_SLOW=1 pytest --cov=./ --cov-report=xml
+      if: matrix.torch == 'Nightly'
       run: |
         pytest test
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      if: matrix.torch == 'Stable'
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        verbose: true
     - name: Build TorchVision Cpp Nightly
+      if: matrix.torch == 'Nightly'
       run: |
         export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
         cd ..
@@ -48,9 +70,11 @@ jobs:
         make -j4
         sudo make install
     - name: Export torchscript model
+      if: matrix.torch == 'Nightly'
       run: |
         python -m test.tracing.trace_model
     - name: Test libtorch tracing
+      if: matrix.torch == 'Nightly'
       run: |
         export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
