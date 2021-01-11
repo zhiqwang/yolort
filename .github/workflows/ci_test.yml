@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: 3.7
+        python-version: [3.7]
         os: [ubuntu-latest]
         torch: [1.7.1+cpu, Nightly]
         include:
@@ -26,62 +26,62 @@ jobs:
             unittest_type: test
 
     steps:
-    - name: Clone repository
-      uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: 'x64'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        pip install pytest-cov
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install opencv-python
-    - name: Install PyTorch ${{ matrix.torch }} Version
-      run: |
-        pip install ${{ matrix.pip_address }}
-    - name: Test and Generate coverage report
-      run: |
-        PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      if: matrix.torch == '1.7.1+cpu'
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        flags: unittests
-        env_vars: OS,PYTHON
-        name: codecov-umbrella
-        fail_ci_if_error: true
-        verbose: true
-    - name: Build TorchVision Cpp Nightly
-      if: matrix.torch == 'Nightly'
-      run: |
-        export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
-        cd ..
-        git clone https://github.com/pytorch/vision.git vision
-        cd vision
-        git checkout nightly
-        mkdir build && cd build
-        cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
-        make -j4
-        sudo make install
-    - name: Export torchscript model
-      if: matrix.torch == 'Nightly'
-      run: |
-        python -m test.tracing.trace_model
-    - name: Test libtorch tracing
-      if: matrix.torch == 'Nightly'
-      run: |
-        export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
-        cd test/tracing
-        mkdir build && cd build
-        cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
-        make
-        mv ../yolov5s.torchscript.pt ./
-        echo ">> Test libtorch tracing"
-        ./test_tracing
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: 'x64'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          pip install pytest-cov
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install opencv-python
+      - name: Install PyTorch ${{ matrix.torch }} Version
+        run: |
+          pip install ${{ matrix.pip_address }}
+      - name: Test and Generate coverage report
+        run: |
+          PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        if: matrix.torch == '1.7.1+cpu'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+      - name: Build TorchVision Cpp Nightly
+        if: matrix.torch == 'Nightly'
+        run: |
+          export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
+          cd ..
+          git clone https://github.com/pytorch/vision.git vision
+          cd vision
+          git checkout nightly
+          mkdir build && cd build
+          cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
+          make -j4
+          sudo make install
+      - name: Export torchscript model
+        if: matrix.torch == 'Nightly'
+        run: |
+          python -m test.tracing.trace_model
+      - name: Test libtorch tracing
+        if: matrix.torch == 'Nightly'
+        run: |
+          export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
+          cd test/tracing
+          mkdir build && cd build
+          cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
+          make
+          mv ../yolov5s.torchscript.pt ./
+          echo ">> Test libtorch tracing"
+          ./test_tracing
