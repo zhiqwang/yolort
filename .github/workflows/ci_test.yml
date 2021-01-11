@@ -14,9 +14,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: 3.7
         os: [ubuntu-latest]
-        torch: [Stable, Nightly]
+        torch: [1.7.1+cpu, Nightly]
+        include:
+          - torch: 1.7.1+cpu
+            pip_address: torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+            unittest_type: --cov=test --cov-report=xml
+          - torch: Nightly
+            pip_address: --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+            unittest_type: test
 
     steps:
     - name: Clone repository
@@ -32,23 +39,16 @@ jobs:
         pip install flake8 pytest
         pip install pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install opencv-python
     - name: Install PyTorch ${{ matrix.torch }} Version
-      if: matrix.torch == 'Nightly'
       run: |
-        pip install --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
-      if: matrix.torch == 'Stable'
-      run: |
-        pip install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        pip install ${{ matrix.pip_address }}
     - name: Test and Generate coverage report
-      if: matrix.torch == 'Stable'
       run: |
-        PYTORCH_TEST_WITH_SLOW=1 pytest --cov=./ --cov-report=xml
-      if: matrix.torch == 'Nightly'
-      run: |
-        pytest test
+        PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
-      if: matrix.torch == 'Stable'
+      if: matrix.torch == '1.7.1+cpu'
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
