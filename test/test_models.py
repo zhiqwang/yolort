@@ -1,7 +1,7 @@
 import unittest
 import torch
 
-from models.backbone import darknet
+from models.backbone_utils import darknet
 from models.anchor_utils import AnchorGenerator
 from models.box_head import YoloHead, PostProcess, SetCriterion
 
