@@ -15,11 +15,9 @@ from .transform import WrappedModel
 
 from typing import Tuple, Any, List, Dict, Optional
 
-
 __all__ = ['yolov5', 'create_model', 'yolov5s', 'yolov5m', 'yolov5l']
 
-
-model_urls = {
+_MODEL_URLS = {
     'yolov5s': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
     'yolov5m': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5m.pt',
     'yolov5l': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5l.pt',
@@ -177,7 +175,7 @@ def yolov5(
     backbone, anchor_grids = darknet(cfg_path=cfg_path)
     model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[Path(cfg_path).stem], progress=progress)
+        state_dict = load_state_dict_from_url(_MODEL_URLS[Path(cfg_path).stem], progress=progress)
         model.load_state_dict(state_dict)
 
     return model
