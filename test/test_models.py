@@ -1,7 +1,7 @@
 import unittest
 import torch
 
-from models.backbone_utils import darknet
+from models.backbone_utils import darknet_backbone
 from models.anchor_utils import AnchorGenerator
 from models.box_head import YoloHead, PostProcess, SetCriterion
 
@@ -66,7 +66,7 @@ class ModelTester(TestCase):
         return head_outputs
 
     def _init_test_backbone_with_fpn(self):
-        backbone_with_fpn, _ = darknet()
+        backbone_with_fpn, _ = darknet_backbone()
         return backbone_with_fpn
 
     def test_backbone_with_fpn(self):

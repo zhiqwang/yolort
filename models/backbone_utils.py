@@ -28,7 +28,7 @@ class BackboneWithFPN(nn.Module):
         )
         self.out_channels = out_channels
 
-    def forward(self, x: Tensor):
+    def forward(self, x: Tensor) -> List[Tensor]:
         x = self.body(x)
         out: List[Tensor] = []
 
@@ -38,7 +38,7 @@ class BackboneWithFPN(nn.Module):
         return out
 
 
-class YoloBody(nn.Module):
+class DarkNet(nn.Module):
     __annotations__ = {
         "save_list": List[int],
     }
@@ -188,17 +188,17 @@ class IntermediateLayerGetter(nn.ModuleDict):
         return out
 
 
-def darknet(cfg_path='yolov5s.yaml'):
+def darknet_backbone(cfg_path='yolov5s.yaml'):
     cfg_path = Path(__file__).parent.absolute().joinpath(cfg_path)
     with open(cfg_path) as f:
         model_dict = yaml.load(f, Loader=yaml.FullLoader)
 
     layers, save_list, head_info = parse_model(model_dict, in_channels=3)
 
-    body = YoloBody(layers, save_list)
+    darknet = DarkNet(layers, save_list)
 
     backbone = BackboneWithFPN(
-        yolo_body=body,
+        yolo_body=darknet,
         return_layers={str(key): str(i) for i, key in enumerate(head_info[2])},
         out_channels=head_info[0],
     )
