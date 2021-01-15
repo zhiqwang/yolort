@@ -13,7 +13,7 @@ from .experimental import MixConv2d, CrossConv, C3
 from .box_head import Detect
 
 
-class YoloBackbone(nn.Module):
+class BackboneWithFPN(nn.Module):
     def __init__(
         self,
         yolo_body: nn.Module,
@@ -197,7 +197,7 @@ def darknet(cfg_path='yolov5s.yaml'):
 
     body = YoloBody(layers, save_list)
 
-    backbone = YoloBackbone(
+    backbone = BackboneWithFPN(
         yolo_body=body,
         return_layers={str(key): str(i) for i, key in enumerate(head_info[2])},
         out_channels=head_info[0],

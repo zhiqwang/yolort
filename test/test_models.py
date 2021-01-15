@@ -65,16 +65,16 @@ class ModelTester(TestCase):
 
         return head_outputs
 
-    def _init_test_backbone(self):
-        backbone, _ = darknet()
-        return backbone
+    def _init_test_backbone_with_fpn(self):
+        backbone_with_fpn, _ = darknet()
+        return backbone_with_fpn
 
-    def test_backbone(self):
+    def test_backbone_with_fpn(self):
         N, H, W = 4, 416, 352
         out_shape = self._get_feature_shapes(H, W)
 
         x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone()
+        model = self._init_test_backbone_with_fpn()
         out = model(x)
 
         self.assertEqual(len(out), 3)
