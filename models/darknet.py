@@ -44,7 +44,7 @@ class DarkNet(nn.Module):
         block: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         """
-        MobileNet V2 main class
+        DarkNet main class
 
         Args:
             num_classes (int): Number of classes
@@ -65,9 +65,9 @@ class DarkNet(nn.Module):
 
         if channels_list_setting is None:
             channels_list_setting = [
-                [[32, 64, 3, 2], [64, 64, 1]],  # 1-P2/4
-                [[64, 128, 3, 2], [128, 128, 3]],  # 3-P3/8
-                [[128, 256, 3, 2], [256, 256, 3]],  # 5-P4/16
+                [[32, 64, 3, 2], [64, 64, 1]],  # P2/4
+                [[64, 128, 3, 2], [128, 128, 3]],  # P3/8
+                [[128, 256, 3, 2], [256, 256, 3]],  # P4/16
             ]
 
         # building first layer
@@ -85,13 +85,13 @@ class DarkNet(nn.Module):
         layers.append(SPP(512, 512, k=(5, 9, 13)))
         layers.append(BottleneckCSP(512, 512, n=1, shortcut=False))
 
-        self.stages = nn.Sequential(*layers)
+        self.features = nn.Sequential(*layers)
 
         self.last_channel = _make_divisible(last_channel * max(1.0, width_multiple), round_nearest)
 
     def forward(self, x: Tensor) -> Tensor:
         out = self.focus(x)
-        out = self.stages(out)
+        out = self.features(out)
 
         return out
 
@@ -125,5 +125,3 @@ def darknet3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -
 
 def darknet4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
     return _darknet("4.0", pretrained, progress, **kwargs)
-
-
