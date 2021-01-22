@@ -39,7 +39,7 @@ class DarkNet(nn.Module):
         self,
         depth_multiple: float = 0.33,
         width_multiple: float = 0.5,
-        channels_list_setting: Optional[List[List[int]]] = None,
+        channels_list_setting: Optional[List[List[List[int]]]] = None,
         round_nearest: int = 8,
         block: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
@@ -60,39 +60,40 @@ class DarkNet(nn.Module):
         if block is None:
             block = BottleneckCSP
 
-        input_channel = 32
+        input_channel = 64
         last_channel = 1024
 
-        # only check the first element, assuming user knows t,c,n,s are required
-        if len(channels_list_setting) == 0 or len(channels_list_setting[0]) != 4:
-            raise ValueError("channels_list_setting should be non-empty "
-                             "or a 4-element list, got {}".format(channels_list_setting))
+        if channels_list_setting is None:
+            channels_list_setting = [
+                [[32, 64, 3, 2], [64, 64, 1]],  # 1-P2/4
+                [[64, 128, 3, 2], [128, 128, 3]],  # 3-P3/8
+                [[128, 256, 3, 2], [256, 256, 3]],  # 5-P4/16
+            ]
 
         # building first layer
         input_channel = _make_divisible(input_channel * width_multiple, round_nearest)
-        self.last_channel = _make_divisible(last_channel * max(1.0, width_multiple), round_nearest)
-        layers: List[nn.Module] = [Focus(3, input_channel, k=3)]
+        self.focus = Focus(3, input_channel, k=3)
 
         # building CSP blocks
-        for i, cnf in enumerate(channels_list_setting):
-            layers.append(Conv)
-            if i == 3:
-                layers.append(SPP)
+        layers = []
+        for cfgs in channels_list_setting:
+            layers.append(Conv(*cfgs[0]))
+            layers.append(BottleneckCSP(*cfgs[1]))
 
-            if i in [4, 5]:
-                layers.append(nn.Upsample)
+        # building last CSP blocks
+        layers.append(Conv(256, 512, k=3, s=2))
+        layers.append(SPP(512, 512, k=(5, 9, 13)))
+        layers.append(BottleneckCSP(512, 512, n=1, shortcut=False))
 
-            if i in [4, 5, 6, 7]:
-                layers.append(Concat)  # Cat backbone, set as the FPN modules
+        self.stages = nn.Sequential(*layers)
 
-            layers.append(block(cnf))
-
-        # make it nn.Sequential
-        self.features = nn.Sequential(*layers)
+        self.last_channel = _make_divisible(last_channel * max(1.0, width_multiple), round_nearest)
 
     def forward(self, x: Tensor) -> Tensor:
-        x = self.features(x)
-        return x
+        out = self.focus(x)
+        out = self.stages(out)
+
+        return out
 
 
 def _darknet(
