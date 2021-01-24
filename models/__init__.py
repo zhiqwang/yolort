@@ -2,6 +2,7 @@ from torch import nn
 
 from .common import Conv
 from .yolo import yolov5, create_model, yolov5s, yolov5m, yolov5l  # noqa
+from .path_aggregation_network import PathAggregationNetwork
 
 from utils.activations import Hardswish
 
