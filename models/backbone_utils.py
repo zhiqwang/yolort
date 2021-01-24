@@ -1,205 +1,87 @@
-# Modified from ultralytics/yolov5 by Zhiqiang Wang
-from pathlib import Path
-from collections import OrderedDict
+from torch import nn
+from torchvision.models._utils import IntermediateLayerGetter
 
-import yaml
-
-import torch
-from torch import nn, Tensor
-from typing import List, Dict, Optional
-
-from .common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
-from .experimental import MixConv2d, CrossConv, C3
-from .box_head import Detect
+from .pan import PathAggregationNetwork
+from . import darknet
 
 
 class BackboneWithPAN(nn.Module):
-    def __init__(
-        self,
-        yolo_body: nn.Module,
-        return_layers: dict,
-        out_channels: List[int],
-    ):
+    """
+    Adds a FPN on top of a model.
+    Internally, it uses torchvision.models._utils.IntermediateLayerGetter to
+    extract a submodel that returns the feature maps specified in return_layers.
+    The same limitations of IntermediatLayerGetter apply here.
+    Args:
+        backbone (nn.Module)
+        return_layers (Dict[name, new_name]): a dict containing the names
+            of the modules for which the activations will be returned as
+            the key of the dict, and the value of the dict is the name
+            of the returned activation (which the user can specify).
+        in_channels_list (List[int]): number of channels for each feature map
+            that is returned, in the order they are present in the OrderedDict
+        out_channels (int): number of channels in the FPN.
+    Attributes:
+        out_channels (int): the number of channels in the FPN
+    """
+    def __init__(self, backbone, return_layers, in_channels_list, out_channels, extra_blocks=None):
         super().__init__()
-        self.body = IntermediateLayerGetter(
-            yolo_body.model,
-            return_layers=return_layers,
-            save_list=yolo_body.save_list,
+
+        self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
+        self.pan = PathAggregationNetwork(
+            in_channels_list=in_channels_list,
+            out_channels=out_channels,
+            extra_blocks=extra_blocks,
         )
         self.out_channels = out_channels
 
-    def forward(self, x: Tensor) -> List[Tensor]:
-        x = self.body(x)
-        out: List[Tensor] = []
-
-        for name, feature in x.items():
-            out.append(feature)
-
-        return out
-
-
-class DarkNet(nn.Module):
-    __annotations__ = {
-        "save_list": List[int],
-    }
-
-    def __init__(self, layers, save_list):
-        super().__init__()
-        # Define model
-        self.model = nn.Sequential(*layers)
-        self.save_list = save_list
-
-        # Init weights, biases
-        self._initialize_weights()
-
-    def forward(self, x: Tensor) -> Tensor:
-        out = x
-        y: List[Tensor] = []
-
-        for i, m in enumerate(self.model):
-            if m.f > 0:  # Concat layer
-                out = torch.cat([out, y[sorted(self.save_list).index(m.f)]], 1)
-            else:
-                out = m(out)  # run
-            if i in self.save_list:
-                y.append(out)  # save output
-        return out
-
-    def _initialize_weights(self) -> None:
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, nn.BatchNorm2d):
-                m.eps = 1e-3
-                m.momentum = 0.03
-            elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
-                m.inplace = True
-
-
-def parse_model(model_dict, in_channels=3):
-    head_info = ()
-    anchors, num_classes = model_dict['anchors'], model_dict['nc']
-    num_anchors = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors
-    num_outputs = num_anchors * (num_classes + 5)
-
-    c2 = in_channels
-    layers, save_list, channels = [], [], [c2]  # layers, save list, channels out
-    # from, number, module, args
-    for i, (f, n, m, args) in enumerate(model_dict['backbone'] + model_dict['head']):
-        m = eval(m) if isinstance(m, str) else m  # eval strings
-        for j, a in enumerate(args):
-            try:
-                args[j] = eval(a) if isinstance(a, str) else a  # eval strings
-            except NameError:
-                pass
-
-        n = max(round(n * model_dict['depth_multiple']), 1) if n > 1 else n  # depth gain
-        if m in [Conv, Bottleneck, SPP, DWConv, MixConv2d, Focus, CrossConv, BottleneckCSP, C3]:
-            c1, c2 = channels[f], args[0]
-            c2 = _make_divisible(c2 * model_dict['width_multiple'], 8) if c2 != num_outputs else c2
-
-            args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3]:
-                args.insert(2, n)
-                n = 1
-        elif m is nn.BatchNorm2d:
-            args = [channels[f]]
-        elif m is Concat:
-            c2 = sum([channels[-1 if x == -1 else x + 1] for x in f])
-        elif m is Detect:
-            num_layers, anchor_grids = f, args[-1]
-            out_channels = [channels[x + 1] for x in f]
-            head_info = (out_channels, anchor_grids, num_layers)
-            continue
-        else:
-            c2 = channels[f]
-
-        module = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)
-        module.f = -1 if f == -1 else f[-1]
-
-        save_list.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)
-        layers.append(module)
-        channels.append(c2)
-    return layers, save_list, head_info
-
-
-def _make_divisible(v: float, divisor: int, min_value: Optional[int] = None) -> int:
-    """
-    This function is taken from the original tf repo.
-    It ensures that all layers have a channel number that is divisible by 8
-    It can be seen here:
-    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
-    :param v:
-    :param divisor:
-    :param min_value:
-    :return:
-    """
-    if min_value is None:
-        min_value = divisor
-    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-    # Make sure that round down does not go down by more than 10%.
-    if new_v < 0.9 * v:
-        new_v += divisor
-    return new_v
-
-
-class IntermediateLayerGetter(nn.ModuleDict):
-    """
-    Module wrapper that returns intermediate layers from a model
-    """
-    _version = 2
-    __annotations__ = {
-        "return_layers": Dict[str, str],
-        "save_list": List[int],
-    }
-
-    def __init__(self, model, return_layers, save_list):
-        if not set(return_layers).issubset([name for name, _ in model.named_children()]):
-            raise ValueError("return_layers are not present in model")
-        orig_return_layers = return_layers
-        return_layers = {str(k): str(v) for k, v in return_layers.items()}
-        layers = OrderedDict()
-        for name, module in model.named_children():
-            layers[name] = module
-            if name in return_layers:
-                del return_layers[name]
-            if not return_layers:
-                break
-
-        super().__init__(layers)
-        self.return_layers = orig_return_layers
-        self.save_list = save_list
-
     def forward(self, x):
-        out = OrderedDict()
-        y: List[Tensor] = []
-
-        for i, (name, module) in enumerate(self.items()):
-            if module.f > 0:  # Concat layer
-                x = torch.cat([x, y[sorted(self.save_list).index(module.f)]], 1)
-            else:
-                x = module(x)  # run
-            if i in self.save_list:
-                y.append(x)  # save output
-
-            if name in self.return_layers:
-                out_name = self.return_layers[name]
-                out[out_name] = x
-        return out
+        x = self.body(x)
+        x = self.pan(x)
+        return x
 
 
-def darknet_backbone(cfg_path='yolov5s.yaml'):
-    cfg_path = Path(__file__).parent.absolute().joinpath(cfg_path)
-    with open(cfg_path) as f:
-        model_dict = yaml.load(f, Loader=yaml.FullLoader)
+def darknet_pan_backbone(
+    backbone_name,
+    pretrained,
+    trainable_layers=3,
+    returned_layers=None,
+):
+    """
+    Constructs a specified ResNet backbone with FPN on top. Freezes the specified number of layers in the backbone.
 
-    layers, save_list, head_info = parse_model(model_dict, in_channels=3)
+    Examples::
 
-    darknet = DarkNet(layers, save_list)
+        >>> from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+        >>> backbone = resnet_fpn_backbone('resnet50', pretrained=True, trainable_layers=3)
+        >>> # get some dummy image
+        >>> x = torch.rand(1,3,64,64)
+        >>> # compute the output
+        >>> output = backbone(x)
+        >>> print([(k, v.shape) for k, v in output.items()])
+        >>> # returns
+        >>>   [('0', torch.Size([1, 256, 16, 16])),
+        >>>    ('1', torch.Size([1, 256, 8, 8])),
+        >>>    ('2', torch.Size([1, 256, 4, 4])),
+        >>>    ('3', torch.Size([1, 256, 2, 2])),
+        >>>    ('pool', torch.Size([1, 256, 1, 1]))]
 
-    backbone = BackboneWithPAN(
-        yolo_body=darknet,
-        return_layers={str(key): str(i) for i, key in enumerate(head_info[2])},
-        out_channels=head_info[0],
-    )
-    return backbone, head_info[1]
+    Args:
+        backbone_name (string): resnet architecture. Possible values are 'ResNet', 'resnet18', 'resnet34', 'resnet50',
+             'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d', 'wide_resnet50_2', 'wide_resnet101_2'
+        norm_layer (torchvision.ops): it is recommended to use the default value. For details visit:
+            (https://github.com/facebookresearch/maskrcnn-benchmark/issues/267)
+        pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
+        trainable_layers (int): number of trainable (not frozen) resnet layers starting from final block.
+            Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
+    """
+    backbone = darknet.__dict__[backbone_name](pretrained=pretrained)
+
+    if returned_layers is None:
+        returned_layers = [1, 2, 3, 4]
+    assert min(returned_layers) > 0 and max(returned_layers) < 5
+    return_layers = {f'layer{k}': str(v) for v, k in enumerate(returned_layers)}
+
+    in_channels_stage2 = backbone.inplanes // 8
+    in_channels_list = [in_channels_stage2 * 2 ** (i - 1) for i in returned_layers]
+    out_channels = 256
+    return BackboneWithPAN(backbone, return_layers, in_channels_list, out_channels)

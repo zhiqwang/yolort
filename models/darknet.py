@@ -81,13 +81,13 @@ class DarkNet(nn.Module):
             layers.append(BottleneckCSP(*cfgs[1]))
 
         # building last CSP blocks
-        layers.append(Conv(256, 512, k=3, s=2))
-        layers.append(SPP(512, 512, k=(5, 9, 13)))
-        layers.append(BottleneckCSP(512, 512, n=1, shortcut=False))
+        last_channel = _make_divisible(last_channel * width_multiple, round_nearest)
+
+        layers.append(Conv(256, last_channel, k=3, s=2))
+        layers.append(SPP(last_channel, last_channel, k=(5, 9, 13)))
+        layers.append(BottleneckCSP(last_channel, last_channel, n=1, shortcut=False))
 
         self.features = nn.Sequential(*layers)
-
-        self.last_channel = _make_divisible(last_channel * max(1.0, width_multiple), round_nearest)
 
     def forward(self, x: Tensor) -> Tensor:
         out = self.focus(x)

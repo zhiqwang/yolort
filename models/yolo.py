@@ -8,7 +8,7 @@ from torch import nn, Tensor
 
 from torchvision.models.utils import load_state_dict_from_url
 
-from .backbone_utils import darknet_backbone
+from .backbone_utils import darknet_pan_backbone
 from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
 from .transform import WrappedModel
@@ -130,7 +130,7 @@ class YOLO(nn.Module):
 
 
 def yolov5(
-    cfg_path: str = 'yolov5s.yaml',
+    backbone_name,
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,
@@ -172,10 +172,10 @@ def yolov5(
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone, anchor_grids = darknet_backbone(cfg_path=cfg_path)
+    backbone, anchor_grids = darknet_pan_backbone(backbone_name)
     model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(_MODEL_URLS[Path(cfg_path).stem], progress=progress)
+        state_dict = load_state_dict_from_url(backbone_name, progress=progress)
         model.load_state_dict(state_dict)
 
     return model
