@@ -1,8 +1,8 @@
 from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
-from .pan import PathAggregationNetwork
 from . import darknet
+from .path_aggregation_network import PathAggregationNetwork
 
 
 class BackboneWithPAN(nn.Module):
@@ -23,14 +23,13 @@ class BackboneWithPAN(nn.Module):
     Attributes:
         out_channels (int): the number of channels in the FPN
     """
-    def __init__(self, backbone, return_layers, in_channels_list, out_channels, extra_blocks=None):
+    def __init__(self, backbone, return_layers, in_channels_list, out_channels):
         super().__init__()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
         self.pan = PathAggregationNetwork(
             in_channels_list=in_channels_list,
             out_channels=out_channels,
-            extra_blocks=extra_blocks,
         )
         self.out_channels = out_channels
 
@@ -74,14 +73,13 @@ def darknet_pan_backbone(
         trainable_layers (int): number of trainable (not frozen) resnet layers starting from final block.
             Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
     """
-    backbone = darknet.__dict__[backbone_name](pretrained=pretrained)
+    backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
 
     if returned_layers is None:
-        returned_layers = [1, 2, 3, 4]
-    assert min(returned_layers) > 0 and max(returned_layers) < 5
-    return_layers = {f'layer{k}': str(v) for v, k in enumerate(returned_layers)}
+        returned_layers = [4, 6, 8]
 
-    in_channels_stage2 = backbone.inplanes // 8
-    in_channels_list = [in_channels_stage2 * 2 ** (i - 1) for i in returned_layers]
-    out_channels = 256
+    return_layers = {str(k): str(i) for i, k in enumerate(returned_layers)}
+
+    in_channels_list = [128, 256, 512]
+    out_channels = 512
     return BackboneWithPAN(backbone, return_layers, in_channels_list, out_channels)

@@ -1,3 +1,4 @@
+import torch
 from torch import dropout, nn, Tensor
 from torch.hub import load_state_dict_from_url
 
@@ -40,6 +41,7 @@ class DarkNet(nn.Module):
         depth_multiple: float = 0.33,
         width_multiple: float = 0.5,
         channels_list_setting: Optional[List[List[List[int]]]] = None,
+        num_classes: int = 1000,
         round_nearest: int = 8,
         block: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
@@ -70,30 +72,56 @@ class DarkNet(nn.Module):
                 [[128, 256, 3, 2], [256, 256, 3]],  # P4/16
             ]
 
+        # Initial an empty features list
+        layers: List[nn.Module] = []
+
         # building first layer
         input_channel = _make_divisible(input_channel * width_multiple, round_nearest)
-        self.focus = Focus(3, input_channel, k=3)
+        layers.append(Focus(3, input_channel, k=3))
 
         # building CSP blocks
-        layers = []
         for cfgs in channels_list_setting:
             layers.append(Conv(*cfgs[0]))
             layers.append(BottleneckCSP(*cfgs[1]))
 
         # building last CSP blocks
         last_channel = _make_divisible(last_channel * width_multiple, round_nearest)
-
         layers.append(Conv(256, last_channel, k=3, s=2))
         layers.append(SPP(last_channel, last_channel, k=(5, 9, 13)))
-        layers.append(BottleneckCSP(last_channel, last_channel, n=1, shortcut=False))
 
         self.features = nn.Sequential(*layers)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.classifier = nn.Sequential(
+            nn.Linear(last_channel, last_channel),
+            nn.Hardswish(inplace=True),
+            nn.Dropout(p=0.2, inplace=True),
+            nn.Linear(last_channel, num_classes),
+        )
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out')
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.ones_(m.weight)
+                nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.zeros_(m.bias)
+
+    def _forward_impl(self, x: Tensor) -> Tensor:
+        x = self.features(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+
+        x = self.classifier(x)
+
+        return x
 
     def forward(self, x: Tensor) -> Tensor:
-        out = self.focus(x)
-        out = self.features(out)
-
-        return out
+        return self._forward_impl(x)
 
 
 def _darknet(
