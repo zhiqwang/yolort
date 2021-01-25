@@ -1,7 +1,10 @@
 from collections import OrderedDict
+import torch
 
 import torch.nn.functional as F
-from torch import nn, Tensor
+from torch import nn, Tensor, select
+
+from .common import Conv, BottleneckCSP
 
 from typing import Tuple, List, Dict, Optional
 
@@ -49,15 +52,27 @@ class PathAggregationNetwork(nn.Module):
         out_channels: int,
     ):
         super().__init__()
-        self.inner_blocks = nn.ModuleList()
-        self.layer_blocks = nn.ModuleList()
-        for in_channels in in_channels_list:
-            if in_channels == 0:
-                raise ValueError("in_channels=0 is currently not supported")
-            inner_block_module = nn.Conv2d(in_channels, out_channels, 1)
-            layer_block_module = nn.Conv2d(out_channels, out_channels, 3, padding=1)
-            self.inner_blocks.append(inner_block_module)
-            self.layer_blocks.append(layer_block_module)
+        assert len(in_channels_list) == 3, "current only support length 3."
+
+        inner_blocks = [
+            BottleneckCSP(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
+            Conv(in_channels_list[2], in_channels_list[1], 1, 1),
+            nn.Upsample(scale_factor=2),
+            BottleneckCSP(in_channels_list[2], in_channels_list[1], n=1, shortcut=False),
+            Conv(in_channels_list[1], in_channels_list[0], 1, 1),
+            nn.Upsample(scale_factor=2),
+        ]
+
+        self.inner_blocks = nn.ModuleList(inner_blocks)
+
+        layer_blocks = [
+            BottleneckCSP(in_channels_list[1], in_channels_list[0], n=1, shortcut=False),
+            Conv(in_channels_list[0], in_channels_list[0], 3, 2),
+            BottleneckCSP(in_channels_list[1], in_channels_list[1], n=1, shortcut=False),
+            Conv(in_channels_list[1], in_channels_list[1], 3, 2),
+            BottleneckCSP(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
+        ]
+        self.layer_blocks = nn.ModuleList(layer_blocks)
 
     def forward(self, x: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """
@@ -74,18 +89,30 @@ class PathAggregationNetwork(nn.Module):
         names = list(x.keys())
         x = list(x.values())
 
-        last_inner = self.inner_blocks[-1](x[-1])
+        inners = []
+
+        last_inner = self.inner_blocks[0](x[2])
+        last_inner = self.inner_blocks[1](last_inner)
+        inners.append(last_inner)
+        last_inner = self.inner_blocks[2](last_inner)
+        last_inner = torch.cat([last_inner, x[1]], dim=1)
+        last_inner = self.inner_blocks[3](last_inner)
+        last_inner = self.inner_blocks[4](last_inner)
+        inners.insert(0, last_inner)
+        last_inner = self.inner_blocks[5](last_inner)
+        last_inner = torch.cat([last_inner, x[0]], dim=1)
+        inners.insert(0, last_inner)
+
         results = []
-        results.append(self.layer_blocks[-1](last_inner))
+        last_inner = self.layer_blocks[0](inners[0])
+        results.append(last_inner)
+        last_inner = self.layer_blocks[1](last_inner)
+        last_inner = torch.cat([last_inner, inners[1]], dim=1)
+        last_inner = self.layer_blocks[2](last_inner)
+        results.append(last_inner)
+        last_inner = self.layer_blocks[3](last_inner)
+        last_inner = torch.cat([last_inner, inners[2]], dim=1)
+        last_inner = self.layer_blocks[4](last_inner)
+        results.append(last_inner)
 
-        for idx in range(len(x) - 2, -1, -1):
-            inner_lateral = self.inner_blocks[idx](x[idx])
-            feat_shape = inner_lateral.shape[-2:]
-            inner_top_down = F.interpolate(last_inner, size=feat_shape, mode="nearest")
-            last_inner = inner_lateral + inner_top_down
-            results.insert(0, self.layer_blocks[idx](last_inner))
-
-        # make it back an OrderedDict
-        out = OrderedDict([(k, v) for k, v in zip(names, results)])
-
-        return out
+        return results
