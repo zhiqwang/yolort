@@ -27,10 +27,7 @@ class BackboneWithPAN(nn.Module):
         super().__init__()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
-        self.pan = PathAggregationNetwork(
-            in_channels_list=in_channels_list,
-            out_channels=out_channels,
-        )
+        self.pan = PathAggregationNetwork(in_channels_list=in_channels_list)
         self.out_channels = out_channels
 
     def forward(self, x):

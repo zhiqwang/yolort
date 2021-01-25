@@ -1,12 +1,10 @@
-from collections import OrderedDict
 import torch
 
-import torch.nn.functional as F
-from torch import nn, Tensor, select
+from torch import nn, Tensor
 
 from .common import Conv, BottleneckCSP
 
-from typing import Tuple, List, Dict, Optional
+from typing import List, Dict
 
 
 class PathAggregationNetwork(nn.Module):
@@ -24,10 +22,6 @@ class PathAggregationNetwork(nn.Module):
         in_channels_list (list[int]): number of channels for each feature map that
             is passed to the module
         out_channels (int): number of channels of the PAN representation
-        extra_blocks (ExtraFPNBlock or None): if provided, extra operations will
-            be performed. It is expected to take the fpn features, the original
-            features and the names of the original features as input, and returns
-            a new list of feature maps and their corresponding names
 
     Examples::
 
@@ -49,7 +43,6 @@ class PathAggregationNetwork(nn.Module):
     def __init__(
         self,
         in_channels_list: List[int],
-        out_channels: int,
     ):
         super().__init__()
         assert len(in_channels_list) == 3, "current only support length 3."
@@ -74,7 +67,7 @@ class PathAggregationNetwork(nn.Module):
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
 
-    def forward(self, x: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    def forward(self, x: Dict[str, Tensor]) -> List[Tensor]:
         """
         Computes the PAN for a set of feature maps.
 
@@ -86,7 +79,6 @@ class PathAggregationNetwork(nn.Module):
                 They are ordered from highest resolution first.
         """
         # unpack OrderedDict into two lists for easier handling
-        names = list(x.keys())
         x = list(x.values())
 
         inners = []
