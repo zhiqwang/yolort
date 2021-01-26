@@ -52,10 +52,6 @@ class YoloHead(nn.Module):
         return all_pred_logits
 
 
-# necessary for backwards compatibility
-Detect = YoloHead
-
-
 class SetCriterion(nn.Module):
     """This class computes the loss for YOLOv5.
     Arguments:

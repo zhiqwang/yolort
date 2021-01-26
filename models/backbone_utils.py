@@ -1,3 +1,4 @@
+from typing import List, Optional
 from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
@@ -7,7 +8,7 @@ from .path_aggregation_network import PathAggregationNetwork
 
 class BackboneWithPAN(nn.Module):
     """
-    Adds a FPN on top of a model.
+    Adds a PAN on top of a model.
     Internally, it uses torchvision.models._utils.IntermediateLayerGetter to
     extract a submodel that returns the feature maps specified in return_layers.
     The same limitations of IntermediatLayerGetter apply here.
@@ -19,16 +20,15 @@ class BackboneWithPAN(nn.Module):
             of the returned activation (which the user can specify).
         in_channels_list (List[int]): number of channels for each feature map
             that is returned, in the order they are present in the OrderedDict
-        out_channels (int): number of channels in the FPN.
     Attributes:
-        out_channels (int): the number of channels in the FPN
+        out_channels (int): the number of channels in the PAN
     """
-    def __init__(self, backbone, return_layers, in_channels_list, out_channels):
+    def __init__(self, backbone, return_layers, in_channels_list):
         super().__init__()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
         self.pan = PathAggregationNetwork(in_channels_list=in_channels_list)
-        self.out_channels = out_channels
+        self.out_channels = in_channels_list
 
     def forward(self, x):
         x = self.body(x)
@@ -37,13 +37,12 @@ class BackboneWithPAN(nn.Module):
 
 
 def darknet_pan_backbone(
-    backbone_name,
-    pretrained,
-    trainable_layers=3,
-    returned_layers=None,
+    backbone_name: str,
+    pretrained: Optional[bool] = False,
+    returned_layers: Optional[List[int]] = None,
 ):
     """
-    Constructs a specified ResNet backbone with FPN on top. Freezes the specified number of layers in the backbone.
+    Constructs a specified ResNet backbone with PAN on top. Freezes the specified number of layers in the backbone.
 
     Examples::
 
@@ -78,5 +77,5 @@ def darknet_pan_backbone(
     return_layers = {str(k): str(i) for i, k in enumerate(returned_layers)}
 
     in_channels_list = [128, 256, 512]
-    out_channels = 512
-    return BackboneWithPAN(backbone, return_layers, in_channels_list, out_channels)
+
+    return BackboneWithPAN(backbone, return_layers, in_channels_list)

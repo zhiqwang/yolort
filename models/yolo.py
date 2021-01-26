@@ -1,7 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Modified by Zhiqiang Wang (zhiqwang@outlook.com)
 import warnings
-from pathlib import Path
 
 import torch
 from torch import nn, Tensor
@@ -9,19 +8,13 @@ from torch import nn, Tensor
 from torchvision.models.utils import load_state_dict_from_url
 
 from .backbone_utils import darknet_pan_backbone
-from .box_head import YoloHead, SetCriterion, PostProcess
 from .anchor_utils import AnchorGenerator
+from .box_head import YoloHead, SetCriterion, PostProcess
 from .transform import WrappedModel
 
 from typing import Tuple, Any, List, Dict, Optional
 
-__all__ = ['yolov5', 'create_model', 'yolov5s', 'yolov5m', 'yolov5l']
-
-_MODEL_URLS = {
-    'yolov5s': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt',
-    'yolov5m': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5m.pt',
-    'yolov5l': 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.4/yolov5l.pt',
-}
+__all__ = ['yolov5_darknet_pan_s_v31']
 
 
 class YOLO(nn.Module):
@@ -129,8 +122,19 @@ class YOLO(nn.Module):
             return self.eager_outputs(losses, detections)
 
 
-def yolov5(
+model_urls = {
+    'yolov5_darknet_pan_s_v31_coco': 'https://waiting.for/upload/yolov5s_v3.1-8521683e.pt',
+    'yolov5_darknet_pan_m_v31_coco': None,
+    'yolov5_darknet_pan_l_v31_coco': None,
+    'yolov5_darknet_pan_s_v40_coco': None,
+    'yolov5_darknet_pan_m_v40_coco': None,
+    'yolov5_darknet_pan_l_v40_coco': None,
+}
+
+
+def _yolov5_darknet_pan(
     backbone_name,
+    weights_name,
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,
@@ -172,21 +176,23 @@ def yolov5(
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone, anchor_grids = darknet_pan_backbone(backbone_name)
+    backbone = darknet_pan_backbone(backbone_name)
+
+    anchor_grids = [[10, 13, 16, 30, 33, 23],
+                    [30, 61, 62, 45, 59, 119],
+                    [116, 90, 156, 198, 373, 326]]
+
     model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(backbone_name, progress=progress)
+        if model_urls.get(weights_name, None) is None:
+            raise ValueError(f"No checkpoint is available for model {weights_name}")
+        state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
         model.load_state_dict(state_dict)
 
     return model
 
 
-def create_model(
-    cfg_path: str = 'yolov5s.yaml',
-    pretrained: bool = False,
-    progress: bool = True,
-    **kwargs: Any,
-) -> WrappedModel:
+def _yolo(**kwargs: Any) -> WrappedModel:
     """
     Constructs a YOLO model.
 
@@ -200,36 +206,17 @@ def create_model(
         >>> x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
         >>> predictions = model(x)
     """
-    model = yolov5(cfg_path, pretrained, progress, **kwargs)
+    model = _yolov5_darknet_pan(**kwargs)
     model = WrappedModel(model)
     return model
 
 
-def yolov5s(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
-    r"""yolov5s model from
+def yolov5_darknet_pan_s_v31(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
+    r"""yolov5s release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return create_model('yolov5s.yaml', pretrained, progress, **kwargs)
-
-
-def yolov5m(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
-    r"""yolov5m model from
-    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
-    return create_model('yolov5m.yaml', pretrained, progress, **kwargs)
-
-
-def yolov5l(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
-    r"""yolov5l model from
-    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
-    return create_model('yolov5l.yaml', pretrained, progress, **kwargs)
+    weights_name = 'yolov5_darknet_pan_s_v31_coco'
+    return _yolov5_darknet_pan('darknet3_1', weights_name, pretrained, progress, **kwargs)
