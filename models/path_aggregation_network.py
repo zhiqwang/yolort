@@ -4,7 +4,7 @@ from torch import nn, Tensor
 
 from .common import Conv, BottleneckCSP
 
-from typing import List, Dict
+from typing import Callable, List, Dict, Optional
 
 
 class PathAggregationNetwork(nn.Module):
@@ -43,15 +43,19 @@ class PathAggregationNetwork(nn.Module):
     def __init__(
         self,
         in_channels_list: List[int],
+        block: Optional[Callable[..., nn.Module]] = None,
     ):
         super().__init__()
-        assert len(in_channels_list) == 3, "current only support length 3."
+        assert len(in_channels_list) == 3, "currently only support length 3."
+
+        if block is None:
+            block = BottleneckCSP
 
         inner_blocks = [
-            BottleneckCSP(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
+            block(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
             Conv(in_channels_list[2], in_channels_list[1], 1, 1),
             nn.Upsample(scale_factor=2),
-            BottleneckCSP(in_channels_list[2], in_channels_list[1], n=1, shortcut=False),
+            block(in_channels_list[2], in_channels_list[1], n=1, shortcut=False),
             Conv(in_channels_list[1], in_channels_list[0], 1, 1),
             nn.Upsample(scale_factor=2),
         ]
@@ -59,11 +63,11 @@ class PathAggregationNetwork(nn.Module):
         self.inner_blocks = nn.ModuleList(inner_blocks)
 
         layer_blocks = [
-            BottleneckCSP(in_channels_list[1], in_channels_list[0], n=1, shortcut=False),
+            block(in_channels_list[1], in_channels_list[0], n=1, shortcut=False),
             Conv(in_channels_list[0], in_channels_list[0], 3, 2),
-            BottleneckCSP(in_channels_list[1], in_channels_list[1], n=1, shortcut=False),
+            block(in_channels_list[1], in_channels_list[1], n=1, shortcut=False),
             Conv(in_channels_list[1], in_channels_list[1], 3, 2),
-            BottleneckCSP(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
+            block(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
 
@@ -81,8 +85,8 @@ class PathAggregationNetwork(nn.Module):
         # unpack OrderedDict into two lists for easier handling
         x = list(x.values())
 
+        # Descending the feature pyramid
         inners = []
-
         last_inner = self.inner_blocks[0](x[2])
         last_inner = self.inner_blocks[1](last_inner)
         inners.append(last_inner)
@@ -95,16 +99,15 @@ class PathAggregationNetwork(nn.Module):
         last_inner = torch.cat([last_inner, x[0]], dim=1)
         inners.insert(0, last_inner)
 
+        # Ascending the feature pyramid
         results = []
         last_inner = self.layer_blocks[0](inners[0])
         results.append(last_inner)
-        last_inner = self.layer_blocks[1](last_inner)
-        last_inner = torch.cat([last_inner, inners[1]], dim=1)
-        last_inner = self.layer_blocks[2](last_inner)
-        results.append(last_inner)
-        last_inner = self.layer_blocks[3](last_inner)
-        last_inner = torch.cat([last_inner, inners[2]], dim=1)
-        last_inner = self.layer_blocks[4](last_inner)
-        results.append(last_inner)
+
+        for idx in range(len(inners) - 1):
+            last_inner = self.layer_blocks[2 * idx + 1](last_inner)
+            last_inner = torch.cat([last_inner, inners[idx + 1]], dim=1)
+            last_inner = self.layer_blocks[2 * idx + 2](last_inner)
+            results.append(last_inner)
 
         return results
