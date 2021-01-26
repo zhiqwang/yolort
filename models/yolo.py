@@ -123,7 +123,7 @@ class YOLO(nn.Module):
 
 
 model_urls = {
-    'yolov5_darknet_pan_s_v31_coco': 'https://waiting.for/upload/yolov5s_v3.1-8521683e.pt',
+    'yolov5_darknet_pan_s_v31_coco': 'https://waiting.for/upload/yolov5_darknet_pan_v31-6baf0e51.pt',
     'yolov5_darknet_pan_m_v31_coco': None,
     'yolov5_darknet_pan_l_v31_coco': None,
     'yolov5_darknet_pan_s_v40_coco': None,

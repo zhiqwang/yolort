@@ -71,6 +71,15 @@ class PathAggregationNetwork(nn.Module):
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
 
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                m.eps = 1e-3
+                m.momentum = 0.03
+            elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
+                m.inplace = True
+
     def forward(self, x: Dict[str, Tensor]) -> List[Tensor]:
         """
         Computes the PAN for a set of feature maps.
