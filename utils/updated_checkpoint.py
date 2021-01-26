@@ -2,7 +2,7 @@
 import argparse
 import torch
 
-from hubconf import yolov5s
+from models.yolo import yolov5
 
 
 def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):
@@ -16,12 +16,32 @@ def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):
     """
     state_dict = torch.load(checkpoint_path_ultralytics, map_location="cpu")
 
-    # Update body features
+    # Update backbone features
     for name, params in model.backbone.body.named_parameters(prefix='model'):
         params.data.copy_(state_dict[name])
 
     for name, buffers in model.backbone.body.named_buffers(prefix='model'):
         buffers.copy_(state_dict[name])
+
+    inner_block_maps = {'0': '9', '1': '10', '3': '13', '4': '14'}
+    layer_block_maps = {'0': '17', '1': '18', '2': '20', '3': '21', '4': '23'}
+
+    # Update PAN features
+    for name, params in model.backbone.pan.inner_blocks.named_parameters():
+        state_key = name.split('.')
+        params.data.copy_(state_dict[f"model.{'.'.join([inner_block_maps[state_key[0]]] + state_key[1:])}"])
+
+    for name, buffers in model.backbone.pan.inner_blocks.named_buffers():
+        state_key = name.split('.')
+        buffers.copy_(state_dict[f"model.{'.'.join([inner_block_maps[state_key[0]]] + state_key[1:])}"])
+
+    for name, params in model.backbone.pan.layer_blocks.named_parameters():
+        state_key = name.split('.')
+        params.data.copy_(state_dict[f"model.{'.'.join([layer_block_maps[state_key[0]]] + state_key[1:])}"])
+
+    for name, buffers in model.backbone.pan.layer_blocks.named_buffers():
+        state_key = name.split('.')
+        buffers.copy_(state_dict[f"model.{'.'.join([layer_block_maps[state_key[0]]] + state_key[1:])}"])
 
     # Update box heads
     for name, params in model.head.named_parameters(prefix='model.24'):
@@ -34,9 +54,9 @@ def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):
 
 
 def main(args):
-    model = yolov5s()
+    model = yolov5("darknet3_1", pretrained=False, score_thresh=0.25)
     model = update_ultralytics_checkpoints(model, args.checkpoint_path_ultralytics)
-
+    # model = model
     torch.save(model.state_dict(), args.checkpoint_path_rt_stack)
 
 
