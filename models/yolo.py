@@ -127,11 +127,11 @@ model_urls_root = 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download
 
 model_urls = {
     'yolov5_darknet_pan_s_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r31_coco-eb728698.pt',
-    'yolov5_darknet_pan_m_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r31_coco-cde0d6eb.pt',
-    'yolov5_darknet_pan_l_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r31_coco-.pt',
-    'yolov5_darknet_pan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r40_coco-.pt',
-    'yolov5_darknet_pan_m_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r40_coco-.pt',
-    'yolov5_darknet_pan_l_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r40_coco-.pt',
+    'yolov5_darknet_pan_m_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r31_coco-670dc553.pt',
+    'yolov5_darknet_pan_l_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt',
+    'yolov5_darknet_pan_s_r40_coco': None,
+    'yolov5_darknet_pan_m_r40_coco': None,
+    'yolov5_darknet_pan_l_r40_coco': None,
 }
 
 
