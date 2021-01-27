@@ -14,7 +14,8 @@ from .transform import WrappedModel
 
 from typing import Tuple, Any, List, Dict, Optional
 
-__all__ = ['yolov5_darknet_pan_s_v31']
+__all__ = ['yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
+           'yolov5_darknet_pan_s_r40', 'yolov5_darknet_pan_m_r40', 'yolov5_darknet_pan_l_r40']
 
 
 class YOLO(nn.Module):
@@ -122,13 +123,15 @@ class YOLO(nn.Module):
             return self.eager_outputs(losses, detections)
 
 
+model_urls_root = 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0'
+
 model_urls = {
-    'yolov5_darknet_pan_s_v31_coco': 'https://waiting.for/upload/yolov5_darknet_pan_v31-6baf0e51.pt',
-    'yolov5_darknet_pan_m_v31_coco': None,
-    'yolov5_darknet_pan_l_v31_coco': None,
-    'yolov5_darknet_pan_s_v40_coco': None,
-    'yolov5_darknet_pan_m_v40_coco': None,
-    'yolov5_darknet_pan_l_v40_coco': None,
+    'yolov5_darknet_pan_s_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r31_coco-eb728698.pt',
+    'yolov5_darknet_pan_m_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r31_coco-.pt',
+    'yolov5_darknet_pan_l_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r31_coco-.pt',
+    'yolov5_darknet_pan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r40_coco-.pt',
+    'yolov5_darknet_pan_m_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r40_coco-.pt',
+    'yolov5_darknet_pan_l_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r40_coco-.pt',
 }
 
 
@@ -211,12 +214,67 @@ def _yolo(**kwargs: Any) -> WrappedModel:
     return model
 
 
-def yolov5_darknet_pan_s_v31(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
+def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
     r"""yolov5s release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    weights_name = 'yolov5_darknet_pan_s_v31_coco'
-    return _yolov5_darknet_pan('darknet3_1', weights_name, pretrained, progress, **kwargs)
+    weights_name = 'yolov5_darknet_pan_s_r31_coco'
+    return _yolov5_darknet_pan('darknet_s_r3_1', weights_name, pretrained, progress, **kwargs)
+
+
+def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
+    r"""yolov5s release 3.1 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    weights_name = 'yolov5_darknet_pan_m_r31_coco'
+    return _yolov5_darknet_pan('darknet_m_r3_1', weights_name, pretrained, progress, **kwargs)
+
+
+def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
+    r"""yolov5s release 3.1 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    weights_name = 'yolov5_darknet_pan_l_r31_coco'
+    return _yolov5_darknet_pan('darknet_l_r3_1', weights_name, pretrained, progress, **kwargs)
+
+
+def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
+    r"""yolov5s release 4.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    weights_name = 'yolov5_darknet_pan_s_r40_coco'
+    return _yolov5_darknet_pan('darknet_s_r4_0', weights_name, pretrained, progress, **kwargs)
+
+
+def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
+    r"""yolov5s release 4.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    weights_name = 'yolov5_darknet_pan_m_r40_coco'
+    return _yolov5_darknet_pan('darknet_m_r4_0', weights_name, pretrained, progress, **kwargs)
+
+
+def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> WrappedModel:
+    r"""yolov5s release 4.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    weights_name = 'yolov5_darknet_pan_l_r40_coco'
+    return _yolov5_darknet_pan('darknet_l_r4_0', weights_name, pretrained, progress, **kwargs)

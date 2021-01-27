@@ -46,19 +46,17 @@ def darknet_pan_backbone(
 
     Examples::
 
-        >>> from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
-        >>> backbone = resnet_fpn_backbone('resnet50', pretrained=True, trainable_layers=3)
+        >>> from models.backbone_utils import darknet_pan_backbone
+        >>> backbone = darknet_pan_backbone('darknet3_1', pretrained=True, trainable_layers=3)
         >>> # get some dummy image
-        >>> x = torch.rand(1,3,64,64)
+        >>> x = torch.rand(1, 3, 64, 64)
         >>> # compute the output
         >>> output = backbone(x)
         >>> print([(k, v.shape) for k, v in output.items()])
         >>> # returns
-        >>>   [('0', torch.Size([1, 256, 16, 16])),
-        >>>    ('1', torch.Size([1, 256, 8, 8])),
-        >>>    ('2', torch.Size([1, 256, 4, 4])),
-        >>>    ('3', torch.Size([1, 256, 2, 2])),
-        >>>    ('pool', torch.Size([1, 256, 1, 1]))]
+        >>>   [('0', torch.Size([1, 128, 8, 8])),
+        >>>    ('1', torch.Size([1, 256, 4, 4])),
+        >>>    ('2', torch.Size([1, 512, 2, 2]))]
 
     Args:
         backbone_name (string): resnet architecture. Possible values are 'ResNet', 'resnet18', 'resnet34', 'resnet50',
