@@ -23,11 +23,11 @@ class BackboneWithPAN(nn.Module):
     Attributes:
         out_channels (int): the number of channels in the PAN
     """
-    def __init__(self, backbone, return_layers, in_channels_list):
+    def __init__(self, backbone, return_layers, in_channels_list, depth_multiple):
         super().__init__()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
-        self.pan = PathAggregationNetwork(in_channels_list=in_channels_list)
+        self.pan = PathAggregationNetwork(in_channels_list, depth_multiple)
         self.out_channels = in_channels_list
 
     def forward(self, x):
@@ -38,6 +38,7 @@ class BackboneWithPAN(nn.Module):
 
 def darknet_pan_backbone(
     backbone_name: str,
+    depth_multiple: float,
     width_multiple: float,
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
@@ -77,4 +78,4 @@ def darknet_pan_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithPAN(backbone, return_layers, in_channels_list)
+    return BackboneWithPAN(backbone, return_layers, in_channels_list, depth_multiple)

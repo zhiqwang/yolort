@@ -43,6 +43,7 @@ class PathAggregationNetwork(nn.Module):
     def __init__(
         self,
         in_channels_list: List[int],
+        depth_multiple: float,
         block: Optional[Callable[..., nn.Module]] = None,
     ):
         super().__init__()
@@ -51,11 +52,13 @@ class PathAggregationNetwork(nn.Module):
         if block is None:
             block = BottleneckCSP
 
+        depth_gain = max(round(3 * depth_multiple), 1)
+
         inner_blocks = [
-            block(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
+            block(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
             Conv(in_channels_list[2], in_channels_list[1], 1, 1),
             nn.Upsample(scale_factor=2),
-            block(in_channels_list[2], in_channels_list[1], n=1, shortcut=False),
+            block(in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False),
             Conv(in_channels_list[1], in_channels_list[0], 1, 1),
             nn.Upsample(scale_factor=2),
         ]
@@ -63,11 +66,11 @@ class PathAggregationNetwork(nn.Module):
         self.inner_blocks = nn.ModuleList(inner_blocks)
 
         layer_blocks = [
-            block(in_channels_list[1], in_channels_list[0], n=1, shortcut=False),
+            block(in_channels_list[1], in_channels_list[0], n=depth_gain, shortcut=False),
             Conv(in_channels_list[0], in_channels_list[0], 3, 2),
-            block(in_channels_list[1], in_channels_list[1], n=1, shortcut=False),
+            block(in_channels_list[1], in_channels_list[1], n=depth_gain, shortcut=False),
             Conv(in_channels_list[1], in_channels_list[1], 3, 2),
-            block(in_channels_list[2], in_channels_list[2], n=1, shortcut=False),
+            block(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
 

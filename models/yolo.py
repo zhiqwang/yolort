@@ -138,6 +138,7 @@ model_urls = {
 def _yolov5_darknet_pan(
     backbone_name: str,
     weights_name: str,
+    depth_multiple: float,
     width_multiple: float,
     pretrained: bool = False,
     progress: bool = True,
@@ -180,7 +181,7 @@ def _yolov5_darknet_pan(
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone = darknet_pan_backbone(backbone_name, width_multiple)
+    backbone = darknet_pan_backbone(backbone_name, depth_multiple, width_multiple)
 
     anchor_grids = [[10, 13, 16, 30, 33, 23],
                     [30, 61, 62, 45, 59, 119],
@@ -226,7 +227,8 @@ def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, nu
     backbone_name = 'darknet_s_r3_1'
     weights_name = 'yolov5_darknet_pan_s_r31_coco'
     width_multiple = 0.5
-    return _yolov5_darknet_pan(backbone_name, weights_name, width_multiple,
+    depth_multiple = 0.33
+    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
@@ -241,7 +243,8 @@ def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, nu
     backbone_name = 'darknet_m_r3_1'
     weights_name = 'yolov5_darknet_pan_m_r31_coco'
     width_multiple = 0.75
-    return _yolov5_darknet_pan(backbone_name, weights_name, width_multiple,
+    depth_multiple = 0.67
+    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
@@ -256,7 +259,8 @@ def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, nu
     backbone_name = 'darknet_l_r3_1'
     weights_name = 'yolov5_darknet_pan_l_r31_coco'
     width_multiple = 1.0
-    return _yolov5_darknet_pan(backbone_name, weights_name, width_multiple,
+    depth_multiple = 1.0
+    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
@@ -271,7 +275,8 @@ def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, nu
     backbone_name = 'darknet_s_r4_0'
     weights_name = 'yolov5_darknet_pan_s_r40_coco'
     width_multiple = 0.5
-    return _yolov5_darknet_pan(backbone_name, weights_name, width_multiple,
+    depth_multiple = 0.33
+    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
@@ -286,7 +291,8 @@ def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, nu
     backbone_name = 'darknet_m_r4_0'
     weights_name = 'yolov5_darknet_pan_m_r40_coco'
     width_multiple = 0.75
-    return _yolov5_darknet_pan(backbone_name, weights_name, width_multiple,
+    depth_multiple = 0.67
+    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
@@ -301,5 +307,6 @@ def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, nu
     backbone_name = 'darknet_l_r4_0'
     weights_name = 'yolov5_darknet_pan_l_r40_coco'
     width_multiple = 1.0
-    return _yolov5_darknet_pan(backbone_name, weights_name, width_multiple,
+    depth_multiple = 1.0
+    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
