@@ -197,7 +197,7 @@ def _yolov5_darknet_pan(
     return model
 
 
-def _yolo(**kwargs: Any) -> WrappedModel:
+def _yolov5_wrapped(model) -> WrappedModel:
     """
     Constructs a YOLO model.
 
@@ -211,7 +211,6 @@ def _yolo(**kwargs: Any) -> WrappedModel:
         >>> x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
         >>> predictions = model(x)
     """
-    model = _yolov5_darknet_pan(**kwargs)
     model = WrappedModel(model)
     return model
 
@@ -228,8 +227,9 @@ def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_s_r31_coco'
     width_multiple = 0.5
     depth_multiple = 0.33
-    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    model = _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
+                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    return _yolov5_wrapped(model)
 
 
 def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
@@ -244,8 +244,9 @@ def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_m_r31_coco'
     width_multiple = 0.75
     depth_multiple = 0.67
-    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    model = _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
+                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    return _yolov5_wrapped(model)
 
 
 def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
@@ -260,8 +261,9 @@ def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_l_r31_coco'
     width_multiple = 1.0
     depth_multiple = 1.0
-    return _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    model = _yolov5_darknet_pan(backbone_name, weights_name, depth_multiple, width_multiple,
+                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    return _yolov5_wrapped(model)
 
 
 def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,

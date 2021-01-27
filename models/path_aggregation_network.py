@@ -83,6 +83,38 @@ class PathAggregationNetwork(nn.Module):
             elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
                 m.inplace = True
 
+    def get_result_from_inner_blocks(self, x: Tensor, idx: int) -> Tensor:
+        """
+        This is equivalent to self.inner_blocks[idx](x),
+        but torchscript doesn't support this yet
+        """
+        num_blocks = len(self.inner_blocks)
+        if idx < 0:
+            idx += num_blocks
+        i = 0
+        out = x
+        for module in self.inner_blocks:
+            if i == idx:
+                out = module(x)
+            i += 1
+        return out
+
+    def get_result_from_layer_blocks(self, x: Tensor, idx: int) -> Tensor:
+        """
+        This is equivalent to self.layer_blocks[idx](x),
+        but torchscript doesn't support this yet
+        """
+        num_blocks = len(self.layer_blocks)
+        if idx < 0:
+            idx += num_blocks
+        i = 0
+        out = x
+        for module in self.layer_blocks:
+            if i == idx:
+                out = module(x)
+            i += 1
+        return out
+
     def forward(self, x: Dict[str, Tensor]) -> List[Tensor]:
         """
         Computes the PAN for a set of feature maps.
@@ -99,27 +131,27 @@ class PathAggregationNetwork(nn.Module):
 
         # Descending the feature pyramid
         inners = []
-        last_inner = self.inner_blocks[0](x[2])
-        last_inner = self.inner_blocks[1](last_inner)
+        last_inner = self.get_result_from_inner_blocks(x[2], 0)
+        last_inner = self.get_result_from_inner_blocks(last_inner, 1)
         inners.append(last_inner)
-        last_inner = self.inner_blocks[2](last_inner)
+        last_inner = self.get_result_from_inner_blocks(last_inner, 2)
         last_inner = torch.cat([last_inner, x[1]], dim=1)
-        last_inner = self.inner_blocks[3](last_inner)
-        last_inner = self.inner_blocks[4](last_inner)
+        last_inner = self.get_result_from_inner_blocks(last_inner, 3)
+        last_inner = self.get_result_from_inner_blocks(last_inner, 4)
         inners.insert(0, last_inner)
-        last_inner = self.inner_blocks[5](last_inner)
+        last_inner = self.get_result_from_inner_blocks(last_inner, 5)
         last_inner = torch.cat([last_inner, x[0]], dim=1)
         inners.insert(0, last_inner)
 
         # Ascending the feature pyramid
         results = []
-        last_inner = self.layer_blocks[0](inners[0])
+        last_inner = self.get_result_from_layer_blocks(inners[0], 0)
         results.append(last_inner)
 
         for idx in range(len(inners) - 1):
-            last_inner = self.layer_blocks[2 * idx + 1](last_inner)
+            last_inner = self.get_result_from_layer_blocks(last_inner, 2 * idx + 1)
             last_inner = torch.cat([last_inner, inners[idx + 1]], dim=1)
-            last_inner = self.layer_blocks[2 * idx + 2](last_inner)
+            last_inner = self.get_result_from_layer_blocks(last_inner, 2 * idx + 2)
             results.append(last_inner)
 
         return results
