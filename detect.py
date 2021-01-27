@@ -1,24 +1,13 @@
 import time
 from pathlib import Path
 
-import numpy as np
 from numpy import random
 
 import cv2
 import torch
 
-from torchvision.ops import box_convert
-
-from utils.image_utils import plot_one_box, read_image
-from hubconf import yolov5s
-
-
-def load_names(category_path):
-    names = []
-    with open(category_path, 'r') as f:
-        for line in f:
-            names.append(line.strip())
-    return names
+from utils.image_utils import read_image, load_names, overlay_boxes
+from hubconf import yolov5_darknet_pan_s_v31
 
 
 @torch.no_grad()
@@ -34,57 +23,11 @@ def inference(model, img_name, device, is_half=False):
     return detections, time_consume
 
 
-@torch.no_grad()
-def overlay_boxes(detections, path, time_consume, args):
-    img = cv2.imread(path) if args.save_img else None
-
-    for i, pred in enumerate(detections):  # detections per image
-        det_logs = ''
-        save_path = Path(args.output_dir).joinpath(Path(path).name)
-        txt_path = Path(args.output_dir).joinpath(Path(path).stem)
-
-        if pred is not None and len(pred) > 0:
-            # Rescale boxes from img_size to im0 size
-            boxes, scores, labels = pred['boxes'].round(), pred['scores'], pred['labels']
-
-            # Print results
-            for c in labels.unique():
-                n = (labels == c).sum()  # detections per class
-                det_logs += '%g %ss, ' % (n, args.names[int(c)])  # add to string
-
-            # Write results
-            for xyxy, conf, cls_name in zip(boxes, scores, labels):
-                if args.save_txt:  # Write to file
-                    # normalized cxcywh
-                    cxcywh = box_convert(xyxy, in_fmt="xyxy", out_fmt="cxcywh").tolist()
-                    with open(f'{txt_path}.txt', 'a') as f:
-                        f.write(('%g ' * 5 + '\n') % (cls_name, *cxcywh))  # label format
-
-                if args.save_img:  # Add bbox to image
-                    label = '%s %.2f' % (args.names[int(cls_name)], conf)
-                    plot_one_box(
-                        xyxy,
-                        img,
-                        label=label,
-                        color=args.colors[int(cls_name) % len(args.colors)],
-                        line_thickness=3,
-                    )
-
-        # Print inference time
-        print('%sDone. (%.3fs)' % (det_logs, time_consume))
-
-        # Save results (image with detections)
-        if args.save_img:
-            cv2.imwrite(str(save_path), img)
-
-    return (boxes.tolist(), scores.tolist(), labels.tolist())
-
-
 def main(args):
     print(args)
     device = torch.device("cuda") if torch.cuda.is_available() and args.gpu else torch.device("cpu")
 
-    model = yolov5s(
+    model = yolov5_darknet_pan_s_v31(
         pretrained=True,
         min_size=args.min_size,
         max_size=args.max_size,
