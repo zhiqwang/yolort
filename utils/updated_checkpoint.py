@@ -2,7 +2,7 @@
 import argparse
 import torch
 
-from models import yolov5_darknet_pan_s_v31
+from models import yolov5m
 
 
 def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):
@@ -54,7 +54,7 @@ def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):
 
 
 def main(args):
-    model = yolov5_darknet_pan_s_v31(pretrained=False, score_thresh=0.25)
+    model = yolov5m(pretrained=False, score_thresh=0.25)
     model = update_ultralytics_checkpoints(model, args.checkpoint_path_ultralytics)
     model = model.half()
     torch.save(model.state_dict(), args.checkpoint_path_rt_stack)

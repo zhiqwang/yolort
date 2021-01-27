@@ -38,6 +38,7 @@ class BackboneWithPAN(nn.Module):
 
 def darknet_pan_backbone(
     backbone_name: str,
+    width_multiple: float,
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
 ):
@@ -74,6 +75,6 @@ def darknet_pan_backbone(
 
     return_layers = {str(k): str(i) for i, k in enumerate(returned_layers)}
 
-    in_channels_list = [128, 256, 512]
+    in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
     return BackboneWithPAN(backbone, return_layers, in_channels_list)
