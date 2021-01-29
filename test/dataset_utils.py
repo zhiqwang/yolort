@@ -4,7 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from torchvision import ops
 
-from utils.misc import collate_fn
+from datasets import collate_fn
 
 __all__ = ["create_loaders", "DummyDetectionDataset"]
 
