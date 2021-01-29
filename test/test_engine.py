@@ -43,7 +43,7 @@ class EngineTester(unittest.TestCase):
         data_loader_val = create_loaders(datasets)
 
         # Trainer
-        trainer = pl.Trainer(max_epochs=1, gpus=1)
+        trainer = pl.Trainer(max_epochs=1)
         trainer.fit(model, data_loader_train, data_loader_val)
 
     def test_inference(self):
