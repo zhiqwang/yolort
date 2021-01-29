@@ -10,7 +10,6 @@ from torchvision.models.utils import load_state_dict_from_url
 from .backbone_utils import darknet_pan_backbone
 from .anchor_utils import AnchorGenerator
 from .box_head import YoloHead, SetCriterion, PostProcess
-from .transform import WrappedModel
 
 from typing import Tuple, Any, List, Dict, Optional
 
@@ -197,26 +196,8 @@ def _yolov5_darknet_pan(
     return model
 
 
-def _yolov5_wrapped(model) -> WrappedModel:
-    """
-    Constructs a YOLO model.
-
-    The input to the model is expected to be a list of tensors, each of shape ``[C, H, W]``, one for each
-    image, and should be in ``0-1`` range. Different images can have different sizes.
-
-    Example::
-
-        >>> model = yolov5(pretrained=True)
-        >>> model.eval()
-        >>> x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
-        >>> predictions = model(x)
-    """
-    model = WrappedModel(model)
-    return model
-
-
 def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> WrappedModel:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 small release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -227,13 +208,12 @@ def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_s_r31_coco'
     depth_multiple = 0.33
     width_multiple = 0.5
-    model = _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
-    return _yolov5_wrapped(model)
+    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
 def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> WrappedModel:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 medium release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -244,13 +224,12 @@ def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_m_r31_coco'
     depth_multiple = 0.67
     width_multiple = 0.75
-    model = _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
-    return _yolov5_wrapped(model)
+    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
 def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> WrappedModel:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 large release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -261,13 +240,12 @@ def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_l_r31_coco'
     depth_multiple = 1.0
     width_multiple = 1.0
-    model = _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
-    return _yolov5_wrapped(model)
+    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
 def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> WrappedModel:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 small release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -283,7 +261,7 @@ def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, nu
 
 
 def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> WrappedModel:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 medium release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -299,7 +277,7 @@ def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, nu
 
 
 def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> WrappedModel:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 large release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:

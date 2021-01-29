@@ -40,6 +40,7 @@ jobs:
           pip install pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install opencv-python
+          pip install pycocotools>=2.0.2
       - name: Install PyTorch ${{ matrix.torch }} Version
         run: |
           pip install ${{ matrix.pip_address }}

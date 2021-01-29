@@ -1,10 +1,12 @@
 import unittest
 import torch
+import pytorch_lightning as pl
+
+from .torch_utils import image_preprocess
+from .dataset_utils import create_loaders, DummyDetectionDataset
+from models import YOLOLitWrapper
 
 from typing import Dict
-
-from models import yolov5s
-from .torch_utils import image_preprocess
 
 
 class EngineTester(unittest.TestCase):
@@ -22,7 +24,7 @@ class EngineTester(unittest.TestCase):
                                 [0, 3, 0.1720, 0.5403, 0.1960, 0.1409],
                                 [0, 4, 0.2240, 0.4547, 0.1520, 0.0705]], dtype=torch.float)
 
-        model = yolov5s(num_classes=12)
+        model = YOLOLitWrapper(num_classes=12)
         model.train()
         out = model(images, targets)
         self.assertIsInstance(out, Dict)
@@ -30,13 +32,27 @@ class EngineTester(unittest.TestCase):
         self.assertIsInstance(out["bbox_regression"], torch.Tensor)
         self.assertIsInstance(out["objectness"], torch.Tensor)
 
+    def test_train_one_step(self):
+        # Load model
+        model = YOLOLitWrapper()
+        model.train()
+
+        # Datasets
+        datasets = DummyDetectionDataset(num_samples=200)
+        data_loader_train = create_loaders(datasets)
+        data_loader_val = create_loaders(datasets)
+
+        # Trainer
+        trainer = pl.Trainer(max_epochs=1)
+        trainer.fit(model, data_loader_train, data_loader_val)
+
     def test_inference(self):
         # Infer over an image
         img_name = "test/assets/zidane.jpg"
         img_input = image_preprocess(img_name)
         self.assertEqual(img_input.ndim, 3)
 
-        model = yolov5s(pretrained=True)
+        model = YOLOLitWrapper(pretrained=True)
         model.eval()
 
         out = model([img_input])

@@ -1,13 +1,24 @@
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 from torch import nn
 from .common import Conv
 from utils.activations import Hardswish
 
-from .yolo import (yolov5_darknet_pan_s_r31 as yolov5s,
-                   yolov5_darknet_pan_m_r31 as yolov5m,
-                   yolov5_darknet_pan_l_r31 as yolov5l,
-                   yolov5_darknet_pan_s_r40,
-                   yolov5_darknet_pan_m_r40,
-                   yolov5_darknet_pan_l_r40)
+from .lightning_wrapper import YOLOLitWrapper
+
+
+def yolov5s(**kwargs):
+    model = YOLOLitWrapper(arch="yolov5_darknet_pan_s_r31", **kwargs)
+    return model
+
+
+def yolov5m(**kwargs):
+    model = YOLOLitWrapper(arch="yolov5_darknet_pan_m_r31", **kwargs)
+    return model
+
+
+def yolov5l(**kwargs):
+    model = YOLOLitWrapper(arch="yolov5_darknet_pan_l_r31", **kwargs)
+    return model
 
 
 def yolov5_onnx(pretrained=False, progress=True, num_classes=80, **kwargs):
