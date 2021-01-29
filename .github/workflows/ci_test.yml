@@ -38,6 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest
           pip install pytest-cov
+          pip install pycocotools>=2.0.2
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install opencv-python
       - name: Install PyTorch ${{ matrix.torch }} Version
