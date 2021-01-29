@@ -2,6 +2,8 @@
 import torch.utils.data
 import torchvision
 
+from models.transform import nested_tensor_from_tensor_list
+
 from .coco import build as build_coco
 from .voc import build as build_voc
 
@@ -14,6 +16,24 @@ def get_coco_api_from_dataset(dataset):
             dataset = dataset.dataset
     if isinstance(dataset, torchvision.datasets.CocoDetection):
         return dataset.coco
+
+
+
+def collate_fn(batch):
+    batch = list(zip(*batch))
+    samples = nested_tensor_from_tensor_list(batch[0])
+
+    targets = []
+    for i, target in enumerate(batch[1]):
+        num_objects = len(target['labels'])
+        if num_objects > 0:
+            targets_merged = torch.full((num_objects, 6), i, dtype=torch.float32)
+            targets_merged[:, 1] = target['labels']
+            targets_merged[:, 2:] = target['boxes']
+            targets.append(targets_merged)
+    targets = torch.cat(targets, dim=0)
+
+    return samples, targets
 
 
 def build_dataset(image_set, dataset_year, args):

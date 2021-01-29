@@ -7,17 +7,17 @@ from .lightning_wrapper import YOLOLitWrapper
 
 
 def yolov5s(**kwargs):
-    model = YOLOLitWrapper("yolov5_darknet_pan_s_r31", **kwargs)
+    model = YOLOLitWrapper(arch="yolov5_darknet_pan_s_r31", **kwargs)
     return model
 
 
 def yolov5m(**kwargs):
-    model = YOLOLitWrapper("yolov5_darknet_pan_m_r31", **kwargs)
+    model = YOLOLitWrapper(arch="yolov5_darknet_pan_m_r31", **kwargs)
     return model
 
 
 def yolov5l(**kwargs):
-    model = YOLOLitWrapper("yolov5_darknet_pan_l_r31", **kwargs)
+    model = YOLOLitWrapper(arch="yolov5_darknet_pan_l_r31", **kwargs)
     return model
 
 
