@@ -84,13 +84,3 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
     tensor = torch.stack(padded_imgs)
 
     return NestedTensor(tensor)
-
-
-class WrappedModel(nn.Module):
-    def __init__(self, model):
-        super().__init__()
-        self.model = model
-
-    def forward(self, inputs: List[Tensor], targets: Optional[Tensor] = None,):
-        sample = nested_tensor_from_tensor_list(inputs)
-        return self.model(sample.tensors, targets=targets)

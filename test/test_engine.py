@@ -3,7 +3,7 @@ import torch
 
 from typing import Dict
 
-from models import yolov5s
+from hubconf import yolov5s
 from .torch_utils import image_preprocess
 
 
