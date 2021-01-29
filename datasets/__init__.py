@@ -18,7 +18,6 @@ def get_coco_api_from_dataset(dataset):
         return dataset.coco
 
 
-
 def collate_fn(batch):
     batch = list(zip(*batch))
     samples = nested_tensor_from_tensor_list(batch[0])

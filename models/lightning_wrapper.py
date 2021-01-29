@@ -47,10 +47,10 @@ class YOLOLitWrapper(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
 
-        images, targets = batch
+        samples, targets = batch
 
         # yolov5 takes both images and targets for training, returns
-        loss_dict = self.model(images, targets)
+        loss_dict = self.model(samples.tensors, targets)
         loss = sum(loss for loss in loss_dict.values())
         return {"loss": loss, "log": loss_dict}
 
