@@ -1,7 +1,8 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from torch import nn, Tensor
-
 from torchvision.models.utils import load_state_dict_from_url
+
+import pytorch_lightning as pl
 
 from . import yolo
 from .transform import nested_tensor_from_tensor_list
@@ -9,17 +10,17 @@ from .transform import nested_tensor_from_tensor_list
 from typing import Tuple, Any, List, Dict, Optional
 
 
-class YOLOLitWrapper(nn.Module):
+class YOLOLitWrapper(pl.LightningModule):
     """
     PyTorch Lightning implementation of `YOLO`
     """
     def __init__(
         self,
         arch: str = 'yolov5_darknet_pan_s_r31',
-        learning_rate: float = 0.001,
         pretrained: bool = False,
         progress: bool = True,
         num_classes: int = 80,
+        learning_rate: float = 0.001,
         **kwargs: Any,
     ):
         """
@@ -34,6 +35,6 @@ class YOLOLitWrapper(nn.Module):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-    def forward(self, inputs: List[Tensor], targets: Optional[Tensor] = None,):
+    def forward(self, inputs: List[Tensor], targets: Optional[Tensor] = None):
         sample = nested_tensor_from_tensor_list(inputs)
         return self.model(sample.tensors, targets=targets)
