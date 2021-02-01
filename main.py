@@ -1,11 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 # Modified by Zhiqiang Wang (zhiqwang@foxmail.com)
-
 import argparse
 from pathlib import Path
-
-import torch
-from torch.utils.data import DataLoader, DistributedSampler
 
 import pytorch_lightning as pl
 
@@ -42,8 +38,6 @@ def get_args_parser():
 
 
 def main(args):
-    print('Creating model, always set args.return_criterion be True')
-    args.return_criterion = True
 
     # Load model
     model = YOLOLitWrapper()
