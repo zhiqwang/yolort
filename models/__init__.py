@@ -1,9 +1,9 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from torch import nn
 from .common import Conv
 from utils.activations import Hardswish
 
-from .lightning_wrapper import YOLOLitWrapper
+from .pl_wrapper import YOLOLitWrapper
 
 
 def yolov5s(**kwargs):
