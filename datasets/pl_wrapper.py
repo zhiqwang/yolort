@@ -11,7 +11,7 @@ from .voc import build as build_voc
 from typing import List, Any
 
 
-def _collate_fn(batch):
+def collate_fn(batch):
     batch = list(zip(*batch))
     samples = nested_tensor_from_tensor_list(batch[0])
 
@@ -84,7 +84,7 @@ class DetectionDataModule(LightningDataModule):
         loader = DataLoader(
             dataset,
             batch_sampler=batch_sampler,
-            collate_fn=_collate_fn,
+            collate_fn=collate_fn,
             num_workers=self.num_workers,
         )
 
@@ -107,7 +107,7 @@ class DetectionDataModule(LightningDataModule):
             batch_size,
             sampler=sampler,
             drop_last=False,
-            collate_fn=_collate_fn,
+            collate_fn=collate_fn,
             num_workers=self.num_workers,
         )
 

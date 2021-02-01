@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 
-from datasets.pl_wrapper import DetectionDataModule
+from datasets import DetectionDataModule
 from models import YOLOLitWrapper
 
 
