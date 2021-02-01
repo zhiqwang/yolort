@@ -72,10 +72,10 @@ class VOCDetection(torchvision.datasets.VOCDetection):
         return img, target
 
 
-def build(image_set, year, args):
+def build(data_path, image_set, year):
 
     dataset = VOCDetection(
-        img_folder=args.data_path,
+        img_folder=data_path,
         year=year,
         image_set=image_set,
         transforms=make_transforms(image_set=image_set),

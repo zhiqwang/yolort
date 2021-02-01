@@ -82,7 +82,7 @@ class ConvertCocoPolysToMask(object):
 
 
 class CocoDetection(torchvision.datasets.CocoDetection):
-    def __init__(self, img_folder, ann_file, transforms, return_masks):
+    def __init__(self, img_folder, ann_file, transforms, return_masks=False):
         super().__init__(img_folder, ann_file)
         self._transforms = transforms
 
@@ -158,19 +158,17 @@ def _coco_remove_images_without_annotations(dataset, cat_list=None):
     return dataset
 
 
-def build(image_set, year, args):
-    root = Path(args.data_path)
+def build(data_path, image_set, year):
+    root = Path(data_path)
     assert root.exists(), f'provided COCO path {root} does not exist'
-    mode = args.dataset_mode
 
     img_folder = Path(root)
-    ann_file = img_folder.joinpath("annotations").joinpath(f"{mode}_{image_set}{year}.json")
+    ann_file = img_folder.joinpath("annotations").joinpath(f"instances_{image_set}{year}.json")
 
     dataset = CocoDetection(
         img_folder,
         ann_file,
         transforms=make_transforms(image_set=image_set),
-        return_masks=args.masks,
     )
 
     if image_set == 'train':
