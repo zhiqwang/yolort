@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 from . import yolo
 from .transform import nested_tensor_from_tensor_list
 
-from typing import Tuple, Any, List, Dict, Optional
+from typing import Any, List, Optional
 
 
 class YOLOLitWrapper(pl.LightningModule):
