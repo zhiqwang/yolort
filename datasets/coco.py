@@ -159,14 +159,10 @@ def _coco_remove_images_without_annotations(dataset, cat_list=None):
 
 
 def build(data_path, image_set, year):
-    root = Path(data_path)
-    assert root.exists(), f'provided COCO path {root} does not exist'
-
-    img_folder = Path(root)
-    ann_file = img_folder.joinpath("annotations").joinpath(f"instances_{image_set}{year}.json")
+    ann_file = Path(data_path).joinpath("annotations").joinpath(f"instances_{image_set}{year}.json")
 
     dataset = CocoDetection(
-        img_folder,
+        data_path,
         ann_file,
         transforms=make_transforms(image_set=image_set),
     )

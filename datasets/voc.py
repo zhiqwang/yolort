@@ -75,7 +75,7 @@ class VOCDetection(torchvision.datasets.VOCDetection):
 def build(data_path, image_set, year):
 
     dataset = VOCDetection(
-        img_folder=data_path,
+        data_path,
         year=year,
         image_set=image_set,
         transforms=make_transforms(image_set=image_set),
