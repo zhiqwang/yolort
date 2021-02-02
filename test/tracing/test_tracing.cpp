@@ -32,9 +32,7 @@ int main() {
   images.push_back(torch::rand({3, 480, 384}));
 
   inputs.push_back(images);
-  auto output = module.forward(inputs);
-
-  auto detections = output.toTuple()->elements();
+  auto detections = module.forward(inputs);
 
   std::cout << ">> OKey, detections: " << detections << std::endl;
 
@@ -51,9 +49,7 @@ int main() {
     images.push_back(torch::rand({3, 480, 384}, options));
 
     inputs.push_back(images);
-    auto output = module.forward(inputs);
-
-    auto detections = output.toTuple()->elements();
+    auto detections = module.forward(inputs);
 
     std::cout << ">> OKey, detections: " << detections << std::endl;
   }
