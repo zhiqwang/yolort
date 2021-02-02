@@ -16,7 +16,7 @@ class TorchScriptTester(unittest.TestCase):
         x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
 
         out = model(x)
-        out_script = scripted_model(x)[1]
+        out_script = scripted_model(x)
         self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
         self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
@@ -31,7 +31,7 @@ class TorchScriptTester(unittest.TestCase):
         x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
 
         out = model(x)
-        out_script = scripted_model(x)[1]
+        out_script = scripted_model(x)
         self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
         self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
@@ -46,7 +46,7 @@ class TorchScriptTester(unittest.TestCase):
         x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
 
         out = model(x)
-        out_script = scripted_model(x)[1]
+        out_script = scripted_model(x)
         self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
         self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
