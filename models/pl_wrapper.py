@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 from . import yolo
 from .transform import GeneralizedYOLOTransform, nested_tensor_from_tensor_list
 
-from typing import Any, List, Optional
+from typing import Any, List, Dict, Tuple, Optional
 
 
 class YOLOLitWrapper(pl.LightningModule):
@@ -44,9 +44,35 @@ class YOLOLitWrapper(pl.LightningModule):
 
         self.transform = GeneralizedYOLOTransform(min_size, max_size)
 
-    def forward(self, inputs: List[Tensor], targets: Optional[Tensor] = None):
+    def forward(
+        self,
+        inputs: List[Tensor],
+        targets: Optional[List[Dict[str, Tensor]]] = None,
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
+        """
+        Args:
+            images (list[Tensor]): images to be processed
+            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
+
+        Returns:
+            result (list[BoxList] or dict[Tensor]): the output from the model.
+                During training, it returns a dict[Tensor] which contains the losses.
+                During testing, it returns list[BoxList] contains additional fields
+                like `scores`, `labels` and `mask` (for Mask R-CNN models).
+
+        """
+        # get the original image sizes
+        original_image_sizes: List[Tuple[int, int]] = []
+        for img in inputs:
+            val = img.shape[-2:]
+            assert len(val) == 2
+            original_image_sizes.append((val[0], val[1]))
+
+        # Transform the input
         samples, targets = self.transform(inputs, targets)
+        # Compute the detections
         detections = self.model(samples.tensors, targets=targets)
+        # Rescale coordinate
         detections = self.transform.postprocess(detections, samples.image_sizes, original_image_sizes)
         return detections
 

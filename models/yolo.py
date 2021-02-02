@@ -88,6 +88,7 @@ class YOLO(nn.Module):
             samples (NestedTensor): Expects a NestedTensor, which consists of:
                - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
             targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
+
         Returns:
             result (list[BoxList] or dict[Tensor]): the output from the model.
                 During training, it returns a dict[Tensor] which contains the losses.

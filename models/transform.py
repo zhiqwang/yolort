@@ -35,6 +35,16 @@ class NestedTensor(object):
 
 
 class GeneralizedYOLOTransform(nn.Module):
+    """
+    Performs input / target transformation before feeding the data to a GeneralizedRCNN
+    model.
+
+    The transformations it perform are:
+        - input normalization (mean subtraction and std division)
+        - input / target resizing to match min_size / max_size
+
+    It returns a ImageList for the inputs, and a List[Dict[Tensor]] for the targets
+    """
     def __init__(self, min_size, max_size) -> None:
         super().__init__()
         if not isinstance(min_size, (list, tuple)):
@@ -46,7 +56,8 @@ class GeneralizedYOLOTransform(nn.Module):
         self,
         images: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]],
-    ) -> Tuple[NestedTensor, Optional[List[Dict[str, Tensor]]]]:
+    ) -> Tuple[NestedTensor, Optional[Tensor]]:
+
         images = [img for img in images]
         if targets is not None:
             # make a copy of targets to avoid modifying it in-place
@@ -75,14 +86,37 @@ class GeneralizedYOLOTransform(nn.Module):
                 targets[i] = target_index
 
         image_sizes = [img.shape[-2:] for img in images]
-        images = self.nested_tensor_from_tensor_list(images)
+        images = nested_tensor_from_tensor_list(images)
         image_sizes_list: List[Tuple[int, int]] = []
         for image_size in image_sizes:
             assert len(image_size) == 2
             image_sizes_list.append((image_size[0], image_size[1]))
 
         image_list = NestedTensor(images, image_sizes_list)
-        return image_list, targets
+
+        if targets is not None:
+            targets_batched = []
+            for i, target in enumerate(targets):
+                num_objects = len(target['labels'])
+                if num_objects > 0:
+                    targets_merged = torch.full((num_objects, 6), i, dtype=torch.float32)
+                    targets_merged[:, 1] = target['labels']
+                    targets_merged[:, 2:] = target['boxes']
+                    targets_batched.append(targets_merged)
+            targets_batched = torch.cat(targets_batched, dim=0)
+        else:
+            targets_batched = None
+
+        return image_list, targets_batched
+
+    def torch_choice(self, k: List[int]) -> int:
+        """
+        Implements `random.choice` via torch ops so it can be compiled with
+        TorchScript. Remove if https://github.com/pytorch/pytorch/issues/25803
+        is fixed.
+        """
+        index = int(torch.empty(1).uniform_(0., float(len(k))).item())
+        return k[index]
 
     def resize(
         self,
@@ -116,8 +150,7 @@ class GeneralizedYOLOTransform(nn.Module):
         image_shapes: List[Tuple[int, int]],
         original_image_sizes: List[Tuple[int, int]],
     ) -> List[Dict[str, Tensor]]:
-        if self.training:
-            return result
+
         for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
             boxes = pred["boxes"]
             boxes = resize_boxes(boxes, im_s, o_im_s)
@@ -146,7 +179,7 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: in
             pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
     else:
         raise ValueError('not supported')
-    return NestedTensor(tensor_batched)
+    return tensor_batched
 
 
 def _max_by_axis(the_list: List[List[int]]) -> List[int]:
@@ -160,7 +193,7 @@ def _max_by_axis(the_list: List[List[int]]) -> List[int]:
 # _onnx_nested_tensor_from_tensor_list() is an implementation of
 # nested_tensor_from_tensor_list() that is supported by ONNX tracing.
 @torch.jit.unused
-def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32) -> NestedTensor:
+def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32) -> Tensor:
     max_size = []
     for i in range(tensor_list[0].dim()):
         max_size_i = torch.max(torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)).to(torch.int64)
@@ -183,7 +216,7 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
 
     tensor = torch.stack(padded_imgs)
 
-    return NestedTensor(tensor)
+    return tensor
 
 
 @torch.jit.unused
