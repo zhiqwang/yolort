@@ -1,7 +1,8 @@
+# Modified from ultralytics/yolov5 by Zhiqiang Wang
 import math
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor
 import torch.nn.functional as F
 from torchvision.ops import box_convert
 

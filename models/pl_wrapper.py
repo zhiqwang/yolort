@@ -2,8 +2,7 @@
 import argparse
 
 import torch
-from torch import nn, Tensor
-from torchvision.models.utils import load_state_dict_from_url
+from torch import Tensor
 
 import pytorch_lightning as pl
 

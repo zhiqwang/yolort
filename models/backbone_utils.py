@@ -1,3 +1,4 @@
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from typing import List, Optional
 from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
