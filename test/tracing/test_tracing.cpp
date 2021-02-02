@@ -34,7 +34,7 @@ int main() {
   inputs.push_back(images);
   auto output = module.forward(inputs);
 
-  auto detections = output.toTuple()->elements()[1];
+  auto detections = output.toTuple()->elements();
 
   std::cout << ">> OKey, detections: " << detections << std::endl;
 
@@ -53,7 +53,7 @@ int main() {
     inputs.push_back(images);
     auto output = module.forward(inputs);
 
-    auto detections = output.toTuple()->elements()[1];
+    auto detections = output.toTuple()->elements();
 
     std::cout << ">> OKey, detections: " << detections << std::endl;
   }
