@@ -74,6 +74,7 @@ class YOLOLitWrapper(pl.LightningModule):
         detections = self.model(samples.tensors, targets=targets)
         # Rescale coordinate
         detections = self.transform.postprocess(detections, samples.image_sizes, original_image_sizes)
+
         return detections
 
     def training_step(self, batch, batch_idx):
