@@ -48,7 +48,7 @@ class YOLOLitWrapper(pl.LightningModule):
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
+    ) -> List[Dict[str, Tensor]]:
         """
         Args:
             images (list[Tensor]): images to be processed

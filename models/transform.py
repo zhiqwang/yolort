@@ -146,17 +146,22 @@ class GeneralizedYOLOTransform(nn.Module):
 
     def postprocess(
         self,
-        result: List[Dict[str, Tensor]],
+        result: Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]],
         image_shapes: List[Tuple[int, int]],
         original_image_sizes: List[Tuple[int, int]],
     ) -> List[Dict[str, Tensor]]:
 
-        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
+        if torch.jit.is_scripting():
+            predictions = result[1]
+        else:
+            predictions = result
+
+        for i, (pred, im_s, o_im_s) in enumerate(zip(predictions, image_shapes, original_image_sizes)):
             boxes = pred["boxes"]
             boxes = resize_boxes(boxes, im_s, o_im_s)
-            result[i]["boxes"] = boxes
+            predictions[i]["boxes"] = boxes
 
-        return result
+        return predictions
 
 
 def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32):
