@@ -38,13 +38,9 @@ class EngineTester(unittest.TestCase):
 
     @unittest.skip("Current it isn't well implemented")
     def test_train_one_step(self):
-        # Determine the device
-        gpu_available = torch.cuda.is_available()
-        device = torch.device("cuda") if gpu_available else torch.device("cpu")
         # Load model
         model = YOLOLitWrapper()
         model.train()
-        model = model.to(device)
 
         # Datasets
         datasets = DummyDetectionDataset(num_samples=200)
