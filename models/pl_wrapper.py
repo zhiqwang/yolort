@@ -2,15 +2,14 @@
 import argparse
 
 import torch
-from torch import nn, Tensor
-from torchvision.models.utils import load_state_dict_from_url
+from torch import Tensor
 
 import pytorch_lightning as pl
 
 from . import yolo
-from .transform import nested_tensor_from_tensor_list
+from .transform import GeneralizedYOLOTransform, nested_tensor_from_tensor_list
 
-from typing import Any, List, Optional
+from typing import Any, List, Dict, Tuple, Optional
 
 
 class YOLOLitWrapper(pl.LightningModule):
@@ -24,6 +23,8 @@ class YOLOLitWrapper(pl.LightningModule):
         pretrained: bool = False,
         progress: bool = True,
         num_classes: int = 80,
+        min_size: int = 320,
+        max_size: int = 416,
         **kwargs: Any,
     ):
         """
@@ -41,9 +42,40 @@ class YOLOLitWrapper(pl.LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-    def forward(self, inputs: List[Tensor], targets: Optional[Tensor] = None):
-        sample = nested_tensor_from_tensor_list(inputs)
-        return self.model(sample.tensors, targets=targets)
+        self.transform = GeneralizedYOLOTransform(min_size, max_size)
+
+    def forward(
+        self,
+        inputs: List[Tensor],
+        targets: Optional[List[Dict[str, Tensor]]] = None,
+    ) -> List[Dict[str, Tensor]]:
+        """
+        Args:
+            images (list[Tensor]): images to be processed
+            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
+
+        Returns:
+            result (list[BoxList] or dict[Tensor]): the output from the model.
+                During training, it returns a dict[Tensor] which contains the losses.
+                During testing, it returns list[BoxList] contains additional fields
+                like `scores`, `labels` and `mask` (for Mask R-CNN models).
+
+        """
+        # get the original image sizes
+        original_image_sizes: List[Tuple[int, int]] = []
+        for img in inputs:
+            val = img.shape[-2:]
+            assert len(val) == 2
+            original_image_sizes.append((val[0], val[1]))
+
+        # Transform the input
+        samples, targets = self.transform(inputs, targets)
+        # Compute the detections
+        detections = self.model(samples.tensors, targets=targets)
+        # Rescale coordinate
+        detections = self.transform.postprocess(detections, samples.image_sizes, original_image_sizes)
+
+        return detections
 
     def training_step(self, batch, batch_idx):
 

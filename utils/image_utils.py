@@ -255,6 +255,7 @@ def restore_anchor(anchor, grid_x, grid_y, stride, feature_map_size, image_sizes
 
 
 def anchor_match_visualize(images, targets, indices, anchors, pred):
+    # Modified from <https://github.com/hhaAndroid/yolov5-comment/blob/e018889b/utils/general.py#L714>
     image_sizes = images.shape[-2:]
     images = parse_images(images)
 

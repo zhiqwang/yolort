@@ -1,8 +1,7 @@
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import torch
 from torch import nn, Tensor
 from torch.hub import load_state_dict_from_url
-from torch.nn.modules import conv
-from torch.nn.modules.linear import Linear
 
 from .common import Conv, SPP, Focus, BottleneckCSP
 from .experimental import C3

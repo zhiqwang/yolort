@@ -1,5 +1,5 @@
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import torch
-
 from torch import nn, Tensor
 
 from .common import Conv, BottleneckCSP
