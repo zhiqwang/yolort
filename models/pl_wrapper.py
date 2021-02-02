@@ -7,7 +7,7 @@ from torch import Tensor
 import pytorch_lightning as pl
 
 from . import yolo
-from .transform import nested_tensor_from_tensor_list
+from .transform import GeneralizedYOLOTransform, nested_tensor_from_tensor_list
 
 from typing import Any, List, Optional
 
@@ -23,6 +23,8 @@ class YOLOLitWrapper(pl.LightningModule):
         pretrained: bool = False,
         progress: bool = True,
         num_classes: int = 80,
+        min_size: int = 320,
+        max_size: int = 416,
         **kwargs: Any,
     ):
         """
@@ -40,9 +42,13 @@ class YOLOLitWrapper(pl.LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
+        self.transform = GeneralizedYOLOTransform(min_size, max_size)
+
     def forward(self, inputs: List[Tensor], targets: Optional[Tensor] = None):
-        sample = nested_tensor_from_tensor_list(inputs)
-        return self.model(sample.tensors, targets=targets)
+        samples, targets = self.transform(inputs, targets)
+        detections = self.model(samples.tensors, targets=targets)
+        detections = self.transform.postprocess(detections, samples.image_sizes, original_image_sizes)
+        return detections
 
     def training_step(self, batch, batch_idx):
 

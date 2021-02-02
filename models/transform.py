@@ -3,9 +3,11 @@
 import math
 import torch
 from torch import nn, Tensor
+import torch.nn.functional as F
+
 import torchvision
 
-from typing import Optional, List
+from typing import Dict, Optional, List, Tuple
 
 
 class NestedTensor(object):
@@ -15,15 +17,113 @@ class NestedTensor(object):
     This works by padding the images to the same size,
     and storing in a field the original sizes of each image
     """
-    def __init__(self, tensors):
+    def __init__(self, tensors: Tensor, image_sizes: List[Tuple[int, int]]):
+        """
+        Args:
+            tensors (Tensor)
+            image_sizes (list[tuple[int, int]])
+        """
         self.tensors = tensors
+        self.image_sizes = image_sizes
 
     def to(self, device) -> "NestedTensor":
         cast_tensor = self.tensors.to(device)
-        return NestedTensor(cast_tensor)
+        return NestedTensor(cast_tensor, self.image_sizes)
 
     def __repr__(self):
         return str(self.tensors)
+
+
+class GeneralizedYOLOTransform(nn.Module):
+    def __init__(self, min_size, max_size) -> None:
+        super().__init__()
+        if not isinstance(min_size, (list, tuple)):
+            min_size = (min_size,)
+        self.min_size = min_size
+        self.max_size = max_size
+
+    def forward(
+        self,
+        images: List[Tensor],
+        targets: Optional[List[Dict[str, Tensor]]],
+    ) -> Tuple[NestedTensor, Optional[List[Dict[str, Tensor]]]]:
+        images = [img for img in images]
+        if targets is not None:
+            # make a copy of targets to avoid modifying it in-place
+            # once torchscript supports dict comprehension
+            # this can be simplified as as follows
+            # targets = [{k: v for k,v in t.items()} for t in targets]
+            targets_copy: List[Dict[str, Tensor]] = []
+            for t in targets:
+                data: Dict[str, Tensor] = {}
+                for k, v in t.items():
+                    data[k] = v
+                targets_copy.append(data)
+            targets = targets_copy
+
+        for i in range(len(images)):
+            image = images[i]
+            target_index = targets[i] if targets is not None else None
+
+            if image.dim() != 3:
+                raise ValueError("images is expected to be a list of 3d tensors "
+                                 "of shape [C, H, W], got {}".format(image.shape))
+
+            image, target_index = self.resize(image, target_index)
+            images[i] = image
+            if targets is not None and target_index is not None:
+                targets[i] = target_index
+
+        image_sizes = [img.shape[-2:] for img in images]
+        images = self.nested_tensor_from_tensor_list(images)
+        image_sizes_list: List[Tuple[int, int]] = []
+        for image_size in image_sizes:
+            assert len(image_size) == 2
+            image_sizes_list.append((image_size[0], image_size[1]))
+
+        image_list = NestedTensor(images, image_sizes_list)
+        return image_list, targets
+
+    def resize(
+        self,
+        image: Tensor,
+        target: Optional[Dict[str, Tensor]],
+    ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+
+        h, w = image.shape[-2:]
+        if self.training:
+            size = float(self.torch_choice(self.min_size))
+        else:
+            # FIXME assume for now that testing uses the largest scale
+            size = float(self.min_size[-1])
+        if torchvision._is_tracing():
+            image, target = _resize_image_and_masks_onnx(image, size, float(self.max_size), target)
+        else:
+            image, target = _resize_image_and_masks(image, size, float(self.max_size), target)
+
+        if target is None:
+            return image, target
+
+        bbox = target["boxes"]
+        bbox = resize_boxes(bbox, (h, w), image.shape[-2:])
+        target["boxes"] = bbox
+
+        return image, target
+
+    def postprocess(
+        self,
+        result: List[Dict[str, Tensor]],
+        image_shapes: List[Tuple[int, int]],
+        original_image_sizes: List[Tuple[int, int]],
+    ) -> List[Dict[str, Tensor]]:
+        if self.training:
+            return result
+        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
+            boxes = pred["boxes"]
+            boxes = resize_boxes(boxes, im_s, o_im_s)
+            result[i]["boxes"] = boxes
+
+        return result
 
 
 def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32):
@@ -84,3 +184,75 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
     tensor = torch.stack(padded_imgs)
 
     return NestedTensor(tensor)
+
+
+@torch.jit.unused
+def _resize_image_and_masks_onnx(
+    image: Tensor,
+    self_min_size: float,
+    self_max_size: float,
+    target: Optional[Dict[str, Tensor]],
+) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+
+    from torch.onnx import operators
+
+    im_shape = operators.shape_as_tensor(image)[-2:]
+    min_size = torch.min(im_shape).to(dtype=torch.float32)
+    max_size = torch.max(im_shape).to(dtype=torch.float32)
+    scale_factor = torch.min(self_min_size / min_size, self_max_size / max_size)
+
+    image = torch.nn.functional.interpolate(
+        image[None], scale_factor=scale_factor, mode='bilinear', recompute_scale_factor=True,
+        align_corners=False)[0]
+
+    if target is None:
+        return image, target
+
+    if "masks" in target:
+        mask = target["masks"]
+        mask = F.interpolate(mask[:, None].float(), scale_factor=scale_factor, recompute_scale_factor=True)[:, 0].byte()
+        target["masks"] = mask
+    return image, target
+
+
+def _resize_image_and_masks(
+    image: Tensor,
+    self_min_size: float,
+    self_max_size: float,
+    target: Optional[Dict[str, Tensor]],
+) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+
+    im_shape = torch.tensor(image.shape[-2:])
+    min_size = float(torch.min(im_shape))
+    max_size = float(torch.max(im_shape))
+    scale_factor = self_min_size / min_size
+    if max_size * scale_factor > self_max_size:
+        scale_factor = self_max_size / max_size
+    image = torch.nn.functional.interpolate(
+        image[None], scale_factor=scale_factor, mode='bilinear', recompute_scale_factor=True,
+        align_corners=False)[0]
+
+    if target is None:
+        return image, target
+
+    if "masks" in target:
+        mask = target["masks"]
+        mask = F.interpolate(mask[:, None].float(), scale_factor=scale_factor, recompute_scale_factor=True)[:, 0].byte()
+        target["masks"] = mask
+    return image, target
+
+
+def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -> Tensor:
+    ratios = [
+        torch.tensor(s, dtype=torch.float32, device=boxes.device) /
+        torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
+        for s, s_orig in zip(new_size, original_size)
+    ]
+    ratio_height, ratio_width = ratios
+    xmin, ymin, xmax, ymax = boxes.unbind(1)
+
+    xmin = xmin * ratio_width
+    xmax = xmax * ratio_width
+    ymin = ymin * ratio_height
+    ymax = ymax * ratio_height
+    return torch.stack((xmin, ymin, xmax, ymax), dim=1)
