@@ -271,36 +271,3 @@ class Compose(object):
             format_string += "    {0}".format(t)
         format_string += "\n)"
         return format_string
-
-
-def make_transforms(image_set='train'):
-
-    normalize = Compose([
-        ToTensor(),
-        Normalize(),
-    ])
-
-    scales = [384, 416, 448, 480, 512, 544, 576, 608, 640, 672]
-    scales_for_training = [(640, 640)]
-
-    if image_set == 'train' or image_set == 'trainval':
-        return Compose([
-            RandomHorizontalFlip(),
-            RandomSelect(
-                RandomResize(scales_for_training),
-                Compose([
-                    RandomResize(scales),
-                    RandomSizeCrop(384, 480),
-                    RandomResize(scales_for_training),
-                ])
-            ),
-            normalize,
-        ])
-
-    if image_set == 'val' or image_set == 'test':
-        return Compose([
-            RandomResize([800], max_size=1333),
-            normalize,
-        ])
-
-    raise ValueError(f'unknown {image_set}')

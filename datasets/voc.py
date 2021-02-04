@@ -1,7 +1,55 @@
 import torch
 import torchvision
 
-from .transforms import make_transforms
+from .detection_datamodule import (
+    DetectionDataModule,
+    default_train_transforms,
+    default_val_transforms,
+)
+
+from typing import Callable, List, Any, Optional
+
+
+class VOCDetectionDataModule(DetectionDataModule):
+    def __init__(
+        self,
+        data_path: str,
+        years: List[str] = ["2007", "2012"],
+        train_transform: Optional[Callable] = default_train_transforms,
+        val_transform: Optional[Callable] = default_val_transforms,
+        batch_size: int = 1,
+        num_workers: int = 0,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        train_dataset, num_classes = self.build_datasets(
+            data_path, image_set='train', years=years, transforms=train_transform)
+        val_dataset, _ = self.build_datasets(
+            data_path, image_set='val', years=years, transforms=val_transform)
+
+        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
+                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
+
+        self.num_classes = num_classes
+
+    @staticmethod
+    def build_datasets(data_path, image_set, years, transforms):
+        datasets = []
+        for year in years:
+            dataset = VOCDetection(
+                data_path,
+                year=year,
+                image_set=image_set,
+                transforms=transforms,
+            )
+            datasets.append(dataset)
+
+        num_classes = len(datasets[0].prepare.CLASSES)
+
+        if len(datasets) == 1:
+            return datasets[0], num_classes
+        else:
+            return torch.utils.data.ConcatDataset(datasets), num_classes
 
 
 class ConvertVOCtoCOCO(object):
@@ -70,15 +118,3 @@ class VOCDetection(torchvision.datasets.VOCDetection):
             img, target = self._transforms(img, target)
 
         return img, target
-
-
-def build(data_path, image_set, year):
-
-    dataset = VOCDetection(
-        data_path,
-        year=year,
-        image_set=image_set,
-        transforms=make_transforms(image_set=image_set),
-    )
-
-    return dataset

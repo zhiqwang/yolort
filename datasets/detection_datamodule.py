@@ -1,14 +1,15 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import torch.utils.data
 from torch.utils.data import DataLoader
+from torch.utils.data.dataset import Dataset
+import torchvision.transforms as T
 
 from pytorch_lightning import LightningDataModule
 
+from . import transforms as FT
 from models.transform import nested_tensor_from_tensor_list
-from .coco import build as build_coco
-from .voc import build as build_voc
 
-from typing import List, Any
+from typing import List, Any, Optional
 
 
 def collate_fn(batch):
@@ -28,22 +29,26 @@ def collate_fn(batch):
     return samples, targets
 
 
-def build_dataset(data_path, dataset_type, image_set, dataset_year):
+def default_train_transforms():
+    scales = [384, 416, 448, 480, 512, 544, 576, 608, 640, 672]
+    scales_for_training = [(640, 640)]
 
-    datasets = []
-    for year in dataset_year:
-        if dataset_type == 'coco':
-            dataset = build_coco(data_path, image_set, year)
-        elif dataset_type == 'voc':
-            dataset = build_voc(data_path, image_set, year)
-        else:
-            raise ValueError(f'dataset {dataset_type} not supported')
-        datasets.append(dataset)
+    return T.Compose([
+        FT.RandomHorizontalFlip(),
+        FT.RandomSelect(
+            FT.RandomResize(scales_for_training),
+            T.Compose([
+                FT.RandomResize(scales),
+                FT.RandomSizeCrop(384, 480),
+                FT.RandomResize(scales_for_training),
+            ])
+        ),
+        FT.Compose([FT.ToTensor(), FT.Normalize()]),
+    ])
 
-    if len(datasets) == 1:
-        return datasets[0]
-    else:
-        return torch.utils.data.ConcatDataset(datasets)
+
+def default_val_transforms():
+    return T.Compose([FT.Compose([FT.ToTensor(), FT.Normalize()])])
 
 
 class DetectionDataModule(LightningDataModule):
@@ -52,18 +57,21 @@ class DetectionDataModule(LightningDataModule):
     """
     def __init__(
         self,
-        data_path: str,
-        dataset_type: str,
-        dataset_year: List[str],
-        num_workers: int = 4,
+        train_dataset: Optional[Dataset] = None,
+        val_dataset: Optional[Dataset] = None,
+        test_dataset: Optional[Dataset] = None,
+        batch_size: int = 1,
+        num_workers: int = 0,
         *args: Any,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
 
-        self.data_path = data_path
-        self.dataset_type = dataset_type
-        self.dataset_year = dataset_year
+        self._train_dataset = train_dataset
+        self._val_dataset = val_dataset
+        self._test_dataset = test_dataset
+
+        self.batch_size = batch_size
         self.num_workers = num_workers
 
     def train_dataloader(self, batch_size: int = 16) -> None:
@@ -73,16 +81,12 @@ class DetectionDataModule(LightningDataModule):
             batch_size: size of batch
             transforms: custom transforms
         """
-        dataset = build_dataset(self.data_path, self.dataset_type, 'train', self.dataset_year)
-
         # Creating data loaders
-        sampler = torch.utils.data.RandomSampler(dataset)
-        batch_sampler = torch.utils.data.BatchSampler(
-            sampler, batch_size, drop_last=True,
-        )
+        sampler = torch.utils.data.RandomSampler(self._train_dataset)
+        batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
 
         loader = DataLoader(
-            dataset,
+            self._train_dataset,
             batch_sampler=batch_sampler,
             collate_fn=collate_fn,
             num_workers=self.num_workers,
@@ -97,13 +101,11 @@ class DetectionDataModule(LightningDataModule):
             batch_size: size of batch
             transforms: custom transforms
         """
-        dataset = build_dataset(self.data_path, self.dataset_type, 'val', self.dataset_year)
-
         # Creating data loaders
-        sampler = torch.utils.data.SequentialSampler(dataset)
+        sampler = torch.utils.data.SequentialSampler(self._val_dataset)
 
         loader = DataLoader(
-            dataset,
+            self._val_dataset,
             batch_size,
             sampler=sampler,
             drop_last=False,
