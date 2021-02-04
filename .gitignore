@@ -2,6 +2,7 @@
 data-bin
 checkpoints
 logs
+lightning_logs
 *.ipynb
 runs
 yolov5s.pt
