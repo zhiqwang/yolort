@@ -7,7 +7,7 @@ import cv2
 import torch
 
 from utils.image_utils import read_image, load_names, overlay_boxes
-from hubconf import yolov5_darknet_pan_s_v31
+from hubconf import yolov5s
 
 
 @torch.no_grad()
@@ -27,7 +27,7 @@ def main(args):
     print(args)
     device = torch.device("cuda") if torch.cuda.is_available() and args.gpu else torch.device("cpu")
 
-    model = yolov5_darknet_pan_s_v31(
+    model = yolov5s(
         pretrained=True,
         min_size=args.min_size,
         max_size=args.max_size,
