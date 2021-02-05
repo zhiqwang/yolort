@@ -13,7 +13,7 @@ from .box_head import YoloHead, SetCriterion, PostProcess
 
 from typing import Tuple, Any, List, Dict, Optional
 
-__all__ = ['yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
+__all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
            'yolov5_darknet_pan_s_r40', 'yolov5_darknet_pan_m_r40', 'yolov5_darknet_pan_l_r40']
 
 
