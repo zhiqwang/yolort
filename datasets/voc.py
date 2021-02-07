@@ -40,7 +40,7 @@ class VOCDetectionDataModule(DetectionDataModule):
                 data_path,
                 year=year,
                 image_set=image_set,
-                transforms=transforms,
+                transforms=transforms(),
             )
             datasets.append(dataset)
 

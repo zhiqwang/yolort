@@ -2,11 +2,10 @@
 import torch.utils.data
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
-import torchvision.transforms as T
 
 from pytorch_lightning import LightningDataModule
 
-from . import transforms as FT
+from . import transforms as T
 from models.transform import nested_tensor_from_tensor_list
 
 from typing import List, Any, Optional
@@ -34,21 +33,21 @@ def default_train_transforms():
     scales_for_training = [(640, 640)]
 
     return T.Compose([
-        FT.RandomHorizontalFlip(),
-        FT.RandomSelect(
-            FT.RandomResize(scales_for_training),
+        T.RandomHorizontalFlip(),
+        T.RandomSelect(
+            T.RandomResize(scales_for_training),
             T.Compose([
-                FT.RandomResize(scales),
-                FT.RandomSizeCrop(384, 480),
-                FT.RandomResize(scales_for_training),
+                T.RandomResize(scales),
+                T.RandomSizeCrop(384, 480),
+                T.RandomResize(scales_for_training),
             ])
         ),
-        FT.Compose([FT.ToTensor(), FT.Normalize()]),
+        T.Compose([T.ToTensor(), T.Normalize()]),
     ])
 
 
 def default_val_transforms():
-    return T.Compose([FT.Compose([FT.ToTensor(), FT.Normalize()])])
+    return T.Compose([T.Compose([T.ToTensor(), T.Normalize()])])
 
 
 class DetectionDataModule(LightningDataModule):
