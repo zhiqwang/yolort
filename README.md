@@ -22,6 +22,7 @@
 - Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
 - Support exporting to `onnx`, and inferring with `onnxruntime` interface. *Nov. 17, 2020*.
 - Add graph visualization tools. *Nov. 21, 2020*.
+- Add `TVM` compile and inference notebooks. *Feb 5, 2021*.
 
 ## 🛠️ Usage
 
