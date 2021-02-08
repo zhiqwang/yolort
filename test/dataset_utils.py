@@ -1,15 +1,14 @@
 import random
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 from torchvision import ops
 
-from datasets import collate_fn
 
-__all__ = ["create_loaders", "DummyDetectionDataset"]
+__all__ = ["DummyDetectionDataset"]
 
 
-class DummyDetectionDataset(Dataset):
+class DummyCOCODetectionDataset(Dataset):
     """
     Generate a dummy dataset for detection
     Example::
@@ -76,25 +75,3 @@ class DummyDetectionDataset(Dataset):
             boxes = boxes / torch.tensor([w, h, w, h], dtype=torch.float32)
         image_id = torch.tensor([idx])
         return img, {"image_id": image_id, "boxes": boxes, "labels": labels}
-
-
-def create_loaders(dataset, batch_size=16, num_workers=0):
-    """
-    Creates train loader and test loader from train and test dataset
-    Args:
-        dataset: Torchvision dataset.
-        batch_size (int) : Default 16, Batch size
-        num_workers (int) : Defualt 0, Number of workers for training and validation.
-    """
-    sampler = torch.utils.data.RandomSampler(dataset)
-
-    batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
-
-    dataloader = DataLoader(
-        dataset,
-        batch_sampler=batch_sampler,
-        collate_fn=collate_fn,
-        num_workers=num_workers,
-    )
-
-    return dataloader
