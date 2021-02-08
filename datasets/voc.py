@@ -1,8 +1,6 @@
 import torch
 import torchvision
 
-from .transforms import make_transforms
-
 
 class ConvertVOCtoCOCO(object):
 
@@ -70,15 +68,3 @@ class VOCDetection(torchvision.datasets.VOCDetection):
             img, target = self._transforms(img, target)
 
         return img, target
-
-
-def build(data_path, image_set, year):
-
-    dataset = VOCDetection(
-        data_path,
-        year=year,
-        image_set=image_set,
-        transforms=make_transforms(image_set=image_set),
-    )
-
-    return dataset

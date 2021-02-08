@@ -7,14 +7,14 @@ from torch import Tensor
 import pytorch_lightning as pl
 
 from . import yolo
-from .transform import GeneralizedYOLOTransform, nested_tensor_from_tensor_list
+from .transform import GeneralizedYOLOTransform
 
 from typing import Any, List, Dict, Tuple, Optional
 
 
 class YOLOLitWrapper(pl.LightningModule):
     """
-    PyTorch Lightning implementation of `YOLO`
+    PyTorch Lightning wrapper of `YOLO`
     """
     def __init__(
         self,
@@ -78,9 +78,11 @@ class YOLOLitWrapper(pl.LightningModule):
         return detections
 
     def training_step(self, batch, batch_idx):
-
-        samples, targets = batch
-
+        """
+        The training step.
+        """
+        # Transform the input
+        samples, targets = self.transform(*batch)
         # yolov5 takes both images and targets for training, returns
         loss_dict = self.model(samples.tensors, targets)
         loss = sum(loss for loss in loss_dict.values())

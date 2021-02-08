@@ -10,8 +10,6 @@ import torch.utils.data
 import torchvision
 from pycocotools import mask as coco_mask
 
-from .transforms import make_transforms
-
 
 class ConvertCocoPolysToMask(object):
     def __init__(self, json_category_id_maps, return_masks=False):
@@ -155,19 +153,4 @@ def _coco_remove_images_without_annotations(dataset, cat_list=None):
             ids.append(ds_idx)
 
     dataset = torch.utils.data.Subset(dataset, ids)
-    return dataset
-
-
-def build(data_path, image_set, year):
-    ann_file = Path(data_path).joinpath("annotations").joinpath(f"instances_{image_set}{year}.json")
-
-    dataset = CocoDetection(
-        data_path,
-        ann_file,
-        transforms=make_transforms(image_set=image_set),
-    )
-
-    if image_set == 'train':
-        dataset = _coco_remove_images_without_annotations(dataset)
-
     return dataset

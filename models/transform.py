@@ -2,7 +2,7 @@
 # Modified by Zhiqiang Wang (zhiqwang@outlook.com)
 import math
 import torch
-from torch import nn, Tensor
+from torch import device, nn, Tensor
 import torch.nn.functional as F
 
 import torchvision
@@ -57,7 +57,7 @@ class GeneralizedYOLOTransform(nn.Module):
         images: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]],
     ) -> Tuple[NestedTensor, Optional[Tensor]]:
-
+        device = images[0].device
         images = [img for img in images]
         if targets is not None:
             # make a copy of targets to avoid modifying it in-place
@@ -68,7 +68,7 @@ class GeneralizedYOLOTransform(nn.Module):
             for t in targets:
                 data: Dict[str, Tensor] = {}
                 for k, v in t.items():
-                    data[k] = v
+                    data[k] = v.to(device)
                 targets_copy.append(data)
             targets = targets_copy
 
@@ -99,7 +99,7 @@ class GeneralizedYOLOTransform(nn.Module):
             for i, target in enumerate(targets):
                 num_objects = len(target['labels'])
                 if num_objects > 0:
-                    targets_merged = torch.full((num_objects, 6), i, dtype=torch.float32)
+                    targets_merged = torch.full((num_objects, 6), i, dtype=torch.float32, device=device)
                     targets_merged[:, 1] = target['labels']
                     targets_merged[:, 2:] = target['boxes']
                     targets_batched.append(targets_merged)

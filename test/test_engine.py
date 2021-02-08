@@ -2,12 +2,13 @@ import unittest
 import torch
 import pytorch_lightning as pl
 
-from .torch_utils import image_preprocess
-from .dataset_utils import create_loaders, DummyDetectionDataset
-
 from models import YOLOLitWrapper
 from models.yolo import yolov5_darknet_pan_s_r31
 from models.transform import nested_tensor_from_tensor_list
+from datasets import DetectionDataModule
+
+from .torch_utils import image_preprocess
+from .dataset_utils import DummyCOCODetectionDataset
 
 from typing import Dict
 
@@ -36,20 +37,17 @@ class EngineTester(unittest.TestCase):
         self.assertIsInstance(out["bbox_regression"], torch.Tensor)
         self.assertIsInstance(out["objectness"], torch.Tensor)
 
-    @unittest.skip("Current it isn't well implemented")
     def test_train_one_step(self):
         # Load model
         model = YOLOLitWrapper()
         model.train()
 
-        # Datasets
-        datasets = DummyDetectionDataset(num_samples=200)
-        data_loader_train = create_loaders(datasets)
-        data_loader_val = create_loaders(datasets)
-
+        # Setup the DataModule
+        train_dataset = DummyCOCODetectionDataset(num_samples=128)
+        datamodule = DetectionDataModule(train_dataset, batch_size=16)
         # Trainer
         trainer = pl.Trainer(max_epochs=1)
-        trainer.fit(model, data_loader_train, data_loader_val)
+        trainer.fit(model, datamodule)
 
     def test_inference(self):
         # Infer over an image
