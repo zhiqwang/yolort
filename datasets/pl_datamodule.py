@@ -1,4 +1,6 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+from pathlib import Path
+
 import torch.utils.data
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
@@ -7,6 +9,7 @@ from pytorch_lightning import LightningDataModule
 
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
 from .voc import VOCDetection
+from .coco import CocoDetection
 
 from typing import Callable, List, Any, Optional
 
@@ -116,3 +119,31 @@ class VOCDetectionDataModule(DetectionDataModule):
             return datasets[0], num_classes
         else:
             return torch.utils.data.ConcatDataset(datasets), num_classes
+
+
+class CocoDetectionDataModule(DetectionDataModule):
+    def __init__(
+        self,
+        data_path: str,
+        year: str = "2017",
+        train_transform: Optional[Callable] = default_train_transforms,
+        val_transform: Optional[Callable] = default_val_transforms,
+        batch_size: int = 1,
+        num_workers: int = 0,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        train_dataset = self.build_datasets(
+            data_path, image_set='train', year=year, transforms=train_transform)
+        val_dataset = self.build_datasets(
+            data_path, image_set='val', year=year, transforms=val_transform)
+
+        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
+                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
+
+        self.num_classes = 80
+
+    @staticmethod
+    def build_datasets(data_path, image_set, year, transforms):
+        ann_file = Path(data_path).joinpath('annotations').joinpath(f"instances_{image_set}{year}.json")
+        return CocoDetection(data_path, ann_file, transforms())
