@@ -5,35 +5,10 @@ from torch.utils.data.dataset import Dataset
 
 from pytorch_lightning import LightningDataModule
 
-from . import transforms as T
+from .transforms import collate_fn, default_train_transforms, default_val_transforms
+from .voc import VOCDetection
 
-from typing import Any, Optional
-
-
-def collate_fn(batch):
-    return tuple(zip(*batch))
-
-
-def default_train_transforms():
-    scales = [384, 416, 448, 480, 512, 544, 576, 608, 640, 672]
-    scales_for_training = [(640, 640)]
-
-    return T.Compose([
-        T.RandomHorizontalFlip(),
-        T.RandomSelect(
-            T.RandomResize(scales_for_training),
-            T.Compose([
-                T.RandomResize(scales),
-                T.RandomSizeCrop(384, 480),
-                T.RandomResize(scales_for_training),
-            ])
-        ),
-        T.Compose([T.ToTensor(), T.Normalize()]),
-    ])
-
-
-def default_val_transforms():
-    return T.Compose([T.Compose([T.ToTensor(), T.Normalize()])])
+from typing import Callable, List, Any, Optional
 
 
 class DetectionDataModule(LightningDataModule):
@@ -99,3 +74,45 @@ class DetectionDataModule(LightningDataModule):
         )
 
         return loader
+
+
+class VOCDetectionDataModule(DetectionDataModule):
+    def __init__(
+        self,
+        data_path: str,
+        years: List[str] = ["2007", "2012"],
+        train_transform: Optional[Callable] = default_train_transforms,
+        val_transform: Optional[Callable] = default_val_transforms,
+        batch_size: int = 1,
+        num_workers: int = 0,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        train_dataset, num_classes = self.build_datasets(
+            data_path, image_set='train', years=years, transforms=train_transform)
+        val_dataset, _ = self.build_datasets(
+            data_path, image_set='val', years=years, transforms=val_transform)
+
+        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
+                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
+
+        self.num_classes = num_classes
+
+    @staticmethod
+    def build_datasets(data_path, image_set, years, transforms):
+        datasets = []
+        for year in years:
+            dataset = VOCDetection(
+                data_path,
+                year=year,
+                image_set=image_set,
+                transforms=transforms(),
+            )
+            datasets.append(dataset)
+
+        num_classes = len(datasets[0].prepare.CLASSES)
+
+        if len(datasets) == 1:
+            return datasets[0], num_classes
+        else:
+            return torch.utils.data.ConcatDataset(datasets), num_classes
