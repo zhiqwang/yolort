@@ -2,7 +2,7 @@
 import argparse
 import torch
 
-from models import yolov5m
+from ..models import yolov5m
 
 
 def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):

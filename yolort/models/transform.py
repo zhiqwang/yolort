@@ -2,7 +2,7 @@
 # Modified by Zhiqiang Wang (zhiqwang@outlook.com)
 import math
 import torch
-from torch import device, nn, Tensor
+from torch import nn, Tensor
 import torch.nn.functional as F
 
 import torchvision

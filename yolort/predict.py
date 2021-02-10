@@ -6,8 +6,8 @@ from numpy import random
 import cv2
 import torch
 
-from utils.image_utils import read_image, load_names, overlay_boxes
-from hubconf import yolov5s
+from .utils.image_utils import read_image, load_names, overlay_boxes
+from .models import yolov5s
 
 
 @torch.no_grad()

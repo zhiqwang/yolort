@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from utils.image_utils import box_cxcywh_to_xyxy, letterbox, read_image, scale_coords
+from yolort.utils.image_utils import box_cxcywh_to_xyxy, letterbox, read_image, scale_coords
 
 
 class ImageUtilsTester(unittest.TestCase):

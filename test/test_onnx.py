@@ -10,7 +10,7 @@ except ImportError:
 import unittest
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
 
-from models import yolov5_onnx
+from yolort.models import yolov5_onnx
 
 
 @unittest.skipIf(onnxruntime is None, 'ONNX Runtime unavailable')
