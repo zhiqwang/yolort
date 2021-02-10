@@ -64,14 +64,13 @@ if __name__ == "__main__":
             "Operating System :: POSIX :: Linux",
             # How mature is this project? Common values are
             #   3 - Alpha, 4 - Beta, 5 - Production/Stable
-            'Development Status :: 4 - Beta',
+            "Development Status :: 4 - Beta",
             # Indicate who your project is intended for
-            'Intended Audience :: Developers',
-            'Topic :: Scientific/Engineering :: Artificial Intelligence',
-            'Topic :: Scientific/Engineering :: Object Detection',
-            'Topic :: Scientific/Engineering :: Information Analysis',
+            "Intended Audience :: Developers",
+            "Topic :: Scientific/Engineering :: Artificial Intelligence",
+            "Topic :: Scientific/Engineering :: Information Analysis",
             # Pick your license as you wish
-            "License :: OSI Approved :: GNU General Public License v3.0 (GPL-3.0)",
+            "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
             # Specify the Python versions you support here. In particular, ensure
             # that you indicate whether you support Python 2, Python 3 or both.
             "Programming Language :: Python :: 3",
