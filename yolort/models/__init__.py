@@ -1,9 +1,10 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from torch import nn
-from .common import Conv
-from utils.activations import Hardswish
 
+from .common import Conv
 from .pl_wrapper import YOLOLitWrapper
+
+from ..utils.activations import Hardswish
 
 
 def yolov5s(**kwargs):
