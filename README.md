@@ -2,7 +2,7 @@
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22) [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
 
-**What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on.
+**What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime`, `tvm` and so on.
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
@@ -18,9 +18,9 @@
 - Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
 - Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
 - Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
-- Support exporting to `onnx`, and inferring with `onnxruntime` interface. *Nov. 17, 2020*.
+- Support exporting to `ONNX`, and inferring with `ONNXRuntime` interface. *Nov. 17, 2020*.
 - Add graph visualization tools. *Nov. 21, 2020*.
-- Add `TVM` compile and inference notebooks. *Feb 5, 2021*.
+- Add `TVM` compile and inference notebooks. *Feb. 5, 2021*.
 
 ## 🛠️ Usage
 
@@ -28,7 +28,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 ### Installation via Pip
 
-- Pip from _PyPi_
+- Pip from [_PyPi_](https://pypi.org/project/yolort/)
 
   ```bash
   pip install -U yolort
