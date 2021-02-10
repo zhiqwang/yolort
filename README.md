@@ -1,8 +1,6 @@
-# 🔦 yolov5rt - YOLOv5 Runtime Stack
+# 🔦 yolort - YOLOv5 Runtime Stack
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22) [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
-
-**Note:** The master branch is not stable, please use [release/0.2.0](https://github.com/zhiqwang/yolov5-rt-stack/tree/release/v0.2.0) now.
 
 **What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime` and so on.
 
@@ -10,7 +8,7 @@
 
 > object detection should not be more difficult than classification, and should not require complex libraries for training and inference.
 
-`yolov5rt` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolov5rt`!
+`yolort` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolort`!
 
 <a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
@@ -26,32 +24,25 @@
 
 ## 🛠️ Usage
 
-There are no extra compiled components in `yolov5rt` and package dependencies are minimal, so the code is very simple to use.
+There are no extra compiled components in `yolort` and package dependencies are minimal, so the code is very simple to use.
 
-<details><summary>Expand to see the instructions of how to install dependencies via conda.</summary><br/>
+### Installation
 
-- First, clone the repository locally:
+- Pip from `PyPi`
 
   ```bash
+  pip install -U yolort
+  ```
+
+- Pip from Source
+
+  ```bash
+  # clone flash repository locally
   git clone https://github.com/zhiqwang/yolov5-rt-stack.git
+  cd yolov5-rt-stack
+  # install in editable mode
+  pip install -e .
   ```
-
-- Then, install PyTorch 1.7.0+ and torchvision 0.8.1+:
-
-  ```bash
-  conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
-  ```
-
-- Install pycocotools (for evaluation on COCO) and scipy (for training):
-
-  ```bash
-  conda install cython scipy
-  pip install -U pycocotools>=2.0.2  # corresponds to https://github.com/ppwwyyxx/cocoapi
-  ```
-
-- That's it, should be good to train and evaluate detection models.
-
-</details>
 
 ### Loading via `torch.hub`
 
@@ -63,7 +54,7 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### Updating checkpoint from ultralytics/yolov5
 
-The module state of `yolov5rt` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest release [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
+The module state of `yolort` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest release [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
 
 <details><summary>Expand to see more information of how to update ultralytics's trained (or your own) model checkpoint.</summary><br/>
 
@@ -77,7 +68,7 @@ The module state of `yolov5rt` has some differences comparing to `ultralytics/yo
   torch.save(checkpoints_.state_dict(), desensitize_ultralytics_weights)
   ```
 
-- Load `yolov5rt` model as follows:
+- Load `yolort` model as follows:
 
   ```python
   from hubconf import yolov5s
@@ -120,7 +111,7 @@ We provide an [example](./deployment) of getting `LibTorch` inference to work. F
 
 ## 🎨 Model Graph Visualization
 
-Now, `yolov5rt` can draw the model graph directly, checkout our [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook to see how to use and visualize the model graph.
+Now, `yolort` can draw the model graph directly, checkout our [visualize-jit-models](notebooks/visualize-jit-models.ipynb) notebook to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5.detail.svg"><img src="notebooks/assets/yolov5.detail.svg" alt="YOLO model visualize" width="500"/></a>
 
