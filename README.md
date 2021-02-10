@@ -26,9 +26,9 @@
 
 There are no extra compiled components in `yolort` and package dependencies are minimal, so the code is very simple to use.
 
-### Installation
+### Installation via Pip
 
-- Pip from `PyPi`
+- Pip from _PyPi_
 
   ```bash
   pip install -U yolort
