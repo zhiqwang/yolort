@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from models import yolov5s, yolov5m, yolov5l
+from yolort.models import yolov5s, yolov5m, yolov5l
 
 
 class TorchScriptTester(unittest.TestCase):

@@ -2,10 +2,10 @@ import unittest
 import torch
 import pytorch_lightning as pl
 
-from models import YOLOLitWrapper
-from models.yolo import yolov5_darknet_pan_s_r31
-from models.transform import nested_tensor_from_tensor_list
-from datasets import DetectionDataModule
+from yolort.models import YOLOLitWrapper
+from yolort.models.yolo import yolov5_darknet_pan_s_r31
+from yolort.models.transform import nested_tensor_from_tensor_list
+from yolort.datasets import DetectionDataModule
 
 from .torch_utils import image_preprocess
 from .dataset_utils import DummyCOCODetectionDataset

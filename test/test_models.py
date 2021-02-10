@@ -1,9 +1,9 @@
 import unittest
 import torch
 
-from models.backbone_utils import darknet_pan_backbone
-from models.anchor_utils import AnchorGenerator
-from models.box_head import YoloHead, PostProcess, SetCriterion
+from yolort.models.backbone_utils import darknet_pan_backbone
+from yolort.models.anchor_utils import AnchorGenerator
+from yolort.models.box_head import YoloHead, PostProcess, SetCriterion
 
 from .common_utils import TestCase
 
