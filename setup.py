@@ -57,7 +57,7 @@ if __name__ == "__main__":
     setup(
         name=PACKAGE_NAME,
         version=VERSION,
-        description="Yet Another YOLOv5 and with Additional Runtime Stack",
+        description="Yet Another YOLOv5 and its Additional Runtime Stack",
         author="Zhiqiang Wang",
         author_email="me@zhiqwang.com",
         long_description=long_description,
