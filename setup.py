@@ -1,4 +1,11 @@
-# !/usr/bin/env python
+"""A setuptools based setup module.
+See:
+https://packaging.python.org/guides/distributing-packages-using-setuptools/
+https://github.com/pypa/sampleproject
+
+Adopted from TorchVision, see:
+https://github.com/pytorch/vision/blob/master/setup.py
+"""
 from pathlib import Path
 import subprocess
 from setuptools import setup, find_packages
