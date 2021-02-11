@@ -16,8 +16,8 @@
 
 - Support exporting to `TorchScript` model. *Oct. 8, 2020*.
 - Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
-- Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
-- Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
+- Add `TorchScript` cpp inference example. *Nov. 4, 2020*.
+- Refactor YOLO modules and support *dynmaic batching* inference. *Nov. 16, 2020*.
 - Support exporting to `ONNX`, and inferring with `ONNXRuntime` interface. *Nov. 17, 2020*.
 - Add graph visualization tools. *Nov. 21, 2020*.
 - Add `TVM` compile and inference notebooks. *Feb. 5, 2021*.
@@ -28,7 +28,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 ### Installation via Pip
 
-- Pip from [_PyPi_](https://pypi.org/project/yolort/)
+- Pip from PyPI
 
   ```bash
   pip install -U yolort
@@ -43,6 +43,25 @@ There are no extra compiled components in `yolort` and package dependencies are 
   # install in editable mode
   pip install -e .
   ```
+
+To run batched inference with YOLOv5:
+
+```python
+from torchvision.io import read_image
+from yolort.models import yolov5s
+
+# Model
+model = yolov5s(pretrained=True, score_thresh=0.45)
+model.eval()
+
+# Images
+img1 = read_image('zidane.jpg') / 255.
+img2 = read_image('bus.jpg') / 255.
+imgs = [img1, img2]  # batched list of images
+
+# Inference
+results = model(imgs)
+```
 
 ### Loading via `torch.hub`
 
