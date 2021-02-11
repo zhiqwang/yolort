@@ -26,15 +26,17 @@
 
 There are no extra compiled components in `yolort` and package dependencies are minimal, so the code is very simple to use.
 
-### Installation via Pip
+### Installation and Inference Examples
 
-- Pip from PyPI
+- Installation via Pip
+
+  Simple installation from PyPI
 
   ```bash
   pip install -U yolort
   ```
 
-- Pip from Source
+  Or from Source
 
   ```bash
   # clone flash repository locally
@@ -44,24 +46,24 @@ There are no extra compiled components in `yolort` and package dependencies are 
   pip install -e .
   ```
 
-To run batched inference with YOLOv5:
+- To run batched inference with YOLOv5s
 
-```python
-from torchvision.io import read_image
-from yolort.models import yolov5s
+  ```python
+  from torchvision.io import read_image
+  from yolort.models import yolov5s
 
-# Model
-model = yolov5s(pretrained=True, score_thresh=0.45)
-model.eval()
+  # Model
+  model = yolov5s(pretrained=True, score_thresh=0.45)
+  model.eval()
 
-# Images
-img1 = read_image('zidane.jpg') / 255.
-img2 = read_image('bus.jpg') / 255.
-imgs = [img1, img2]  # batched list of images
+  # Images
+  img1 = read_image('zidane.jpg') / 255.
+  img2 = read_image('bus.jpg') / 255.
+  imgs = [img1, img2]  # batched list of images
 
-# Inference
-results = model(imgs)
-```
+  # Inference
+  results = model(imgs)
+  ```
 
 ### Loading via `torch.hub`
 
