@@ -59,10 +59,10 @@ There are no extra compiled components in `yolort` and package dependencies are 
   # Images
   img1 = read_image('zidane.jpg') / 255.
   img2 = read_image('bus.jpg') / 255.
-  imgs = [img1, img2]  # batched list of images
+  images = [img1, img2]  # batched list of images
 
   # Inference
-  results = model(imgs)
+  results = model(images)
   ```
 
 ### Loading via `torch.hub`
