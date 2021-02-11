@@ -10,7 +10,7 @@ from pathlib import Path
 import subprocess
 from setuptools import setup, find_packages
 
-PATH_ROOT = Path(__file__).parent
+PATH_ROOT = Path(__file__).parent.resolve()
 VERSION = "0.3.0rc1"
 
 PACKAGE_NAME = 'yolort'
@@ -33,8 +33,8 @@ def write_version_file():
 
 
 def load_requirements(path_dir=PATH_ROOT, file_name='requirements.txt', comment_char='#'):
-    with open(path_dir.joinpath(file_name), 'r', encoding="utf-8", errors="ignore") as file:
-        lines = [ln.strip() for ln in file.readlines()]
+    with open(path_dir / file_name, 'r', encoding="utf-8", errors="ignore") as file:
+        lines = [ln.rstrip() for ln in file.readlines() if not ln.startswith('#')]
     reqs = []
     for ln in lines:
         if comment_char in ln:  # filer all comments
@@ -51,8 +51,8 @@ if __name__ == "__main__":
 
     write_version_file()
 
-    with open('README.md', encoding='utf-8') as f:
-        readme = f.read()
+    # Get the long description from the README file
+    long_description = (PATH_ROOT / 'README.md').read_text(encoding='utf-8')
 
     setup(
         name=PACKAGE_NAME,
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         description="Yet Another YOLOv5 and with Additional Runtime Stack",
         author="Zhiqiang Wang",
         author_email="me@zhiqwang.com",
-        long_description=readme,
+        long_description=long_description,
         long_description_content_type="text/markdown",
         url="https://github.com/zhiqwang/yolov5-rt-stack",
         license="GPL-3.0",
@@ -68,23 +68,55 @@ if __name__ == "__main__":
 
         zip_safe=False,
         classifiers=[
-            "Operating System :: POSIX :: Linux",
+            # Operation system
+            'Operating System :: OS Independent',
             # How mature is this project? Common values are
-            #   3 - Alpha, 4 - Beta, 5 - Production/Stable
-            "Development Status :: 4 - Beta",
+            #   3 - Alpha
+            #   4 - Beta
+            #   5 - Production/Stable
+            'Development Status :: 4 - Beta',
             # Indicate who your project is intended for
-            "Intended Audience :: Developers",
-            "Topic :: Scientific/Engineering :: Artificial Intelligence",
-            "Topic :: Scientific/Engineering :: Information Analysis",
+            'Intended Audience :: Developers',
+            # Topics
+            'Topic :: Education',
+            'Topic :: Scientific/Engineering',
+            'Topic :: Scientific/Engineering :: Artificial Intelligence',
+            'Topic :: Scientific/Engineering :: Image Recognition',
             # Pick your license as you wish
-            "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+            'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
             # Specify the Python versions you support here. In particular, ensure
             # that you indicate whether you support Python 2, Python 3 or both.
-            "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.6",
-            "Programming Language :: Python :: 3.7",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
         ],
         install_requires=load_requirements(),
+        # This field adds keywords for your project which will appear on the
+        # project page. What does your project relate to?
+        #
+        # Note that this is a list of additional keywords, separated
+        # by commas, to be used to assist searching for the distribution in a
+        # larger catalog.
+        keywords='machine-learning, deep-learning, ml, pytorch, YOLO, object-detection, YOLOv5, TorchScript',
+        # Specify which Python versions you support. In contrast to the
+        # 'Programming Language' classifiers above, 'pip install' will check this
+        # and refuse to install the project if the version does not match. See
+        # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
+        python_requires='>=3.6, <4',
+        # List additional URLs that are relevant to your project as a dict.
+        #
+        # This field corresponds to the "Project-URL" metadata fields:
+        # https://packaging.python.org/specifications/core-metadata/#project-url-multiple-use
+        #
+        # Examples listed include a pattern for specifying where the package tracks
+        # issues, where the source is hosted, where to say thanks to the package
+        # maintainers, and where to support the project financially. The key is
+        # what's used to render the link text on PyPI.
+        project_urls={  # Optional
+            'Bug Reports': 'https://github.com/zhiqwang/yolov5-rt-stack/issues',
+            'Funding': 'https://zhiqwang.com',
+            'Source': 'https://github.com/zhiqwang/yolov5-rt-stack/',
+        },
     )
