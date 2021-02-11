@@ -1,6 +1,8 @@
 # 🔦 yolort - YOLOv5 Runtime Stack
 
-[![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22) [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+[![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
+[![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
+[![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
 
 **What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime`, `tvm` and so on.
 
@@ -16,8 +18,8 @@
 
 - Support exporting to `TorchScript` model. *Oct. 8, 2020*.
 - Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
-- Add `TorchScript` cpp inference example, *Nov. 4, 2020*.
-- Refactor YOLO modules and support *dynmaic batching* inference, *Nov. 16, 2020*.
+- Add `TorchScript` cpp inference example. *Nov. 4, 2020*.
+- Refactor YOLO modules and support *dynmaic batching* inference. *Nov. 16, 2020*.
 - Support exporting to `ONNX`, and inferring with `ONNXRuntime` interface. *Nov. 17, 2020*.
 - Add graph visualization tools. *Nov. 21, 2020*.
 - Add `TVM` compile and inference notebooks. *Feb. 5, 2021*.
@@ -26,15 +28,17 @@
 
 There are no extra compiled components in `yolort` and package dependencies are minimal, so the code is very simple to use.
 
-### Installation via Pip
+### Installation and Inference Examples
 
-- Pip from [_PyPi_](https://pypi.org/project/yolort/)
+- Installation via Pip
+
+  Simple installation from PyPI
 
   ```bash
   pip install -U yolort
   ```
 
-- Pip from Source
+  Or from Source
 
   ```bash
   # clone flash repository locally
@@ -42,6 +46,25 @@ There are no extra compiled components in `yolort` and package dependencies are 
   cd yolov5-rt-stack
   # install in editable mode
   pip install -e .
+  ```
+
+- To run batched inference with YOLOv5s
+
+  ```python
+  from torchvision.io import read_image
+  from yolort.models import yolov5s
+
+  # Model
+  model = yolov5s(pretrained=True, score_thresh=0.45)
+  model.eval()
+
+  # Images
+  img1 = read_image('zidane.jpg') / 255.
+  img2 = read_image('bus.jpg') / 255.
+  images = [img1, img2]  # batched list of images
+
+  # Inference
+  results = model(images)
   ```
 
 ### Loading via `torch.hub`
