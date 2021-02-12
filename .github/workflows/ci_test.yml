@@ -39,8 +39,9 @@ jobs:
           pip install flake8 pytest
           pip install pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install opencv-python
-          pip install pycocotools>=2.0.2
+          pip install -U opencv-python
+          pip install -U pycocotools>=2.0.2
+          pip install -U onnxruntime
       - name: Install PyTorch ${{ matrix.torch }} Version
         run: |
           pip install ${{ matrix.pip_address }}
