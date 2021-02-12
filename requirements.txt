@@ -8,6 +8,7 @@ pillow
 scipy>=1.4.1
 tqdm>=4.41.0
 onnx>=1.8.0
+ipython
 # pycocotools need python3.7 as minimal
 # pip install -U pycocotools>=2.0.2  # corresponds to https://github.com/ppwwyyxx/cocoapi
 pytorch-lightning>=1.1.1
