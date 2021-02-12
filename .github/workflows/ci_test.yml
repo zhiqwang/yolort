@@ -45,6 +45,12 @@ jobs:
       - name: Install PyTorch ${{ matrix.torch }} Version
         run: |
           pip install ${{ matrix.pip_address }}
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=18 --max-line-length=120 --statistics
       - name: Test and Generate coverage report
         run: |
           PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
