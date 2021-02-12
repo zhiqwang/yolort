@@ -1,10 +1,11 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import List, Optional
 from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
 from . import darknet
 from .path_aggregation_network import PathAggregationNetwork
+
+from typing import List, Optional
 
 
 class BackboneWithPAN(nn.Module):
@@ -45,7 +46,8 @@ def darknet_pan_backbone(
     returned_layers: Optional[List[int]] = None,
 ):
     """
-    Constructs a specified ResNet backbone with PAN on top. Freezes the specified number of layers in the backbone.
+    Constructs a specified ResNet backbone with PAN on top. Freezes the specified number of
+    layers in the backbone.
 
     Examples::
 
@@ -62,8 +64,8 @@ def darknet_pan_backbone(
         >>>    ('2', torch.Size([1, 512, 2, 2]))]
 
     Args:
-        backbone_name (string): resnet architecture. Possible values are 'ResNet', 'resnet18', 'resnet34', 'resnet50',
-             'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d', 'wide_resnet50_2', 'wide_resnet101_2'
+        backbone_name (string): resnet architecture. Possible values are 'DarkNet', 'darknet_s_r3_1',
+           'darknet_m_r3_1', 'darknet_l_r3_1', 'darknet_s_r4_0', 'darknet_m_r4_0', 'darknet_l_r4_0'
         norm_layer (torchvision.ops): it is recommended to use the default value. For details visit:
             (https://github.com/facebookresearch/maskrcnn-benchmark/issues/267)
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet

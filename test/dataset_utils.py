@@ -5,9 +5,6 @@ from torch.utils.data import Dataset
 from torchvision import ops
 
 
-__all__ = ["DummyDetectionDataset"]
-
-
 class DummyCOCODetectionDataset(Dataset):
     """
     Generate a dummy dataset for detection

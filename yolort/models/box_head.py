@@ -252,7 +252,8 @@ class SetCriterion(nn.Module):
             num_target_per_layer = b.shape[0]  # number of targets
             if num_target_per_layer:
                 num_targets += num_target_per_layer  # cumulative targets
-                pred_logits_matched = pred_logits_per_layer[b, a, gj, gi]  # prediction subset corresponding to targets
+                # prediction subset corresponding to targets
+                pred_logits_matched = pred_logits_per_layer[b, a, gj, gi]
 
                 # Regression head
                 bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
@@ -268,10 +269,10 @@ class SetCriterion(nn.Module):
 
                 # Classification head
                 if num_classes > 1:  # cls loss (only if multiple classes)
-                    cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)  # targets
+                    cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)
                     cls_logits[torch.arange(num_target_per_layer), targets_cls[i]] = cls_positive
 
-                    loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)  # BCE
+                    loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)
 
             loss_obj += det_utils.obj_loss(
                 pred_logits_per_layer[..., 4],
@@ -325,10 +326,9 @@ class PostProcess(nn.Module):
         score and locations.
 
         Parameters:
-            head_outputs : [batch_size, num_anchors, num_classes + 5] predicted locations and class/object confidence.
-            image_shapes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
-                          For evaluation, this must be the original image size (before any data augmentation)
-                          For visualization, this should be the image size after data augment, but before padding
+            head_outputs: [batch_size, num_anchors, num_classes + 5] predicted locations and
+                class/object confidence.
+            anchors_tuple:
         """
         batch_size, _, _, _, K = head_outputs[0].shape
 
