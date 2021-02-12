@@ -16,7 +16,6 @@ class ImageUtilsTester(unittest.TestCase):
         self.assertIsInstance(out, Tensor)
         self.assertEqual(tuple(out.shape), (N, H, W))
 
-
     def test_letterbox(self):
         img = np.random.randint(0, 255, (720, 360, 3), dtype='uint8')  # As a dummy image
         out = letterbox(img, new_shape=(416, 416))[0]
@@ -51,6 +50,7 @@ class ImageUtilsTester(unittest.TestCase):
         box_coords_scaled = scale_coords(box_tensor, (160, 128), (178, 136))
         self.assertEqual(tuple(box_coords_scaled.shape), (4, 4))
         self.assertTrue((exp_coords - box_coords_scaled).abs().max() < TOLERANCE)
+
 
 if __name__ == '__main__':
     unittest.main()
