@@ -1,3 +1,4 @@
+# Modified from ultralytics/yolov5 by Zhiqiang Wang
 # This file contains modules common to various models
 import math
 from typing import List

@@ -1,5 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-# Modified by Zhiqiang Wang (zhiqwang@foxmail.com)
+# Modified by Zhiqiang Wang (me@zhiqwang.com)
 import argparse
 from pathlib import Path
 
