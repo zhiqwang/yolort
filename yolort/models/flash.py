@@ -18,7 +18,7 @@ import pytorch_lightning as pl
 import torch
 from torch import nn
 
-from yolort.datasets import DataModule, DataPipeline
+from yolort.datasets import DetectionDataModule, DataPipeline
 from yolort.utils import get_callable_dict
 
 
@@ -172,16 +172,15 @@ class Task(pl.LightningModule):
         return self.optimizer_cls(
             filter(lambda p: p.requires_grad, self.parameters()), lr=self.learning_rate)
 
+    @torch.jit.unused
     @property
     def data_pipeline(self) -> DataPipeline:
         # we need to save the pipeline in case this class
         # is loaded from checkpoint and used to predict
         if not self._data_pipeline:
-            try:
-                # datamodule pipeline takes priority
-                self._data_pipeline = self.trainer.datamodule.data_pipeline
-            except AttributeError:
-                self._data_pipeline = self.default_pipeline()
+            # datamodule pipeline takes priority
+            self._data_pipeline = self.default_pipeline()
+
         return self._data_pipeline
 
     @data_pipeline.setter
@@ -191,7 +190,7 @@ class Task(pl.LightningModule):
     @staticmethod
     def default_pipeline() -> DataPipeline:
         """Pipeline to use when there is no datamodule or it has not defined its pipeline"""
-        return DataModule.default_pipeline()
+        return DetectionDataModule.default_pipeline()
 
     def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
         self.data_pipeline = checkpoint["pipeline"]

@@ -10,8 +10,15 @@ from pytorch_lightning import LightningDataModule
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
 from .voc import VOCDetection
 from .coco import CocoDetection
+from .datapipeline import DataPipeline
 
 from typing import Callable, List, Any, Optional
+
+
+class TaskDataPipeline(DataPipeline):
+
+    def after_collate(self, batch: Any) -> Any:
+        return (batch["x"], batch["target"]) if isinstance(batch, dict) else batch
 
 
 class DetectionDataModule(LightningDataModule):
@@ -77,6 +84,20 @@ class DetectionDataModule(LightningDataModule):
         )
 
         return loader
+
+    @property
+    def data_pipeline(self) -> DataPipeline:
+        if self._data_pipeline is None:
+            self._data_pipeline = self.default_pipeline()
+        return self._data_pipeline
+
+    @data_pipeline.setter
+    def data_pipeline(self, data_pipeline) -> None:
+        self._data_pipeline = data_pipeline
+
+    @staticmethod
+    def default_pipeline() -> DataPipeline:
+        return TaskDataPipeline()
 
 
 class VOCDetectionDataModule(DetectionDataModule):

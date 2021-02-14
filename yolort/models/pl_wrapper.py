@@ -4,7 +4,7 @@ import argparse
 import torch
 from torch import Tensor
 
-import pytorch_lightning as pl
+from yolort.models.flash import Task
 
 from . import yolo
 from .transform import GeneralizedYOLOTransform
@@ -12,7 +12,7 @@ from .transform import GeneralizedYOLOTransform
 from typing import Any, List, Dict, Tuple, Optional
 
 
-class YOLOLitWrapper(pl.LightningModule):
+class YOLOLitWrapper(Task):
     """
     PyTorch Lightning wrapper of `YOLO`
     """
