@@ -1,6 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from pathlib import Path
-from collections import abc as container_abcs
 
 import torch.utils.data
 from torch.utils.data import DataLoader
@@ -18,6 +17,7 @@ from .coco import CocoDetection
 from .datapipeline import DataPipeline
 
 from typing import Callable, List, Any, Optional
+from collections.abc import Sequence
 
 
 class ObjectDetectionDataPipeline(DataPipeline):
@@ -50,7 +50,7 @@ class ObjectDetectionDataPipeline(DataPipeline):
         if not isinstance(samples, Tensor):
             elem = samples[0]
 
-            if isinstance(elem, container_abcs.Sequence):
+            if isinstance(elem, Sequence):
                 return tuple(zip(*samples))
 
             return default_collate(samples)
