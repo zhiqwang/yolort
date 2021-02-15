@@ -21,6 +21,10 @@ from typing import Callable, List, Any, Optional
 
 
 class ObjectDetectionDataPipeline(DataPipeline):
+    """
+    Ref:
+    <https://github.com/PyTorchLightning/lightning-flash/blob/be07c10/flash/vision/detection/data.py#L133>
+    """
     def __init__(self, loader: Optional[Callable] = None):
         if loader is None:
             loader = lambda x: read_image(x) / 255.
