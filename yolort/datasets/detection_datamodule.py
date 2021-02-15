@@ -4,6 +4,11 @@ from pathlib import Path
 import torch.utils.data
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
+from torch.utils.data.dataloader import default_collate
+
+from torch import Tensor
+from torch._six import container_abcs
+from torchvision.io import read_image
 
 from pytorch_lightning import LightningDataModule
 
@@ -15,7 +20,38 @@ from .datapipeline import DataPipeline
 from typing import Callable, List, Any, Optional
 
 
-class TaskDataPipeline(DataPipeline):
+class ObjectDetectionDataPipeline(DataPipeline):
+    def __init__(self, loader: Optional[Callable] = None):
+        if loader is None:
+            loader = lambda x: read_image(x) / 255.
+        self._loader = loader
+
+    def before_collate(self, samples: Any) -> Any:
+        if isinstance(samples, Tensor):
+            return samples
+
+        if isinstance(samples, str):
+            samples = [samples]
+
+        if isinstance(samples, (list, tuple)) and all(isinstance(p, str) for p in samples):
+            outputs = []
+            for sample in samples:
+                output = self._loader(sample)
+                outputs.append(output)
+            return outputs
+
+        raise NotImplementedError("The samples should either be a tensor, a list of paths or a path.")
+
+    def collate(self, samples: Any) -> Any:
+        if not isinstance(samples, Tensor):
+            elem = samples[0]
+
+            if isinstance(elem, container_abcs.Sequence):
+                return tuple(zip(*samples))
+
+            return default_collate(samples)
+
+        return samples.unsqueeze(dim=0)
 
     def after_collate(self, batch: Any) -> Any:
         return (batch["x"], batch["target"]) if isinstance(batch, dict) else batch
@@ -97,7 +133,7 @@ class DetectionDataModule(LightningDataModule):
 
     @staticmethod
     def default_pipeline() -> DataPipeline:
-        return TaskDataPipeline()
+        return ObjectDetectionDataPipeline()
 
 
 class VOCDetectionDataModule(DetectionDataModule):

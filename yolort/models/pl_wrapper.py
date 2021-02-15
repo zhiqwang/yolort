@@ -125,8 +125,8 @@ class YOLOLitWrapper(LightningModule):
         """
         data_pipeline = data_pipeline or self.data_pipeline
         batch = x if skip_collate_fn else data_pipeline.collate_fn(x)
-        batch_x, batch_y = batch if len(batch) == 2 and isinstance(batch, (list, tuple)) else (batch, None)
-        predictions = self.forward(batch_x)
+        images, _ = batch if len(batch) == 2 and isinstance(batch, (list, tuple)) else (batch, None)
+        predictions = self.forward(images.to(self.device))
         output = data_pipeline.uncollate_fn(predictions)  # TODO: pass batch and x
         return output
 
