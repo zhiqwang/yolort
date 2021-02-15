@@ -1,5 +1,6 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from pathlib import Path
+from collections import abc as container_abcs
 
 import torch.utils.data
 from torch.utils.data import DataLoader
@@ -7,7 +8,6 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data.dataloader import default_collate
 
 from torch import Tensor
-from torch._six import container_abcs
 from torchvision.io import read_image
 
 from pytorch_lightning import LightningDataModule
