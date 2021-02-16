@@ -94,6 +94,25 @@ class EngineTester(unittest.TestCase):
         self.assertIsInstance(predictions[0]["labels"], torch.Tensor)
         self.assertIsInstance(predictions[0]["scores"], torch.Tensor)
 
+    def test_predict_tensors(self):
+        # Set image inputs
+        img_tensor1 = default_loader("test/assets/zidane.jpg")
+        self.assertEqual(img_tensor1.ndim, 3)
+        img_tensor2 = default_loader("test/assets/bus.jpg")
+        self.assertEqual(img_tensor2.ndim, 3)
+        img_tensors = [img_tensor1, img_tensor2]
+        # Load model
+        model = yolov5s(pretrained=True)
+        model.eval()
+        # Perform inference on a list of image files
+        predictions = model.predict(img_tensors)
+        self.assertIsInstance(predictions, list)
+        self.assertEqual(len(predictions), 2)
+        self.assertIsInstance(predictions[0], Dict)
+        self.assertIsInstance(predictions[0]["boxes"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["labels"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["scores"], torch.Tensor)
+
     def test_predict_image_file(self):
         # Set image inputs
         img_name = "test/assets/zidane.jpg"
@@ -104,6 +123,23 @@ class EngineTester(unittest.TestCase):
         predictions = model.predict(img_name)
         self.assertIsInstance(predictions, list)
         self.assertEqual(len(predictions), 1)
+        self.assertIsInstance(predictions[0], Dict)
+        self.assertIsInstance(predictions[0]["boxes"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["labels"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["scores"], torch.Tensor)
+
+    def test_predict_image_files(self):
+        # Set image inputs
+        img_name1 = "test/assets/zidane.jpg"
+        img_name2 = "test/assets/bus.jpg"
+        img_names = [img_name1, img_name2]
+        # Load model
+        model = yolov5s(pretrained=True)
+        model.eval()
+        # Perform inference on a list of image files
+        predictions = model.predict(img_names)
+        self.assertIsInstance(predictions, list)
+        self.assertEqual(len(predictions), 2)
         self.assertIsInstance(predictions[0], Dict)
         self.assertIsInstance(predictions[0]["boxes"], torch.Tensor)
         self.assertIsInstance(predictions[0]["labels"], torch.Tensor)

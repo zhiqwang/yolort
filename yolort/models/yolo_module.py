@@ -127,7 +127,8 @@ class YOLOModule(LightningModule):
         data_pipeline = data_pipeline or self.data_pipeline
         batch = x if skip_collate_fn else data_pipeline.collate_fn(x)
         images, _ = batch if len(batch) == 2 and isinstance(batch, (list, tuple)) else (batch, None)
-        predictions = self.forward(images.to(self.device))
+        images = [img.to(self.device) for img in images]
+        predictions = self.forward(images)
         output = data_pipeline.uncollate_fn(predictions)  # TODO: pass batch and x
         return output
 
