@@ -48,7 +48,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
   pip install -e .
   ```
 
-- To read a source image and detect its objects run 🔥
+- To read a source image(s) and detect its objects 🔥
 
   ```python
   from yolort.models import yolov5s
@@ -57,7 +57,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
   model = yolov5s(pretrained=True, score_thresh=0.45)
   model.eval()
 
-  # Perform inference on a image file
+  # Perform inference on an image file
   predictions = model.predict('bus.jpg')
   # Perform inference on a list of image files
   predictions = model.predict(['bus.jpg', 'zidane.jpg'])
