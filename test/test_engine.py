@@ -2,23 +2,35 @@ import unittest
 import torch
 import pytorch_lightning as pl
 
-from yolort.models import YOLOModule
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
+from yolort.models import yolov5s
+
 from yolort.datasets import DetectionDataModule
 
-from .torch_utils import image_preprocess
 from .dataset_utils import DummyCOCODetectionDataset
 
 from typing import Dict
 
+from torchvision.io import read_image
+
+
+def default_loader(img_name, is_half=False):
+    """
+    Read Image using TorchVision.io Here
+    """
+    img = read_image(img_name)
+    img = img.half() if is_half else img.float()  # uint8 to fp16/32
+    img /= 255.  # 0 - 255 to 0.0 - 1.0
+
+    return img
+
 
 class EngineTester(unittest.TestCase):
     def test_train(self):
-        # Read Image using TorchVision.io Here
         # Do forward over image
         img_name = "test/assets/zidane.jpg"
-        img_tensor = image_preprocess(img_name)
+        img_tensor = default_loader(img_name)
         self.assertEqual(img_tensor.ndim, 3)
         # Add a dummy image to train
         img_dummy = torch.rand((3, 416, 360), dtype=torch.float32)
@@ -39,9 +51,8 @@ class EngineTester(unittest.TestCase):
 
     def test_train_one_step(self):
         # Load model
-        model = YOLOModule()
+        model = yolov5s()
         model.train()
-
         # Setup the DataModule
         train_dataset = DummyCOCODetectionDataset(num_samples=128)
         datamodule = DetectionDataModule(train_dataset, batch_size=16)
@@ -50,20 +61,53 @@ class EngineTester(unittest.TestCase):
         trainer.fit(model, datamodule)
 
     def test_inference(self):
-        # Infer over an image
+        # Set image inputs
         img_name = "test/assets/zidane.jpg"
-        img_input = image_preprocess(img_name)
+        img_input = default_loader(img_name)
         self.assertEqual(img_input.ndim, 3)
-
-        model = YOLOModule(pretrained=True)
+        # Load model
+        model = yolov5s(pretrained=True)
         model.eval()
-
+        # Perform inference on a list of tensors
         out = model([img_input])
         self.assertIsInstance(out, list)
+        self.assertEqual(len(out), 1)
         self.assertIsInstance(out[0], Dict)
         self.assertIsInstance(out[0]["boxes"], torch.Tensor)
         self.assertIsInstance(out[0]["labels"], torch.Tensor)
         self.assertIsInstance(out[0]["scores"], torch.Tensor)
+
+    def test_predict_tensor(self):
+        # Set image inputs
+        img_name = "test/assets/zidane.jpg"
+        img_tensor = default_loader(img_name)
+        self.assertEqual(img_tensor.ndim, 3)
+        # Load model
+        model = yolov5s(pretrained=True)
+        model.eval()
+        # Perform inference on a list of image files
+        predictions = model.predict(img_tensor)
+        self.assertIsInstance(predictions, list)
+        self.assertEqual(len(predictions), 1)
+        self.assertIsInstance(predictions[0], Dict)
+        self.assertIsInstance(predictions[0]["boxes"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["labels"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["scores"], torch.Tensor)
+
+    def test_predict_image_file(self):
+        # Set image inputs
+        img_name = "test/assets/zidane.jpg"
+        # Load model
+        model = yolov5s(pretrained=True)
+        model.eval()
+        # Perform inference on an image file
+        predictions = model.predict(img_name)
+        self.assertIsInstance(predictions, list)
+        self.assertEqual(len(predictions), 1)
+        self.assertIsInstance(predictions[0], Dict)
+        self.assertIsInstance(predictions[0]["boxes"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["labels"], torch.Tensor)
+        self.assertIsInstance(predictions[0]["scores"], torch.Tensor)
 
 
 if __name__ == '__main__':
