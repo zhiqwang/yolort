@@ -1,6 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import argparse
-from yolort.datasets.detection_datamodule import DetectionDataModule
 
 import torch
 from torch import Tensor
@@ -10,12 +9,14 @@ from pytorch_lightning import LightningModule
 from . import yolo
 from .transform import GeneralizedYOLOTransform
 
-from ..datasets import DataPipeline
+from ..datasets import DetectionDataModule, DataPipeline
 
 from typing import Any, List, Dict, Tuple, Optional
 
+__all__ = ['YOLOModule']
 
-class YOLOLitWrapper(LightningModule):
+
+class YOLOModule(LightningModule):
     """
     PyTorch Lightning wrapper of `YOLO`
     """

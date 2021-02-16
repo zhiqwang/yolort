@@ -2,7 +2,7 @@ import unittest
 import torch
 import pytorch_lightning as pl
 
-from yolort.models import YOLOLitWrapper
+from yolort.models import YOLOModule
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
 from yolort.datasets import DetectionDataModule
@@ -39,7 +39,7 @@ class EngineTester(unittest.TestCase):
 
     def test_train_one_step(self):
         # Load model
-        model = YOLOLitWrapper()
+        model = YOLOModule()
         model.train()
 
         # Setup the DataModule
@@ -55,7 +55,7 @@ class EngineTester(unittest.TestCase):
         img_input = image_preprocess(img_name)
         self.assertEqual(img_input.ndim, 3)
 
-        model = YOLOLitWrapper(pretrained=True)
+        model = YOLOModule(pretrained=True)
         model.eval()
 
         out = model([img_input])
