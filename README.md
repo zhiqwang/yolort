@@ -48,7 +48,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
   pip install -e .
   ```
 
-- To read a source image(s) and detect its objects 🔥
+- To read a source of image(s) and detect its objects 🔥
 
   ```python
   from yolort.models import yolov5s
@@ -110,7 +110,7 @@ The module state of `yolort` has some differences comparing to `ultralytics/yolo
 
 ### Inference on `LibTorch` backend 🚀
 
-We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And We provide an [C++ example](./deployment) of how to infer with the transformed `torchscript` model. For details see the [GitHub actions](.github/workflows/nightly.yml).
+We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](./deployment) of how to infer with the transformed `torchscript` model. For details see the [GitHub actions](.github/workflows/nightly.yml).
 
 ## 🎨 Model Graph Visualization
 
