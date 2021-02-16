@@ -2,23 +2,23 @@
 from torch import nn
 
 from .common import Conv
-from .pl_wrapper import YOLOLitWrapper
+from .yolo_module import YOLOModule
 
 from ..utils.activations import Hardswish
 
 
 def yolov5s(**kwargs):
-    model = YOLOLitWrapper(arch="yolov5_darknet_pan_s_r31", **kwargs)
+    model = YOLOModule(arch="yolov5_darknet_pan_s_r31", **kwargs)
     return model
 
 
 def yolov5m(**kwargs):
-    model = YOLOLitWrapper(arch="yolov5_darknet_pan_m_r31", **kwargs)
+    model = YOLOModule(arch="yolov5_darknet_pan_m_r31", **kwargs)
     return model
 
 
 def yolov5l(**kwargs):
-    model = YOLOLitWrapper(arch="yolov5_darknet_pan_l_r31", **kwargs)
+    model = YOLOModule(arch="yolov5_darknet_pan_l_r31", **kwargs)
     return model
 
 

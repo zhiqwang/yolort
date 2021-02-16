@@ -48,23 +48,19 @@ There are no extra compiled components in `yolort` and package dependencies are 
   pip install -e .
   ```
 
-- To run batched inference with YOLOv5s
+- To read a source of image(s) and detect its objects 🔥
 
   ```python
-  from torchvision.io import read_image
   from yolort.models import yolov5s
 
-  # Model
+  # Load model
   model = yolov5s(pretrained=True, score_thresh=0.45)
   model.eval()
 
-  # Images
-  img1 = read_image('zidane.jpg') / 255.
-  img2 = read_image('bus.jpg') / 255.
-  images = [img1, img2]  # batched list of images
-
-  # Inference
-  results = model(images)
+  # Perform inference on an image file
+  predictions = model.predict('bus.jpg')
+  # Perform inference on a list of image files
+  predictions = model.predict(['bus.jpg', 'zidane.jpg'])
   ```
 
 ### Loading via `torch.hub`
@@ -112,25 +108,9 @@ The module state of `yolort` has some differences comparing to `ultralytics/yolo
 
 </details>
 
-### Inference on `PyTorch` backend 🔥
-
-To read a source image and detect its objects run:
-
-```bash
-python -m detect [--input_source ./test/assets/zidane.jpg]
-                 [--labelmap ./notebooks/assets/coco.names]
-                 [--output_dir ./data-bin/output]
-                 [--min_size 640]
-                 [--max_size 640]
-                 [--save_img]
-                 [--gpu]  # GPU switch, Set False as default
-```
-
-You can also see the [inference-pytorch-export-libtorch](notebooks/inference-pytorch-export-libtorch.ipynb) notebook for more information.
-
 ### Inference on `LibTorch` backend 🚀
 
-We provide an [example](./deployment) of getting `LibTorch` inference to work. For details see the [GitHub actions](.github/workflows/nightly.yml).
+We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](./deployment) of how to infer with the transformed `torchscript` model. For details see the [GitHub actions](.github/workflows/nightly.yml).
 
 ## 🎨 Model Graph Visualization
 

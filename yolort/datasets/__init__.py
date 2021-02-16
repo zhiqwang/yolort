@@ -1,2 +1,3 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from .pl_datamodule import DetectionDataModule, VOCDetectionDataModule, CocoDetectionDataModule
+from .datapipeline import DataPipeline
+from .datamodule import DetectionDataModule, VOCDetectionDataModule, CocoDetectionDataModule

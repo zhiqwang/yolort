@@ -4,15 +4,19 @@ import argparse
 import torch
 from torch import Tensor
 
-import pytorch_lightning as pl
+from pytorch_lightning import LightningModule
 
 from . import yolo
 from .transform import GeneralizedYOLOTransform
 
+from ..datasets import DetectionDataModule, DataPipeline
+
 from typing import Any, List, Dict, Tuple, Optional
 
+__all__ = ['YOLOModule']
 
-class YOLOLitWrapper(pl.LightningModule):
+
+class YOLOModule(LightningModule):
     """
     PyTorch Lightning wrapper of `YOLO`
     """
@@ -43,6 +47,8 @@ class YOLOLitWrapper(pl.LightningModule):
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
         self.transform = GeneralizedYOLOTransform(min_size, max_size)
+
+        self._data_pipeline = None
 
     def forward(
         self,
@@ -88,6 +94,44 @@ class YOLOLitWrapper(pl.LightningModule):
         loss = sum(loss for loss in loss_dict.values())
         return {"loss": loss, "log": loss_dict}
 
+    @torch.no_grad()
+    def predict(
+        self,
+        x: Any,
+        batch_idx: Optional[int] = None,
+        skip_collate_fn: bool = False,
+        dataloader_idx: Optional[int] = None,
+        data_pipeline: Optional[DataPipeline] = None,
+    ) -> Any:
+        """
+        Predict function for raw data or processed data
+
+        Args:
+
+            x: Input to predict. Can be raw data or processed data.
+
+            batch_idx: Batch index
+
+            dataloader_idx: Dataloader index
+
+            skip_collate_fn: Whether to skip the collate step.
+                this is required when passing data already processed
+                for the model, for example, data from a dataloader
+
+            data_pipeline: Use this to override the current data pipeline
+
+        Returns:
+            The post-processed model predictions
+
+        """
+        data_pipeline = data_pipeline or self.data_pipeline
+        batch = x if skip_collate_fn else data_pipeline.collate_fn(x)
+        images, _ = batch if len(batch) == 2 and isinstance(batch, (list, tuple)) else (batch, None)
+        images = [img.to(self.device) for img in images]
+        predictions = self.forward(images)
+        output = data_pipeline.uncollate_fn(predictions)  # TODO: pass batch and x
+        return output
+
     def configure_optimizers(self):
         return torch.optim.SGD(
             self.model.parameters(),
@@ -95,6 +139,24 @@ class YOLOLitWrapper(pl.LightningModule):
             momentum=0.9,
             weight_decay=0.005,
         )
+
+    @torch.jit.unused
+    @property
+    def data_pipeline(self) -> DataPipeline:
+        # we need to save the pipeline in case this class
+        # is loaded from checkpoint and used to predict
+        if not self._data_pipeline:
+            self._data_pipeline = self.default_pipeline()
+        return self._data_pipeline
+
+    @data_pipeline.setter
+    def data_pipeline(self, data_pipeline: DataPipeline) -> None:
+        self._data_pipeline = data_pipeline
+
+    @staticmethod
+    def default_pipeline() -> DataPipeline:
+        """Pipeline to use when there is no datamodule or it has not defined its pipeline"""
+        return DetectionDataModule.default_pipeline()
 
     @staticmethod
     def add_model_specific_args(parent_parser):
