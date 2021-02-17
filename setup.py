@@ -11,7 +11,7 @@ import subprocess
 from setuptools import setup, find_packages
 
 PATH_ROOT = Path(__file__).parent.resolve()
-VERSION = "0.3.0rc1"
+VERSION = "0.3.1"
 
 PACKAGE_NAME = 'yolort'
 sha = 'Unknown'
