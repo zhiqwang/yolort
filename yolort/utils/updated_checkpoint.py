@@ -1,77 +1,89 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
-import argparse
+from functools import reduce
+
 import torch
+from torch import nn
 
-from ..models import yolov5m
+from ..models import yolo
+
+from typing import Any
 
 
-def update_ultralytics_checkpoints(model, checkpoint_path_ultralytics):
+class ModuleStateUpdate:
     """
-    It's limited that ultralytics saved model must load in their root path.
-    So a very important thing is to desensitize the path befor updating
-    ultralytics's trained model as following:
-
-        >>> checkpoints_ = torch.load(weights, map_location='cpu')['model']
-        >>> torch.save(checkpoints_.state_dict(), './checkpoints/yolov5s_ultralytics.pt')
+    Update checkpoint from ultralytics yolov5
     """
-    state_dict = torch.load(checkpoint_path_ultralytics, map_location="cpu")
+    def __init__(
+        self,
+        arch: str = 'yolov5_darknet_pan_s_r31',
+        num_classes: int = 80,
+        inner_block_maps: dict = {'0': '9', '1': '10', '3': '13', '4': '14'},
+        layer_block_maps: dict = {'0': '17', '1': '18', '2': '20', '3': '21', '4': '23'},
+        head_ind: int = 24,
+        head_name: str = 'm',
+    ) -> None:
+        # Configuration for making the keys consistent
+        self.inner_block_maps = inner_block_maps
+        self.layer_block_maps = layer_block_maps
+        self.head_ind = head_ind
+        self.head_name = head_name
+        # Set model
+        self.model = yolo.__dict__[arch](num_classes=num_classes)
 
-    # Update backbone features
-    for name, params in model.backbone.body.named_parameters(prefix='model'):
-        params.data.copy_(state_dict[name])
+    def state_updating(self, state_dict):
+        state_dict = state_dict.model
+        # Update backbone features
+        for name, params in self.model.backbone.body.named_parameters():
+            params.data.copy_(
+                self.attach_parameters_block(state_dict, name, None))
 
-    for name, buffers in model.backbone.body.named_buffers(prefix='model'):
-        buffers.copy_(state_dict[name])
+        for name, buffers in self.model.backbone.body.named_buffers():
+            buffers.copy_(
+                self.attach_parameters_block(state_dict, name, None))
 
-    inner_block_maps = {'0': '9', '1': '10', '3': '13', '4': '14'}
-    layer_block_maps = {'0': '17', '1': '18', '2': '20', '3': '21', '4': '23'}
+        # Update PAN features
+        for name, params in self.model.backbone.pan.inner_blocks.named_parameters():
+            params.data.copy_(
+                self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
-    # Update PAN features
-    for name, params in model.backbone.pan.inner_blocks.named_parameters():
-        state_key = name.split('.')
-        params.data.copy_(state_dict[f"model.{'.'.join([inner_block_maps[state_key[0]]] + state_key[1:])}"])
+        for name, buffers in self.model.backbone.pan.inner_blocks.named_buffers():
+            buffers.copy_(
+                self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
-    for name, buffers in model.backbone.pan.inner_blocks.named_buffers():
-        state_key = name.split('.')
-        buffers.copy_(state_dict[f"model.{'.'.join([inner_block_maps[state_key[0]]] + state_key[1:])}"])
+        for name, params in self.model.backbone.pan.layer_blocks.named_parameters():
+            params.data.copy_(
+                self.attach_parameters_block(state_dict, name, self.layer_block_maps))
 
-    for name, params in model.backbone.pan.layer_blocks.named_parameters():
-        state_key = name.split('.')
-        params.data.copy_(state_dict[f"model.{'.'.join([layer_block_maps[state_key[0]]] + state_key[1:])}"])
+        for name, buffers in self.model.backbone.pan.layer_blocks.named_buffers():
+            buffers.copy_(
+                self.attach_parameters_block(state_dict, name, self.layer_block_maps))
 
-    for name, buffers in model.backbone.pan.layer_blocks.named_buffers():
-        state_key = name.split('.')
-        buffers.copy_(state_dict[f"model.{'.'.join([layer_block_maps[state_key[0]]] + state_key[1:])}"])
+        # Update box heads
+        for name, params in self.model.head.named_parameters():
+            params.data.copy_(
+                self.attach_parameters_heads(state_dict, name))
 
-    # Update box heads
-    for name, params in model.head.named_parameters(prefix='model.24'):
-        params.data.copy_(state_dict[name.replace('head', 'm')])
+        for name, buffers in self.model.head.named_buffers():
+            buffers.copy_(
+                self.attach_parameters_heads(state_dict, name))
 
-    for name, buffers in model.head.named_buffers(prefix='model.24'):
-        buffers.copy_(state_dict[name.replace('head', 'm')])
+    @staticmethod
+    def attach_parameters_block(state_dict, name, block_maps=None):
+        keys = name.split('.')
+        ind = int(block_maps[keys[0]]) if block_maps else int(keys[0])
+        return rgetattr(state_dict[ind], keys[1:])
 
-    return model
-
-
-def main(args):
-    model = yolov5m(pretrained=False, score_thresh=0.25)
-    model = update_ultralytics_checkpoints(model, args.checkpoint_path_ultralytics)
-    model = model.half()
-    torch.save(model.state_dict(), args.checkpoint_path_rt_stack)
-
-
-def get_args_parser():
-    parser = argparse.ArgumentParser('YOLO checkpoint configures', add_help=False)
-    parser.add_argument('--checkpoint_path_ultralytics', default='.checkpoints/yolov5s_ultralytics.pt',
-                        help='Path of ultralytics trained yolov5 checkpoint model')
-    parser.add_argument('--checkpoint_path_rt_stack', default='./checkpoints/yolov5s_rt.pt',
-                        help='Path of updated yolov5 checkpoint model')
-
-    return parser
+    def attach_parameters_heads(self, state_dict, name):
+        keys = name.split('.')
+        ind = int(keys[1])
+        return rgetattr(getattr(state_dict[self.head_ind], self.head_name)[ind], keys[2:])
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser('Update checkpoint from ultralytics yolov5', parents=[get_args_parser()])
-    args = parser.parse_args()
-
-    main(args)
+def rgetattr(obj, attr, *args):
+    """
+    Nested version of getattr.
+    See <https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects>
+    """
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+    return reduce(_getattr, [obj] + attr)
