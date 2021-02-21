@@ -34,7 +34,6 @@ class BackboneWithPAN(nn.Module):
         self.pan = PathAggregationNetwork(
             in_channels_list,
             depth_multiple,
-            block=_block[version],
             version=version,
         )
         self.out_channels = in_channels_list
@@ -43,12 +42,6 @@ class BackboneWithPAN(nn.Module):
         x = self.body(x)
         x = self.pan(x)
         return x
-
-
-_block = {
-    "v3.1": BottleneckCSP,
-    "v4.0": C3,
-}
 
 
 def darknet_pan_backbone(
@@ -96,4 +89,4 @@ def darknet_pan_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithPAN(backbone, return_layers, in_channels_list, depth_multiple, version=version)
+    return BackboneWithPAN(backbone, return_layers, in_channels_list, depth_multiple, version)

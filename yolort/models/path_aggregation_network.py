@@ -2,7 +2,7 @@
 import torch
 from torch import nn, Tensor
 
-from .common import Conv, BottleneckCSP
+from .common import Conv, BottleneckCSP, C3
 
 from typing import Callable, List, Dict, Optional
 
@@ -45,14 +45,14 @@ class PathAggregationNetwork(nn.Module):
         self,
         in_channels_list: List[int],
         depth_multiple: float,
-        block: Optional[Callable[..., nn.Module]] = None,
         version: str = 'v4.0',
+        block: Optional[Callable[..., nn.Module]] = None,
     ):
         super().__init__()
         assert len(in_channels_list) == 3, "currently only support length 3."
 
         if block is None:
-            block = BottleneckCSP
+            block = _block[version]
 
         depth_gain = max(round(3 * depth_multiple), 1)
 
@@ -157,3 +157,9 @@ class PathAggregationNetwork(nn.Module):
             results.append(last_inner)
 
         return results
+
+
+_block = {
+    "v3.1": BottleneckCSP,
+    "v4.0": C3,
+}
