@@ -1,6 +1,7 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 from functools import reduce
 import torch
+from torch import nn
 
 from ..models import yolo
 
@@ -30,7 +31,7 @@ class ModuleStateUpdate:
 
     def updating(self, state_dict):
         # Obtain module state
-        state_dict = state_dict.model
+        state_dict = obtain_module_sequential(state_dict)
 
         # Update backbone features
         for name, params in self.model.backbone.body.named_parameters():
@@ -89,9 +90,16 @@ def rgetattr(obj, attr, *args):
     return reduce(_getattr, [obj] + attr)
 
 
+def obtain_module_sequential(state_dict):
+    if isinstance(state_dict, nn.Sequential):
+        return state_dict
+    else:
+        return obtain_module_sequential(state_dict.model)
+
+
 def update_module_state_from_ultralytics(
     arch: str = 'yolov5s',
-    release: str = 'v4.0',
+    version: str = 'v4.0',
     num_classes: int = 80,
     **kwargs: Any,
 ):
@@ -104,9 +112,9 @@ def update_module_state_from_ultralytics(
         'yolov5l_v4.0': 'yolov5_darknet_pan_l_r40',
     }
 
-    model = torch.hub.load(f'ultralytics/yolov5:{release}', arch, pretrained=True)
+    model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
 
-    module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{release}'],
+    module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{version}'],
                                              num_classes=num_classes, **kwargs)
 
     module_state_updater.updating(model)
