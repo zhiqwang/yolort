@@ -143,6 +143,7 @@ def _yolov5_darknet_pan(
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,
+    version: str = 'v4.0',
     **kwargs: Any,
 ) -> YOLO:
     """
@@ -181,7 +182,7 @@ def _yolov5_darknet_pan(
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone = darknet_pan_backbone(backbone_name, depth_multiple, width_multiple)
+    backbone = darknet_pan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
 
     anchor_grids = [[10, 13, 16, 30, 33, 23],
                     [30, 61, 62, 45, 59, 119],
@@ -210,7 +211,8 @@ def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, nu
     depth_multiple = 0.33
     width_multiple = 0.5
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes,
+                               version='v3.1', **kwargs)
 
 
 def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
@@ -226,7 +228,8 @@ def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, nu
     depth_multiple = 0.67
     width_multiple = 0.75
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes,
+                               version='v3.1', **kwargs)
 
 
 def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
@@ -242,7 +245,8 @@ def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, nu
     depth_multiple = 1.0
     width_multiple = 1.0
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes,
+                               version='v3.1', **kwargs)
 
 
 def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
@@ -258,7 +262,8 @@ def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, nu
     depth_multiple = 0.33
     width_multiple = 0.5
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes,
+                               version='v4.0', **kwargs)
 
 
 def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
@@ -274,7 +279,8 @@ def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, nu
     depth_multiple = 0.67
     width_multiple = 0.75
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes,
+                               version='v4.0', **kwargs)
 
 
 def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
@@ -290,4 +296,5 @@ def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, nu
     depth_multiple = 1.0
     width_multiple = 1.0
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes,
+                               version='v4.0', **kwargs)

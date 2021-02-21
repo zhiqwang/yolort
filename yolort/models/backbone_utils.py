@@ -17,21 +17,26 @@ class BackboneWithPAN(nn.Module):
     The same limitations of IntermediatLayerGetter apply here.
     Args:
         backbone (nn.Module)
-        block (nn.Module)
         return_layers (Dict[name, new_name]): a dict containing the names
             of the modules for which the activations will be returned as
             the key of the dict, and the value of the dict is the name
             of the returned activation (which the user can specify).
         in_channels_list (List[int]): number of channels for each feature map
             that is returned, in the order they are present in the OrderedDict
+        version (str): ultralytics release version: v3.1 or v4.0
     Attributes:
         out_channels (int): the number of channels in the PAN
     """
-    def __init__(self, backbone, block, return_layers, in_channels_list, depth_multiple):
+    def __init__(self, backbone, return_layers, in_channels_list, depth_multiple, version):
         super().__init__()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
-        self.pan = PathAggregationNetwork(in_channels_list, depth_multiple, block=block)
+        self.pan = PathAggregationNetwork(
+            in_channels_list,
+            depth_multiple,
+            block=_block[version],
+            version=version,
+        )
         self.out_channels = in_channels_list
 
     def forward(self, x):
@@ -41,12 +46,8 @@ class BackboneWithPAN(nn.Module):
 
 
 _block = {
-    "darknet_s_r3_1": BottleneckCSP,
-    "darknet_m_r3_1": BottleneckCSP,
-    "darknet_l_r3_1": BottleneckCSP,
-    "darknet_s_r4_0": C3,
-    "darknet_m_r4_0": C3,
-    "darknet_l_r4_0": C3,
+    "v3.1": BottleneckCSP,
+    "v4.0": C3,
 }
 
 
@@ -56,6 +57,7 @@ def darknet_pan_backbone(
     width_multiple: float,
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
+    version: str = 'v4.0',
 ):
     """
     Constructs a specified ResNet backbone with PAN on top. Freezes the specified number of
@@ -83,6 +85,7 @@ def darknet_pan_backbone(
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
         trainable_layers (int): number of trainable (not frozen) resnet layers starting from final block.
             Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
+        version (str): ultralytics release version: v3.1 or v4.0
     """
     backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
 
@@ -93,4 +96,4 @@ def darknet_pan_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithPAN(backbone, _block[backbone_name], return_layers, in_channels_list, depth_multiple)
+    return BackboneWithPAN(backbone, return_layers, in_channels_list, depth_multiple, version=version)
