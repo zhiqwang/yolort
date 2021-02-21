@@ -3,8 +3,7 @@ import torch
 from torch import nn, Tensor
 from torch.hub import load_state_dict_from_url
 
-from .common import Conv, SPP, Focus, BottleneckCSP
-from .experimental import C3
+from .common import Conv, SPP, Focus, BottleneckCSP, C3
 
 from typing import Callable, List, Optional, Any
 

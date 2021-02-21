@@ -4,6 +4,7 @@ from torchvision.models._utils import IntermediateLayerGetter
 
 from . import darknet
 from .path_aggregation_network import PathAggregationNetwork
+from .common import BottleneckCSP, C3
 
 from typing import List, Optional
 
@@ -16,6 +17,7 @@ class BackboneWithPAN(nn.Module):
     The same limitations of IntermediatLayerGetter apply here.
     Args:
         backbone (nn.Module)
+        block (nn.Module)
         return_layers (Dict[name, new_name]): a dict containing the names
             of the modules for which the activations will be returned as
             the key of the dict, and the value of the dict is the name
@@ -25,17 +27,27 @@ class BackboneWithPAN(nn.Module):
     Attributes:
         out_channels (int): the number of channels in the PAN
     """
-    def __init__(self, backbone, return_layers, in_channels_list, depth_multiple):
+    def __init__(self, backbone, block, return_layers, in_channels_list, depth_multiple):
         super().__init__()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
-        self.pan = PathAggregationNetwork(in_channels_list, depth_multiple)
+        self.pan = PathAggregationNetwork(in_channels_list, depth_multiple, block=block)
         self.out_channels = in_channels_list
 
     def forward(self, x):
         x = self.body(x)
         x = self.pan(x)
         return x
+
+
+_block = {
+    "darknet_s_r3_1": BottleneckCSP,
+    "darknet_m_r3_1": BottleneckCSP,
+    "darknet_l_r3_1": BottleneckCSP,
+    "darknet_s_r4_0": C3,
+    "darknet_m_r4_0": C3,
+    "darknet_l_r4_0": C3,
+}
 
 
 def darknet_pan_backbone(
@@ -81,4 +93,4 @@ def darknet_pan_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithPAN(backbone, return_layers, in_channels_list, depth_multiple)
+    return BackboneWithPAN(backbone, _block[backbone_name], return_layers, in_channels_list, depth_multiple)
