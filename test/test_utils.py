@@ -12,6 +12,7 @@ class UtilsTester(unittest.TestCase):
         model = update_module_state_from_ultralytics(arch='yolov5s', version='v3.1')
         self.assertIsInstance(model, nn.Module)
 
+    @unittest.skipIf(float(torch.__version__[:3]) < 1.8, "Avoid multiple loading of the same model")
     def test_update_module_state_from_ultralytics_yolov5s_r40(self):
         model = update_module_state_from_ultralytics(arch='yolov5s', version='v4.0')
         self.assertIsInstance(model, nn.Module)
