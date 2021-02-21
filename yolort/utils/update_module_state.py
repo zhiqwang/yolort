@@ -1,8 +1,6 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 from functools import reduce
-
 import torch
-from torch import nn
 
 from ..models import yolo
 
@@ -30,8 +28,10 @@ class ModuleStateUpdate:
         # Set model
         self.model = yolo.__dict__[arch](num_classes=num_classes)
 
-    def state_updating(self, state_dict):
+    def updating(self, state_dict):
+        # Obtain module state
         state_dict = state_dict.model
+
         # Update backbone features
         for name, params in self.model.backbone.body.named_parameters():
             params.data.copy_(
@@ -87,3 +87,28 @@ def rgetattr(obj, attr, *args):
     def _getattr(obj, attr):
         return getattr(obj, attr, *args)
     return reduce(_getattr, [obj] + attr)
+
+
+def update_module_state_from_ultralytics(
+    arch: str = 'yolov5s',
+    release: str = 'v4.0',
+    num_classes: int = 80,
+    **kwargs: Any,
+):
+    architecture_maps = {
+        'yolov5s_v3.1': 'yolov5_darknet_pan_s_r31',
+        'yolov5m_v3.1': 'yolov5_darknet_pan_m_r31',
+        'yolov5l_v3.1': 'yolov5_darknet_pan_l_r31',
+        'yolov5s_v4.0': 'yolov5_darknet_pan_s_r40',
+        'yolov5m_v4.0': 'yolov5_darknet_pan_m_r40',
+        'yolov5l_v4.0': 'yolov5_darknet_pan_l_r40',
+    }
+
+    model = torch.hub.load(f'ultralytics/yolov5:{release}', arch, pretrained=True)
+
+    module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{release}'],
+                                             num_classes=num_classes, **kwargs)
+
+    module_state_updater.updating(model)
+
+    return module_state_updater.model.half()
