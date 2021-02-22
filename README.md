@@ -74,7 +74,7 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### Updating checkpoint from ultralytics/yolov5
 
-The module state of `yolort` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's release [v3.1](https://github.com/ultralytics/yolov5/releases/tag/v3.1) and [v4.0](https://github.com/ultralytics/yolov5/releases/tag/v4.0)). For example, if you want to convert a `yolov5s` (release 4.0) model, you can just run the following script:
+The module state of `yolort` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's release [v3.1](https://github.com/ultralytics/yolov5/releases/tag/v3.1) and [v4.0](https://github.com/ultralytics/yolov5/releases/tag/v4.0). For example, if you want to convert a `yolov5s` (release 4.0) model, you can just run the following script:
 
 ```python
 from yolort.utils import update_module_state_from_ultralytics
