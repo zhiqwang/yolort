@@ -22,6 +22,21 @@ def yolov5l(**kwargs):
     return model
 
 
+def yolov5s_r40(**kwargs):
+    model = YOLOModule(arch="yolov5_darknet_pan_s_r40", **kwargs)
+    return model
+
+
+def yolov5m_r40(**kwargs):
+    model = YOLOModule(arch="yolov5_darknet_pan_m_r40", **kwargs)
+    return model
+
+
+def yolov5l_r40(**kwargs):
+    model = YOLOModule(arch="yolov5_darknet_pan_l_r40", **kwargs)
+    return model
+
+
 def yolov5_onnx(pretrained=False, progress=True, num_classes=80, **kwargs):
 
     model = yolov5s(pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)

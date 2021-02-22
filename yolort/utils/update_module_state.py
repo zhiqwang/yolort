@@ -8,6 +8,31 @@ from ..models import yolo
 from typing import Any
 
 
+def update_module_state_from_ultralytics(
+    arch: str = 'yolov5s',
+    version: str = 'v4.0',
+    num_classes: int = 80,
+    **kwargs: Any,
+):
+    architecture_maps = {
+        'yolov5s_v3.1': 'yolov5_darknet_pan_s_r31',
+        'yolov5m_v3.1': 'yolov5_darknet_pan_m_r31',
+        'yolov5l_v3.1': 'yolov5_darknet_pan_l_r31',
+        'yolov5s_v4.0': 'yolov5_darknet_pan_s_r40',
+        'yolov5m_v4.0': 'yolov5_darknet_pan_m_r40',
+        'yolov5l_v4.0': 'yolov5_darknet_pan_l_r40',
+    }
+
+    model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
+
+    module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{version}'],
+                                             num_classes=num_classes, **kwargs)
+
+    module_state_updater.updating(model)
+
+    return module_state_updater.model.half()
+
+
 class ModuleStateUpdate:
     """
     Update checkpoint from ultralytics yolov5
@@ -95,28 +120,3 @@ def obtain_module_sequential(state_dict):
         return state_dict
     else:
         return obtain_module_sequential(state_dict.model)
-
-
-def update_module_state_from_ultralytics(
-    arch: str = 'yolov5s',
-    version: str = 'v4.0',
-    num_classes: int = 80,
-    **kwargs: Any,
-):
-    architecture_maps = {
-        'yolov5s_v3.1': 'yolov5_darknet_pan_s_r31',
-        'yolov5m_v3.1': 'yolov5_darknet_pan_m_r31',
-        'yolov5l_v3.1': 'yolov5_darknet_pan_l_r31',
-        'yolov5s_v4.0': 'yolov5_darknet_pan_s_r40',
-        'yolov5m_v4.0': 'yolov5_darknet_pan_m_r40',
-        'yolov5l_v4.0': 'yolov5_darknet_pan_l_r40',
-    }
-
-    model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
-
-    module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{version}'],
-                                             num_classes=num_classes, **kwargs)
-
-    module_state_updater.updating(model)
-
-    return module_state_updater.model.half()
