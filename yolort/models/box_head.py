@@ -26,9 +26,8 @@ class YoloHead(nn.Module):
     def _initialize_biases(self, cf=None):
         """
         Initialize biases into YoloHead, cf is class frequency
-        Ref section 3.3 in <https://arxiv.org/abs/1708.02002>
+        Check section 3.3 in <https://arxiv.org/abs/1708.02002>
         """
-
         for mi, s in zip(self.head, self.strides):
             b = mi.bias.view(self.num_anchors, -1)  # conv.bias(255) to (3,85)
             # obj (8 objects per 640 image)
