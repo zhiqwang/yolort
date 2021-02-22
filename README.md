@@ -74,40 +74,16 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### Updating checkpoint from ultralytics/yolov5
 
-The module state of `yolort` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's lastest release [v3.1](https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt) checkpoint [here](https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.2.1/yolov5s.pt).
+The module state of `yolort` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's release [v3.1](https://github.com/ultralytics/yolov5/releases/tag/v3.1) and [v4.0](https://github.com/ultralytics/yolov5/releases/tag/v4.0)). For example, if you want to convert a `yolov5s` (release 4.0) model, you can just run the following script:
 
-<details><summary>Expand to see more information of how to update ultralytics's trained (or your own) model checkpoint.</summary><br/>
+```python
+from yolort.utils import update_module_state_from_ultralytics
 
-- If you train your model using ultralytics's repo, you should update the model checkpoint first. ultralytics's trained model has a limitation that their model must load in the root path of ultralytics, so a important thing is to desensitize the path dependence as follows:
-
-  ```python
-  # Noted that current path is the root of ultralytics/yolov5, and the checkpoint is
-  # downloaded from <https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt>
-  ultralytics_weights = 'https://github.com/ultralytics/yolov5/releases/download/v3.1/yolov5s.pt'
-  checkpoints_ = torch.load(ultralytics_weights, map_location='cpu')['model']
-  torch.save(checkpoints_.state_dict(), desensitize_ultralytics_weights)
-  ```
-
-- Load `yolort` model as follows:
-
-  ```python
-  from hubconf import yolov5s
-
-  model = yolov5s()
-  model.eval()
-  ```
-
-- Now let's update ultralytics/yolov5 trained checkpoint, see the [conversion script](utils/updated_checkpoint.py) for more information:
-
-  ```python
-  from utils.updated_checkpoint import update_ultralytics_checkpoints
-
-  model = update_ultralytics_checkpoints(model, desensitize_ultralytics_weights)
-  # updated checkpint is saved to checkpoint_path_rt_stack
-  torch.save(model.state_dict(), checkpoint_path_rt_stack)
-  ```
-
-</details>
+# Update module state from ultralytics
+model = update_module_state_from_ultralytics(arch='yolov5s', version='v4.0')
+# Save updated module
+torch.save(model.state_dict(), 'yolov5s_updated.pt')
+```
 
 ### Inference on `LibTorch` backend 🚀
 
