@@ -10,7 +10,7 @@ except ImportError:
 import unittest
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
 
-from yolort.models import yolov5_onnx
+from yolort.models import yolov5s, yolov5m
 
 
 @unittest.skipIf(onnxruntime is None, 'ONNX Runtime unavailable')
@@ -19,15 +19,23 @@ class ONNXExporterTester(unittest.TestCase):
     def setUpClass(cls):
         torch.manual_seed(123)
 
-    def run_model(self, model, inputs_list, tolerate_small_mismatch=False, do_constant_folding=True, dynamic_axes=None,
+    def run_model(self, model, inputs_list, tolerate_small_mismatch=False,
+                  do_constant_folding=True, dynamic_axes=None,
                   output_names=None, input_names=None):
         model.eval()
 
         onnx_io = io.BytesIO()
         # export to onnx with the first input
-        torch.onnx.export(model, inputs_list[0], onnx_io,
-                          do_constant_folding=do_constant_folding, opset_version=_onnx_opset_version,
-                          dynamic_axes=dynamic_axes, input_names=input_names, output_names=output_names)
+        torch.onnx.export(
+            model,
+            inputs_list[0],
+            onnx_io,
+            do_constant_folding=do_constant_folding,
+            opset_version=_onnx_opset_version,
+            dynamic_axes=dynamic_axes,
+            input_names=input_names,
+            output_names=output_names,
+        )
         # validate the exported model with onnx runtime
         for test_inputs in inputs_list:
             with torch.no_grad():
@@ -89,23 +97,40 @@ class ONNXExporterTester(unittest.TestCase):
         image_url2 = "https://pytorch.org/tutorials/_static/img/tv_tutorial/tv_image05.png"
         image2 = self.get_image_from_url(url=image_url2, size=(250, 380))
 
-        images = [image]
-        test_images = [image2]
-        return images, test_images
+        images_one = [image]
+        images_two = [image2]
+        return images_one, images_two
 
-    def test_yolov5s(self):
-        images, test_images = self.get_test_images()
-        dummy_image = [torch.ones(3, 100, 100) * 0.3]
-        model = yolov5_onnx(pretrained=True)
+    def test_yolov5s_r31(self):
+        images_one, images_two = self.get_test_images()
+        images_dummy = [torch.ones(3, 100, 100) * 0.3]
+        model = yolov5s(upstream_version='v3.1', export_friendly=True, pretrained=True)
         model.eval()
-        model(images)
+        model(images_one)
         # Test exported model on images of different size, or dummy input
-        self.run_model(model, [(images,), (test_images,), (dummy_image,)], input_names=["images_tensors"],
+        self.run_model(model, [(images_one,), (images_two,), (images_dummy,)], input_names=["images_tensors"],
                        output_names=["outputs"],
                        dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
                        tolerate_small_mismatch=True)
         # Test exported model for an image with no detections on other images
-        self.run_model(model, [(dummy_image,), (images,)], input_names=["images_tensors"],
+        self.run_model(model, [(images_dummy,), (images_one,)], input_names=["images_tensors"],
+                       output_names=["outputs"],
+                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
+                       tolerate_small_mismatch=True)
+
+    def test_yolov5m_r40(self):
+        images_one, images_two = self.get_test_images()
+        images_dummy = [torch.ones(3, 100, 100) * 0.3]
+        model = yolov5m(upstream_version='v4.0', export_friendly=True, pretrained=True)
+        model.eval()
+        model(images_one)
+        # Test exported model on images of different size, or dummy input
+        self.run_model(model, [(images_one,), (images_two,), (images_dummy,)], input_names=["images_tensors"],
+                       output_names=["outputs"],
+                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
+                       tolerate_small_mismatch=True)
+        # Test exported model for an image with no detections on other images
+        self.run_model(model, [(images_dummy,), (images_one,)], input_names=["images_tensors"],
                        output_names=["outputs"],
                        dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
                        tolerate_small_mismatch=True)

@@ -3,14 +3,23 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# Swish <https://arxiv.org/pdf/1905.02244.pdf>
-class Swish(nn.Module):  #
-    @staticmethod
-    def forward(x):
+class SiLU(nn.Module):
+    """
+    Export-friendly version of nn.SiLU()
+
+    Ref: <https://arxiv.org/pdf/1606.08415.pdf>
+    """
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, x):
         return x * torch.sigmoid(x)
 
 
-class Hardswish(nn.Module):  # export-friendly version of nn.Hardswish()
+class Hardswish(nn.Module):
+    """
+    Export-friendly version of nn.Hardswish()
+    """
     def __init__(self):
         super().__init__()
 
