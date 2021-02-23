@@ -9,7 +9,12 @@ from ..utils.activations import Hardswish, SiLU
 from typing import Any
 
 
-def yolov5s(upstream_version: str ='v3.1', export_friendly = False, **kwargs: Any):
+def yolov5s(upstream_version: str ='v3.1', export_friendly: bool = False, **kwargs: Any):
+    """
+    Args:
+        upstream_version (str): Determine the upstream YOLOv5 version.
+        export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+    """
     if upstream_version == 'v3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_s_r31", **kwargs)
     elif upstream_version == 'v4.0':
@@ -24,6 +29,11 @@ def yolov5s(upstream_version: str ='v3.1', export_friendly = False, **kwargs: An
 
 
 def yolov5m(upstream_version: str ='v3.1', export_friendly: bool = False, **kwargs: Any):
+    """
+    Args:
+        upstream_version (str): Determine the upstream YOLOv5 version.
+        export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+    """
     if upstream_version == 'v3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_m_r31", **kwargs)
     elif upstream_version == 'v4.0':
@@ -38,6 +48,11 @@ def yolov5m(upstream_version: str ='v3.1', export_friendly: bool = False, **kwar
 
 
 def yolov5l(upstream_version: str ='v3.1', export_friendly: bool = False, **kwargs: Any):
+    """
+    Args:
+        upstream_version (str): Determine the upstream YOLOv5 version.
+        export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+    """
     if upstream_version == 'v3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_l_r31", **kwargs)
     elif upstream_version == 'v4.0':
