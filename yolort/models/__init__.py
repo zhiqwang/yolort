@@ -6,34 +6,36 @@ from .yolo_module import YOLOModule
 
 from ..utils.activations import Hardswish
 
+from typing import Any
 
-def yolov5s(**kwargs):
-    model = YOLOModule(arch="yolov5_darknet_pan_s_r31", **kwargs)
+
+def yolov5s(upstream_version: str ='v3.1', **kwargs: Any):
+    if upstream_version == 'v3.1':
+        model = YOLOModule(arch="yolov5_darknet_pan_s_r31", **kwargs)
+    elif upstream_version == 'v4.0':
+        model = YOLOModule(arch="yolov5_darknet_pan_s_r40", **kwargs)
+    else:
+        raise NotImplementedError("Currently only supports v3.1 and v4.0 versions")
     return model
 
 
-def yolov5m(**kwargs):
-    model = YOLOModule(arch="yolov5_darknet_pan_m_r31", **kwargs)
+def yolov5m(upstream_version: str ='v3.1', **kwargs: Any):
+    if upstream_version == 'v3.1':
+        model = YOLOModule(arch="yolov5_darknet_pan_m_r31", **kwargs)
+    elif upstream_version == 'v4.0':
+        model = YOLOModule(arch="yolov5_darknet_pan_m_r40", **kwargs)
+    else:
+        raise NotImplementedError("Currently only supports v3.1 and v4.0 versions")
     return model
 
 
-def yolov5l(**kwargs):
-    model = YOLOModule(arch="yolov5_darknet_pan_l_r31", **kwargs)
-    return model
-
-
-def yolov5s_r40(**kwargs):
-    model = YOLOModule(arch="yolov5_darknet_pan_s_r40", **kwargs)
-    return model
-
-
-def yolov5m_r40(**kwargs):
-    model = YOLOModule(arch="yolov5_darknet_pan_m_r40", **kwargs)
-    return model
-
-
-def yolov5l_r40(**kwargs):
-    model = YOLOModule(arch="yolov5_darknet_pan_l_r40", **kwargs)
+def yolov5l(upstream_version: str ='v3.1', **kwargs: Any):
+    if upstream_version == 'v3.1':
+        model = YOLOModule(arch="yolov5_darknet_pan_l_r31", **kwargs)
+    elif upstream_version == 'v4.0':
+        model = YOLOModule(arch="yolov5_darknet_pan_l_r40", **kwargs)
+    else:
+        raise NotImplementedError("Currently only supports v3.1 and v4.0 versions")
     return model
 
 
