@@ -2,7 +2,7 @@
 import torch
 from torch import nn, Tensor
 
-from .common import Conv, BottleneckCSP
+from .common import Conv, BottleneckCSP, C3
 
 from typing import Callable, List, Dict, Optional
 
@@ -22,6 +22,7 @@ class PathAggregationNetwork(nn.Module):
         in_channels_list (list[int]): number of channels for each feature map that
             is passed to the module
         out_channels (int): number of channels of the PAN representation
+        version (str): ultralytics release version: v3.1 or v4.0
 
     Examples::
 
@@ -44,22 +45,23 @@ class PathAggregationNetwork(nn.Module):
         self,
         in_channels_list: List[int],
         depth_multiple: float,
+        version: str = 'v4.0',
         block: Optional[Callable[..., nn.Module]] = None,
     ):
         super().__init__()
         assert len(in_channels_list) == 3, "currently only support length 3."
 
         if block is None:
-            block = BottleneckCSP
+            block = _block[version]
 
         depth_gain = max(round(3 * depth_multiple), 1)
 
         inner_blocks = [
             block(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
-            Conv(in_channels_list[2], in_channels_list[1], 1, 1),
+            Conv(in_channels_list[2], in_channels_list[1], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
             block(in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False),
-            Conv(in_channels_list[1], in_channels_list[0], 1, 1),
+            Conv(in_channels_list[1], in_channels_list[0], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
         ]
 
@@ -67,9 +69,9 @@ class PathAggregationNetwork(nn.Module):
 
         layer_blocks = [
             block(in_channels_list[1], in_channels_list[0], n=depth_gain, shortcut=False),
-            Conv(in_channels_list[0], in_channels_list[0], 3, 2),
+            Conv(in_channels_list[0], in_channels_list[0], 3, 2, version=version),
             block(in_channels_list[1], in_channels_list[1], n=depth_gain, shortcut=False),
-            Conv(in_channels_list[1], in_channels_list[1], 3, 2),
+            Conv(in_channels_list[1], in_channels_list[1], 3, 2, version=version),
             block(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
@@ -155,3 +157,9 @@ class PathAggregationNetwork(nn.Module):
             results.append(last_inner)
 
         return results
+
+
+_block = {
+    "v3.1": BottleneckCSP,
+    "v4.0": C3,
+}

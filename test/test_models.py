@@ -108,7 +108,8 @@ class ModelTester(TestCase):
         in_channels = self._get_in_channels()
         num_anchors = self._get_num_anchors()
         num_classes = self._get_num_classes()
-        box_head = YoloHead(in_channels, num_anchors, num_classes)
+        strides = self._get_strides()
+        box_head = YoloHead(in_channels, num_anchors, strides, num_classes)
         return box_head
 
     def test_yolo_head(self):

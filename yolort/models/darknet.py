@@ -3,8 +3,7 @@ import torch
 from torch import nn, Tensor
 from torch.hub import load_state_dict_from_url
 
-from .common import Conv, SPP, Focus, BottleneckCSP
-from .experimental import C3
+from .common import Conv, SPP, Focus, BottleneckCSP, C3
 
 from typing import Callable, List, Optional, Any
 
@@ -13,12 +12,12 @@ __all__ = ['DarkNet', 'darknet_s_r3_1', 'darknet_m_r3_1', 'darknet_l_r3_1',
            'darknet_s_r4_0', 'darknet_m_r4_0', 'darknet_l_r4_0']
 
 model_urls = {
-    "darknet_s_r3.1": None,
-    "darknet_m_r3.1": None,
-    "darknet_l_r3.1": None,
-    "darknet_s_r4.0": None,
-    "darknet_m_r4.0": None,
-    "darknet_l_r4.0": None,
+    "darknet_s_v3.1": None,
+    "darknet_m_v3.1": None,
+    "darknet_l_v3.1": None,
+    "darknet_s_v4.0": None,
+    "darknet_m_v4.0": None,
+    "darknet_l_v4.0": None,
 }  # TODO: add checkpoint weights
 
 
@@ -47,6 +46,7 @@ class DarkNet(nn.Module):
         self,
         depth_multiple: float,
         width_multiple: float,
+        version: str,
         block: Optional[Callable[..., nn.Module]] = None,
         stages_repeats: Optional[List[int]] = None,
         stages_out_channels: Optional[List[int]] = None,
@@ -60,6 +60,7 @@ class DarkNet(nn.Module):
             num_classes (int): Number of classes
             depth_multiple (float): Depth multiplier
             width_multiple (float): Width multiplier - adjusts number of channels in each layer by this amount
+            version (str): ultralytics release version: v3.1 or v4.0
             round_nearest (int): Round the number of channels in each layer to be a multiple of this number
             Set to 1 to turn off rounding
             block: Module specifying inverted residual building block for darknet
@@ -67,7 +68,7 @@ class DarkNet(nn.Module):
         super().__init__()
 
         if block is None:
-            block = BottleneckCSP
+            block = _block[version]
 
         input_channel = 64
         last_channel = 1024
@@ -83,21 +84,21 @@ class DarkNet(nn.Module):
 
         # building first layer
         out_channel = _make_divisible(input_channel * width_multiple, round_nearest)
-        layers.append(Focus(3, out_channel, k=3))
+        layers.append(Focus(3, out_channel, k=3, version=version))
         input_channel = out_channel
 
         # building CSP blocks
         for depth_gain, out_channel in zip(stages_repeats, stages_out_channels):
             depth_gain = max(round(depth_gain * depth_multiple), 1)
             out_channel = _make_divisible(out_channel * width_multiple, round_nearest)
-            layers.append(Conv(input_channel, out_channel, k=3, s=2))
+            layers.append(Conv(input_channel, out_channel, k=3, s=2, version=version))
             layers.append(block(out_channel, out_channel, n=depth_gain))
             input_channel = out_channel
 
         # building last CSP blocks
         last_channel = _make_divisible(last_channel * width_multiple, round_nearest)
-        layers.append(Conv(input_channel, last_channel, k=3, s=2))
-        layers.append(SPP(last_channel, last_channel, k=(5, 9, 13)))
+        layers.append(Conv(input_channel, last_channel, k=3, s=2, version=version))
+        layers.append(SPP(last_channel, last_channel, k=(5, 9, 13), version=version))
 
         self.features = nn.Sequential(*layers)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
@@ -131,6 +132,12 @@ class DarkNet(nn.Module):
         return self._forward_impl(x)
 
 
+_block = {
+    "v3.1": BottleneckCSP,
+    "v4.0": C3,
+}
+
+
 def _darknet(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNet:
     """
     Constructs a DarkNet architecture from
@@ -150,12 +157,6 @@ def _darknet(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: 
     return model
 
 
-_block = {
-    "r3.1": BottleneckCSP,
-    "r4.0": C3,
-}
-
-
 def darknet_s_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
     """
     Constructs a DarkNet with small channels, as described in release 3.1
@@ -165,8 +166,7 @@ def darknet_s_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_s_r3.1", pretrained, progress,
-                    0.33, 0.5, block=_block["r3.1"], **kwargs)
+    return _darknet("darknet_s_r3.1", pretrained, progress, 0.33, 0.5, "v3.1", **kwargs)
 
 
 def darknet_m_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
@@ -178,8 +178,7 @@ def darknet_m_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_m_r3.1", pretrained, progress,
-                    0.67, 0.75, block=_block["r3.1"], **kwargs)
+    return _darknet("darknet_m_r3.1", pretrained, progress, 0.67, 0.75, "v3.1", **kwargs)
 
 
 def darknet_l_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
@@ -191,8 +190,7 @@ def darknet_l_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_l_r3.1", pretrained, progress,
-                    1.0, 1.0, block=_block["r3.1"], **kwargs)
+    return _darknet("darknet_l_r3.1", pretrained, progress, 1.0, 1.0, "v3.1", **kwargs)
 
 
 def darknet_s_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
@@ -204,8 +202,7 @@ def darknet_s_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_s_r4.0", pretrained, progress,
-                    0.33, 0.5, block=_block["r4.0"], **kwargs)
+    return _darknet("darknet_s_r4.0", pretrained, progress, 0.33, 0.5, "v4.0", **kwargs)
 
 
 def darknet_m_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
@@ -217,8 +214,7 @@ def darknet_m_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_m_r4.0", pretrained, progress,
-                    0.67, 0.75, block=_block["r4.0"], **kwargs)
+    return _darknet("darknet_m_r4.0", pretrained, progress, 0.67, 0.75, "v4.0", **kwargs)
 
 
 def darknet_l_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
@@ -230,5 +226,4 @@ def darknet_l_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_l_r4.0", pretrained, progress,
-                    1.0, 1.0, block=_block["r4.0"], **kwargs)
+    return _darknet("darknet_l_r4.0", pretrained, progress, 1.0, 1.0, "v4.0", **kwargs)
