@@ -8,7 +8,11 @@ from pathlib import Path
 import torch
 import torch.utils.data
 import torchvision
-from pycocotools import mask as coco_mask
+
+try:
+    from pycocotools import mask as coco_mask
+except ImportError:
+    coco_mask = None
 
 
 class ConvertCocoPolysToMask(object):
