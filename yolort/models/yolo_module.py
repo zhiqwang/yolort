@@ -3,6 +3,7 @@ import argparse
 
 import torch
 from torch import Tensor
+from torchvision.ops import box_iou
 
 from pytorch_lightning import LightningModule
 
@@ -83,16 +84,34 @@ class YOLOModule(LightningModule):
 
         return detections
 
-    def training_step(self, batch, batch_idx):
+    def run_step(self, batch):
         """
-        The training step.
+        Internal step
         """
         # Transform the input
         samples, targets = self.transform(*batch)
         # yolov5 takes both images and targets for training, returns
-        loss_dict = self.model(samples.tensors, targets)
+        outputs = self.model(samples.tensors, targets)
+        return outputs
+
+    def training_step(self, batch, batch_idx):
+        """
+        The training step.
+        """
+        loss_dict = self.run_step(batch)
         loss = sum(loss for loss in loss_dict.values())
         return {"loss": loss, "log": loss_dict}
+
+    def validation_step(self, batch, batch_idx):
+        _, targets = batch
+        outs = self.run_step(batch)
+        iou = torch.stack([_evaluate_iou(t, o) for t, o in zip(targets, outs)]).mean()
+        self.log("val_iou", iou, prog_bar=True)
+
+    def validation_epoch_end(self, outs):
+        avg_iou = torch.stack([o["val_iou"] for o in outs]).mean()
+        logs = {"val_iou": avg_iou}
+        return {"avg_val_iou": avg_iou, "log": logs}
 
     @torch.no_grad()
     def predict(
@@ -175,3 +194,13 @@ class YOLOModule(LightningModule):
         parser.add_argument('--weight-decay', default=5e-4, type=float,
                             metavar='W', help='weight decay (default: 5e-4)')
         return parser
+
+
+def _evaluate_iou(target, pred):
+    """
+    Evaluate intersection over union (IOU) for target from dataset and output prediction from model
+    """
+    if pred["boxes"].shape[0] == 0:
+        # no box detected, 0 IOU
+        return torch.tensor(0.0, device=pred["boxes"].device)
+    return box_iou(target["boxes"], pred["boxes"]).diag().mean()
