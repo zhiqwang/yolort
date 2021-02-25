@@ -99,8 +99,9 @@ class YOLOModule(LightningModule):
         The training step.
         """
         loss_dict = self.run_step(batch)
-        loss = sum(loss for loss in loss_dict.values())
-        return {"loss": loss, "log": loss_dict}
+        loss = sum(loss_dict.values())
+        self.log_dict(loss_dict, on_step=True, on_epoch=True, prog_bar=True)
+        return loss
 
     def validation_step(self, batch, batch_idx):
         _, targets = batch
