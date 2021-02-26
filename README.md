@@ -31,6 +31,8 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 ### Installation and Inference Examples
 
+- Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
+
 - Installation via Pip
 
   Simple installation from [PyPI](https://pypi.org/project/yolort/)
@@ -48,8 +50,6 @@ There are no extra compiled components in `yolort` and package dependencies are 
   # install in editable mode
   pip install -e .
   ```
-
-- Then, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
 
 - Install pycocotools (for evaluation on COCO):
 
