@@ -33,7 +33,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 - Installation via Pip
 
-  Simple installation from PyPI
+  Simple installation from [PyPI](https://pypi.org/project/yolort/)
 
   ```shell
   pip install -U yolort
@@ -49,15 +49,13 @@ There are no extra compiled components in `yolort` and package dependencies are 
   pip install -e .
   ```
 
-- Then, follow the [official instructions](https://pytorch.org/get-started/locally/) to installinstall PyTorch 1.7.0+ and torchvision 0.8.1+
+- Then, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
 
 - Install pycocotools (for evaluation on COCO):
 
   ```shell
   pip install -U 'git+https://github.com/ppwwyyxx/cocoapi.git#subdirectory=PythonAPI'
   ```
-
-  That's it, should be good to train and evaluate detection models.
 
 - To read a source of image(s) and detect its objects 🔥
 
