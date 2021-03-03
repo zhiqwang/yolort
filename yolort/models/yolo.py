@@ -135,7 +135,7 @@ model_urls = {
     'yolov5_darknet_pan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt',
     'yolov5_darknet_pan_m_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt',
     'yolov5_darknet_pan_l_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r40_coco-4416841f.pt',
-    'yolov5_darknet_pan_s_tr_coco': None,
+    'yolov5_darknet_pan_s_tr_coco': f'{model_urls_root}/yolov5_darknet_pan_s_tr_coco-f09f21f7.pt',
 }
 
 
