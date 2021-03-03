@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from yolort.models import yolov5s, yolov5m, yolov5l
+from yolort.models import yolov5s, yolov5m, yolov5l, yolotr
 
 
 class TorchScriptTester(unittest.TestCase):
@@ -51,6 +51,20 @@ class TorchScriptTester(unittest.TestCase):
         self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
         self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
 
+    def test_yolotr_script(self):
+        model = yolotr(pretrained=True)
+        model.eval()
+
+        scripted_model = torch.jit.script(model)
+        scripted_model.eval()
+
+        x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
+
+        out = model(x)
+        out_script = scripted_model(x)
+        self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
+        self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
+        self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
 
 if __name__ == "__main__":
     unittest.main()
