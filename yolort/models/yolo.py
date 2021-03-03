@@ -1,5 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-# Modified by Zhiqiang Wang (me@zhiqwang.com)
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import warnings
 
 import torch
@@ -306,8 +305,8 @@ def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, nu
 
 def yolov5_darknet_pan_s_tr(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
                             **kwargs: Any) -> YOLO:
-    r"""yolov5 small release 4.0 model from
-    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    r"""yolov5 small with a transformer block model from
+    `"dingyiwei/yolov5" <https://github.com/ultralytics/yolov5/pull/2333>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr

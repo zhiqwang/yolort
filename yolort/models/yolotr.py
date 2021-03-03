@@ -1,3 +1,4 @@
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from torch import nn
 
 from .common import Conv, C3
@@ -18,13 +19,13 @@ def darknet_pan_tr_backbone(
     version: str = 'v4.0',
 ):
     """
-    Constructs a specified ResNet backbone with PAN on top. Freezes the specified number of
+    Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
     layers in the backbone.
 
     Examples::
 
-        >>> from models.backbone_utils import darknet_pan_backbone
-        >>> backbone = darknet_pan_backbone('darknet3_1', pretrained=True, trainable_layers=3)
+        >>> from models.backbone_utils import darknet_pan_tr_backbone
+        >>> backbone = darknet_pan_tr_backbone('darknet3_1', pretrained=True, trainable_layers=3)
         >>> # get some dummy image
         >>> x = torch.rand(1, 3, 64, 64)
         >>> # compute the output
@@ -36,12 +37,12 @@ def darknet_pan_tr_backbone(
         >>>    ('2', torch.Size([1, 512, 2, 2]))]
 
     Args:
-        backbone_name (string): resnet architecture. Possible values are 'DarkNet', 'darknet_s_r3_1',
+        backbone_name (string): darknet architecture. Possible values are 'DarkNet', 'darknet_s_r3_1',
            'darknet_m_r3_1', 'darknet_l_r3_1', 'darknet_s_r4_0', 'darknet_m_r4_0', 'darknet_l_r4_0'
         norm_layer (torchvision.ops): it is recommended to use the default value. For details visit:
             (https://github.com/facebookresearch/maskrcnn-benchmark/issues/267)
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
-        trainable_layers (int): number of trainable (not frozen) resnet layers starting from final block.
+        trainable_layers (int): number of trainable (not frozen) darknet layers starting from final block.
             Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
         version (str): ultralytics release version, currently only supports v3.1 or v4.0
     """

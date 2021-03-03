@@ -4,7 +4,6 @@ from torchvision.models._utils import IntermediateLayerGetter
 
 from . import darknet
 from .path_aggregation_network import PathAggregationNetwork
-from .common import BottleneckCSP, C3
 
 from typing import List, Optional
 
@@ -53,7 +52,7 @@ def darknet_pan_backbone(
     version: str = 'v4.0',
 ):
     """
-    Constructs a specified ResNet backbone with PAN on top. Freezes the specified number of
+    Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
     layers in the backbone.
 
     Examples::
@@ -71,12 +70,12 @@ def darknet_pan_backbone(
         >>>    ('2', torch.Size([1, 512, 2, 2]))]
 
     Args:
-        backbone_name (string): resnet architecture. Possible values are 'DarkNet', 'darknet_s_r3_1',
+        backbone_name (string): darknet architecture. Possible values are 'DarkNet', 'darknet_s_r3_1',
            'darknet_m_r3_1', 'darknet_l_r3_1', 'darknet_s_r4_0', 'darknet_m_r4_0', 'darknet_l_r4_0'
         norm_layer (torchvision.ops): it is recommended to use the default value. For details visit:
             (https://github.com/facebookresearch/maskrcnn-benchmark/issues/267)
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
-        trainable_layers (int): number of trainable (not frozen) resnet layers starting from final block.
+        trainable_layers (int): number of trainable (not frozen) darknet layers starting from final block.
             Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
         version (str): ultralytics release version: v3.1 or v4.0
     """
