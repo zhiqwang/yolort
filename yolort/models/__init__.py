@@ -9,7 +9,7 @@ from ..utils.activations import Hardswish, SiLU
 from typing import Any
 
 
-def yolov5s(upstream_version: str ='v3.1', export_friendly: bool = False, **kwargs: Any):
+def yolov5s(upstream_version: str = 'v3.1', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): Determine the upstream YOLOv5 version.
@@ -28,7 +28,7 @@ def yolov5s(upstream_version: str ='v3.1', export_friendly: bool = False, **kwar
     return model
 
 
-def yolov5m(upstream_version: str ='v3.1', export_friendly: bool = False, **kwargs: Any):
+def yolov5m(upstream_version: str = 'v3.1', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): Determine the upstream YOLOv5 version.
@@ -47,7 +47,7 @@ def yolov5m(upstream_version: str ='v3.1', export_friendly: bool = False, **kwar
     return model
 
 
-def yolov5l(upstream_version: str ='v3.1', export_friendly: bool = False, **kwargs: Any):
+def yolov5l(upstream_version: str = 'v3.1', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): Determine the upstream YOLOv5 version.
@@ -59,6 +59,23 @@ def yolov5l(upstream_version: str ='v3.1', export_friendly: bool = False, **kwar
         model = YOLOModule(arch="yolov5_darknet_pan_l_r40", **kwargs)
     else:
         raise NotImplementedError("Currently only supports v3.1 and v4.0 versions")
+
+    if export_friendly:
+        _export_module_friendly(model)
+
+    return model
+
+
+def yolotr(upstream_version: str = 'v4.0', export_friendly: bool = False, **kwargs: Any):
+    """
+    Args:
+        upstream_version (str): Determine the upstream YOLOv5 version.
+        export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+    """
+    if upstream_version == 'v4.0':
+        model = YOLOModule(arch="yolov5_darknet_pan_s_tr", **kwargs)
+    else:
+        raise NotImplementedError("Currently only supports v4.0 versions")
 
     if export_friendly:
         _export_module_friendly(model)
