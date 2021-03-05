@@ -283,7 +283,7 @@ class SetCriterion(nn.Module):
 
                 # Objectness head
                 # iou ratio
-                ciou_vals = torch.tensor(ciou.detach().clamp(0), dtype=obj_logits.dtype)
+                ciou_vals = ciou.clone().detach().clamp(0).requires_grad_(True)
                 obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + (self.iou_ratio * ciou_vals)
 
                 # Classification head
