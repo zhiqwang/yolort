@@ -4,7 +4,7 @@ import torch
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.yolotr import darknet_pan_tr_backbone
 from yolort.models.anchor_utils import AnchorGenerator
-from yolort.models.box_head import YoloHead, PostProcess, SetCriterion
+from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
 
 from .common_utils import TestCase
 
@@ -152,7 +152,7 @@ class ModelTester(TestCase):
         num_anchors = self._get_num_anchors()
         num_classes = self._get_num_classes()
         strides = self._get_strides()
-        box_head = YoloHead(in_channels, num_anchors, strides, num_classes)
+        box_head = YOLOHead(in_channels, num_anchors, strides, num_classes)
         return box_head
 
     def test_yolo_head(self):
