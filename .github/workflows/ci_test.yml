@@ -16,7 +16,7 @@ jobs:
       matrix:
         python-version: [3.7]
         os: [ubuntu-latest]
-        torch: [1.7.1+cpu, 1.8.0+cpu, Nightly]
+        torch: [1.7.1+cpu, 1.8.0+cpu, nightly]
         include:
           - torch: 1.7.1+cpu
             pip_address: torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
@@ -24,7 +24,7 @@ jobs:
           - torch: 1.8.0+cpu
             pip_address: torch==1.8.0+cpu torchvision==0.9.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
-          - torch: Nightly
+          - torch: nightly
             pip_address: --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
             unittest_type: test
 
@@ -74,24 +74,24 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
           verbose: true
-      - name: Build TorchVision Cpp Nightly
-        if: matrix.torch == 'Nightly'
+      - name: Build TorchVision Cpp ${{ matrix.torch }}
+        if: matrix.torch == '1.8.0+cpu'
         run: |
           export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
           cd ..
           git clone https://github.com/pytorch/vision.git vision
           cd vision
-          git checkout nightly
+          git checkout release/0.9
           mkdir build && cd build
           cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
           make -j4
           sudo make install
       - name: Export torchscript model
-        if: matrix.torch == 'Nightly'
+        if: matrix.torch == '1.8.0+cpu'
         run: |
           python -m test.tracing.trace_model
       - name: Test libtorch tracing
-        if: matrix.torch == 'Nightly'
+        if: matrix.torch == '1.8.0+cpu'
         run: |
           export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
