@@ -45,8 +45,8 @@ jobs:
           pip install -U opencv-python
           pip install -U pycocotools>=2.0.2
           pip install -U onnxruntime
-          # required by ultralytics
-          pip install -U pandas seaborn PyYAML thop tensorboard
+          # required by Ultralytics
+          pip install -U pandas seaborn thop
       - name: Install PyTorch ${{ matrix.torch }} Version
         run: |
           pip install ${{ matrix.pip_address }}
