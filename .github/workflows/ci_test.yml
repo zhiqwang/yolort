@@ -16,10 +16,13 @@ jobs:
       matrix:
         python-version: [3.7]
         os: [ubuntu-latest]
-        torch: [1.7.1+cpu, Nightly]
+        torch: [1.7.1+cpu, 1.8.0+cpu, Nightly]
         include:
           - torch: 1.7.1+cpu
             pip_address: torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+            unittest_type: --cov=test --cov-report=xml
+          - torch: 1.8.0+cpu
+            pip_address: torch==1.8.0+cpu torchvision==0.9.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
           - torch: Nightly
             pip_address: --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
