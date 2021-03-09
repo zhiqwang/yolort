@@ -16,12 +16,15 @@ jobs:
       matrix:
         python-version: [3.7]
         os: [ubuntu-latest]
-        torch: [1.7.1+cpu, Nightly]
+        torch: [1.7.1+cpu, 1.8.0+cpu, nightly]
         include:
           - torch: 1.7.1+cpu
             pip_address: torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
-          - torch: Nightly
+          - torch: 1.8.0+cpu
+            pip_address: torch==1.8.0+cpu torchvision==0.9.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+            unittest_type: --cov=test --cov-report=xml
+          - torch: nightly
             pip_address: --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
             unittest_type: test
 
@@ -33,20 +36,24 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: 'x64'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 pytest
-          pip install pytest-cov
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install -U opencv-python
-          pip install -U pycocotools>=2.0.2
-          pip install -U onnxruntime
-          # required by ultralytics
-          pip install -U pandas seaborn PyYAML thop tensorboard
       - name: Install PyTorch ${{ matrix.torch }} Version
         run: |
+          python -m pip install --upgrade pip
+          # requirements for PyTorch and torchvision
+          pip install numpy pillow scipy
           pip install ${{ matrix.pip_address }}
+      - name: Install dependencies
+        run: |
+          # requirements for unittest
+          pip install flake8 pytest
+          pip install pytest-cov
+          # Install other dependencies
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install opencv-python
+          pip install pycocotools>=2.0.2
+          pip install onnxruntime
+          # requirements for ultralytics/yolov5
+          pip install pandas seaborn thop
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -58,7 +65,7 @@ jobs:
           PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
-        if: matrix.torch == '1.7.1+cpu'
+        if: matrix.torch == '1.8.0+cpu'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
@@ -67,24 +74,24 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
           verbose: true
-      - name: Build TorchVision Cpp Nightly
-        if: matrix.torch == 'Nightly'
+      - name: Build TorchVision Cpp ${{ matrix.torch }}
+        if: matrix.torch == '1.8.0+cpu'
         run: |
           export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
           cd ..
           git clone https://github.com/pytorch/vision.git vision
           cd vision
-          git checkout nightly
+          git checkout release/0.9
           mkdir build && cd build
           cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
           make -j4
           sudo make install
       - name: Export torchscript model
-        if: matrix.torch == 'Nightly'
+        if: matrix.torch == '1.8.0+cpu'
         run: |
           python -m test.tracing.trace_model
       - name: Test libtorch tracing
-        if: matrix.torch == 'Nightly'
+        if: matrix.torch == '1.8.0+cpu'
         run: |
           export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
