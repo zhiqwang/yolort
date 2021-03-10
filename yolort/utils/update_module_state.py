@@ -13,6 +13,7 @@ def update_module_state_from_ultralytics(
     version: str = 'v4.0',
     num_classes: int = 80,
     pretrained_file: str = None,
+    fp16=True,
     **kwargs: Any,
 ):
     architecture_maps = {
@@ -25,7 +26,7 @@ def update_module_state_from_ultralytics(
     }
 
     if pretrained_file:
-        model = torch.hub.load('ultralytics/yolov5', 'custom', path_or_model=pretrained_file)
+        model = torch.hub.load(f'ultralytics/yolov5:{version}', 'custom', path_or_model=pretrained_file)
     else:
         model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
 
@@ -33,8 +34,11 @@ def update_module_state_from_ultralytics(
                                              num_classes=num_classes, **kwargs)
 
     module_state_updater.updating(model)
-
-    return module_state_updater.model.half()
+    
+    if fp16:
+        module_state_updater.model.half()
+    
+    return model
 
 
 class ModuleStateUpdate:
