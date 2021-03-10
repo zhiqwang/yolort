@@ -12,6 +12,7 @@ def update_module_state_from_ultralytics(
     arch: str = 'yolov5s',
     version: str = 'v4.0',
     num_classes: int = 80,
+    pretrained_file: str = None,
     **kwargs: Any,
 ):
     architecture_maps = {
@@ -23,7 +24,10 @@ def update_module_state_from_ultralytics(
         'yolov5l_v4.0': 'yolov5_darknet_pan_l_r40',
     }
 
-    model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
+    if pretrained_file:
+        model = torch.hub.load('ultralytics/yolov5:{version}', 'custom', path_or_model=pretrained_file)
+    else:
+        model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
 
     module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{version}'],
                                              num_classes=num_classes, **kwargs)
