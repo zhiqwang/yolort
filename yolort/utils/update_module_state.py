@@ -25,7 +25,7 @@ def update_module_state_from_ultralytics(
     }
 
     if pretrained_file:
-        model = torch.hub.load('ultralytics/yolov5:{version}', 'custom', path_or_model=pretrained_file)
+        model = torch.hub.load('ultralytics/yolov5', 'custom', path_or_model=pretrained_file)
     else:
         model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
 
