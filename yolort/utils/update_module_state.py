@@ -38,7 +38,7 @@ def update_module_state_from_ultralytics(
     if fp16:
         module_state_updater.model.half()
     
-    return model
+    return module_state_updater.model
 
 
 class ModuleStateUpdate:
