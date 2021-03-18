@@ -1,4 +1,9 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+"""
+The transformer attention network blocks.
+
+Mostly copy-paste from <https://github.com/dingyiwei/yolov5/tree/Transformer>.
+"""
 from torch import nn
 
 from .common import Conv, C3
@@ -119,24 +124,20 @@ class TransformerLayer(nn.Module):
     def __init__(self, c, num_heads):
         """
         Args:
-            c (int):
-            num_heads:
+            c (int): number of channels
+            num_heads: number of heads
         """
         super().__init__()
-
-        self.ln1 = nn.LayerNorm(c)
         self.q = nn.Linear(c, c, bias=False)
         self.k = nn.Linear(c, c, bias=False)
         self.v = nn.Linear(c, c, bias=False)
+
         self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
-        self.ln2 = nn.LayerNorm(c)
         self.fc1 = nn.Linear(c, c, bias=False)
         self.fc2 = nn.Linear(c, c, bias=False)
 
     def forward(self, x):
-        x_ = self.ln1(x)
-        x = self.ma(self.q(x_), self.k(x_), self.v(x_))[0] + x
-        x = self.ln2(x)
+        x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x
         x = self.fc2(self.fc1(x)) + x
         return x
 
@@ -145,10 +146,10 @@ class TransformerBlock(nn.Module):
     def __init__(self, c1, c2, num_heads, num_layers):
         """
         Args:
-            c1 (int): ch_in
-            c2 (int): ch_out
-            num_heads:
-            num_layers:
+            c1 (int): number of input channels
+            c2 (int): number of output channels
+            num_heads: number of heads
+            num_layers: number of layers
         """
         super().__init__()
 
