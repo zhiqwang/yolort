@@ -2,7 +2,7 @@ import unittest
 import torch
 
 from yolort.models.backbone_utils import darknet_pan_backbone
-from yolort.models.yolotr import darknet_pan_tr_backbone
+from yolort.models.transformer import darknet_tan_backbone
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.box_head import YoloHead, PostProcess, SetCriterion
 
@@ -112,7 +112,7 @@ class ModelTester(TestCase):
         backbone_name = 'darknet_s_r4_0'
         depth_multiple = 0.33
         width_multiple = 0.5
-        backbone_with_fpn_tr = darknet_pan_tr_backbone(backbone_name, depth_multiple, width_multiple)
+        backbone_with_fpn_tr = darknet_tan_backbone(backbone_name, depth_multiple, width_multiple)
         return backbone_with_fpn_tr
 
     def test_backbone_with_pan_tr(self):

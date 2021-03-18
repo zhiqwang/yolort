@@ -24,7 +24,7 @@ def darknet_tan_backbone(
     version: str = 'v4.0',
 ):
     """
-    Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
+    Constructs a specified DarkNet backbone with TAN on top. Freezes the specified number of
     layers in the backbone.
 
     Examples::
