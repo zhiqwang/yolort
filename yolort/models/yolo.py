@@ -7,7 +7,7 @@ from torch import nn, Tensor
 from torchvision.models.utils import load_state_dict_from_url
 
 from .backbone_utils import darknet_pan_backbone
-from .yolotr import darknet_pan_tr_backbone
+from .transformer import darknet_pan_tr_backbone
 from .anchor_utils import AnchorGenerator
 from .box_head import YoloHead, SetCriterion, PostProcess
 

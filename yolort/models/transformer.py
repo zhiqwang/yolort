@@ -10,7 +10,7 @@ from . import darknet
 from typing import Callable, List, Optional
 
 
-def darknet_pan_tr_backbone(
+def darknet_tan_backbone(
     backbone_name: str,
     depth_multiple: float,
     width_multiple: float,
@@ -24,8 +24,8 @@ def darknet_pan_tr_backbone(
 
     Examples::
 
-        >>> from models.backbone_utils import darknet_pan_tr_backbone
-        >>> backbone = darknet_pan_tr_backbone('darknet3_1', pretrained=True, trainable_layers=3)
+        >>> from models.backbone_utils import darknet_tan_backbone
+        >>> backbone = darknet_tan_backbone('darknet3_1', pretrained=True, trainable_layers=3)
         >>> # get some dummy image
         >>> x = torch.rand(1, 3, 64, 64)
         >>> # compute the output
@@ -55,20 +55,23 @@ def darknet_pan_tr_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithPANTranformer(backbone, return_layers, in_channels_list, depth_multiple, version)
+    return BackboneWithTAN(backbone, return_layers, in_channels_list, depth_multiple, version)
 
 
-class BackboneWithPANTranformer(BackboneWithPAN):
+class BackboneWithTAN(BackboneWithPAN):
+    """
+    Adds a TAN on top of a model.
+    """
     def __init__(self, backbone, return_layers, in_channels_list, depth_multiple, version):
         super().__init__(backbone, return_layers, in_channels_list, depth_multiple, version)
-        self.pan = PathAggregationNetworkTransformer(
+        self.pan = TransformerAttentionNetwork(
             in_channels_list,
             depth_multiple,
             version=version,
         )
 
 
-class PathAggregationNetworkTransformer(PathAggregationNetwork):
+class TransformerAttentionNetwork(PathAggregationNetwork):
     def __init__(
         self,
         in_channels_list: List[int],
