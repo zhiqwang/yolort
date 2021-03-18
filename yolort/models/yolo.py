@@ -128,13 +128,15 @@ class YOLO(nn.Module):
 model_urls_root = 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0'
 
 model_urls = {
+    # Path Aggregation Network
     'yolov5_darknet_pan_s_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r31_coco-eb728698.pt',
     'yolov5_darknet_pan_m_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r31_coco-670dc553.pt',
     'yolov5_darknet_pan_l_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt',
     'yolov5_darknet_pan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt',
     'yolov5_darknet_pan_m_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt',
     'yolov5_darknet_pan_l_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r40_coco-4416841f.pt',
-    'yolov5_darknet_pan_s_tr_coco': f'{model_urls_root}/yolov5_darknet_pan_s_tr_coco-f09f21f7.pt',
+    # Tranformer Attention Network
+    'yolov5_darknet_tan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt',
 }
 
 
@@ -312,7 +314,7 @@ def yolov5_darknet_tan_s_r40(pretrained: bool = False, progress: bool = True, nu
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     backbone_name = 'darknet_s_r4_0'
-    weights_name = 'yolov5_darknet_pan_s_tr_coco'
+    weights_name = 'yolov5_darknet_tan_s_r40_coco'
     depth_multiple = 0.33
     width_multiple = 0.5
     version = 'v4.0'
