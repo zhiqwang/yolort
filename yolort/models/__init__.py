@@ -73,7 +73,7 @@ def yolotr(upstream_version: str = 'v4.0', export_friendly: bool = False, **kwar
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
     """
     if upstream_version == 'v4.0':
-        model = YOLOModule(arch="yolov5_darknet_pan_s_tr", **kwargs)
+        model = YOLOModule(arch="yolov5_darknet_tan_s_r40", **kwargs)
     else:
         raise NotImplementedError("Currently only supports v4.0 versions")
 

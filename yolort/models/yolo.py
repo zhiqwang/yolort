@@ -7,7 +7,7 @@ from torch import nn, Tensor
 from torchvision.models.utils import load_state_dict_from_url
 
 from .backbone_utils import darknet_pan_backbone
-from .yolotr import darknet_pan_tr_backbone
+from .transformer import darknet_tan_backbone
 from .anchor_utils import AnchorGenerator
 from .box_head import YoloHead, SetCriterion, PostProcess
 
@@ -15,7 +15,7 @@ from typing import Tuple, Any, List, Dict, Optional
 
 __all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
            'yolov5_darknet_pan_s_r40', 'yolov5_darknet_pan_m_r40', 'yolov5_darknet_pan_l_r40',
-           'yolov5_darknet_pan_s_tr']
+           'yolov5_darknet_tan_s_r40']
 
 
 class YOLO(nn.Module):
@@ -128,13 +128,15 @@ class YOLO(nn.Module):
 model_urls_root = 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0'
 
 model_urls = {
+    # Path Aggregation Network
     'yolov5_darknet_pan_s_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r31_coco-eb728698.pt',
     'yolov5_darknet_pan_m_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r31_coco-670dc553.pt',
     'yolov5_darknet_pan_l_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt',
     'yolov5_darknet_pan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt',
     'yolov5_darknet_pan_m_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt',
     'yolov5_darknet_pan_l_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r40_coco-4416841f.pt',
-    'yolov5_darknet_pan_s_tr_coco': f'{model_urls_root}/yolov5_darknet_pan_s_tr_coco-f09f21f7.pt',
+    # Tranformer Attention Network
+    'yolov5_darknet_tan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt',
 }
 
 
@@ -303,8 +305,8 @@ def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, nu
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
-def yolov5_darknet_pan_s_tr(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                            **kwargs: Any) -> YOLO:
+def yolov5_darknet_tan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 small with a transformer block model from
     `"dingyiwei/yolov5" <https://github.com/ultralytics/yolov5/pull/2333>`_.
     Args:
@@ -312,12 +314,12 @@ def yolov5_darknet_pan_s_tr(pretrained: bool = False, progress: bool = True, num
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     backbone_name = 'darknet_s_r4_0'
-    weights_name = 'yolov5_darknet_pan_s_tr_coco'
+    weights_name = 'yolov5_darknet_tan_s_r40_coco'
     depth_multiple = 0.33
     width_multiple = 0.5
     version = 'v4.0'
 
-    backbone = darknet_pan_tr_backbone(backbone_name, depth_multiple, width_multiple, version=version)
+    backbone = darknet_tan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
 
     anchor_grids = [[10, 13, 16, 30, 33, 23],
                     [30, 61, 62, 45, 59, 119],
