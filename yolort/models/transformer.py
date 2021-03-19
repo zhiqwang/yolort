@@ -1,4 +1,9 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+"""
+The transformer attention network blocks.
+
+Mostly copy-paste from <https://github.com/dingyiwei/yolov5/tree/Transformer>.
+"""
 from torch import nn
 
 from .common import Conv, C3
@@ -10,7 +15,7 @@ from . import darknet
 from typing import Callable, List, Optional
 
 
-def darknet_pan_tr_backbone(
+def darknet_tan_backbone(
     backbone_name: str,
     depth_multiple: float,
     width_multiple: float,
@@ -19,13 +24,13 @@ def darknet_pan_tr_backbone(
     version: str = 'v4.0',
 ):
     """
-    Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
+    Constructs a specified DarkNet backbone with TAN on top. Freezes the specified number of
     layers in the backbone.
 
     Examples::
 
-        >>> from models.backbone_utils import darknet_pan_tr_backbone
-        >>> backbone = darknet_pan_tr_backbone('darknet3_1', pretrained=True, trainable_layers=3)
+        >>> from models.backbone_utils import darknet_tan_backbone
+        >>> backbone = darknet_tan_backbone('darknet3_1', pretrained=True, trainable_layers=3)
         >>> # get some dummy image
         >>> x = torch.rand(1, 3, 64, 64)
         >>> # compute the output
@@ -55,20 +60,23 @@ def darknet_pan_tr_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithPANTranformer(backbone, return_layers, in_channels_list, depth_multiple, version)
+    return BackboneWithTAN(backbone, return_layers, in_channels_list, depth_multiple, version)
 
 
-class BackboneWithPANTranformer(BackboneWithPAN):
+class BackboneWithTAN(BackboneWithPAN):
+    """
+    Adds a TAN on top of a model.
+    """
     def __init__(self, backbone, return_layers, in_channels_list, depth_multiple, version):
         super().__init__(backbone, return_layers, in_channels_list, depth_multiple, version)
-        self.pan = PathAggregationNetworkTransformer(
+        self.pan = TransformerAttentionNetwork(
             in_channels_list,
             depth_multiple,
             version=version,
         )
 
 
-class PathAggregationNetworkTransformer(PathAggregationNetwork):
+class TransformerAttentionNetwork(PathAggregationNetwork):
     def __init__(
         self,
         in_channels_list: List[int],
@@ -116,24 +124,20 @@ class TransformerLayer(nn.Module):
     def __init__(self, c, num_heads):
         """
         Args:
-            c (int):
-            num_heads:
+            c (int): number of channels
+            num_heads: number of heads
         """
         super().__init__()
-
-        self.ln1 = nn.LayerNorm(c)
         self.q = nn.Linear(c, c, bias=False)
         self.k = nn.Linear(c, c, bias=False)
         self.v = nn.Linear(c, c, bias=False)
+
         self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
-        self.ln2 = nn.LayerNorm(c)
         self.fc1 = nn.Linear(c, c, bias=False)
         self.fc2 = nn.Linear(c, c, bias=False)
 
     def forward(self, x):
-        x_ = self.ln1(x)
-        x = self.ma(self.q(x_), self.k(x_), self.v(x_))[0] + x
-        x = self.ln2(x)
+        x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x
         x = self.fc2(self.fc1(x)) + x
         return x
 
@@ -142,10 +146,10 @@ class TransformerBlock(nn.Module):
     def __init__(self, c1, c2, num_heads, num_layers):
         """
         Args:
-            c1 (int): ch_in
-            c2 (int): ch_out
-            num_heads:
-            num_layers:
+            c1 (int): number of input channels
+            c2 (int): number of output channels
+            num_heads: number of heads
+            num_layers: number of layers
         """
         super().__init__()
 
