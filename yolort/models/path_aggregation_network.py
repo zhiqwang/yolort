@@ -49,7 +49,7 @@ class PathAggregationNetwork(nn.Module):
         block: Optional[Callable[..., nn.Module]] = None,
     ):
         super().__init__()
-        assert len(in_channels_list) == 3, "currently only support length 3."
+        assert len(in_channels_list) == 3, "Currently only supports length 3."
 
         if block is None:
             block = _block[version]

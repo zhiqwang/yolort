@@ -5,32 +5,77 @@ from torch import nn
 
 from ..models import yolo
 
-from typing import Any
+from typing import Any, Union, Optional
 
 
 def update_module_state_from_ultralytics(
     arch: str = 'yolov5s',
     version: str = 'v4.0',
+    feature_fusion_type: str = 'PAN',
     num_classes: int = 80,
+    custom_path_or_model: Optional[Union[str, dict, nn.Module]] = None,
+    set_fp16: bool = True,
     **kwargs: Any,
 ):
+    """
+    Allows the user to specify a file to use when loading an ultralytics model for conversion.
+    This is valuable for users who have already trained their models using ultralytics and don't
+    wish to re-train.
+
+    Args:
+        arch (str): yolo architecture. Possible values are 'yolov5s', 'yolov5m' and 'yolov5l'.
+            Default: 'yolov5s'.
+        version (str): the released version of ultralytics. Possible values are 'v3.1' and 'v4.0'.
+            Default: 'v4.0'.
+        feature_fusion_type (str): the type of fature fusion. Possible values are PAN and TAN.
+            Default: 'PAN'.
+        num_classes (int): number of detection classes (doesn't including background).
+            Default: 80.
+        custom_path_or_model (Optional[Union[str, dict, nn.Module]]): custom path or model.
+            Possible arguments are str, dict, nn.Module, None, to respond to different scenarios.
+            Ref: usage details for calling parameters:
+            <https://github.com/ultralytics/yolov5/blob/ed2c742/hubconf.py#L112>
+            and tutorial of loading ultralytics/YOLOv5 from PyTorch Hub:
+            <https://github.com/ultralytics/yolov5/issues/36>
+            - None: use model trained from COCO datasets as ultralytics
+            - str: string of path to model
+            - dict: torch.load('path/to/model.pt')
+            - nn.Module: torch.load('path/to/model.pt')['model']
+            Default: None.
+        set_fp16 (bool): allow selective conversion to fp16 or not.
+            Default: True.
+    """
     architecture_maps = {
-        'yolov5s_v3.1': 'yolov5_darknet_pan_s_r31',
-        'yolov5m_v3.1': 'yolov5_darknet_pan_m_r31',
-        'yolov5l_v3.1': 'yolov5_darknet_pan_l_r31',
-        'yolov5s_v4.0': 'yolov5_darknet_pan_s_r40',
-        'yolov5m_v4.0': 'yolov5_darknet_pan_m_r40',
-        'yolov5l_v4.0': 'yolov5_darknet_pan_l_r40',
+        'yolov5s_pan_v3.1': 'yolov5_darknet_pan_s_r31',
+        'yolov5m_pan_v3.1': 'yolov5_darknet_pan_m_r31',
+        'yolov5l_pan_v3.1': 'yolov5_darknet_pan_l_r31',
+        'yolov5s_pan_v4.0': 'yolov5_darknet_pan_s_r40',
+        'yolov5m_pan_v4.0': 'yolov5_darknet_pan_m_r40',
+        'yolov5l_pan_v4.0': 'yolov5_darknet_pan_l_r40',
+        'yolov5s_tan_v4.0': 'yolov5_darknet_tan_s_r40',
     }
 
-    model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
+    if custom_path_or_model is None:
+        model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
+    else:
+        model = torch.hub.load(f'ultralytics/yolov5:{version}', 'custom', path_or_model=custom_path_or_model)
 
-    module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{version}'],
-                                             num_classes=num_classes, **kwargs)
+    key_arch = f'{arch}_{feature_fusion_type.lower()}_{version}'
+    assert key_arch in architecture_maps, (
+        "Currently does't support your architecture, fell free to report a issue to yolort")
+
+    module_state_updater = ModuleStateUpdate(
+        arch=architecture_maps[key_arch],
+        num_classes=num_classes,
+        **kwargs,
+    )
 
     module_state_updater.updating(model)
 
-    return module_state_updater.model.half()
+    if set_fp16:
+        module_state_updater.model.half()
+
+    return module_state_updater.model
 
 
 class ModuleStateUpdate:
