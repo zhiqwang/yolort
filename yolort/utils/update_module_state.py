@@ -5,14 +5,14 @@ from torch import nn
 
 from ..models import yolo
 
-from typing import Any
+from typing import Any, Optional
 
 
 def update_module_state_from_ultralytics(
     arch: str = 'yolov5s',
     version: str = 'v4.0',
     num_classes: int = 80,
-    pretrained_file: str = None,
+    custom_path_or_model: Optional[str] = None,
     fp16=True,
     **kwargs: Any,
 ):
@@ -25,19 +25,21 @@ def update_module_state_from_ultralytics(
         'yolov5l_v4.0': 'yolov5_darknet_pan_l_r40',
     }
 
-    if pretrained_file:
-        model = torch.hub.load(f'ultralytics/yolov5:{version}', 'custom', path_or_model=pretrained_file)
+    if custom_path_or_model is not None:
+        model = torch.hub.load(
+            f'ultralytics/yolov5:{version}', 'custom', path_or_model=custom_path_or_model)
     else:
-        model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
+        model = torch.hub.load(
+            f'ultralytics/yolov5:{version}', arch, pretrained=True)
 
     module_state_updater = ModuleStateUpdate(arch=architecture_maps[f'{arch}_{version}'],
                                              num_classes=num_classes, **kwargs)
 
     module_state_updater.updating(model)
-    
+
     if fp16:
         module_state_updater.model.half()
-    
+
     return module_state_updater.model
 
 
