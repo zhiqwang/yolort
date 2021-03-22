@@ -10,7 +10,7 @@ class UtilsTester(unittest.TestCase):
     def test_update_module_state_from_ultralytics(self):
         model = update_module_state_from_ultralytics(
             arch='yolov5s',
-            version='4.0',
+            version='v4.0',
             feature_fusion_type='PAN',
             num_classes=80,
             custom_path_or_model=None,

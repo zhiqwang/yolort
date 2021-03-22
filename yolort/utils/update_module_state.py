@@ -10,7 +10,7 @@ from typing import Any, Union, Optional
 
 def update_module_state_from_ultralytics(
     arch: str = 'yolov5s',
-    version: str = '4.0',
+    version: str = 'v4.0',
     feature_fusion_type: str = 'PAN',
     num_classes: int = 80,
     custom_path_or_model: Optional[Union[str, dict, nn.Module]] = None,
@@ -25,8 +25,8 @@ def update_module_state_from_ultralytics(
     Args:
         arch (str): yolo architecture. Possible values are 'yolov5s', 'yolov5m' and 'yolov5l'.
             Default: 'yolov5s'.
-        version (str): the released version of ultralytics. Possible values are '3.1' and '4.0'.
-            Default: '4.0'.
+        version (str): the released version of ultralytics. Possible values are 'v3.1' and 'v4.0'.
+            Default: 'v4.0'.
         feature_fusion_type (str): the type of fature fusion. Possible values are PAN and TAN.
             Default: 'PAN'.
         num_classes (int): number of detection classes (doesn't including background).
@@ -46,19 +46,19 @@ def update_module_state_from_ultralytics(
             Default: True.
     """
     architecture_maps = {
-        'yolov5s_pan_3.1': 'yolov5_darknet_pan_s_r31',
-        'yolov5m_pan_3.1': 'yolov5_darknet_pan_m_r31',
-        'yolov5l_pan_3.1': 'yolov5_darknet_pan_l_r31',
-        'yolov5s_pan_4.0': 'yolov5_darknet_pan_s_r40',
-        'yolov5m_pan_4.0': 'yolov5_darknet_pan_m_r40',
-        'yolov5l_pan_4.0': 'yolov5_darknet_pan_l_r40',
-        'yolov5s_tan_4.0': 'yolov5_darknet_tan_s_r40',
+        'yolov5s_pan_v3.1': 'yolov5_darknet_pan_s_r31',
+        'yolov5m_pan_v3.1': 'yolov5_darknet_pan_m_r31',
+        'yolov5l_pan_v3.1': 'yolov5_darknet_pan_l_r31',
+        'yolov5s_pan_v4.0': 'yolov5_darknet_pan_s_r40',
+        'yolov5m_pan_v4.0': 'yolov5_darknet_pan_m_r40',
+        'yolov5l_pan_v4.0': 'yolov5_darknet_pan_l_r40',
+        'yolov5s_tan_v4.0': 'yolov5_darknet_tan_s_r40',
     }
 
     if custom_path_or_model is None:
-        model = torch.hub.load(f'ultralytics/yolov5:v{version}', arch, pretrained=True)
+        model = torch.hub.load(f'ultralytics/yolov5:{version}', arch, pretrained=True)
     else:
-        model = torch.hub.load(f'ultralytics/yolov5:v{version}', 'custom', path_or_model=custom_path_or_model)
+        model = torch.hub.load(f'ultralytics/yolov5:{version}', 'custom', path_or_model=custom_path_or_model)
 
     key_arch = f'{arch}_{feature_fusion_type.lower()}_{version}'
     assert key_arch in architecture_maps, (
