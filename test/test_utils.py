@@ -1,6 +1,6 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import unittest
-import torch
+
 from torch import nn
 
 from yolort.utils import update_module_state_from_ultralytics
