@@ -9,7 +9,7 @@ from torchvision.models.utils import load_state_dict_from_url
 from .backbone_utils import darknet_pan_backbone
 from .transformer import darknet_tan_backbone
 from .anchor_utils import AnchorGenerator
-from .box_head import YoloHead, SetCriterion, PostProcess
+from .box_head import YOLOHead, SetCriterion, PostProcess
 
 from typing import Tuple, Any, List, Dict, Optional
 
@@ -54,7 +54,7 @@ class YOLO(nn.Module):
         self.compute_loss = loss_calculator
 
         if head is None:
-            head = YoloHead(
+            head = YOLOHead(
                 backbone.out_channels,
                 anchor_generator.num_anchors,
                 anchor_generator.strides,

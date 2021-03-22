@@ -10,7 +10,7 @@ from . import _utils as det_utils
 from typing import Tuple, List, Dict
 
 
-class YoloHead(nn.Module):
+class YOLOHead(nn.Module):
     def __init__(self, in_channels: List[int], num_anchors: int, strides: List[int], num_classes: int):
         super().__init__()
         self.num_anchors = num_anchors  # anchors
@@ -25,7 +25,7 @@ class YoloHead(nn.Module):
 
     def _initialize_biases(self, cf=None):
         """
-        Initialize biases into YoloHead, cf is class frequency
+        Initialize biases into YOLOHead, cf is class frequency
         Check section 3.3 in <https://arxiv.org/abs/1708.02002>
         """
         for mi, s in zip(self.head, self.strides):
