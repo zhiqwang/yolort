@@ -21,7 +21,7 @@ def DWConv(c1, c2, k=1, s=1, act=True):
 
 class Conv(nn.Module):
     # Standard convolution
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version='v4.0'):
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version='r4.0'):
         """
         Args:
             c1 (int): ch_in
@@ -31,17 +31,17 @@ class Conv(nn.Module):
             p (Optional[int]): padding
             g (int): groups
             act (bool): determine the activation function
-            version (str): ultralytics release version: v3.1 or v4.0
+            version (str): ultralytics release version: r3.1 or r4.0
         """
         super().__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
-        if version == 'v4.0':
+        if version == 'r4.0':
             self.act = nn.SiLU() if act else nn.Identity()
-        elif version == 'v3.1':
+        elif version == 'r3.1':
             self.act = nn.Hardswish() if act else nn.Identity()
         else:
-            raise NotImplementedError("Currently only support version v3.1 and v4.0")
+            raise NotImplementedError("Currently only supports version r3.1 and r4.0")
 
     def forward(self, x: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(x)))
@@ -52,7 +52,7 @@ class Conv(nn.Module):
 
 class Bottleneck(nn.Module):
     # Standard bottleneck
-    def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version='v4.0'):
+    def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version='r4.0'):
         """
         Args:
             c1 (int): ch_in
@@ -60,7 +60,7 @@ class Bottleneck(nn.Module):
             shortcut (bool): shortcut
             g (int): groups
             e (float): expansion
-            version (str): ultralytics release version: v3.1 or v4.0
+            version (str): ultralytics release version: r3.1 or r4.0
         """
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -86,13 +86,13 @@ class BottleneckCSP(nn.Module):
         """
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1, version='v3.1')
+        self.cv1 = Conv(c1, c_, 1, 1, version='r3.1')
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
         self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv4 = Conv(2 * c_, c2, 1, 1, version='v3.1')
+        self.cv4 = Conv(2 * c_, c2, 1, 1, version='r3.1')
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
         self.act = nn.LeakyReLU(0.1, inplace=True)
-        self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0, version='v3.1') for _ in range(n)])
+        self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0, version='r3.1') for _ in range(n)])
 
     def forward(self, x):
         y1 = self.cv3(self.m(self.cv1(x)))
@@ -125,7 +125,7 @@ class C3(nn.Module):
 
 class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13), version='v4.0'):
+    def __init__(self, c1, c2, k=(5, 9, 13), version='r4.0'):
         super().__init__()
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
@@ -139,7 +139,7 @@ class SPP(nn.Module):
 
 class Focus(nn.Module):
     # Focus wh information into c-space
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version='v4.0'):
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version='r4.0'):
         """
         Args:
             c1 (int): ch_in
@@ -149,7 +149,7 @@ class Focus(nn.Module):
             p (Optional[int]): padding
             g (int): groups
             act (bool): determine the activation function
-            version (str): ultralytics release version: v3.1 or v4.0
+            version (str): ultralytics release version: r3.1 or r4.0
         """
         super().__init__()
         self.conv = Conv(c1 * 4, c2, k, s, p, g, act, version=version)

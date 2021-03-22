@@ -21,7 +21,7 @@ def darknet_tan_backbone(
     width_multiple: float,
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
-    version: str = 'v4.0',
+    version: str = 'r4.0',
 ):
     """
     Constructs a specified DarkNet backbone with TAN on top. Freezes the specified number of
@@ -49,7 +49,7 @@ def darknet_tan_backbone(
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
         trainable_layers (int): number of trainable (not frozen) darknet layers starting from final block.
             Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
-        version (str): ultralytics release version, currently only supports v3.1 or v4.0
+        version (str): ultralytics release version, currently only supports r3.1 or r4.0
     """
     backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
 

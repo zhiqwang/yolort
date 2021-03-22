@@ -22,7 +22,7 @@ class BackboneWithPAN(nn.Module):
             of the returned activation (which the user can specify).
         in_channels_list (List[int]): number of channels for each feature map
             that is returned, in the order they are present in the OrderedDict
-        version (str): ultralytics release version: v3.1 or v4.0
+        version (str): ultralytics release version: r3.1 or r4.0
     Attributes:
         out_channels (int): the number of channels in the PAN
     """
@@ -49,7 +49,7 @@ def darknet_pan_backbone(
     width_multiple: float,
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
-    version: str = 'v4.0',
+    version: str = 'r4.0',
 ):
     """
     Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
@@ -77,7 +77,7 @@ def darknet_pan_backbone(
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
         trainable_layers (int): number of trainable (not frozen) darknet layers starting from final block.
             Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
-        version (str): ultralytics release version: v3.1 or v4.0
+        version (str): ultralytics release version: r3.1 or r4.0
     """
     backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
 
