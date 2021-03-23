@@ -9,7 +9,7 @@ from torchvision.models.utils import load_state_dict_from_url
 from .backbone_utils import darknet_pan_backbone
 from .transformer import darknet_tan_backbone
 from .anchor_utils import AnchorGenerator
-from .box_head import YoloHead, SetCriterion, PostProcess
+from .box_head import YOLOHead, SetCriterion, PostProcess
 
 from typing import Tuple, Any, List, Dict, Optional
 
@@ -54,7 +54,7 @@ class YOLO(nn.Module):
         self.compute_loss = loss_calculator
 
         if head is None:
-            head = YoloHead(
+            head = YOLOHead(
                 backbone.out_channels,
                 anchor_generator.num_anchors,
                 anchor_generator.strides,
@@ -215,7 +215,7 @@ def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_s_r31_coco'
     depth_multiple = 0.33
     width_multiple = 0.5
-    version = 'v3.1'
+    version = 'r3.1'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
@@ -232,7 +232,7 @@ def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_m_r31_coco'
     depth_multiple = 0.67
     width_multiple = 0.75
-    version = 'v3.1'
+    version = 'r3.1'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
@@ -249,7 +249,7 @@ def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_l_r31_coco'
     depth_multiple = 1.0
     width_multiple = 1.0
-    version = 'v3.1'
+    version = 'r3.1'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
@@ -266,7 +266,7 @@ def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_s_r40_coco'
     depth_multiple = 0.33
     width_multiple = 0.5
-    version = 'v4.0'
+    version = 'r4.0'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
@@ -283,7 +283,7 @@ def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_m_r40_coco'
     depth_multiple = 0.67
     width_multiple = 0.75
-    version = 'v4.0'
+    version = 'r4.0'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
@@ -300,7 +300,7 @@ def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_pan_l_r40_coco'
     depth_multiple = 1.0
     width_multiple = 1.0
-    version = 'v4.0'
+    version = 'r4.0'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
                                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
@@ -317,7 +317,7 @@ def yolov5_darknet_tan_s_r40(pretrained: bool = False, progress: bool = True, nu
     weights_name = 'yolov5_darknet_tan_s_r40_coco'
     depth_multiple = 0.33
     width_multiple = 0.5
-    version = 'v4.0'
+    version = 'r4.0'
 
     backbone = darknet_tan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
 

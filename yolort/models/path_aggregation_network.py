@@ -22,7 +22,7 @@ class PathAggregationNetwork(nn.Module):
         in_channels_list (list[int]): number of channels for each feature map that
             is passed to the module
         out_channels (int): number of channels of the PAN representation
-        version (str): ultralytics release version: v3.1 or v4.0
+        version (str): ultralytics release version: r3.1 or r4.0
 
     Examples::
 
@@ -45,7 +45,7 @@ class PathAggregationNetwork(nn.Module):
         self,
         in_channels_list: List[int],
         depth_multiple: float,
-        version: str = 'v4.0',
+        version: str = 'r4.0',
         block: Optional[Callable[..., nn.Module]] = None,
     ):
         super().__init__()
@@ -160,6 +160,6 @@ class PathAggregationNetwork(nn.Module):
 
 
 _block = {
-    "v3.1": BottleneckCSP,
-    "v4.0": C3,
+    "r3.1": BottleneckCSP,
+    "r4.0": C3,
 }
