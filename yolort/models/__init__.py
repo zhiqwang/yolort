@@ -9,11 +9,13 @@ from ..utils.activations import Hardswish, SiLU
 from typing import Any
 
 
-def yolov5s(upstream_version: str = 'r3.1', export_friendly: bool = False, **kwargs: Any):
+def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
-        upstream_version (str): Determine the upstream YOLOv5 version.
+        upstream_version (str): model released by the upstream YOLOv5. Possible values
+            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+            Default: False.
     """
     if upstream_version == 'r3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_s_r31", **kwargs)
@@ -28,11 +30,13 @@ def yolov5s(upstream_version: str = 'r3.1', export_friendly: bool = False, **kwa
     return model
 
 
-def yolov5m(upstream_version: str = 'r3.1', export_friendly: bool = False, **kwargs: Any):
+def yolov5m(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
-        upstream_version (str): Determine the upstream YOLOv5 version.
+        upstream_version (str): model released by the upstream YOLOv5. Possible values
+            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+            Default: False.
     """
     if upstream_version == 'r3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_m_r31", **kwargs)
@@ -47,11 +51,13 @@ def yolov5m(upstream_version: str = 'r3.1', export_friendly: bool = False, **kwa
     return model
 
 
-def yolov5l(upstream_version: str = 'r3.1', export_friendly: bool = False, **kwargs: Any):
+def yolov5l(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
-        upstream_version (str): Determine the upstream YOLOv5 version.
+        upstream_version (str): model released by the upstream YOLOv5. Possible values
+            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+            Default: False.
     """
     if upstream_version == 'r3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_l_r31", **kwargs)
@@ -69,8 +75,10 @@ def yolov5l(upstream_version: str = 'r3.1', export_friendly: bool = False, **kwa
 def yolotr(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
-        upstream_version (str): Determine the upstream YOLOv5 version.
+        upstream_version (str): model released by the upstream YOLOv5. Possible values
+            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+            Default: False.
     """
     if upstream_version == 'r4.0':
         model = YOLOModule(arch="yolov5_darknet_tan_s_r40", **kwargs)
