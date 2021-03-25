@@ -1,8 +1,11 @@
 # 🔦 yolort - YOLOv5 Runtime Stack
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
-[![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+[![CodeQL](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/codeql-analysis.yml)
+[![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
+[![Github Downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?label=GitHub%20Downloads)](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?label=GitHub%20Downloads)
+[![Pypi Downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=black&right_color=orange&left_text=Pypi%20Downloads)](https://pepy.tech/project/yolort)
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
 
 **What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime`, `tvm` and so on.
