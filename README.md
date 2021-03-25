@@ -98,7 +98,7 @@ torch.save(model.state_dict(), 'yolov5s_updated.pt')
 
 ### Inference on `LibTorch` backend 🚀
 
-We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](./deployment) of how to infer with the transformed `torchscript` model. For details see the [GitHub actions](.github/workflows/nightly.yml).
+We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](./deployment) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
 
 ## 🎨 Model Graph Visualization
 
