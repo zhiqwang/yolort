@@ -1,0 +1,7 @@
+Sphinx
+IPython
+sphinx-markdown-tables
+sphinx_rtd_theme
+nbsphinx
+pandoc
+ipykernel
