@@ -10,20 +10,21 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'yolort'
-copyright = '2021, Zhiqiang Wang'
-author = 'Zhiqiang Wang'
+copyright = '2020-2021, yolort community'
+author = 'yolort authors'
 
+# The short X.Y version
+version = '0.3.2'
 # The full version, including alpha/beta/rc tags
-release = 'yolort'
-
+release = 'beta'
 
 # -- General configuration ---------------------------------------------------
 
@@ -31,8 +32,31 @@ release = 'yolort'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx_markdown_tables',
+    'recommonmark',
     'nbsphinx',
 ]
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'PIL': ('https://pillow.readthedocs.io/en/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+}
+
+nbsphinx_allow_errors = False
+nbsphinx_execute = 'never'
+
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -43,8 +67,13 @@ master_doc = 'index'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = [u'_build', '**.ipynb_checkpoints', 'Thumbs.db', '.DS_Store']
 
+pygments_style = 'sphinx'
+
+autodoc_inherit_docstrings = False
+
+autosummary_generate = True
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -53,7 +82,18 @@ exclude_patterns = []
 #
 html_theme = 'insipid'
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {
+    'logo_only': True,
+}
+
+# The name of an image file (relative to this directory) to place at the top
+# of the sidebar.
+html_logo = '_static/rt-logo.png'
+
 html_static_path = ['_static']
+
+# -- Options for LaTex output -------------------------------------------------
+latex_engine = 'xelatex'
