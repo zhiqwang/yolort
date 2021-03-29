@@ -1,0 +1,8 @@
+sphinx
+recommonmark
+sphinx-markdown-tables
+insipid-sphinx-theme
+nbsphinx
+pandoc
+numpy
+jieba
