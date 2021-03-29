@@ -1,4 +1,6 @@
 from pathlib import Path
+import requests
+from io import BytesIO
 
 import matplotlib.pyplot as plt
 from IPython.display import display
@@ -8,7 +10,11 @@ import numpy as np
 import cv2
 
 import torch
+from torch import Tensor
+from torchvision import transforms
 from torchvision.ops.boxes import box_convert
+
+from typing import Optional
 
 
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
@@ -32,22 +38,32 @@ def plot_one_box(box, img, color=None, label=None, line_thickness=None):
     return img
 
 
-def cv2_imshow(a, convert_bgr_to_rgb=True):
-    """A replacement for cv2.imshow() for use in Jupyter notebooks.
-    Args:
-        a: np.ndarray. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape
-            (N, M, 3) is an NxM BGR color image. shape (N, M, 4) is an NxM BGRA color
-            image.
-        convert_bgr_to_rgb: switch to convert BGR to RGB channel.
+def cv2_imshow(
+    image: np.ndarray,
+    imshow_scale: Optional[float] = None,
+    convert_bgr_to_rgb: bool = True,
+) -> None:
     """
-    a = a.clip(0, 255).astype('uint8')
+    A replacement for cv2.imshow() for use in Jupyter notebooks.
+
+    Args:
+        image (np.ndarray):. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape (N, M, 3)
+            is an NxM BGR color image. shape (N, M, 4) is an NxM BGRA color image.
+        imshow_scale (Optional[float]): zoom ratio to show the image
+        convert_bgr_to_rgb (bool): switch to convert BGR to RGB channel.
+    """
+    image = image.clip(0, 255).astype('uint8')
     # cv2 stores colors as BGR; convert to RGB
-    if convert_bgr_to_rgb and a.ndim == 3:
-        if a.shape[2] == 4:
-            a = cv2.cvtColor(a, cv2.COLOR_BGRA2RGBA)
+    if convert_bgr_to_rgb and image.ndim == 3:
+        if image.shape[2] == 4:
+            image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
         else:
-            a = cv2.cvtColor(a, cv2.COLOR_BGR2RGB)
-    display(Image.fromarray(a))
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    if imshow_scale is not None:
+        image = cv2.resize(image, None, fx=imshow_scale, fy=imshow_scale)
+
+    display(Image.fromarray(image))
 
 
 def color_list():
@@ -123,13 +139,45 @@ def scale_coords(coords, img_shape, img_shape_origin, ratio_pad=None):
     return coords
 
 
-def read_image(img, is_half: bool = False):
-    img = np.ascontiguousarray(img, dtype=np.float32)  # uint8 to float32
-    img /= 255.0  # 0 - 255 to 0.0 - 1.0
-    img = torch.from_numpy(img)
-    img = img.permute(2, 0, 1)
-    img = img.half() if is_half else img.float()
-    return img
+def get_image_from_url(
+    url: str,
+    flags: int = cv2.IMREAD_COLOR,
+) -> np.ndarray:
+    """
+    Generates an image directly from an URL
+
+    Args:
+        url (str): the url address of an image.
+        flags (int): Flag that can take values of cv::ImreadModes, which has the following
+            constants predefined in cv2. Default: cv2.IMREAD_COLOR.
+            - cv2.IMREAD_COLOR, always convert image to the 3 channel BGR color image.
+            - cv2.IMREAD_GRAYSCALE, always convert image to the single channel grayscale
+                image (codec internal conversion).
+    """
+    data = requests.get(url)
+    buffer = BytesIO(data.content)
+    bytes_as_np_array = np.frombuffer(buffer.read(), dtype=np.uint8)
+    image = cv2.imdecode(bytes_as_np_array, flags)
+    return image
+
+
+def read_image_to_tensor(
+    image: np.ndarray,
+    is_half: bool = False,
+) -> Tensor:
+    """
+    Parse an image to Tensor.
+
+    Args:
+        image (np.ndarray): the candidate ndarray image to be parsed to Tensor.
+        is_half (bool): whether to transfer image to half. Default: False.
+    """
+    image = np.ascontiguousarray(image, dtype=np.float32)  # uint8 to float32
+    image = np.transpose(image / 255.0, [2, 0, 1])
+
+    image = torch.from_numpy(image)
+    image = image.half() if is_half else image.float()
+    return image
 
 
 def load_names(category_path):

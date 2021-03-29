@@ -4,17 +4,29 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from yolort.utils.image_utils import box_cxcywh_to_xyxy, letterbox, read_image, scale_coords
+from yolort.utils.image_utils import (
+    box_cxcywh_to_xyxy,
+    letterbox,
+    read_image_to_tensor,
+    get_image_from_url,
+    scale_coords,
+)
 
 
 class ImageUtilsTester(unittest.TestCase):
     def test_read_image(self):
         N, H, W = 3, 720, 360
         img = np.random.randint(0, 255, (H, W, N), dtype='uint8')  # As a dummy image
-        out = read_image(img)
+        out = read_image_to_tensor(img)
 
         self.assertIsInstance(out, Tensor)
         self.assertEqual(tuple(out.shape), (N, H, W))
+
+    def test_get_image_from_url(self):
+        url = "https://gitee.com/zhiqwang/yolov5-rt-stack/raw/master/test/assets/zidane.jpg"
+        img = get_image_from_url(url)
+        self.assertIsInstance(img, np.ndarray)
+        self.assertTupleEqual(img.shape, (720, 1280, 3))
 
     def test_letterbox(self):
         img = np.random.randint(0, 255, (720, 360, 3), dtype='uint8')  # As a dummy image
@@ -50,7 +62,3 @@ class ImageUtilsTester(unittest.TestCase):
         box_coords_scaled = scale_coords(box_tensor, (160, 128), (178, 136))
         self.assertEqual(tuple(box_coords_scaled.shape), (4, 4))
         self.assertTrue((exp_coords - box_coords_scaled).abs().max() < TOLERANCE)
-
-
-if __name__ == '__main__':
-    unittest.main()
