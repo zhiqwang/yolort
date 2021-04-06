@@ -282,9 +282,8 @@ class SetCriterion(nn.Module):
                 loss_box += (1.0 - ciou).mean()  # iou loss
 
                 # Objectness head
-                # iou ratio
-                ciou_vals = torch.tensor(ciou.detach().clamp(0), dtype=obj_logits.dtype)
-                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + (self.iou_ratio * ciou_vals)
+                # Compute the iou ratio
+                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + self.iou_ratio * ciou.detach().clamp(0)
 
                 # Classification head
                 if num_classes > 1:  # cls loss (only if multiple classes)
