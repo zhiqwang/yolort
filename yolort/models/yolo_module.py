@@ -9,7 +9,7 @@ from pytorch_lightning import LightningModule
 
 from . import yolo
 from .transform import GeneralizedYOLOTransform
-from ..datasets import DetectionDataModule, DataPipeline
+from ..data import DetectionDataModule, DataPipeline
 
 from typing import Any, List, Dict, Tuple, Optional
 

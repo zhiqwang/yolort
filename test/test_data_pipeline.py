@@ -5,8 +5,8 @@ import unittest
 import torch
 from torch.utils import data
 
-from yolort.datasets.coco import CocoDetection
-from yolort.datasets.transforms import collate_fn, default_train_transforms
+from yolort.data.coco import CocoDetection
+from yolort.data.transforms import collate_fn, default_train_transforms
 from yolort.utils import prepare_coco128
 
 from typing import Dict

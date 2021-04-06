@@ -11,9 +11,9 @@ from yolort.models.yolo import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
 from yolort.models import yolov5s
 
-from yolort.datasets.coco import CocoDetection
-from yolort.datasets.transforms import collate_fn, default_train_transforms
-from yolort.datasets import DetectionDataModule
+from yolort.data.coco import CocoDetection
+from yolort.data.transforms import collate_fn, default_train_transforms
+from yolort.data import DetectionDataModule
 
 from yolort.utils import prepare_coco128
 

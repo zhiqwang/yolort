@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 
-from .datasets import VOCDetectionDataModule
+from .data import VOCDetectionDataModule
 from . import models
 
 
