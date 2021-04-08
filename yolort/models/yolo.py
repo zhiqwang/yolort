@@ -118,7 +118,7 @@ class YOLO(nn.Module):
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLO always returns a (Losses, Detections) tuple in scripting")
+                warnings.warn("YOLO always returns a (Losses, Detections) tuple in scripting.")
                 self._has_warned = True
             return losses, detections
         else:

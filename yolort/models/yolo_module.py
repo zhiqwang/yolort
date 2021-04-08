@@ -1,4 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+import warnings
 import argparse
 
 import torch
@@ -8,7 +9,6 @@ from pytorch_lightning import LightningModule
 
 from . import yolo
 from .transform import GeneralizedYOLOTransform
-
 from ..datasets import DetectionDataModule, DataPipeline
 
 from typing import Any, List, Dict, Tuple, Optional
@@ -50,6 +50,9 @@ class YOLOModule(LightningModule):
 
         self._data_pipeline = None
 
+        # used only on torchscript mode
+        self._has_warned = False
+
     def forward(
         self,
         inputs: List[Tensor],
@@ -77,9 +80,37 @@ class YOLOModule(LightningModule):
         # Transform the input
         samples, targets = self.transform(inputs, targets)
         # Compute the detections
-        detections = self.model(samples.tensors, targets=targets)
-        # Rescale coordinate
-        detections = self.transform.postprocess(detections, samples.image_sizes, original_image_sizes)
+        outputs = self.model(samples.tensors, targets=targets)
+
+        losses = {}
+        detections: List[Dict[str, Tensor]] = []
+
+        if self.training:
+            # compute the losses
+            if torch.jit.is_scripting():
+                losses = outputs[0]
+            else:
+                losses = outputs
+        else:
+            # Rescale coordinate
+            detections = self.transform.postprocess(outputs, samples.image_sizes, original_image_sizes)
+
+        if torch.jit.is_scripting():
+            if not self._has_warned:
+                warnings.warn("YOLOModule always returns Detections in scripting.")
+                self._has_warned = True
+            return detections
+        else:
+            return self.eager_outputs(losses, detections)
+
+    @torch.jit.unused
+    def eager_outputs(
+        self,
+        losses: Dict[str, Tensor],
+        detections: List[Dict[str, Tensor]],
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
+        if self.training:
+            return losses
 
         return detections
 
