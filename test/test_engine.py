@@ -95,7 +95,6 @@ class EngineTester(unittest.TestCase):
         self.assertIsInstance(out["bbox_regression"], torch.Tensor)
         self.assertIsInstance(out["objectness"], torch.Tensor)
 
-    @unittest.skip("Just ignore this.")
     def test_train_one_step(self):
         # Load model
         model = yolov5s()

@@ -77,9 +77,31 @@ class YOLOModule(LightningModule):
         # Transform the input
         samples, targets = self.transform(inputs, targets)
         # Compute the detections
-        detections = self.model(samples.tensors, targets=targets)
-        # Rescale coordinate
-        detections = self.transform.postprocess(detections, samples.image_sizes, original_image_sizes)
+        outputs = self.model(samples.tensors, targets=targets)
+
+        losses = {}
+        detections: List[Dict[str, Tensor]] = []
+
+        if self.training:
+            # compute the losses
+            losses = outputs
+        else:
+            # Rescale coordinate
+            detections = self.transform.postprocess(outputs, samples.image_sizes, original_image_sizes)
+
+        if torch.jit.is_scripting():
+            return losses, detections
+        else:
+            return self.eager_outputs(losses, detections)
+
+    @torch.jit.unused
+    def eager_outputs(
+        self,
+        losses: Dict[str, Tensor],
+        detections: List[Dict[str, Tensor]],
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
+        if self.training:
+            return losses
 
         return detections
 
