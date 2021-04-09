@@ -1,3 +1,4 @@
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import unittest
 import torch
 
@@ -239,7 +240,3 @@ class AnchorGeneratorTester(TestCase):
         self.assertEqual(anchors[0], anchor_output)
         self.assertEqual(anchors[1], wh_output)
         self.assertEqual(anchors[2], xy_output)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,16 +1,22 @@
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+"""
+Test for exporting model to ONNX and inference with ONNXRuntime
+"""
 import io
-import torch
+import unittest
 
-# onnxruntime requires python 3.5 or above
 try:
+    # This import should be before that of torch if you are using PyTorch lower than 1.5.0
+    # see <https://github.com/onnx/onnx/issues/2394#issuecomment-581638840>
     import onnxruntime
 except ImportError:
     onnxruntime = None
 
-import unittest
+import torch
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
 
 from yolort.models import yolov5s, yolov5m, yolotr
+from yolort.utils import get_image_from_url, read_image_to_tensor
 
 
 @unittest.skipIf(onnxruntime is None, 'ONNX Runtime unavailable')
@@ -22,13 +28,21 @@ class ONNXExporterTester(unittest.TestCase):
     def run_model(self, model, inputs_list, tolerate_small_mismatch=False,
                   do_constant_folding=True, dynamic_axes=None,
                   output_names=None, input_names=None):
+        """
+        The core part of exporting model to ONNX and inference with ONNXRuntime
+        Copy-paste from <https://github.com/pytorch/vision/blob/07fb8ba/test/test_onnx.py#L34>
+        """
         model.eval()
 
         onnx_io = io.BytesIO()
+        if isinstance(inputs_list[0][-1], dict):
+            torch_onnx_input = inputs_list[0] + ({},)
+        else:
+            torch_onnx_input = inputs_list[0]
         # export to onnx with the first input
         torch.onnx.export(
             model,
-            inputs_list[0],
+            torch_onnx_input,
             onnx_io,
             do_constant_folding=do_constant_folding,
             opset_version=_onnx_opset_version,
@@ -74,28 +88,14 @@ class ONNXExporterTester(unittest.TestCase):
                 else:
                     raise
 
-    def get_image_from_url(self, url, size=None):
-        import requests
-        from PIL import Image
-        from io import BytesIO
-        from torchvision import transforms
-
-        data = requests.get(url)
-        image = Image.open(BytesIO(data.content)).convert("RGB")
-
-        if size is None:
-            size = (300, 200)
-        image = image.resize(size, Image.BILINEAR)
-
-        to_tensor = transforms.ToTensor()
-        return to_tensor(image)
-
     def get_test_images(self):
-        image_url = "http://farm3.staticflickr.com/2469/3915380994_2e611b1779_z.jpg"
-        image = self.get_image_from_url(url=image_url, size=(100, 320))
+        image_url = "https://github.com/ultralytics/yolov5/raw/master/data/images/bus.jpg"
+        image = get_image_from_url(image_url)
+        image = read_image_to_tensor(image, is_half=False)
 
-        image_url2 = "https://pytorch.org/tutorials/_static/img/tv_tutorial/tv_image05.png"
-        image2 = self.get_image_from_url(url=image_url2, size=(250, 380))
+        image_url2 = "https://github.com/ultralytics/yolov5/raw/master/data/images/zidane.jpg"
+        image2 = get_image_from_url(image_url2)
+        image2 = read_image_to_tensor(image2, is_half=False)
 
         images_one = [image]
         images_two = [image2]
@@ -104,7 +104,7 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolov5s_r31(self):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
-        model = yolov5s(upstream_version='r3.1', export_friendly=True, pretrained=True)
+        model = yolov5s(upstream_version='r3.1', export_friendly=True, pretrained=True, score_thresh=0.45)
         model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input
@@ -121,7 +121,7 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolov5m_r40(self):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
-        model = yolov5m(upstream_version='r4.0', export_friendly=True, pretrained=True)
+        model = yolov5m(upstream_version='r4.0', export_friendly=True, pretrained=True, score_thresh=0.45)
         model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input
@@ -138,7 +138,7 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolotr(self):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
-        model = yolotr(upstream_version='r4.0', export_friendly=True, pretrained=True)
+        model = yolotr(upstream_version='r4.0', export_friendly=True, pretrained=True, score_thresh=0.45)
         model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input
@@ -151,7 +151,3 @@ class ONNXExporterTester(unittest.TestCase):
                        output_names=["outputs"],
                        dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
                        tolerate_small_mismatch=True)
-
-
-if __name__ == '__main__':
-    unittest.main()
