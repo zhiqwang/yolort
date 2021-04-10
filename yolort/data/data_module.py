@@ -2,7 +2,6 @@
 from pathlib import Path
 
 import torch.utils.data
-from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 
 from pytorch_lightning import LightningDataModule
@@ -50,7 +49,7 @@ class DetectionDataModule(LightningDataModule):
         sampler = torch.utils.data.RandomSampler(self._train_dataset)
         batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
 
-        loader = DataLoader(
+        loader = torch.utils.data.DataLoader(
             self._train_dataset,
             batch_sampler=batch_sampler,
             collate_fn=collate_fn,
@@ -69,7 +68,7 @@ class DetectionDataModule(LightningDataModule):
         # Creating data loaders
         sampler = torch.utils.data.SequentialSampler(self._val_dataset)
 
-        loader = DataLoader(
+        loader = torch.utils.data.DataLoader(
             self._val_dataset,
             batch_size,
             sampler=sampler,

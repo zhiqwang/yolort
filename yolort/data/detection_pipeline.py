@@ -1,5 +1,4 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import Callable, Any, Optional, Type
 from collections.abc import Sequence
 
 from torch import Tensor
@@ -7,6 +6,8 @@ from torchvision.io import read_image
 
 from .transforms import collate_fn
 from .data_pipeline import DataPipeline
+
+from typing import Callable, Any, Optional, Type
 
 
 class ObjectDetectionDataPipeline(DataPipeline):
