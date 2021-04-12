@@ -5,7 +5,7 @@ import unittest
 import torch.utils.data
 from torch import Tensor
 
-from yolort.data import DetectionDataModule
+from yolort.data import COCOEvaluator, DetectionDataModule
 from yolort.data.coco import CocoDetection
 from yolort.data.transforms import collate_fn, default_train_transforms
 from yolort.utils import prepare_coco128
@@ -75,3 +75,7 @@ class DataPipelineTester(unittest.TestCase):
         prepare_coco128(data_path, dirname=coco128_dirname)
         annotation_file = data_path / coco128_dirname / 'annotations' / 'instances_train2017.json'
         self.assertTrue(annotation_file.is_file())
+
+    def test_coco_evaluator(self):
+        coco_evaluator = COCOEvaluator()
+        pass

@@ -1,27 +1,38 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-"""
-COCO evaluator that works in distributed mode.
-Mostly copy-paste from https://github.com/pytorch/vision/blob/edfd5a7/references/detection/coco_eval.py
-The difference is that there is less copy-pasting from pycocotools
-in the end of the file, as python3 can suppress prints with contextlib
-"""
-
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import os
+import copy
 import contextlib
 
 import numpy as np
-import copy
-
 import torch
 
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 
-from ..utils.misc import all_gather
+from torchmetrics import Metric
+
+from typing import List, Any, Callable, Optional
 
 
-class CocoEvaluator(object):
-    def __init__(self, coco_gt, iou_types):
+class COCOEvaluator(Metric):
+    """
+    COCO evaluator that works in distributed mode.
+    """
+    def __init__(
+        self,
+        coco_gt: Any,
+        iou_types: List[str] = ['bbox'],
+        compute_on_step: bool = True,
+        dist_sync_on_step: bool = False,
+        process_group: Optional[Any] = None,
+        dist_sync_fn: Callable = None
+    ):
+        super().__init__(
+            compute_on_step=compute_on_step,
+            dist_sync_on_step=dist_sync_on_step,
+            process_group=process_group,
+            dist_sync_fn=dist_sync_fn
+        )
         assert isinstance(iou_types, (list, tuple))
         coco_gt = copy.deepcopy(coco_gt)
         self.coco_gt = coco_gt
@@ -44,25 +55,20 @@ class CocoEvaluator(object):
             # suppress pycocotools prints
             with open(os.devnull, 'w') as devnull:
                 with contextlib.redirect_stdout(devnull):
-                    coco_dt = COCO.loadRes(self.coco_gt, results) if results else COCO()
+                    self.coco_dt = COCO.loadRes(self.coco_gt, results) if results else COCO()
+
             coco_eval = self.coco_eval[iou_type]
 
-            coco_eval.cocoDt = coco_dt
+            coco_eval.cocoDt = self.coco_dt
             coco_eval.params.imgIds = list(img_ids)
             img_ids, eval_imgs = evaluate(coco_eval)
 
             self.eval_imgs[iou_type].append(eval_imgs)
 
-    def synchronize_between_processes(self):
-        for iou_type in self.iou_types:
-            self.eval_imgs[iou_type] = np.concatenate(self.eval_imgs[iou_type], 2)
-            create_common_coco_eval(self.coco_eval[iou_type], self.img_ids, self.eval_imgs[iou_type])
-
-    def accumulate(self):
+    def compute(self):
         for coco_eval in self.coco_eval.values():
             coco_eval.accumulate()
 
-    def summarize(self):
         for iou_type, coco_eval in self.coco_eval.items():
             print("IoU metric: {}".format(iou_type))
             coco_eval.summarize()
@@ -70,12 +76,8 @@ class CocoEvaluator(object):
     def prepare(self, predictions, iou_type):
         if iou_type == "bbox":
             return self.prepare_for_coco_detection(predictions)
-        elif iou_type == "segm":
-            return self.prepare_for_coco_segmentation(predictions)
-        elif iou_type == "keypoints":
-            return self.prepare_for_coco_keypoint(predictions)
         else:
-            raise ValueError("Unknown iou type {}".format(iou_type))
+            raise ValueError(f"Unknown iou type {iou_type}, fell free to report on GitHub issues")
 
     def prepare_for_coco_detection(self, predictions):
         coco_results = []
@@ -140,14 +142,12 @@ def create_common_coco_eval(coco_eval, img_ids, eval_imgs):
     coco_eval._paramsEval = copy.deepcopy(coco_eval.params)
 
 
-#################################################################
-# From pycocotools, just removed the prints and fixed
-# a Python3 bug about unicode not defined
-#################################################################
-
-
 def evaluate(self):
     '''
+    From pycocotools, just removed the prints and fixed a Python3 bug about unicode
+    not defined. Mostly copy-paste from
+    <https://github.com/pytorch/vision/blob/edfd5a7/references/detection/coco_eval.py>
+
     Run per image evaluation on given images and store results (a list of dict) in self.evalImgs
     :return: None
     '''
@@ -165,7 +165,8 @@ def evaluate(self):
     p.maxDets = sorted(p.maxDets)
     self.params = p
 
-    self._prepare()
+    self._prepare()  # bottleneck
+
     # loop through images, area range, max detection number
     catIds = p.catIds if p.useCats else [-1]
 
@@ -173,10 +174,10 @@ def evaluate(self):
         computeIoU = self.computeIoU
     elif p.iouType == 'keypoints':
         computeIoU = self.computeOks
+
     self.ious = {
-        (imgId, catId): computeIoU(imgId, catId)
-        for imgId in p.imgIds
-        for catId in catIds}
+        (imgId, catId): computeIoU(imgId, catId) for imgId in p.imgIds for catId in catIds
+    }  # bottleneck
 
     evaluateImg = self.evaluateImg
     maxDet = p.maxDets[-1]
@@ -192,7 +193,3 @@ def evaluate(self):
     # toc = time.time()
     # print('DONE (t={:0.2f}s).'.format(toc-tic))
     return p.imgIds, evalImgs
-
-#################################################################
-# end of straight copy from pycocotools, just removing the prints
-#################################################################

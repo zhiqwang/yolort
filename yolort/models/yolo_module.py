@@ -1,17 +1,15 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import warnings
 import argparse
-import json
 
 import torch
 from torch import Tensor
-from torchvision.ops import box_iou
 
 from pytorch_lightning import LightningModule
 
 from . import yolo
 from .transform import GeneralizedYOLOTransform
-from ..data import DetectionDataModule, DataPipeline
+from ..data import DetectionDataModule, DataPipeline, COCOEvaluator
 
 from typing import Any, List, Dict, Tuple, Optional
 
@@ -31,6 +29,7 @@ class YOLOModule(LightningModule):
         num_classes: int = 80,
         min_size: int = 320,
         max_size: int = 416,
+        coco_gt: Optional[Any] = None,
         **kwargs: Any,
     ):
         """
@@ -51,6 +50,9 @@ class YOLOModule(LightningModule):
         self.transform = GeneralizedYOLOTransform(min_size, max_size)
 
         self._data_pipeline = None
+
+        # metrics
+        self.evaluator = None if coco_gt else COCOEvaluator(coco_gt, iou_types=["bbox"])
 
         # used only on torchscript mode
         self._has_warned = False
@@ -136,6 +138,18 @@ class YOLOModule(LightningModule):
         loss = sum(loss_dict.values())
         self.log_dict(loss_dict, on_step=True, on_epoch=True, prog_bar=True)
         return loss
+
+    def test_step(self, batch, batch_idx):
+        """
+        The test step.
+        """
+        preds = self._forward_impl(*batch)
+        # log step metric
+        self.log('eval_step', self.evaluator(preds))
+
+    def test_epoch_end(self, outs):
+        # log epoch metric
+        self.log('coco_eval', self.evaluator.compute())
 
     @torch.no_grad()
     def predict(

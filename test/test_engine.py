@@ -109,6 +109,20 @@ class EngineTester(unittest.TestCase):
         trainer = pl.Trainer(max_epochs=1)
         trainer.fit(model, data_module)
 
+    def test_test_dataloaders(self):
+        # Config dataset
+        num_samples = 128
+        batch_size = 4
+        # Setup the DataModule
+        train_dataset = DummyCOCODetectionDataset(num_samples=num_samples)
+        data_module = DetectionDataModule(train_dataset, batch_size=batch_size)
+        # Load model
+        model = yolov5s(pretrained=True)
+        model.eval()
+        # Trainer
+        trainer = pl.Trainer(max_epochs=1)
+        trainer.test(model, test_dataloaders=data_module.val_dataloader(batch_size=batch_size))
+
     def test_predict_with_vanilla_model(self):
         # Set image inputs
         img_name = "test/assets/zidane.jpg"
