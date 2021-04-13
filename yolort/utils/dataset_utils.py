@@ -1,11 +1,82 @@
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import random
-import torch
-from torch.utils.data import Dataset
+from pathlib import Path, PosixPath
+from zipfile import ZipFile
 
+import torch
 from torchvision import ops
 
+from ..data.coco import CocoDetection
+from ..data.transforms import (
+    collate_fn,
+    default_train_transforms,
+    default_val_transforms,
+)
 
-class DummyCOCODetectionDataset(Dataset):
+
+def prepare_coco128(
+    data_path: PosixPath,
+    dirname: str = 'coco128',
+) -> None:
+    """
+    Prepare coco128 dataset to test.
+
+    Args:
+        data_path (PosixPath): root path of coco128 dataset.
+        dirname (str): the directory name of coco128 dataset. Default: 'coco128'.
+    """
+    if not data_path.is_dir():
+        print(f'Create a new directory: {data_path}')
+        data_path.mkdir(parents=True, exist_ok=True)
+
+    zip_path = data_path / 'coco128.zip'
+    coco128_url = 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0/coco128.zip'
+    if not zip_path.is_file():
+        print(f'Downloading coco128 datasets form {coco128_url}')
+        torch.hub.download_url_to_file(coco128_url, zip_path, hash_prefix='a67d2887')
+
+    coco128_path = data_path / dirname
+    if not coco128_path.is_dir():
+        print(f'Unzipping dataset to {coco128_path}')
+        with ZipFile(zip_path, 'r') as zip_obj:
+            zip_obj.extractall(data_path)
+
+
+def get_data_loader(mode: str = 'train', batch_size: int = 4):
+    # Prepare the datasets for training
+    # Acquire the images and labels from the coco128 dataset
+    data_path = Path('data-bin')
+    coco128_dirname = 'coco128'
+    coco128_path = data_path / coco128_dirname
+    image_root = coco128_path / 'images' / 'train2017'
+    annotation_file = coco128_path / 'annotations' / 'instances_train2017.json'
+
+    if not annotation_file.is_file():
+        prepare_coco128(data_path, dirname=coco128_dirname)
+
+    if mode == 'train':
+        dataset = CocoDetection(image_root, annotation_file, default_train_transforms())
+    elif mode == 'val':
+        dataset = CocoDetection(image_root, annotation_file, default_val_transforms())
+    else:
+        raise NotImplementedError(f"Currently not support {mode} mode")
+
+    # We adopt the sequential sampler in order to repeat the experiment
+    sampler = torch.utils.data.SequentialSampler(dataset)
+
+    loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size,
+        sampler=sampler,
+        drop_last=False,
+        collate_fn=collate_fn,
+        num_workers=0,
+    )
+
+    return loader
+
+
+class DummyCOCODetectionDataset(torch.utils.data.Dataset):
     """
     Generate a dummy dataset for detection
     Example::

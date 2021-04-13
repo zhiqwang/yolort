@@ -2,21 +2,18 @@
 from pathlib import Path
 import unittest
 
-import torch.utils.data
 from torch import Tensor
 
 from yolort.data import COCOEvaluator, DetectionDataModule
 from yolort.data.coco import CocoDetection
-from yolort.data.transforms import collate_fn, default_train_transforms
-from yolort.utils import prepare_coco128
-
-from .dataset_utils import DummyCOCODetectionDataset
+from yolort.data.transforms import default_train_transforms
+from yolort.utils.dataset_utils import prepare_coco128, get_data_loader, DummyCOCODetectionDataset
 
 from typing import Dict
 
 
 class DataPipelineTester(unittest.TestCase):
-    def test_vanilla_dataloader(self):
+    def test_vanilla_dataset(self):
         # Acquire the images and labels from the coco128 dataset
         data_path = Path('data-bin')
         coco128_dirname = 'coco128'
@@ -33,11 +30,9 @@ class DataPipelineTester(unittest.TestCase):
         self.assertIsInstance(image, Tensor)
         self.assertIsInstance(target, Dict)
 
-        batch_size = 4
-        sampler = torch.utils.data.RandomSampler(dataset)
-        batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
-        data_loader = torch.utils.data.DataLoader(
-            dataset, batch_sampler=batch_sampler, collate_fn=collate_fn, num_workers=0)
+    def test_vanilla_dataloader(self):
+        batch_size = 8
+        data_loader = get_data_loader(mode='train', batch_size=batch_size)
         # Test the dataloader
         images, targets = next(iter(data_loader))
 
@@ -76,6 +71,7 @@ class DataPipelineTester(unittest.TestCase):
         annotation_file = data_path / coco128_dirname / 'annotations' / 'instances_train2017.json'
         self.assertTrue(annotation_file.is_file())
 
+    @unittest.skip("Currently it isn't well implemented")
     def test_coco_evaluator(self):
         coco_evaluator = COCOEvaluator()
         pass
