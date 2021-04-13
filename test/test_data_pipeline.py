@@ -5,9 +5,14 @@ import unittest
 from torch import Tensor
 
 from yolort.data import COCOEvaluator, DetectionDataModule
-from yolort.data.coco import COCODetection
-from yolort.data.transforms import default_train_transforms
-from yolort.utils.dataset_utils import prepare_coco128, get_data_loader, DummyCOCODetectionDataset
+from yolort.data.utils import get_coco_api_from_dataset
+
+from yolort.utils.dataset_utils import (
+    prepare_coco128,
+    get_dataset,
+    get_dataloader,
+    DummyCOCODetectionDataset,
+)
 
 from typing import Dict
 
@@ -15,16 +20,7 @@ from typing import Dict
 class DataPipelineTester(unittest.TestCase):
     def test_vanilla_dataset(self):
         # Acquire the images and labels from the coco128 dataset
-        data_path = Path('data-bin')
-        coco128_dirname = 'coco128'
-        coco128_path = data_path / coco128_dirname
-        image_root = coco128_path / 'images' / 'train2017'
-        annotation_file = coco128_path / 'annotations' / 'instances_train2017.json'
-
-        if not annotation_file.is_file():
-            prepare_coco128(data_path, dirname=coco128_dirname)
-
-        dataset = COCODetection(image_root, annotation_file, default_train_transforms())
+        dataset = get_dataset(data_root='data-bin', mode='train')
         # Test the datasets
         image, target = next(iter(dataset))
         self.assertIsInstance(image, Tensor)
@@ -32,7 +28,7 @@ class DataPipelineTester(unittest.TestCase):
 
     def test_vanilla_dataloader(self):
         batch_size = 8
-        data_loader = get_data_loader(mode='train', batch_size=batch_size)
+        data_loader = get_dataloader(data_root='data-bin', mode='train', batch_size=batch_size)
         # Test the dataloader
         images, targets = next(iter(data_loader))
 
@@ -71,7 +67,8 @@ class DataPipelineTester(unittest.TestCase):
         annotation_file = data_path / coco128_dirname / 'annotations' / 'instances_train2017.json'
         self.assertTrue(annotation_file.is_file())
 
-    @unittest.skip("Currently it isn't well implemented")
     def test_coco_evaluator(self):
-        coco_evaluator = COCOEvaluator()
-        pass
+        # Acquire the images and labels from the coco128 dataset
+        dataset = get_dataset(data_root='data-bin', mode='val')
+        coco = get_coco_api_from_dataset(dataset)
+        coco_evaluator = COCOEvaluator(coco)

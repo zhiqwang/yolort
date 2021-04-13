@@ -10,11 +10,11 @@ import pytorch_lightning as pl
 
 from yolort.data import DetectionDataModule
 
+from yolort.models import yolov5s
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
-from yolort.models import yolov5s
 
-from yolort.utils.dataset_utils import DummyCOCODetectionDataset, get_data_loader
+from yolort.utils.dataset_utils import DummyCOCODetectionDataset, get_dataloader
 
 from typing import Dict
 
@@ -60,7 +60,7 @@ class EngineTester(unittest.TestCase):
         # Define the device
         device = torch.device('cpu')
 
-        train_dataloader = get_data_loader(mode='train')
+        train_dataloader = get_dataloader(data_root='data-bin', mode='train')
         # Sample a pair of images/targets
         images, targets = next(iter(train_dataloader))
         images = [img.to(device) for img in images]
@@ -90,7 +90,7 @@ class EngineTester(unittest.TestCase):
     @unittest.skip("Currently it isn't well implemented")
     def test_test_with_dataloader(self):
         # Get dataloader to test
-        val_dataloader = get_data_loader(mode='val')
+        val_dataloader = get_dataloader(data_root='data-bin', mode='val')
 
         # Load model
         model = yolov5s(pretrained=True)

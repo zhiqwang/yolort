@@ -20,7 +20,7 @@ class COCOEvaluator(Metric):
     """
     def __init__(
         self,
-        coco_gt: Any,
+        coco_gt: COCO,
         iou_types: List[str] = ['bbox'],
         compute_on_step: bool = True,
         dist_sync_on_step: bool = False,

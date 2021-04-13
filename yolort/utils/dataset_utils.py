@@ -7,11 +7,7 @@ import torch
 from torchvision import ops
 
 from ..data.coco import COCODetection
-from ..data.transforms import (
-    collate_fn,
-    default_train_transforms,
-    default_val_transforms,
-)
+from ..data.transforms import collate_fn, default_train_transforms, default_val_transforms
 
 
 def prepare_coco128(
@@ -42,10 +38,9 @@ def prepare_coco128(
             zip_obj.extractall(data_path)
 
 
-def get_data_loader(mode: str = 'train', batch_size: int = 4):
-    # Prepare the datasets for training
+def get_dataset(data_root: str, mode: str = 'val'):
     # Acquire the images and labels from the coco128 dataset
-    data_path = Path('data-bin')
+    data_path = Path(data_root)
     coco128_dirname = 'coco128'
     coco128_path = data_path / coco128_dirname
     image_root = coco128_path / 'images' / 'train2017'
@@ -59,7 +54,15 @@ def get_data_loader(mode: str = 'train', batch_size: int = 4):
     elif mode == 'val':
         dataset = COCODetection(image_root, annotation_file, default_val_transforms())
     else:
-        raise NotImplementedError(f"Currently not support {mode} mode")
+        raise NotImplementedError(f"Currently not supports mode {mode}")
+
+    return dataset
+
+
+def get_dataloader(data_root: str, mode: str = 'val', batch_size: int = 4):
+    # Prepare the datasets for training
+    # Acquire the images and labels from the coco128 dataset
+    dataset = get_dataset(data_root=data_root, mode=mode)
 
     # We adopt the sequential sampler in order to repeat the experiment
     sampler = torch.utils.data.SequentialSampler(dataset)
