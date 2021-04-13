@@ -8,7 +8,7 @@ from pytorch_lightning import LightningDataModule
 
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
 from .voc import VOCDetection
-from .coco import CocoDetection
+from .coco import COCODetection
 from .data_pipeline import DataPipeline
 from .detection_pipeline import ObjectDetectionDataPipeline
 
@@ -40,7 +40,7 @@ class DetectionDataModule(LightningDataModule):
 
     def train_dataloader(self, batch_size: int = 16) -> None:
         """
-        VOCDetection and CocoDetection
+        VOCDetection and COCODetection
         Args:
             batch_size: size of batch
             transforms: custom transforms
@@ -60,7 +60,7 @@ class DetectionDataModule(LightningDataModule):
 
     def val_dataloader(self, batch_size: int = 16) -> None:
         """
-        VOCDetection and CocoDetection
+        VOCDetection and COCODetection
         Args:
             batch_size: size of batch
             transforms: custom transforms
@@ -136,7 +136,7 @@ class VOCDetectionDataModule(DetectionDataModule):
             return torch.utils.data.ConcatDataset(datasets), num_classes
 
 
-class CocoDetectionDataModule(DetectionDataModule):
+class COCODetectionDataModule(DetectionDataModule):
     def __init__(
         self,
         data_path: str,
@@ -161,4 +161,4 @@ class CocoDetectionDataModule(DetectionDataModule):
     @staticmethod
     def build_datasets(data_path, image_set, year, transforms):
         ann_file = Path(data_path).joinpath('annotations').joinpath(f"instances_{image_set}{year}.json")
-        return CocoDetection(data_path, ann_file, transforms())
+        return COCODetection(data_path, ann_file, transforms())

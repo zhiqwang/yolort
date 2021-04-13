@@ -6,7 +6,7 @@ from zipfile import ZipFile
 import torch
 from torchvision import ops
 
-from ..data.coco import CocoDetection
+from ..data.coco import COCODetection
 from ..data.transforms import (
     collate_fn,
     default_train_transforms,
@@ -55,9 +55,9 @@ def get_data_loader(mode: str = 'train', batch_size: int = 4):
         prepare_coco128(data_path, dirname=coco128_dirname)
 
     if mode == 'train':
-        dataset = CocoDetection(image_root, annotation_file, default_train_transforms())
+        dataset = COCODetection(image_root, annotation_file, default_train_transforms())
     elif mode == 'val':
-        dataset = CocoDetection(image_root, annotation_file, default_val_transforms())
+        dataset = COCODetection(image_root, annotation_file, default_val_transforms())
     else:
         raise NotImplementedError(f"Currently not support {mode} mode")
 

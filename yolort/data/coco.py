@@ -82,7 +82,7 @@ class ConvertCocoPolysToMask(object):
         return image, target
 
 
-class CocoDetection(torchvision.datasets.CocoDetection):
+class COCODetection(torchvision.datasets.CocoDetection):
     def __init__(self, img_folder, ann_file, transforms, return_masks=False):
         super().__init__(img_folder, ann_file)
         self._transforms = transforms

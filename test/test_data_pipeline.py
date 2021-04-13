@@ -5,7 +5,7 @@ import unittest
 from torch import Tensor
 
 from yolort.data import COCOEvaluator, DetectionDataModule
-from yolort.data.coco import CocoDetection
+from yolort.data.coco import COCODetection
 from yolort.data.transforms import default_train_transforms
 from yolort.utils.dataset_utils import prepare_coco128, get_data_loader, DummyCOCODetectionDataset
 
@@ -24,7 +24,7 @@ class DataPipelineTester(unittest.TestCase):
         if not annotation_file.is_file():
             prepare_coco128(data_path, dirname=coco128_dirname)
 
-        dataset = CocoDetection(image_root, annotation_file, default_train_transforms())
+        dataset = COCODetection(image_root, annotation_file, default_train_transforms())
         # Test the datasets
         image, target = next(iter(dataset))
         self.assertIsInstance(image, Tensor)
