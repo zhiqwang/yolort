@@ -4,10 +4,9 @@ import unittest
 
 from torch import Tensor
 
-from yolort.data import COCOEvaluator, DetectionDataModule
-from yolort.data.utils import get_coco_api_from_dataset
+from yolort.data import DetectionDataModule
 
-from yolort.utils.dataset_utils import (
+from yolort.data._helper import (
     prepare_coco128,
     get_dataset,
     get_dataloader,
@@ -66,9 +65,3 @@ class DataPipelineTester(unittest.TestCase):
         prepare_coco128(data_path, dirname=coco128_dirname)
         annotation_file = data_path / coco128_dirname / 'annotations' / 'instances_train2017.json'
         self.assertTrue(annotation_file.is_file())
-
-    def test_coco_evaluator(self):
-        # Acquire the images and labels from the coco128 dataset
-        dataset = get_dataset(data_root='data-bin', mode='val')
-        coco = get_coco_api_from_dataset(dataset)
-        coco_evaluator = COCOEvaluator(coco)

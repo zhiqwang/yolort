@@ -6,8 +6,20 @@ from zipfile import ZipFile
 import torch
 from torchvision import ops
 
-from ..data.coco import COCODetection
-from ..data.transforms import collate_fn, default_train_transforms, default_val_transforms
+from .coco import COCODetection
+from .transforms import collate_fn, default_train_transforms, default_val_transforms
+
+
+def get_coco_api_from_dataset(dataset):
+    for _ in range(10):
+        if isinstance(dataset, COCODetection):
+            break
+        if isinstance(dataset, torch.utils.data.Subset):
+            dataset = dataset.dataset
+    if isinstance(dataset, COCODetection):
+        return dataset.coco
+    else:
+        raise NotImplementedError("Currently only supports COCO datasets")
 
 
 def prepare_coco128(

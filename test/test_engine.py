@@ -8,13 +8,12 @@ from torchvision.io import read_image
 
 import pytorch_lightning as pl
 
-from yolort.data import DetectionDataModule
+from yolort.data import COCOEvaluator, DetectionDataModule
+from yolort.data._helper import DummyCOCODetectionDataset, get_dataloader, get_coco_api_from_dataset
 
 from yolort.models import yolov5s
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
-
-from yolort.utils.dataset_utils import DummyCOCODetectionDataset, get_dataloader
 
 from typing import Dict
 
@@ -86,6 +85,22 @@ class EngineTester(unittest.TestCase):
         # Trainer
         trainer = pl.Trainer(max_epochs=1)
         trainer.fit(model, data_module)
+
+    def test_vanilla_coco_evaluator(self):
+        # Acquire the images and labels from the coco128 dataset
+        val_dataloader = get_dataloader(data_root='data-bin', mode='val')
+        coco = get_coco_api_from_dataset(val_dataloader.dataset)
+        coco_evaluator = COCOEvaluator(coco)
+        # Load model
+        model = yolov5s(pretrained=True)
+        model.eval()
+        for images, targets in val_dataloader:
+            preds = model(images)
+            coco_evaluator.update(preds, targets)
+
+        coco_evaluator.synchronize_between_processes()
+        coco_evaluator.accumulate()
+        coco_evaluator.compute()
 
     @unittest.skip("Currently it isn't well implemented")
     def test_test_with_dataloader(self):

@@ -4,12 +4,15 @@ import copy
 import contextlib
 
 import numpy as np
-import torch
+
+from torchvision.ops import box_convert
 
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 
 from torchmetrics import Metric
+
+from ._utils import all_gather
 
 from typing import List, Any, Callable, Optional
 
@@ -25,13 +28,13 @@ class COCOEvaluator(Metric):
         compute_on_step: bool = True,
         dist_sync_on_step: bool = False,
         process_group: Optional[Any] = None,
-        dist_sync_fn: Callable = None
+        dist_sync_fn: Callable = None,
     ):
         super().__init__(
             compute_on_step=compute_on_step,
             dist_sync_on_step=dist_sync_on_step,
             process_group=process_group,
-            dist_sync_fn=dist_sync_fn
+            dist_sync_fn=dist_sync_fn,
         )
         assert isinstance(iou_types, (list, tuple))
         coco_gt = copy.deepcopy(coco_gt)
@@ -45,12 +48,18 @@ class COCOEvaluator(Metric):
         self.img_ids = []
         self.eval_imgs = {k: [] for k in iou_types}
 
-    def update(self, predictions):
-        img_ids = list(np.unique(list(predictions.keys())))
+    def synchronize_between_processes(self):
+        for iou_type in self.iou_types:
+            self.eval_imgs[iou_type] = np.concatenate(self.eval_imgs[iou_type], 2)
+            self.create_common_coco_eval(self.coco_eval[iou_type], self.img_ids, self.eval_imgs[iou_type])
+
+    def update(self, preds, targets):
+        records = {target['image_id'].item(): prediction for target, prediction in zip(targets, preds)}
+        img_ids = list(np.unique(list(records.keys())))
         self.img_ids.extend(img_ids)
 
         for iou_type in self.iou_types:
-            results = self.prepare(predictions, iou_type)
+            results = self.prepare(records, iou_type)
 
             # suppress pycocotools prints
             with open(os.devnull, 'w') as devnull:
@@ -65,12 +74,13 @@ class COCOEvaluator(Metric):
 
             self.eval_imgs[iou_type].append(eval_imgs)
 
-    def compute(self):
+    def accumulate(self):
         for coco_eval in self.coco_eval.values():
             coco_eval.accumulate()
 
+    def compute(self):
         for iou_type, coco_eval in self.coco_eval.items():
-            print("IoU metric: {}".format(iou_type))
+            print(f"IoU metric: {iou_type}")
             coco_eval.summarize()
 
     def prepare(self, predictions, iou_type):
@@ -79,14 +89,27 @@ class COCOEvaluator(Metric):
         else:
             raise ValueError(f"Unknown iou type {iou_type}, fell free to report on GitHub issues")
 
+    def coco80_to_coco91_class(self):  # converts 80-index (val2014) to 91-index (paper)
+        # https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
+        # a = np.loadtxt('data/coco.names', dtype='str', delimiter='\n')
+        # b = np.loadtxt('data/coco_paper.names', dtype='str', delimiter='\n')
+        # x1 = [list(a[i] == b).index(True) + 1 for i in range(80)]  # darknet to coco
+        # x2 = [list(b[i] == a).index(True) if any(b[i] == a) else None for i in range(91)]  # coco to darknet
+        x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34,
+             35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+             64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90]
+        return x
+
     def prepare_for_coco_detection(self, predictions):
+        coco91class = self.coco80_to_coco91_class()
+
         coco_results = []
         for original_id, prediction in predictions.items():
             if len(prediction) == 0:
                 continue
 
             boxes = prediction["boxes"]
-            boxes = xyxy_to_xywh(boxes).tolist()
+            boxes = box_convert(boxes, in_fmt='xyxy', out_fmt='xywh').tolist()
             scores = prediction["scores"].tolist()
             labels = prediction["labels"].tolist()
 
@@ -94,7 +117,7 @@ class COCOEvaluator(Metric):
                 [
                     {
                         "image_id": original_id,
-                        "category_id": labels[k],
+                        "category_id": coco91class[labels[k]],
                         "bbox": box,
                         "score": scores[k],
                     }
@@ -103,43 +126,35 @@ class COCOEvaluator(Metric):
             )
         return coco_results
 
+    def merge(self, img_ids, eval_imgs):
+        all_img_ids = all_gather(img_ids)
+        all_eval_imgs = all_gather(eval_imgs)
 
-def xyxy_to_xywh(boxes):
-    # BoxMode: convert from XYXY_ABS to XYWH_ABS
-    xmin, ymin, xmax, ymax = boxes.unbind(1)
-    return torch.stack((xmin, ymin, xmax - xmin, ymax - ymin), dim=1)
+        merged_img_ids = []
+        for p in all_img_ids:
+            merged_img_ids.extend(p)
 
+        merged_eval_imgs = []
+        for p in all_eval_imgs:
+            merged_eval_imgs.append(p)
 
-def merge(img_ids, eval_imgs):
-    all_img_ids = all_gather(img_ids)
-    all_eval_imgs = all_gather(eval_imgs)
+        merged_img_ids = np.array(merged_img_ids)
+        merged_eval_imgs = np.concatenate(merged_eval_imgs, 2)
 
-    merged_img_ids = []
-    for p in all_img_ids:
-        merged_img_ids.extend(p)
+        # keep only unique (and in sorted order) images
+        merged_img_ids, idx = np.unique(merged_img_ids, return_index=True)
+        merged_eval_imgs = merged_eval_imgs[..., idx]
 
-    merged_eval_imgs = []
-    for p in all_eval_imgs:
-        merged_eval_imgs.append(p)
+        return merged_img_ids, merged_eval_imgs
 
-    merged_img_ids = np.array(merged_img_ids)
-    merged_eval_imgs = np.concatenate(merged_eval_imgs, 2)
+    def create_common_coco_eval(self, coco_eval, img_ids, eval_imgs):
+        img_ids, eval_imgs = self.merge(img_ids, eval_imgs)
+        img_ids = list(img_ids)
+        eval_imgs = list(eval_imgs.flatten())
 
-    # keep only unique (and in sorted order) images
-    merged_img_ids, idx = np.unique(merged_img_ids, return_index=True)
-    merged_eval_imgs = merged_eval_imgs[..., idx]
-
-    return merged_img_ids, merged_eval_imgs
-
-
-def create_common_coco_eval(coco_eval, img_ids, eval_imgs):
-    img_ids, eval_imgs = merge(img_ids, eval_imgs)
-    img_ids = list(img_ids)
-    eval_imgs = list(eval_imgs.flatten())
-
-    coco_eval.evalImgs = eval_imgs
-    coco_eval.params.imgIds = img_ids
-    coco_eval._paramsEval = copy.deepcopy(coco_eval.params)
+        coco_eval.evalImgs = eval_imgs
+        coco_eval.params.imgIds = img_ids
+        coco_eval._paramsEval = copy.deepcopy(coco_eval.params)
 
 
 def evaluate(self):
