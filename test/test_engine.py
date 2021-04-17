@@ -92,7 +92,7 @@ class EngineTester(unittest.TestCase):
         coco = data_helper.get_coco_api_from_dataset(val_dataloader.dataset)
         coco_evaluator = COCOEvaluator(coco)
         # Load model
-        model = yolov5s(pretrained=True)
+        model = yolov5s(pretrained=True, score_thresh=0.001)
         model.eval()
         for images, targets in val_dataloader:
             preds = model(images)
@@ -101,6 +101,8 @@ class EngineTester(unittest.TestCase):
         coco_evaluator.synchronize_between_processes()
         coco_evaluator.accumulate()
         coco_evaluator.compute()
+        self.assertGreaterEqual(coco_evaluator.coco_eval['bbox'].stats[0], 0.41)
+        self.assertGreaterEqual(coco_evaluator.coco_eval['bbox'].stats[1], 0.62)
 
     @unittest.skip("Currently it isn't well implemented")
     def test_test_with_dataloader(self):
