@@ -9,7 +9,7 @@ from torchvision.io import read_image
 import pytorch_lightning as pl
 
 from yolort.data import COCOEvaluator, DetectionDataModule
-from yolort.data._helper import DummyCOCODetectionDataset, get_dataloader, get_coco_api_from_dataset
+import yolort.data._helper as data_helper
 
 from yolort.models import yolov5s
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
@@ -59,7 +59,7 @@ class EngineTester(unittest.TestCase):
         # Define the device
         device = torch.device('cpu')
 
-        train_dataloader = get_dataloader(data_root='data-bin', mode='train')
+        train_dataloader = data_helper.get_dataloader(data_root='data-bin', mode='train')
         # Sample a pair of images/targets
         images, targets = next(iter(train_dataloader))
         images = [img.to(device) for img in images]
@@ -77,7 +77,7 @@ class EngineTester(unittest.TestCase):
 
     def test_train_one_epoch(self):
         # Setup the DataModule
-        train_dataset = DummyCOCODetectionDataset(num_samples=128)
+        train_dataset = data_helper.DummyCOCODetectionDataset(num_samples=128)
         data_module = DetectionDataModule(train_dataset, batch_size=16)
         # Load model
         model = yolov5s()
@@ -88,8 +88,8 @@ class EngineTester(unittest.TestCase):
 
     def test_vanilla_coco_evaluator(self):
         # Acquire the images and labels from the coco128 dataset
-        val_dataloader = get_dataloader(data_root='data-bin', mode='val')
-        coco = get_coco_api_from_dataset(val_dataloader.dataset)
+        val_dataloader = data_helper.get_dataloader(data_root='data-bin', mode='val')
+        coco = data_helper.get_coco_api_from_dataset(val_dataloader.dataset)
         coco_evaluator = COCOEvaluator(coco)
         # Load model
         model = yolov5s(pretrained=True)
@@ -105,7 +105,7 @@ class EngineTester(unittest.TestCase):
     @unittest.skip("Currently it isn't well implemented")
     def test_test_with_dataloader(self):
         # Get dataloader to test
-        val_dataloader = get_dataloader(data_root='data-bin', mode='val')
+        val_dataloader = data_helper.get_dataloader(data_root='data-bin', mode='val')
 
         # Load model
         model = yolov5s(pretrained=True)

@@ -5,13 +5,7 @@ import unittest
 from torch import Tensor
 
 from yolort.data import DetectionDataModule
-
-from yolort.data._helper import (
-    prepare_coco128,
-    get_dataset,
-    get_dataloader,
-    DummyCOCODetectionDataset,
-)
+import yolort.data._helper as data_helper
 
 from typing import Dict
 
@@ -19,7 +13,7 @@ from typing import Dict
 class DataPipelineTester(unittest.TestCase):
     def test_vanilla_dataset(self):
         # Acquire the images and labels from the coco128 dataset
-        dataset = get_dataset(data_root='data-bin', mode='train')
+        dataset = data_helper.get_dataset(data_root='data-bin', mode='train')
         # Test the datasets
         image, target = next(iter(dataset))
         self.assertIsInstance(image, Tensor)
@@ -27,7 +21,7 @@ class DataPipelineTester(unittest.TestCase):
 
     def test_vanilla_dataloader(self):
         batch_size = 8
-        data_loader = get_dataloader(data_root='data-bin', mode='train', batch_size=batch_size)
+        data_loader = data_helper.get_dataloader(data_root='data-bin', mode='train', batch_size=batch_size)
         # Test the dataloader
         images, targets = next(iter(data_loader))
 
@@ -44,7 +38,7 @@ class DataPipelineTester(unittest.TestCase):
     def test_detection_data_module(self):
         # Setup the DataModule
         batch_size = 4
-        train_dataset = DummyCOCODetectionDataset(num_samples=128)
+        train_dataset = data_helper.DummyCOCODetectionDataset(num_samples=128)
         data_module = DetectionDataModule(train_dataset, batch_size=batch_size)
         self.assertEqual(data_module.batch_size, batch_size)
 
@@ -62,6 +56,6 @@ class DataPipelineTester(unittest.TestCase):
     def test_prepare_coco128(self):
         data_path = Path('data-bin')
         coco128_dirname = 'coco128'
-        prepare_coco128(data_path, dirname=coco128_dirname)
+        data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
         annotation_file = data_path / coco128_dirname / 'annotations' / 'instances_train2017.json'
         self.assertTrue(annotation_file.is_file())
