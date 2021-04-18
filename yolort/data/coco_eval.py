@@ -19,7 +19,7 @@ try:
 except ImportError:
     COCO, COCOeval = None, None
 
-from ._utils import all_gather
+from .distributed import all_gather
 
 from typing import List, Any, Callable, Optional, Union
 
@@ -83,7 +83,7 @@ class COCOEvaluator(Metric):
         # suppress pycocotools prints
         with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
             self.eval_imgs = np.concatenate(self.eval_imgs, 2)
-            # Evaluate
+            # Synchronize between processes
             self.create_common_coco_eval(self.coco_eval, self.img_ids, self.eval_imgs)
 
             # Accumulate

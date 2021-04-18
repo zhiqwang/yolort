@@ -1,14 +1,15 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import pickle
-
 import torch
 
 
 def all_gather(data):
     """
-    Run all_gather on arbitrary picklable data (not necessarily tensors)
+    Run all_gather on arbitrary picklable data (not necessarily tensors). Copy from
+    https://github.com/pytorch/vision/blob/dc42f93/references/detection/utils.py#L75
+
     Args:
         data: any picklable object
+
     Returns:
         list[data]: list of data gathered from each rank
     """
