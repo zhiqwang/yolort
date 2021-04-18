@@ -1,6 +1,6 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 import torch
 from torch import Tensor
@@ -9,17 +9,12 @@ from torchvision.io import read_image
 
 import pytorch_lightning as pl
 
-from yolort.data import DetectionDataModule
-from yolort.data.coco import CocoDetection
-from yolort.data.transforms import collate_fn, default_train_transforms
+from yolort.data import COCOEvaluator, DetectionDataModule
+import yolort.data._helper as data_helper
 
+from yolort.models import yolov5s
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
-from yolort.models import yolov5s
-
-from yolort.utils import prepare_coco128
-
-from .dataset_utils import DummyCOCODetectionDataset
 
 from typing import Dict
 
@@ -65,26 +60,9 @@ class EngineTester(unittest.TestCase):
         # Define the device
         device = torch.device('cpu')
 
-        # Prepare the datasets for training
-        # Acquire the images and labels from the coco128 dataset
-        data_path = Path('data-bin')
-        coco128_dirname = 'coco128'
-        coco128_path = data_path / coco128_dirname
-        image_root = coco128_path / 'images' / 'train2017'
-        annotation_file = coco128_path / 'annotations' / 'instances_train2017.json'
-
-        if not annotation_file.is_file():
-            prepare_coco128(data_path, dirname=coco128_dirname)
-
-        batch_size = 4
-
-        dataset = CocoDetection(image_root, annotation_file, default_train_transforms())
-        sampler = torch.utils.data.RandomSampler(dataset)
-        batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
-        data_loader = torch.utils.data.DataLoader(
-            dataset, batch_sampler=batch_sampler, collate_fn=collate_fn, num_workers=0)
+        train_dataloader = data_helper.get_dataloader(data_root='data-bin', mode='train')
         # Sample a pair of images/targets
-        images, targets = next(iter(data_loader))
+        images, targets = next(iter(train_dataloader))
         images = [img.to(device) for img in images]
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
@@ -98,9 +76,9 @@ class EngineTester(unittest.TestCase):
         self.assertIsInstance(out["bbox_regression"], Tensor)
         self.assertIsInstance(out["objectness"], Tensor)
 
-    def test_train_one_epoch(self):
+    def test_training_step(self):
         # Setup the DataModule
-        train_dataset = DummyCOCODetectionDataset(num_samples=128)
+        train_dataset = data_helper.DummyCOCODetectionDataset(num_samples=128)
         data_module = DetectionDataModule(train_dataset, batch_size=16)
         # Load model
         model = yolov5s()
@@ -108,6 +86,43 @@ class EngineTester(unittest.TestCase):
         # Trainer
         trainer = pl.Trainer(max_epochs=1)
         trainer.fit(model, data_module)
+
+    def test_vanilla_coco_evaluator(self):
+        # Acquire the images and labels from the coco128 dataset
+        val_dataloader = data_helper.get_dataloader(data_root='data-bin', mode='val')
+        coco = data_helper.get_coco_api_from_dataset(val_dataloader.dataset)
+        coco_evaluator = COCOEvaluator(coco)
+        # Load model
+        model = yolov5s(pretrained=True, score_thresh=0.001)
+        model.eval()
+        for images, targets in val_dataloader:
+            preds = model(images)
+            coco_evaluator.update(preds, targets)
+
+        results = coco_evaluator.compute()
+        self.assertGreater(results['AP'], 41.5)
+        self.assertGreater(results['AP50'], 62.0)
+
+    def tets_test_epoch_end(self):
+        # Acquire the annotation file
+        data_path = Path('data-bin')
+        coco128_dirname = 'coco128'
+        data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
+        annotation_file = data_path / coco128_dirname / 'annotations' / 'instances_train2017.json'
+
+        # Get dataloader to test
+        val_dataloader = data_helper.get_dataloader(data_root=data_path, mode='val')
+
+        # Load model
+        model = yolov5s(pretrained=True, annotation_path=annotation_file)
+        model.eval()
+        # test step
+        trainer = pl.Trainer(max_epochs=1)
+        trainer.test(model, test_dataloaders=val_dataloader)
+        # test epoch end
+        results = model.evaluator.compute()
+        self.assertGreater(results['AP'], 41.5)
+        self.assertGreater(results['AP50'], 62.0)
 
     def test_predict_with_vanilla_model(self):
         # Set image inputs

@@ -1,6 +1,7 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import warnings
 import argparse
+from pathlib import PosixPath
 
 import torch
 from torch import Tensor
@@ -9,9 +10,9 @@ from pytorch_lightning import LightningModule
 
 from . import yolo
 from .transform import GeneralizedYOLOTransform
-from ..data import DetectionDataModule, DataPipeline
+from ..data import DetectionDataModule, DataPipeline, COCOEvaluator
 
-from typing import Any, List, Dict, Tuple, Optional
+from typing import Any, List, Dict, Tuple, Optional, Union
 
 __all__ = ['YOLOModule']
 
@@ -29,6 +30,7 @@ class YOLOModule(LightningModule):
         num_classes: int = 80,
         min_size: int = 320,
         max_size: int = 416,
+        annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
     ):
         """
@@ -50,17 +52,22 @@ class YOLOModule(LightningModule):
 
         self._data_pipeline = None
 
+        # metrics
+        self.evaluator = None
+        if annotation_path is not None:
+            self.evaluator = COCOEvaluator(annotation_path, iou_type="bbox")
+
         # used only on torchscript mode
         self._has_warned = False
 
-    def forward(
+    def _forward_impl(
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> List[Dict[str, Tensor]]:
         """
         Args:
-            images (list[Tensor]): images to be processed
+            inputs (list[Tensor]): images to be processed
             targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
 
         Returns:
@@ -68,14 +75,15 @@ class YOLOModule(LightningModule):
                 During training, it returns a dict[Tensor] which contains the losses.
                 During testing, it returns list[BoxList] contains additional fields
                 like `scores`, `labels` and `mask` (for Mask R-CNN models).
-
         """
         # get the original image sizes
         original_image_sizes: List[Tuple[int, int]] = []
-        for img in inputs:
-            val = img.shape[-2:]
-            assert len(val) == 2
-            original_image_sizes.append((val[0], val[1]))
+
+        if not self.training:
+            for img in inputs:
+                val = img.shape[-2:]
+                assert len(val) == 2
+                original_image_sizes.append((val[0], val[1]))
 
         # Transform the input
         samples, targets = self.transform(inputs, targets)
@@ -114,16 +122,39 @@ class YOLOModule(LightningModule):
 
         return detections
 
+    def forward(
+        self,
+        inputs: List[Tensor],
+        targets: Optional[List[Dict[str, Tensor]]] = None,
+    ) -> List[Dict[str, Tensor]]:
+        """
+        This exists since PyTorchLightning forward are used for inference only (separate from
+        ``training_step``). We keep ``targets`` here for Backward Compatible.
+        """
+        return self._forward_impl(inputs, targets)
+
     def training_step(self, batch, batch_idx):
         """
         The training step.
         """
-        # Transform the input
-        samples, targets = self.transform(*batch)
-        # yolov5 takes both images and targets for training, returns
-        loss_dict = self.model(samples.tensors, targets)
-        loss = sum(loss for loss in loss_dict.values())
-        return {"loss": loss, "log": loss_dict}
+        loss_dict = self._forward_impl(*batch)
+        loss = sum(loss_dict.values())
+        self.log_dict(loss_dict, on_step=True, on_epoch=True, prog_bar=True)
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        """
+        The test step.
+        """
+        images, targets = batch
+        images = list(image.to(self.device) for image in images)
+        preds = self._forward_impl(images)
+        results = self.evaluator(preds, targets)
+        # log step metric
+        self.log('eval_step', results, prog_bar=True, on_step=True)
+
+    def test_epoch_end(self, outputs):
+        return self.log('coco_eval', self.evaluator.compute())
 
     @torch.no_grad()
     def predict(
