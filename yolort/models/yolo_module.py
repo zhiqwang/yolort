@@ -29,7 +29,7 @@ class YOLOModule(LightningModule):
         num_classes: int = 80,
         min_size: int = 320,
         max_size: int = 416,
-        coco_gt: Optional[Any] = None,
+        coco_gt_path: Optional[str] = None,
         **kwargs: Any,
     ):
         """
@@ -52,7 +52,9 @@ class YOLOModule(LightningModule):
         self._data_pipeline = None
 
         # metrics
-        self.evaluator = None if coco_gt else COCOEvaluator(coco_gt, iou_types=["bbox"])
+        self.evaluator = None
+        if coco_gt_path is not None:
+            self.evaluator = COCOEvaluator(coco_gt_path, iou_type="bbox")
 
         # used only on torchscript mode
         self._has_warned = False

@@ -2,19 +2,26 @@
 import os
 import copy
 import contextlib
+import logging
+import itertools
+from yolort.utils.logger import create_small_table
+from tabulate import tabulate
 
 import numpy as np
 
 from torchvision.ops import box_convert
 
-from pycocotools.cocoeval import COCOeval
-from pycocotools.coco import COCO
-
 from torchmetrics import Metric
+
+try:
+    from pycocotools.coco import COCO
+    from pycocotools.cocoeval import COCOeval
+except ImportError:
+    COCO, COCOeval = None, None
 
 from ._utils import all_gather
 
-from typing import List, Any, Callable, Optional
+from typing import List, Any, Callable, Optional, Union
 
 
 class COCOEvaluator(Metric):
@@ -23,8 +30,8 @@ class COCOEvaluator(Metric):
     """
     def __init__(
         self,
-        coco_gt: COCO,
-        iou_types: List[str] = ['bbox'],
+        coco_gt: Union[COCO, str],
+        iou_type: str = 'bbox',
         compute_on_step: bool = True,
         dist_sync_on_step: bool = False,
         process_group: Optional[Any] = None,
@@ -36,52 +43,123 @@ class COCOEvaluator(Metric):
             process_group=process_group,
             dist_sync_fn=dist_sync_fn,
         )
-        assert isinstance(iou_types, (list, tuple))
-        coco_gt = copy.deepcopy(coco_gt)
-        self.coco_gt = coco_gt
+        self._logger = logging.getLogger(__name__)
+        if isinstance(coco_gt, str):
+            coco_gt = COCO(coco_gt)
+        elif isinstance(coco_gt, COCO):
+            coco_gt = copy.deepcopy(coco_gt)
+        else:
+            raise NotImplementedError(f"Currently not support type {type(coco_gt)}")
 
-        self.iou_types = iou_types
-        self.coco_eval = {}
-        for iou_type in iou_types:
-            self.coco_eval[iou_type] = COCOeval(coco_gt, iouType=iou_type)
+        self.coco_gt = coco_gt
+        self.contiguous_to_json_category = coco_gt.getCatIds()
+
+        self.iou_type = iou_type
+        self.coco_eval = COCOeval(coco_gt, iouType=iou_type)
 
         self.img_ids = []
-        self.eval_imgs = {k: [] for k in iou_types}
-
-    def synchronize_between_processes(self):
-        for iou_type in self.iou_types:
-            self.eval_imgs[iou_type] = np.concatenate(self.eval_imgs[iou_type], 2)
-            self.create_common_coco_eval(self.coco_eval[iou_type], self.img_ids, self.eval_imgs[iou_type])
+        self.eval_imgs = []
 
     def update(self, preds, targets):
         records = {target['image_id'].item(): prediction for target, prediction in zip(targets, preds)}
         img_ids = list(np.unique(list(records.keys())))
         self.img_ids.extend(img_ids)
 
-        for iou_type in self.iou_types:
-            results = self.prepare(records, iou_type)
+        results = self.prepare(records, self.iou_type)
 
-            # suppress pycocotools prints
-            with open(os.devnull, 'w') as devnull:
-                with contextlib.redirect_stdout(devnull):
-                    self.coco_dt = COCO.loadRes(self.coco_gt, results) if results else COCO()
+        # suppress pycocotools prints
+        with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
+            self.coco_dt = COCO.loadRes(self.coco_gt, results) if results else COCO()
 
-            coco_eval = self.coco_eval[iou_type]
+        coco_eval = self.coco_eval
 
-            coco_eval.cocoDt = self.coco_dt
-            coco_eval.params.imgIds = list(img_ids)
-            img_ids, eval_imgs = evaluate(coco_eval)
+        coco_eval.cocoDt = self.coco_dt
+        coco_eval.params.imgIds = list(img_ids)
+        img_ids, eval_imgs = evaluate(coco_eval)
 
-            self.eval_imgs[iou_type].append(eval_imgs)
-
-    def accumulate(self):
-        for coco_eval in self.coco_eval.values():
-            coco_eval.accumulate()
+        self.eval_imgs.append(eval_imgs)
 
     def compute(self):
-        for iou_type, coco_eval in self.coco_eval.items():
-            print(f"IoU metric: {iou_type}")
-            coco_eval.summarize()
+        # suppress pycocotools prints
+        with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
+            self.eval_imgs = np.concatenate(self.eval_imgs, 2)
+            # Evaluate
+            self.create_common_coco_eval(self.coco_eval, self.img_ids, self.eval_imgs)
+
+            # Accumulate
+            self.coco_eval.accumulate()
+            # Summarize
+            self.coco_eval.summarize()
+
+        results = self.derive_coco_results()
+        return results
+
+    def derive_coco_results(self, class_names: Optional[List[str]] = None):
+        """
+        Derive the desired score numbers from summarized COCOeval. Modified from
+        https://github.com/facebookresearch/detectron2/blob/7205996/detectron2/evaluation/coco_evaluation.py#L291
+
+        Args:
+            coco_eval (None or COCOEval): None represents no predictions from model.
+            iou_type (str):
+            class_names (None or list[str]): if provided, will use it to predict
+                per-category AP.
+
+        Returns:
+            a dict of {metric name: score}
+        """
+
+        metrics = {
+            "bbox": ["AP", "AP50", "AP75", "APs", "APm", "APl"],
+            "segm": ["AP", "AP50", "AP75", "APs", "APm", "APl"],
+            "keypoints": ["AP", "AP50", "AP75", "APm", "APl"],
+        }[self.iou_type]
+
+        if self.coco_eval is None:
+            self._logger.warn("No predictions from the model!")
+            return {metric: float("nan") for metric in metrics}
+
+        # the standard metrics
+        results = {
+            metric: float(self.coco_eval.stats[idx] * 100 if self.coco_eval.stats[idx] >= 0 else "nan")
+            for idx, metric in enumerate(metrics)
+        }
+        self._logger.info(f"Evaluation results for {self.iou_type}:\n" + create_small_table(results))
+
+        if not np.isfinite(sum(results.values())):
+            self._logger.info("Some metrics cannot be computed and is shown as NaN.")
+
+        if class_names is None or len(class_names) <= 1:
+            return results
+        # Compute per-category AP
+        precisions = self.coco_eval.eval["precision"]
+        # precision has dims (iou, recall, cls, area range, max dets)
+        assert len(class_names) == precisions.shape[2]
+
+        results_per_category = []
+        for idx, name in enumerate(class_names):
+            # area range index 0: all area ranges
+            # max dets index -1: typically 100 per image
+            precision = precisions[:, :, idx, 0, -1]
+            precision = precision[precision > -1]
+            ap = np.mean(precision) if precision.size else float("nan")
+            results_per_category.append((f"{name}", float(ap * 100)))
+
+        # tabulate it
+        N_COLS = min(6, len(results_per_category) * 2)
+        results_flatten = list(itertools.chain(*results_per_category))
+        results_2d = itertools.zip_longest(*[results_flatten[i::N_COLS] for i in range(N_COLS)])
+        table = tabulate(
+            results_2d,
+            tablefmt="pipe",
+            floatfmt=".3f",
+            headers=["category", "AP"] * (N_COLS // 2),
+            numalign="left",
+        )
+        self._logger.info(f"Per-category {self.iou_type} AP:\n" + table)
+
+        results.update({"AP-" + name: ap for name, ap in results_per_category})
+        return results
 
     def prepare(self, predictions, iou_type):
         if iou_type == "bbox":
@@ -89,20 +167,7 @@ class COCOEvaluator(Metric):
         else:
             raise ValueError(f"Unknown iou type {iou_type}, fell free to report on GitHub issues")
 
-    def coco80_to_coco91_class(self):  # converts 80-index (val2014) to 91-index (paper)
-        # https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
-        # a = np.loadtxt('data/coco.names', dtype='str', delimiter='\n')
-        # b = np.loadtxt('data/coco_paper.names', dtype='str', delimiter='\n')
-        # x1 = [list(a[i] == b).index(True) + 1 for i in range(80)]  # darknet to coco
-        # x2 = [list(b[i] == a).index(True) if any(b[i] == a) else None for i in range(91)]  # coco to darknet
-        x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34,
-             35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-             64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90]
-        return x
-
     def prepare_for_coco_detection(self, predictions):
-        coco91class = self.coco80_to_coco91_class()
-
         coco_results = []
         for original_id, prediction in predictions.items():
             if len(prediction) == 0:
@@ -117,7 +182,7 @@ class COCOEvaluator(Metric):
                 [
                     {
                         "image_id": original_id,
-                        "category_id": coco91class[labels[k]],
+                        "category_id": self.contiguous_to_json_category[labels[k]],
                         "bbox": box,
                         "score": scores[k],
                     }
@@ -126,7 +191,8 @@ class COCOEvaluator(Metric):
             )
         return coco_results
 
-    def merge(self, img_ids, eval_imgs):
+    @staticmethod
+    def merge(img_ids, eval_imgs):
         all_img_ids = all_gather(img_ids)
         all_eval_imgs = all_gather(eval_imgs)
 
@@ -172,8 +238,8 @@ def evaluate(self):
     # add backward compatibility if useSegm is specified in params
     if p.useSegm is not None:
         p.iouType = 'segm' if p.useSegm == 1 else 'bbox'
-        print('useSegm (deprecated) is not None. Running {} evaluation'.format(p.iouType))
-    # print('Evaluate annotation type *{}*'.format(p.iouType))
+        print(f'useSegm (deprecated) is not None. Running {p.iouType} evaluation')
+    # print(f'Evaluate annotation type *{p.iouType}*')
     p.imgIds = list(np.unique(p.imgIds))
     if p.useCats:
         p.catIds = list(np.unique(p.catIds))
@@ -206,5 +272,4 @@ def evaluate(self):
     evalImgs = np.asarray(evalImgs).reshape(len(catIds), len(p.areaRng), len(p.imgIds))
     self._paramsEval = copy.deepcopy(self.params)
     # toc = time.time()
-    # print('DONE (t={:0.2f}s).'.format(toc-tic))
     return p.imgIds, evalImgs

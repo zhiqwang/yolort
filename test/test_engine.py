@@ -98,11 +98,9 @@ class EngineTester(unittest.TestCase):
             preds = model(images)
             coco_evaluator.update(preds, targets)
 
-        coco_evaluator.synchronize_between_processes()
-        coco_evaluator.accumulate()
-        coco_evaluator.compute()
-        self.assertGreaterEqual(coco_evaluator.coco_eval['bbox'].stats[0], 0.41)
-        self.assertGreaterEqual(coco_evaluator.coco_eval['bbox'].stats[1], 0.62)
+        results = coco_evaluator.compute()
+        self.assertGreater(results['AP'], 0.41)
+        self.assertGreater(results['AP50'], 0.62)
 
     @unittest.skip("Currently it isn't well implemented")
     def test_test_with_dataloader(self):
