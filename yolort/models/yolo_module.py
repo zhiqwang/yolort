@@ -1,6 +1,7 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import warnings
 import argparse
+from pathlib import PosixPath
 
 import torch
 from torch import Tensor
@@ -11,7 +12,7 @@ from . import yolo
 from .transform import GeneralizedYOLOTransform
 from ..data import DetectionDataModule, DataPipeline, COCOEvaluator
 
-from typing import Any, List, Dict, Tuple, Optional
+from typing import Any, List, Dict, Tuple, Optional, Union
 
 __all__ = ['YOLOModule']
 
@@ -29,7 +30,7 @@ class YOLOModule(LightningModule):
         num_classes: int = 80,
         min_size: int = 320,
         max_size: int = 416,
-        coco_gt_path: Optional[str] = None,
+        annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
     ):
         """
@@ -53,8 +54,8 @@ class YOLOModule(LightningModule):
 
         # metrics
         self.evaluator = None
-        if coco_gt_path is not None:
-            self.evaluator = COCOEvaluator(coco_gt_path, iou_type="bbox")
+        if annotation_path is not None:
+            self.evaluator = COCOEvaluator(annotation_path, iou_type="bbox")
 
         # used only on torchscript mode
         self._has_warned = False
@@ -145,13 +146,15 @@ class YOLOModule(LightningModule):
         """
         The test step.
         """
-        preds = self._forward_impl(*batch)
+        images, targets = batch
+        images = list(image.to(self.device) for image in images)
+        preds = self._forward_impl(images)
+        results = self.evaluator(preds, targets)
         # log step metric
-        self.log('eval_step', self.evaluator(preds))
+        self.log('eval_step', results, prog_bar=True, on_step=True)
 
-    def test_epoch_end(self, outs):
-        # log epoch metric
-        self.log('coco_eval', self.evaluator.compute())
+    def test_epoch_end(self, outputs):
+        return self.log('coco_eval', self.evaluator.compute())
 
     @torch.no_grad()
     def predict(

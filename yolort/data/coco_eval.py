@@ -1,5 +1,6 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import os
+from pathlib import PosixPath
 import copy
 import contextlib
 import logging
@@ -30,7 +31,7 @@ class COCOEvaluator(Metric):
     """
     def __init__(
         self,
-        coco_gt: Union[COCO, str],
+        coco_gt: Union[str, PosixPath, COCO],
         iou_type: str = 'bbox',
         compute_on_step: bool = True,
         dist_sync_on_step: bool = False,
@@ -44,7 +45,7 @@ class COCOEvaluator(Metric):
             dist_sync_fn=dist_sync_fn,
         )
         self._logger = logging.getLogger(__name__)
-        if isinstance(coco_gt, str):
+        if isinstance(coco_gt, str) or isinstance(coco_gt, PosixPath):
             coco_gt = COCO(coco_gt)
         elif isinstance(coco_gt, COCO):
             coco_gt = copy.deepcopy(coco_gt)
@@ -82,14 +83,16 @@ class COCOEvaluator(Metric):
     def compute(self):
         # suppress pycocotools prints
         with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
-            self.eval_imgs = np.concatenate(self.eval_imgs, 2)
             # Synchronize between processes
-            self.create_common_coco_eval(self.coco_eval, self.img_ids, self.eval_imgs)
+            coco_eval = self.coco_eval
+            img_ids = self.img_ids
+            eval_imgs = np.concatenate(self.eval_imgs, 2)
+            create_common_coco_eval(coco_eval, img_ids, eval_imgs)
 
             # Accumulate
-            self.coco_eval.accumulate()
+            coco_eval.accumulate()
             # Summarize
-            self.coco_eval.summarize()
+            coco_eval.summarize()
 
         results = self.derive_coco_results()
         return results
@@ -191,36 +194,37 @@ class COCOEvaluator(Metric):
             )
         return coco_results
 
-    @staticmethod
-    def merge(img_ids, eval_imgs):
-        all_img_ids = all_gather(img_ids)
-        all_eval_imgs = all_gather(eval_imgs)
 
-        merged_img_ids = []
-        for p in all_img_ids:
-            merged_img_ids.extend(p)
+def merge(img_ids, eval_imgs):
+    all_img_ids = all_gather(img_ids)
+    all_eval_imgs = all_gather(eval_imgs)
 
-        merged_eval_imgs = []
-        for p in all_eval_imgs:
-            merged_eval_imgs.append(p)
+    merged_img_ids = []
+    for p in all_img_ids:
+        merged_img_ids.extend(p)
 
-        merged_img_ids = np.array(merged_img_ids)
-        merged_eval_imgs = np.concatenate(merged_eval_imgs, 2)
+    merged_eval_imgs = []
+    for p in all_eval_imgs:
+        merged_eval_imgs.append(p)
 
-        # keep only unique (and in sorted order) images
-        merged_img_ids, idx = np.unique(merged_img_ids, return_index=True)
-        merged_eval_imgs = merged_eval_imgs[..., idx]
+    merged_img_ids = np.array(merged_img_ids)
+    merged_eval_imgs = np.concatenate(merged_eval_imgs, 2)
 
-        return merged_img_ids, merged_eval_imgs
+    # keep only unique (and in sorted order) images
+    merged_img_ids, idx = np.unique(merged_img_ids, return_index=True)
+    merged_eval_imgs = merged_eval_imgs[..., idx]
 
-    def create_common_coco_eval(self, coco_eval, img_ids, eval_imgs):
-        img_ids, eval_imgs = self.merge(img_ids, eval_imgs)
-        img_ids = list(img_ids)
-        eval_imgs = list(eval_imgs.flatten())
+    return merged_img_ids, merged_eval_imgs
 
-        coco_eval.evalImgs = eval_imgs
-        coco_eval.params.imgIds = img_ids
-        coco_eval._paramsEval = copy.deepcopy(coco_eval.params)
+
+def create_common_coco_eval(coco_eval, img_ids, eval_imgs):
+    img_ids, eval_imgs = merge(img_ids, eval_imgs)
+    img_ids = list(img_ids)
+    eval_imgs = list(eval_imgs.flatten())
+
+    coco_eval.evalImgs = eval_imgs
+    coco_eval.params.imgIds = img_ids
+    coco_eval._paramsEval = copy.deepcopy(coco_eval.params)
 
 
 def evaluate(self):

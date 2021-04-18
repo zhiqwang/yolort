@@ -1,5 +1,6 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import unittest
+from pathlib import Path
 
 import torch
 from torch import Tensor
@@ -75,7 +76,7 @@ class EngineTester(unittest.TestCase):
         self.assertIsInstance(out["bbox_regression"], Tensor)
         self.assertIsInstance(out["objectness"], Tensor)
 
-    def test_train_one_epoch(self):
+    def test_training_step(self):
         # Setup the DataModule
         train_dataset = data_helper.DummyCOCODetectionDataset(num_samples=128)
         data_module = DetectionDataModule(train_dataset, batch_size=16)
@@ -99,20 +100,29 @@ class EngineTester(unittest.TestCase):
             coco_evaluator.update(preds, targets)
 
         results = coco_evaluator.compute()
-        self.assertGreater(results['AP'], 0.41)
-        self.assertGreater(results['AP50'], 0.62)
+        self.assertGreater(results['AP'], 41.5)
+        self.assertGreater(results['AP50'], 62.0)
 
-    @unittest.skip("Currently it isn't well implemented")
-    def test_test_with_dataloader(self):
+    def tets_test_epoch_end(self):
+        # Acquire the annotation file
+        data_path = Path('data-bin')
+        coco128_dirname = 'coco128'
+        data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
+        annotation_file = data_path / coco128_dirname / 'annotations' / 'instances_train2017.json'
+
         # Get dataloader to test
-        val_dataloader = data_helper.get_dataloader(data_root='data-bin', mode='val')
+        val_dataloader = data_helper.get_dataloader(data_root=data_path, mode='val')
 
         # Load model
-        model = yolov5s(pretrained=True)
+        model = yolov5s(pretrained=True, annotation_path=annotation_file)
         model.eval()
-        # Trainer
+        # test step
         trainer = pl.Trainer(max_epochs=1)
         trainer.test(model, test_dataloaders=val_dataloader)
+        # test epoch end
+        results = model.evaluator.compute()
+        self.assertGreater(results['AP'], 41.5)
+        self.assertGreater(results['AP50'], 62.0)
 
     def test_predict_with_vanilla_model(self):
         # Set image inputs
