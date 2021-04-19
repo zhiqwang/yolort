@@ -10,6 +10,7 @@ from pytorch_lightning import LightningModule
 
 from . import yolo
 from .transform import GeneralizedYOLOTransform
+from ._utils import _evaluate_iou
 from ..data import DetectionDataModule, DataPipeline, COCOEvaluator
 
 from typing import Any, List, Dict, Tuple, Optional, Union
@@ -141,6 +142,19 @@ class YOLOModule(LightningModule):
         loss = sum(loss_dict.values())
         self.log_dict(loss_dict, on_step=True, on_epoch=True, prog_bar=True)
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        images, targets = batch
+        # fasterrcnn takes only images for eval() mode
+        preds = self._forward_impl(images)
+        iou = torch.stack([_evaluate_iou(t, o) for t, o in zip(targets, preds)]).mean()
+        outs = {"val_iou": iou}
+        self.log_dict(outs, on_step=True, on_epoch=True, prog_bar=True)
+        return outs
+
+    def validation_epoch_end(self, outs):
+        avg_iou = torch.stack([o["val_iou"] for o in outs]).mean()
+        self.log("avg_val_iou", avg_iou)
 
     def test_step(self, batch, batch_idx):
         """
