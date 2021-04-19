@@ -27,7 +27,11 @@ from typing import List, Any, Callable, Optional, Union
 
 class COCOEvaluator(Metric):
     """
-    COCO evaluator that works in distributed mode.
+    Evaluate AP for instance detection using COCO's metrics that works in distributed mode.
+    See http://cocodataset.org/#detection-eval and
+    http://cocodataset.org/#keypoints-eval to understand its metrics.
+    The metrics range from 0 to 100 (instead of 0 to 1), where a -1 or NaN means
+    the metric cannot be computed (e.g. due to no predictions made).
     """
     def __init__(
         self,
@@ -38,6 +42,14 @@ class COCOEvaluator(Metric):
         process_group: Optional[Any] = None,
         dist_sync_fn: Callable = None,
     ):
+        """
+        Args:
+            coco_gt (Union[str, PosixPath, COCO]): a json file in COCO's format or a COCO api
+                - str: a json file in COCO's result format.
+                - PosixPath: a json file in COCO's result format, and is wrapped with Path.
+                - COCO: COCO api
+            iou_type (str): iou type to compute.
+        """
         super().__init__(
             compute_on_step=compute_on_step,
             dist_sync_on_step=dist_sync_on_step,
@@ -197,6 +209,10 @@ class COCOEvaluator(Metric):
 
 
 def merge(img_ids, eval_imgs):
+    """
+    Gather data, copy from
+    https://github.com/pytorch/vision/blob/edfd5a7/references/detection/coco_eval.py#L163-L182
+    """
     all_img_ids = all_gather(img_ids)
     all_eval_imgs = all_gather(eval_imgs)
 
@@ -219,6 +235,10 @@ def merge(img_ids, eval_imgs):
 
 
 def create_common_coco_eval(coco_eval, img_ids, eval_imgs):
+    """
+    Synchronize version of coco_eval. Copy from:
+    https://github.com/pytorch/vision/blob/edfd5a7/references/detection/coco_eval.py#L185-L192
+    """
     img_ids, eval_imgs = merge(img_ids, eval_imgs)
     img_ids = list(img_ids)
     eval_imgs = list(eval_imgs.flatten())
@@ -232,7 +252,7 @@ def evaluate(self):
     '''
     From pycocotools, just removed the prints and fixed a Python3 bug about unicode
     not defined. Mostly copy-paste from
-    <https://github.com/pytorch/vision/blob/edfd5a7/references/detection/coco_eval.py>
+    https://github.com/pytorch/vision/blob/edfd5a7/references/detection/coco_eval.py#L300
 
     Run per image evaluation on given images and store results (a list of dict) in self.evalImgs
     :return: None
