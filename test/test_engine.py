@@ -4,7 +4,6 @@ from pathlib import Path
 
 import torch
 from torch import Tensor
-import torch.utils.data
 from torchvision.io import read_image
 
 import pytorch_lightning as pl
@@ -103,7 +102,7 @@ class EngineTester(unittest.TestCase):
         self.assertGreater(results['AP'], 41.5)
         self.assertGreater(results['AP50'], 62.0)
 
-    def tets_test_epoch_end(self):
+    def test_test_epoch_end(self):
         # Acquire the annotation file
         data_path = Path('data-bin')
         coco128_dirname = 'coco128'
@@ -114,8 +113,8 @@ class EngineTester(unittest.TestCase):
         val_dataloader = data_helper.get_dataloader(data_root=data_path, mode='val')
 
         # Load model
-        model = yolov5s(pretrained=True, annotation_path=annotation_file)
-        model.eval()
+        model = yolov5s(pretrained=True, score_thresh=0.001, annotation_path=annotation_file)
+
         # test step
         trainer = pl.Trainer(max_epochs=1)
         trainer.test(model, test_dataloaders=val_dataloader)
