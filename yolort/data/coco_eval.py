@@ -46,7 +46,8 @@ class COCOEvaluator(Metric):
         )
         self._logger = logging.getLogger(__name__)
         if isinstance(coco_gt, str) or isinstance(coco_gt, PosixPath):
-            coco_gt = COCO(coco_gt)
+            with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
+                coco_gt = COCO(coco_gt)
         elif isinstance(coco_gt, COCO):
             coco_gt = copy.deepcopy(coco_gt)
         else:
