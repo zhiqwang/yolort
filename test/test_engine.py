@@ -77,8 +77,10 @@ class EngineTester(unittest.TestCase):
 
     def test_training_step(self):
         # Setup the DataModule
-        train_dataset = data_helper.DummyCOCODetectionDataset(num_samples=128)
-        data_module = DetectionDataModule(train_dataset, batch_size=16)
+        data_path = 'data-bin'
+        train_dataset = data_helper.get_dataset(data_root=data_path, mode='train')
+        val_dataset = data_helper.get_dataset(data_root=data_path, mode='val')
+        data_module = DetectionDataModule(train_dataset, val_dataset, batch_size=16)
         # Load model
         model = yolov5s()
         model.train()

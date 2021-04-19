@@ -11,15 +11,15 @@ from typing import Dict
 
 
 class DataPipelineTester(unittest.TestCase):
-    def test_vanilla_dataset(self):
+    def test_get_dataset(self):
         # Acquire the images and labels from the coco128 dataset
-        dataset = data_helper.get_dataset(data_root='data-bin', mode='train')
+        train_dataset = data_helper.get_dataset(data_root='data-bin', mode='train')
         # Test the datasets
-        image, target = next(iter(dataset))
+        image, target = next(iter(train_dataset))
         self.assertIsInstance(image, Tensor)
         self.assertIsInstance(target, Dict)
 
-    def test_vanilla_dataloader(self):
+    def test_get_dataloader(self):
         batch_size = 8
         data_loader = data_helper.get_dataloader(data_root='data-bin', mode='train', batch_size=batch_size)
         # Test the dataloader
@@ -38,7 +38,7 @@ class DataPipelineTester(unittest.TestCase):
     def test_detection_data_module(self):
         # Setup the DataModule
         batch_size = 4
-        train_dataset = data_helper.DummyCOCODetectionDataset(num_samples=128)
+        train_dataset = data_helper.get_dataset(data_root='data-bin', mode='train')
         data_module = DetectionDataModule(train_dataset, batch_size=batch_size)
         self.assertEqual(data_module.batch_size, batch_size)
 
