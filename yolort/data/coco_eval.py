@@ -1,5 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-import os
+import io
 from pathlib import PosixPath
 import copy
 import contextlib
@@ -58,7 +58,7 @@ class COCOEvaluator(Metric):
         )
         self._logger = logging.getLogger(__name__)
         if isinstance(coco_gt, str) or isinstance(coco_gt, PosixPath):
-            with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
+            with contextlib.redirect_stdout(io.StringIO()):
                 coco_gt = COCO(coco_gt)
         elif isinstance(coco_gt, COCO):
             coco_gt = copy.deepcopy(coco_gt)
@@ -82,7 +82,7 @@ class COCOEvaluator(Metric):
         results = self.prepare(records, self.iou_type)
 
         # suppress pycocotools prints
-        with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
+        with contextlib.redirect_stdout(io.StringIO()):
             self.coco_dt = COCO.loadRes(self.coco_gt, results) if results else COCO()
 
         coco_eval = self.coco_eval
@@ -95,7 +95,7 @@ class COCOEvaluator(Metric):
 
     def compute(self):
         # suppress pycocotools prints
-        with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
+        with contextlib.redirect_stdout(io.StringIO()):
             # Synchronize between processes
             coco_eval = self.coco_eval
             img_ids = self.img_ids
