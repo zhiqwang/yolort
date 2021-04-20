@@ -7,6 +7,9 @@ import torch.nn as nn
 
 from .common import Conv, DWConv
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class CrossConv(nn.Module):
     # Cross Convolution Downsample
@@ -126,7 +129,7 @@ def attempt_load(weights, map_location=None):
     if len(model) == 1:
         return model[-1]  # return model
     else:
-        print('Ensemble created with %s\n' % weights)
+        logger.info('Ensemble created with %s\n' % weights)
         for k in ['names', 'stride']:
             setattr(model, k, getattr(model[-1], k))
         return model  # return ensemble
