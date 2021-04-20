@@ -17,6 +17,8 @@ from collections import OrderedDict
 import numpy as np
 from PIL import Image
 
+import logging
+logger = logging.getLogger(__name__)
 
 def set_rng_seed(seed):
     torch.manual_seed(seed)
@@ -130,7 +132,7 @@ class TestCase(unittest.TestCase):
 
         if ACCEPT:
             filename = {os.path.basename(expected_file)}
-            print("Accepting updated output for {}:\n\n{}".format(filename, output))
+            logger.info("Accepting updated output for {}:\n\n{}".format(filename, output))
             torch.save(output, expected_file)
             MAX_PICKLE_SIZE = 50 * 1000  # 50 KB
             binary_size = os.path.getsize(expected_file)

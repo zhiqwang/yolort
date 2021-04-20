@@ -16,6 +16,9 @@ from torchvision.ops.boxes import box_convert
 
 from typing import Optional
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
     # Plots one bounding box on image img
@@ -225,7 +228,7 @@ def overlay_boxes(detections, path, time_consume, args):
                     )
 
         # Print inference time
-        print('%sDone. (%.3fs)' % (det_logs, time_consume))
+        logger.info('%sDone. (%.3fs)' % (det_logs, time_consume))
 
         # Save results (image with detections)
         if args.save_img:
