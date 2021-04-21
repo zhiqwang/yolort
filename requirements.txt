@@ -10,7 +10,6 @@
 # opencv themselves, preferrably by OS's package manager, or by
 # choosing the proper pypi package name at https://github.com/skvark/opencv-python
 # opencv-python>=4.1.2
-Cython
 matplotlib>=3.2.2
 numpy>=1.18.5
 pillow
