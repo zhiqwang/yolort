@@ -175,6 +175,7 @@ def read_image_to_tensor(
         image (np.ndarray): the candidate ndarray image to be parsed to Tensor.
         is_half (bool): whether to transfer image to half. Default: False.
     """
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = np.ascontiguousarray(image, dtype=np.float32)  # uint8 to float32
     image = np.transpose(image / 255.0, [2, 0, 1])
 
