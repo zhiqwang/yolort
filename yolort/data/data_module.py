@@ -1,164 +1,49 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from pathlib import Path
+from torch.nn import Module
 
-import torch.utils.data
-from torch.utils.data.dataset import Dataset
+from flash.data.process import Preprocess
+from flash.data.data_module import DataModule
 
-from pytorch_lightning import LightningDataModule
+from .process import ObjectDetectionPreprocess
 
-from .transforms import collate_fn, default_train_transforms, default_val_transforms
-from .voc import VOCDetection
-from .coco import COCODetection
-from .data_pipeline import DataPipeline
-from .detection_pipeline import ObjectDetectionDataPipeline
-
-from typing import Callable, List, Any, Optional
+from typing import Dict, Optional
 
 
-class DetectionDataModule(LightningDataModule):
-    """
-    Wrapper of Datasets in LightningDataModule
-    """
-    def __init__(
-        self,
-        train_dataset: Optional[Dataset] = None,
-        val_dataset: Optional[Dataset] = None,
-        test_dataset: Optional[Dataset] = None,
-        batch_size: int = 1,
-        num_workers: int = 0,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(*args, **kwargs)
+class ObjectDetectionData(DataModule):
 
-        self._train_dataset = train_dataset
-        self._val_dataset = val_dataset
-        self._test_dataset = test_dataset
+    preprocess_cls = ObjectDetectionPreprocess
 
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-
-    def train_dataloader(self, batch_size: int = 16) -> None:
-        """
-        VOCDetection and COCODetection
-        Args:
-            batch_size: size of batch
-            transforms: custom transforms
-        """
-        # Creating data loaders
-        sampler = torch.utils.data.RandomSampler(self._train_dataset)
-        batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
-
-        loader = torch.utils.data.DataLoader(
-            self._train_dataset,
-            batch_sampler=batch_sampler,
-            collate_fn=collate_fn,
-            num_workers=self.num_workers,
+    @classmethod
+    def from_coco(
+        cls,
+        train_folder: Optional[str] = None,
+        train_ann_file: Optional[str] = None,
+        train_transform: Optional[Dict[str, Module]] = None,
+        val_folder: Optional[str] = None,
+        val_ann_file: Optional[str] = None,
+        val_transform: Optional[Dict[str, Module]] = None,
+        test_folder: Optional[str] = None,
+        test_ann_file: Optional[str] = None,
+        test_transform: Optional[Dict[str, Module]] = None,
+        predict_transform: Optional[Dict[str, Module]] = None,
+        batch_size: int = 4,
+        num_workers: Optional[int] = None,
+        preprocess: Preprocess = None,
+        **kwargs
+    ):
+        preprocess = preprocess or cls.preprocess_cls(
+            train_transform,
+            val_transform,
+            test_transform,
+            predict_transform,
         )
 
-        return loader
-
-    def val_dataloader(self, batch_size: int = 16) -> None:
-        """
-        VOCDetection and COCODetection
-        Args:
-            batch_size: size of batch
-            transforms: custom transforms
-        """
-        # Creating data loaders
-        sampler = torch.utils.data.SequentialSampler(self._val_dataset)
-
-        loader = torch.utils.data.DataLoader(
-            self._val_dataset,
-            batch_size,
-            sampler=sampler,
-            drop_last=False,
-            collate_fn=collate_fn,
-            num_workers=self.num_workers,
+        return cls.from_load_data_inputs(
+            train_load_data_input=(train_folder, train_ann_file, train_transform),
+            val_load_data_input=(val_folder, val_ann_file, val_transform) if val_folder else None,
+            test_load_data_input=(test_folder, test_ann_file, test_transform) if test_folder else None,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            preprocess=preprocess,
+            **kwargs
         )
-
-        return loader
-
-    @property
-    def data_pipeline(self) -> DataPipeline:
-        if self._data_pipeline is None:
-            self._data_pipeline = self.default_pipeline()
-        return self._data_pipeline
-
-    @data_pipeline.setter
-    def data_pipeline(self, data_pipeline) -> None:
-        self._data_pipeline = data_pipeline
-
-    @staticmethod
-    def default_pipeline() -> DataPipeline:
-        return ObjectDetectionDataPipeline()
-
-
-class VOCDetectionDataModule(DetectionDataModule):
-    def __init__(
-        self,
-        data_path: str,
-        years: List[str] = ["2007", "2012"],
-        train_transform: Optional[Callable] = default_train_transforms,
-        val_transform: Optional[Callable] = default_val_transforms,
-        batch_size: int = 1,
-        num_workers: int = 0,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        train_dataset, num_classes = self.build_datasets(
-            data_path, image_set='train', years=years, transforms=train_transform)
-        val_dataset, _ = self.build_datasets(
-            data_path, image_set='val', years=years, transforms=val_transform)
-
-        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
-                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
-
-        self.num_classes = num_classes
-
-    @staticmethod
-    def build_datasets(data_path, image_set, years, transforms):
-        datasets = []
-        for year in years:
-            dataset = VOCDetection(
-                data_path,
-                year=year,
-                image_set=image_set,
-                transforms=transforms(),
-            )
-            datasets.append(dataset)
-
-        num_classes = len(datasets[0].prepare.CLASSES)
-
-        if len(datasets) == 1:
-            return datasets[0], num_classes
-        else:
-            return torch.utils.data.ConcatDataset(datasets), num_classes
-
-
-class COCODetectionDataModule(DetectionDataModule):
-    def __init__(
-        self,
-        data_path: str,
-        year: str = "2017",
-        train_transform: Optional[Callable] = default_train_transforms,
-        val_transform: Optional[Callable] = default_val_transforms,
-        batch_size: int = 1,
-        num_workers: int = 0,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        train_dataset = self.build_datasets(
-            data_path, image_set='train', year=year, transforms=train_transform)
-        val_dataset = self.build_datasets(
-            data_path, image_set='val', year=year, transforms=val_transform)
-
-        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
-                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
-
-        self.num_classes = 80
-
-    @staticmethod
-    def build_datasets(data_path, image_set, year, transforms):
-        ann_file = Path(data_path).joinpath('annotations').joinpath(f"instances_{image_set}{year}.json")
-        return COCODetection(data_path, ann_file, transforms())

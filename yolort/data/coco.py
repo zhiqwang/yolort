@@ -4,15 +4,15 @@ COCO dataset which returns image_id for evaluation.
 Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references/detection/coco_utils.py
 """
 import torch
-import torch.utils.data
 import torchvision
-try:
+
+from flash.utils.imports import _COCO_AVAILABLE
+
+if _COCO_AVAILABLE:
     from pycocotools import mask as coco_mask
-except ImportError:
-    coco_mask = None
 
 
-class ConvertCocoPolysToMask(object):
+class ConvertCocoPolysToMask:
     def __init__(self, json_category_id_maps, return_masks=False):
         self.json_category_id_to_contiguous_id = json_category_id_maps
         self.return_masks = return_masks
@@ -101,6 +101,9 @@ class COCODetection(torchvision.datasets.CocoDetection):
 
 
 def convert_coco_poly_to_mask(segmentations, height, width):
+    if not _COCO_AVAILABLE:
+        raise ImportError("Kindly install the COCO API `pycocotools` to use the Dataset")
+
     masks = []
     for polygons in segmentations:
         rles = coco_mask.frPyObjects(polygons, height, width)
