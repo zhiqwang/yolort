@@ -4,7 +4,7 @@ import argparse
 from pathlib import PosixPath
 
 import torch
-from torch import Tensor
+from torch import nn, Tensor
 from torchvision.io import read_image
 
 from pytorch_lightning import LightningModule
@@ -32,6 +32,7 @@ class YOLOModule(LightningModule):
         min_size: int = 320,
         max_size: int = 416,
         annotation_path: Optional[Union[str, PosixPath]] = None,
+        transform: nn.Module = None,
         **kwargs: Any,
     ):
         """
@@ -49,7 +50,11 @@ class YOLOModule(LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-        self.transform = YOLOTransform(min_size, max_size)
+        if transform is None:
+            transform = YOLOTransform(min_size, max_size)
+        self.transform = transform
+
+        self._data_pipeline = None
 
         # metrics
         self.evaluator = None
