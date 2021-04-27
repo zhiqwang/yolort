@@ -57,6 +57,11 @@ class YOLOTransform(nn.Module):
         images: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]],
     ) -> Tuple[NestedTensor, Optional[Tensor]]:
+        """
+        Args:
+            images (List[Tensor]): images to be processed.
+            targets (List[Dict[str, Tensor]]): ground-truth boxes present in the image (optional)
+        """
         device = images[0].device
         images = [img for img in images]
         if targets is not None:
