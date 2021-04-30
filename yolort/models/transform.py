@@ -34,7 +34,7 @@ class NestedTensor(object):
         return str(self.tensors)
 
 
-class GeneralizedYOLOTransform(nn.Module):
+class YOLOTransform(nn.Module):
     """
     Performs input / target transformation before feeding the data to a GeneralizedRCNN
     model.
@@ -146,22 +146,17 @@ class GeneralizedYOLOTransform(nn.Module):
 
     def postprocess(
         self,
-        result: Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]],
+        result: List[Dict[str, Tensor]],
         image_shapes: List[Tuple[int, int]],
         original_image_sizes: List[Tuple[int, int]],
     ) -> List[Dict[str, Tensor]]:
 
-        if torch.jit.is_scripting():
-            predictions = result[1]
-        else:
-            predictions = result
-
-        for i, (pred, im_s, o_im_s) in enumerate(zip(predictions, image_shapes, original_image_sizes)):
+        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
             boxes = pred["boxes"]
             boxes = resize_boxes(boxes, im_s, o_im_s)
-            predictions[i]["boxes"] = boxes
+            result[i]["boxes"] = boxes
 
-        return predictions
+        return result
 
 
 def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32):
