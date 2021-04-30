@@ -65,7 +65,7 @@ class YOLOModule(LightningModule):
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> List[Dict[str, Tensor]]:
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         Args:
             inputs (list[Tensor]): images to be processed
@@ -111,9 +111,9 @@ class YOLOModule(LightningModule):
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLOModule always returns Detections in scripting.")
+                warnings.warn("YOLOModule always returns a (Losses, Detections) tuple in scripting.")
                 self._has_warned = True
-            return detections
+            return losses, detections
         else:
             return self.eager_outputs(losses, detections)
 
@@ -132,7 +132,7 @@ class YOLOModule(LightningModule):
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> List[Dict[str, Tensor]]:
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         This exists since PyTorchLightning forward are used for inference only (separate from
         ``training_step``). We keep ``targets`` here for Backward Compatible.
