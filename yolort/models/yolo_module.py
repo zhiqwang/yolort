@@ -9,7 +9,7 @@ from torch import Tensor
 from pytorch_lightning import LightningModule
 
 from . import yolo
-from .transform import GeneralizedYOLOTransform
+from .transform import YOLOTransform
 from ._utils import _evaluate_iou
 from ..data import DetectionDataModule, DataPipeline, COCOEvaluator
 
@@ -49,7 +49,7 @@ class YOLOModule(LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-        self.transform = GeneralizedYOLOTransform(min_size, max_size)
+        self.transform = YOLOTransform(min_size, max_size)
 
         self._data_pipeline = None
 
@@ -65,7 +65,7 @@ class YOLOModule(LightningModule):
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> List[Dict[str, Tensor]]:
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         Args:
             inputs (list[Tensor]): images to be processed
@@ -102,13 +102,18 @@ class YOLOModule(LightningModule):
                 losses = outputs
         else:
             # Rescale coordinate
-            detections = self.transform.postprocess(outputs, samples.image_sizes, original_image_sizes)
+            if torch.jit.is_scripting():
+                result = outputs[1]
+            else:
+                result = outputs
+
+            detections = self.transform.postprocess(result, samples.image_sizes, original_image_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLOModule always returns Detections in scripting.")
+                warnings.warn("YOLOModule always returns a (Losses, Detections) tuple in scripting.")
                 self._has_warned = True
-            return detections
+            return losses, detections
         else:
             return self.eager_outputs(losses, detections)
 
@@ -127,7 +132,7 @@ class YOLOModule(LightningModule):
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> List[Dict[str, Tensor]]:
+    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
         This exists since PyTorchLightning forward are used for inference only (separate from
         ``training_step``). We keep ``targets`` here for Backward Compatible.

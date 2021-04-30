@@ -18,9 +18,9 @@ class TorchScriptTester(unittest.TestCase):
 
         out = model(x)
         out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
+        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
+        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
+        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
 
     def test_yolov5m_script(self):
         model = yolov5m(pretrained=True)
@@ -33,9 +33,9 @@ class TorchScriptTester(unittest.TestCase):
 
         out = model(x)
         out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
+        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
+        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
+        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
 
     def test_yolov5l_script(self):
         model = yolov5l(pretrained=True)
@@ -48,9 +48,9 @@ class TorchScriptTester(unittest.TestCase):
 
         out = model(x)
         out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
+        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
+        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
+        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
 
     def test_yolotr_script(self):
         model = yolotr(pretrained=True)
@@ -63,6 +63,6 @@ class TorchScriptTester(unittest.TestCase):
 
         out = model(x)
         out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[0]["boxes"]))
+        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
+        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
+        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
