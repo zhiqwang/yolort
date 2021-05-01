@@ -4,8 +4,7 @@ import unittest
 
 from torch import Tensor
 
-from yolort.data import DetectionDataModule
-import yolort.data._helper as data_helper
+from yolort.data import DetectionDataModule, _helper as data_helper
 
 from typing import Dict
 

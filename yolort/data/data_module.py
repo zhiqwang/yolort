@@ -6,13 +6,11 @@ from torch.utils.data.dataset import Dataset
 
 from pytorch_lightning import LightningDataModule
 
+from typing import Callable, List, Any, Optional
+
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
 from .voc import VOCDetection
 from .coco import COCODetection
-from .data_pipeline import DataPipeline
-from .detection_pipeline import ObjectDetectionDataPipeline
-
-from typing import Callable, List, Any, Optional
 
 
 class DetectionDataModule(LightningDataModule):
@@ -79,19 +77,33 @@ class DetectionDataModule(LightningDataModule):
 
         return loader
 
-    @property
-    def data_pipeline(self) -> DataPipeline:
-        if self._data_pipeline is None:
-            self._data_pipeline = self.default_pipeline()
-        return self._data_pipeline
 
-    @data_pipeline.setter
-    def data_pipeline(self, data_pipeline) -> None:
-        self._data_pipeline = data_pipeline
+class COCODetectionDataModule(DetectionDataModule):
+    def __init__(
+        self,
+        data_path: str,
+        year: str = "2017",
+        train_transform: Optional[Callable] = default_train_transforms,
+        val_transform: Optional[Callable] = default_val_transforms,
+        batch_size: int = 1,
+        num_workers: int = 0,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        train_dataset = self.build_datasets(
+            data_path, image_set='train', year=year, transforms=train_transform)
+        val_dataset = self.build_datasets(
+            data_path, image_set='val', year=year, transforms=val_transform)
+
+        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
+                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
+
+        self.num_classes = 80
 
     @staticmethod
-    def default_pipeline() -> DataPipeline:
-        return ObjectDetectionDataPipeline()
+    def build_datasets(data_path, image_set, year, transforms):
+        ann_file = Path(data_path) / 'annotations' / f"instances_{image_set}{year}.json"
+        return COCODetection(data_path, ann_file, transforms())
 
 
 class VOCDetectionDataModule(DetectionDataModule):
@@ -134,31 +146,3 @@ class VOCDetectionDataModule(DetectionDataModule):
             return datasets[0], num_classes
         else:
             return torch.utils.data.ConcatDataset(datasets), num_classes
-
-
-class COCODetectionDataModule(DetectionDataModule):
-    def __init__(
-        self,
-        data_path: str,
-        year: str = "2017",
-        train_transform: Optional[Callable] = default_train_transforms,
-        val_transform: Optional[Callable] = default_val_transforms,
-        batch_size: int = 1,
-        num_workers: int = 0,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        train_dataset = self.build_datasets(
-            data_path, image_set='train', year=year, transforms=train_transform)
-        val_dataset = self.build_datasets(
-            data_path, image_set='val', year=year, transforms=val_transform)
-
-        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
-                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
-
-        self.num_classes = 80
-
-    @staticmethod
-    def build_datasets(data_path, image_set, year, transforms):
-        ann_file = Path(data_path).joinpath('annotations').joinpath(f"instances_{image_set}{year}.json")
-        return COCODetection(data_path, ann_file, transforms())

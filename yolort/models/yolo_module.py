@@ -1,4 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+from collections.abc import Sequence
 import warnings
 import argparse
 from pathlib import PosixPath
@@ -7,13 +8,13 @@ import torch
 from torch import Tensor
 
 from pytorch_lightning import LightningModule
+from typing import Any, Callable, List, Dict, Tuple, Optional, Union
 
 from . import yolo
 from .transform import YOLOTransform
 from ._utils import _evaluate_iou
-from ..data import DetectionDataModule, DataPipeline, COCOEvaluator
-
-from typing import Any, List, Dict, Tuple, Optional, Union
+from ..data import COCOEvaluator
+from ..data.transforms import collate_fn
 
 __all__ = ['YOLOModule']
 
@@ -50,8 +51,6 @@ class YOLOModule(LightningModule):
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
         self.transform = YOLOTransform(min_size, max_size)
-
-        self._data_pipeline = None
 
         # metrics
         self.evaluator = None
@@ -175,44 +174,6 @@ class YOLOModule(LightningModule):
     def test_epoch_end(self, outputs):
         return self.log('coco_eval', self.evaluator.compute())
 
-    @torch.no_grad()
-    def predict(
-        self,
-        x: Any,
-        batch_idx: Optional[int] = None,
-        skip_collate_fn: bool = False,
-        dataloader_idx: Optional[int] = None,
-        data_pipeline: Optional[DataPipeline] = None,
-    ) -> Any:
-        """
-        Predict function for raw data or processed data
-
-        Args:
-
-            x: Input to predict. Can be raw data or processed data.
-
-            batch_idx: Batch index
-
-            dataloader_idx: Dataloader index
-
-            skip_collate_fn: Whether to skip the collate step.
-                this is required when passing data already processed
-                for the model, for example, data from a dataloader
-
-            data_pipeline: Use this to override the current data pipeline
-
-        Returns:
-            The post-processed model predictions
-
-        """
-        data_pipeline = data_pipeline or self.data_pipeline
-        batch = x if skip_collate_fn else data_pipeline.collate_fn(x)
-        images, _ = batch if len(batch) == 2 and isinstance(batch, (list, tuple)) else (batch, None)
-        images = [img.to(self.device) for img in images]
-        predictions = self.forward(images)
-        output = data_pipeline.uncollate_fn(predictions)  # TODO: pass batch and x
-        return output
-
     def configure_optimizers(self):
         return torch.optim.SGD(
             self.model.parameters(),
@@ -221,23 +182,37 @@ class YOLOModule(LightningModule):
             weight_decay=0.005,
         )
 
-    @torch.jit.unused
-    @property
-    def data_pipeline(self) -> DataPipeline:
-        # we need to save the pipeline in case this class
-        # is loaded from checkpoint and used to predict
-        if not self._data_pipeline:
-            self._data_pipeline = self.default_pipeline()
-        return self._data_pipeline
+    @torch.no_grad()
+    def predict(
+        self,
+        x: Any,
+        collate: Optional[Callable] = None,
+    ):
+        """
+        Predict function for raw data or processed data
+        Args:
+            x: Input to predict. Can be raw data or processed data.
+            collate: Utility function to convert raw data to batched data.
 
-    @data_pipeline.setter
-    def data_pipeline(self, data_pipeline: DataPipeline) -> None:
-        self._data_pipeline = data_pipeline
+        Returns:
+            The post-processed model predictions
+        """
+        collate = collate or self.collate
+        images = collate(x)
+        images = [img.to(self.device) for img in images]
+        outputs = self.forward(images)
+        return outputs
 
-    @staticmethod
-    def default_pipeline() -> DataPipeline:
-        """Pipeline to use when there is no datamodule or it has not defined its pipeline"""
-        return DetectionDataModule.default_pipeline()
+    def collate(self, samples: Any) -> Any:
+        if not isinstance(samples, Tensor):
+            elem = samples[0]
+
+            if isinstance(elem, Sequence):
+                return collate_fn(samples)
+
+            return list(samples)
+
+        return samples.unsqueeze(dim=0)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
