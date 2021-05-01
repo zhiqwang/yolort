@@ -230,7 +230,7 @@ class YOLOModule(LightningModule):
             return [samples.to(p.device).type_as(p)]
 
         if contains_any_tensor(samples, Tensor):
-            return samples
+            return [sample.to(p.device).type_as(p) for sample in samples]
 
         if isinstance(samples, str):
             samples = [samples]
