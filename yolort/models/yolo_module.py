@@ -1,11 +1,11 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from collections.abc import Sequence
 import warnings
 import argparse
 from pathlib import PosixPath
 
 import torch
 from torch import Tensor
+from torchvision.io import read_image
 
 from pytorch_lightning import LightningModule
 from typing import Any, Callable, List, Dict, Tuple, Optional, Union
@@ -13,8 +13,7 @@ from typing import Any, Callable, List, Dict, Tuple, Optional, Union
 from . import yolo
 from .transform import YOLOTransform
 from ._utils import _evaluate_iou
-from ..data import COCOEvaluator
-from ..data.transforms import collate_fn
+from ..data import COCOEvaluator, contains_any_tensor
 
 __all__ = ['YOLOModule']
 
@@ -165,7 +164,7 @@ class YOLOModule(LightningModule):
         The test step.
         """
         images, targets = batch
-        images = list(image.to(self.device) for image in images)
+        images = list(image.to(next(self.parameters()).device) for image in images)
         preds = self._forward_impl(images)
         results = self.evaluator(preds, targets)
         # log step metric
@@ -186,33 +185,67 @@ class YOLOModule(LightningModule):
     def predict(
         self,
         x: Any,
-        collate: Optional[Callable] = None,
-    ):
+        image_loader: Optional[Callable] = None,
+    ) -> List[Dict[str, Tensor]]:
         """
         Predict function for raw data or processed data
         Args:
             x: Input to predict. Can be raw data or processed data.
-            collate: Utility function to convert raw data to batched data.
+            image_loader: Utility function to convert raw data to Tensor.
 
         Returns:
-            The post-processed model predictions
+            The post-processed model predictions.
         """
-        collate = collate or self.collate
-        images = collate(x)
-        images = [img.to(self.device) for img in images]
+        image_loader = image_loader or self.default_loader
+        images = self.collate_images(x, image_loader)
         outputs = self.forward(images)
         return outputs
 
-    def collate(self, samples: Any) -> Any:
-        if not isinstance(samples, Tensor):
-            elem = samples[0]
+    def default_loader(self, img_path: str) -> Tensor:
+        """
+        Default loader of read a image path.
 
-            if isinstance(elem, Sequence):
-                return collate_fn(samples)
+        Args:
+            img_path (str): a image path
 
-            return list(samples)
+        Returns:
+            Tensor, processed tensor for prediction.
+        """
+        return read_image(img_path) / 255.
 
-        return samples.unsqueeze(dim=0)
+    def collate_images(self, samples: Any, image_loader: Callable) -> List[Tensor]:
+        """
+        Prepare source samples for inference.
+
+        Args:
+            samples (Any): samples source, support the following various types:
+                - str or List[str]: a image path or list of image paths.
+                - Tensor or List[Tensor]: a tensor or list of tensors.
+
+        Returns:
+            List[Tensor], The processed image samples.
+        """
+        p = next(self.parameters())  # for device and type
+        if isinstance(samples, Tensor):
+            return [samples.to(p.device).type_as(p)]
+
+        if contains_any_tensor(samples, Tensor):
+            return samples
+
+        if isinstance(samples, str):
+            samples = [samples]
+
+        if isinstance(samples, (list, tuple)) and all(isinstance(p, str) for p in samples):
+            outputs = []
+            for sample in samples:
+                output = image_loader(sample).to(p.device).type_as(p)
+                outputs.append(output)
+            return outputs
+
+        raise NotImplementedError(
+            f"The type of the sample is {type(samples)}, we currently don't support it now, the "
+            "samples should be either a tensor, list of tensors, a image path or list of image paths."
+        )
 
     @staticmethod
     def add_model_specific_args(parent_parser):
