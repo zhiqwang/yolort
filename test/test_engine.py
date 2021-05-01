@@ -8,8 +8,7 @@ from torchvision.io import read_image
 
 import pytorch_lightning as pl
 
-from yolort.data import COCOEvaluator, DetectionDataModule
-import yolort.data._helper as data_helper
+from yolort.data import COCOEvaluator, DetectionDataModule, _helper as data_helper
 
 from yolort.models import yolov5s
 from yolort.models.yolo import yolov5_darknet_pan_s_r31

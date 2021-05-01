@@ -1,16 +1,25 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from pathlib import Path
 import unittest
+import numpy as np
 
+import torch
 from torch import Tensor
 
-from yolort.data import DetectionDataModule
-import yolort.data._helper as data_helper
+from yolort.data import DetectionDataModule, contains_any_tensor, _helper as data_helper
 
 from typing import Dict
 
 
 class DataPipelineTester(unittest.TestCase):
+    def test_contains_any_tensor(self):
+        dummy_numpy = np.random.randn(3, 6)
+        self.assertFalse(contains_any_tensor(dummy_numpy))
+        dummy_tensor = torch.randn(3, 6)
+        self.assertTrue(contains_any_tensor(dummy_tensor))
+        dummy_tensors = [torch.randn(3, 6), torch.randn(9, 5)]
+        self.assertTrue(contains_any_tensor(dummy_tensors))
+
     def test_get_dataset(self):
         # Acquire the images and labels from the coco128 dataset
         train_dataset = data_helper.get_dataset(data_root='data-bin', mode='train')
