@@ -78,7 +78,7 @@ class DetectionDataModule(LightningDataModule):
         return loader
 
 
-class COCODetectionDataModule(DetectionDataModule):
+class COCODataModule(DetectionDataModule):
     def __init__(
         self,
         data_path: str,
@@ -106,7 +106,7 @@ class COCODetectionDataModule(DetectionDataModule):
         return COCODetection(data_path, ann_file, transforms())
 
 
-class VOCDetectionDataModule(DetectionDataModule):
+class VOCDataModule(DetectionDataModule):
     def __init__(
         self,
         data_path: str,

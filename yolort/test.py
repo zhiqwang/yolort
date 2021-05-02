@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 
-from .data import VOCDetectionDataModule
+from .data import COCODataModule
 from . import models
 
 
@@ -21,41 +21,45 @@ def get_args_parser():
                         help='dataset mode')
     parser.add_argument('--years', default=['2017'], nargs='+',
                         help='dataset year')
-    parser.add_argument('--train_set', default='train',
-                        help='set of train')
     parser.add_argument('--val_set', default='val',
-                        help='set of val')
+                        help='set of validation')
+    parser.add_argument('--image_size', default=640, type=int,
+                        help='image size to predict')
+    parser.add_argument('--score_thresh', default=0.01, type=float,
+                        help='threshold of the score')
     parser.add_argument('--batch_size', default=32, type=int,
                         help='images per gpu, the total batch size is $NGPU x batch_size')
-    parser.add_argument('--max_epochs', default=1, type=int, metavar='N',
-                        help='number of total epochs to run')
     parser.add_argument('--num_gpus', default=1, type=int, metavar='N',
                         help='number of gpu utilizing (default: 1)')
-    parser.add_argument('--num_workers', default=4, type=int, metavar='N',
-                        help='number of data loading workers (default: 4)')
-    parser.add_argument('--print_freq', default=20, type=int,
-                        help='print frequency')
+    parser.add_argument('--num_workers', default=8, type=int, metavar='N',
+                        help='number of data loading workers (default: 8)')
     parser.add_argument('--output_dir', default='.',
                         help='path where to save')
     return parser
 
 
 def main(args):
-    # Load the data
-    datamodule = VOCDetectionDataModule.from_argparse_args(args)
+    # Load the data module
+    data_module = COCODataModule.from_argparse_args(args)
 
     # Build the model
-    model = models.__dict__[args.arch](num_classes=datamodule.num_classes)
+    model = models.__dict__[args.arch](
+        pretrained=True,
+        min_size=args.image_size,
+        max_size=args.image_size,
+        score_thresh=args.score_thresh,
+    )
 
-    # Create the trainer. Run twice on data
-    trainer = pl.Trainer(max_epochs=args.max_epochs, gpus=args.num_gpus)
-
-    # Train the model
-    trainer.fit(model, datamodule=datamodule)
+    # test step
+    trainer = pl.Trainer(max_epochs=1)
+    trainer.test(model, test_dataloaders=data_module.val_dataloader)
+    # test epoch end
+    results = model.evaluator.compute()
+    return results
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser('YOLOv5 training and evaluation script', parents=[get_args_parser()])
+    parser = argparse.ArgumentParser('YOLOv5 evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
