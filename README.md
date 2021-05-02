@@ -1,13 +1,13 @@
 # 🔦 yolort - YOLOv5 Runtime Stack
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
-[![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
-[![Github Downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=Downloads&logo=github&logoColor=lightgrey)](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=Downloads&logo=github&logoColor=lightgrey)
-[![Downloads PyPI](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads%20PyPI)](https://pepy.tech/project/yolort)
+[![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=downloads&logo=github&logoColor=lightgrey)](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=Downloads&logo=github&logoColor=lightgrey)
+[![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=blue&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
+[![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
 
-**What it is.** Yet another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5), and with modules refactoring to make it available in deployment backends such as `libtorch`, `onnxruntime`, `tvm` and so on.
+**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5), and with modules refactoring to adapt to different deployment scenarios such as `libtorch`, `onnxruntime`, `tvm` and so on.
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
@@ -21,9 +21,9 @@
 
 - Support exporting to `TorchScript` model. *Oct. 8, 2020*.
 - Support inferring with `LibTorch` cpp interface. *Oct. 10, 2020*.
-- Add `TorchScript` cpp inference example. *Nov. 4, 2020*.
-- Refactor YOLO modules and support *dynmaic batching* inference. *Nov. 16, 2020*.
-- Support exporting to `ONNX`, and inferring with `ONNXRuntime` interface. *Nov. 17, 2020*.
+- Add `TorchScript` C++ inference example. *Nov. 4, 2020*.
+- Refactor YOLO modules and support *dynamic shape/batch* inference. *Nov. 16, 2020*.
+- Support exporting to `ONNX`, and inferring with `ONNXRuntime`. *Nov. 17, 2020*.
 - Add graph visualization tools. *Nov. 21, 2020*.
 - Add `TVM` compile and inference notebooks. *Feb. 5, 2021*.
 
@@ -112,4 +112,4 @@ Now, `yolort` can draw the model graph directly, checkout our [visualize-jit-mod
 
 ## 🤗 Contributing
 
-We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. *BTW, leave a 🌟 if you liked it, this means a lot to us* :)
+We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. *BTW, leave a 🌟 if you liked it, this means a lot to us, and this is the easiest way to support us* :)
