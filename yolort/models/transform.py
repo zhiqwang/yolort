@@ -209,7 +209,7 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
 
     for img in tensor_list:
         padding = [(s1 - s2) for s1, s2 in zip(max_size, tuple(img.shape))]
-        padded_img = torch.nn.functional.pad(img, (0, padding[2], 0, padding[1], 0, padding[0]))
+        padded_img = F.pad(img, (0, padding[2], 0, padding[1], 0, padding[0]))
         padded_imgs.append(padded_img)
 
     tensor = torch.stack(padded_imgs)
@@ -219,9 +219,7 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
 
 @torch.jit.unused
 def _get_shape_onnx(image: Tensor) -> Tensor:
-
     from torch.onnx import operators
-
     return operators.shape_as_tensor(image)[-2:]
 
 
@@ -235,7 +233,7 @@ def _resize_image_and_masks(
     image: Tensor,
     self_min_size: float,
     self_max_size: float,
-    target: Optional[Dict[str, Tensor]],
+    target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
     if torchvision._is_tracing():
@@ -252,16 +250,16 @@ def _resize_image_and_masks(
     else:
         scale_factor = scale.item()
 
-    image = torch.nn.functional.interpolate(
-        image[None], scale_factor=scale_factor, mode='bilinear', recompute_scale_factor=True,
-        align_corners=False)[0]
+    image = F.interpolate(image[None], size=None, scale_factor=scale_factor, mode='bilinear',
+                          recompute_scale_factor=True, align_corners=False)[0]
 
     if target is None:
         return image, target
 
     if "masks" in target:
         mask = target["masks"]
-        mask = F.interpolate(mask[:, None].float(), scale_factor=scale_factor, recompute_scale_factor=True)[:, 0].byte()
+        mask = F.interpolate(mask[:, None].float(), scale_factor=scale_factor,
+                             recompute_scale_factor=True)[:, 0].byte()
         target["masks"] = mask
     return image, target
 
