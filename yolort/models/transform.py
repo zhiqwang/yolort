@@ -2,7 +2,7 @@
 # Modified by Zhiqiang Wang (me@zhiqwang.com)
 import math
 import torch
-from torch import nn, Tensor, scalar_tensor
+from torch import nn, Tensor
 import torch.nn.functional as F
 
 import torchvision
