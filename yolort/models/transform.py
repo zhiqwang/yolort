@@ -220,7 +220,13 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
 @torch.jit.unused
 def _get_shape_onnx(image: Tensor) -> Tensor:
     from torch.onnx import operators
-    return operators.shape_as_tensor(image)[-2:].to(dtype=torch.float32)
+    return operators.shape_as_tensor(image)[-2:]
+
+
+@torch.jit.unused
+def _fake_cast_onnx(v: Tensor) -> float:
+    # ONNX requires a tensor but here we fake its type for JIT.
+    return v
 
 
 def _resize_image_and_masks(
@@ -231,13 +237,18 @@ def _resize_image_and_masks(
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
     if torchvision._is_tracing():
-        im_shape = _get_shape_onnx(image)
+        im_shape = _get_shape_onnx(image).to(dtype=torch.float32)
     else:
         im_shape = torch.tensor(image.shape[-2:], dtype=torch.float64)
 
     min_size = self_min_size / torch.min(im_shape)
     max_size = self_max_size / torch.max(im_shape)
-    scale_factor = torch.min(min_size, max_size).item()
+    scale = torch.min(min_size, max_size)
+
+    if torchvision._is_tracing():
+        scale_factor = _fake_cast_onnx(scale)
+    else:
+        scale_factor = scale.item()
 
     image = F.interpolate(image[None], size=None, scale_factor=scale_factor, mode='bilinear',
                           recompute_scale_factor=True, align_corners=False)[0]
