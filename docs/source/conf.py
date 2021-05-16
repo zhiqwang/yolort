@@ -91,7 +91,7 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/rt-logo.png'
+html_logo = '_static/rt_logo.png'
 
 html_static_path = ['_static']
 
