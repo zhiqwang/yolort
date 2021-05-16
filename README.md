@@ -1,4 +1,10 @@
-# 🔦 yolort - YOLOv5 Runtime Stack
+<div align="center">
+
+<img src="docs/source/_static/yolort_logo.png" width="400px">
+
+**YOLOv5 Runtime Stack**
+</div>
+
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
