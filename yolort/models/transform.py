@@ -55,7 +55,7 @@ class YOLOTransform(nn.Module):
     def forward(
         self,
         images: List[Tensor],
-        targets: Optional[List[Dict[str, Tensor]]],
+        targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Tuple[NestedTensor, Optional[Tensor]]:
         device = images[0].device
         images = [img for img in images]
