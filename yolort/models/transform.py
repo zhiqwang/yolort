@@ -121,7 +121,7 @@ class YOLOTransform(nn.Module):
     def resize(
         self,
         image: Tensor,
-        target: Optional[Dict[str, Tensor]],
+        target: Optional[Dict[str, Tensor]] = None,
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
         h, w = image.shape[-2:]
