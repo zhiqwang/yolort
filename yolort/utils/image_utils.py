@@ -11,13 +11,13 @@ import cv2
 
 import torch
 from torch import Tensor
-from torchvision import transforms
+
 from torchvision.ops.boxes import box_convert
 
 from typing import Optional
 
 import logging
-logger = logging.getLogger(__name__)
+
 
 
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
@@ -47,7 +47,7 @@ def cv2_imshow(
     convert_bgr_to_rgb: bool = True,
 ) -> None:
     """
-    A replacement for cv2.imshow() for use in Jupyter notebooks.
+    A replacement of cv2.imshow() for using in Jupyter notebooks.
 
     Args:
         image (np.ndarray):. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape (N, M, 3)
@@ -194,6 +194,8 @@ def load_names(category_path):
 
 @torch.no_grad()
 def overlay_boxes(detections, path, time_consume, args):
+    logger = logging.getLogger(__name__)
+
     img = cv2.imread(path) if args.save_img else None
 
     for i, pred in enumerate(detections):  # detections per image

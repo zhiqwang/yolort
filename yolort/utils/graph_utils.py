@@ -1,6 +1,12 @@
+# Copyright (c) 2020, Thomas Viehmann. All Rights Reserved.
 """
-Plotting a graph with bad gradient nodes marked in red.
+Visualizing JIT Modules
+
 Mostly copy-paste from https://github.com/t-vi/pytorch-tvmisc/tree/master/hacks
+with license under the CC-BY-SA 4.0.
+
+Please link to Thomas's blog post or the original github source (linked from the
+blog post) with the attribution notice.
 """
 from graphviz import Digraph
 
