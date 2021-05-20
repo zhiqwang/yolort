@@ -10,7 +10,7 @@ import torchvision
 from typing import Dict, Optional, List, Tuple
 
 
-class NestedTensor(object):
+class NestedTensor:
     """
     Structure that holds a list of images (of possibly
     varying sizes) as a single tensor.
