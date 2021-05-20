@@ -1,3 +1,4 @@
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 from pathlib import Path
 import argparse
 
@@ -7,7 +8,7 @@ from PIL import Image
 from .builtin_meta import COCO_CATEGORIES
 
 
-class Yolo2Coco:
+class YOLO2COCO:
 
     def __init__(self, root, split):
         self.info = {
@@ -24,8 +25,8 @@ class Yolo2Coco:
         self.type = 'instances'
         self.split = split
         self.root_path = Path(root)
-        self.label_path = self.root_path.joinpath('labels')
-        self.annotation_root = self.root_path.joinpath('annotations')
+        self.label_path = self.root_path / 'labels'
+        self.annotation_root = self.root_path / 'annotations'
         Path(self.annotation_root).mkdir(parents=True, exist_ok=True)
 
         self.categories = [{
@@ -48,7 +49,7 @@ class Yolo2Coco:
             'annotations': annotations,
             'categories': self.categories,
         }
-        output_path = self.annotation_root.joinpath(f'{coco_type}_{self.split}.json')
+        output_path = self.annotation_root / f'{coco_type}_{self.split}.json'
         with open(output_path, 'w') as json_file:
             json.dump(json_data, json_file, sort_keys=True)
 
@@ -124,5 +125,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    converter = Yolo2Coco(args.data_path, args.split)
+    converter = YOLO2COCO(args.data_path, args.split)
     converter.generate()
