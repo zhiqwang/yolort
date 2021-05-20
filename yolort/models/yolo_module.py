@@ -31,6 +31,7 @@ class YOLOModule(LightningModule):
         num_classes: int = 80,
         min_size: int = 320,
         max_size: int = 416,
+        fixed_size: Optional[Tuple[int, int]] = None,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
     ):
@@ -49,7 +50,7 @@ class YOLOModule(LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-        self.transform = YOLOTransform(min_size, max_size)
+        self.transform = YOLOTransform(min_size, max_size, fixed_size=fixed_size)
 
         # metrics
         self.evaluator = None
