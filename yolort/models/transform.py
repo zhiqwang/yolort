@@ -52,7 +52,7 @@ class YOLOTransform(nn.Module):
         fixed_size: Optional[Tuple[int, int]] = None,
     ) -> None:
         """
-        When ``fixed_size`` is set, the ``min_size`` and ``max_size`` won't take effect.
+        Note: When ``fixed_size`` is set, the ``min_size`` and ``max_size`` won't take effect.
         """
         super().__init__()
         if not isinstance(min_size, (list, tuple)):
