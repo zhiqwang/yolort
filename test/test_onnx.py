@@ -104,7 +104,14 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolov5s_r31(self):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
-        model = yolov5s(upstream_version='r3.1', export_friendly=True, pretrained=True, score_thresh=0.45)
+
+        model = yolov5s(
+            upstream_version='r3.1',
+            export_friendly=True,
+            pretrained=True,
+            size=(640, 640),
+            score_thresh=0.45,
+        )
         model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input
@@ -121,7 +128,14 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolov5m_r40(self):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
-        model = yolov5m(upstream_version='r4.0', export_friendly=True, pretrained=True, score_thresh=0.45)
+
+        model = yolov5m(
+            upstream_version='r4.0',
+            export_friendly=True,
+            pretrained=True,
+            size=(640, 640),
+            score_thresh=0.45,
+        )
         model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input
@@ -138,7 +152,14 @@ class ONNXExporterTester(unittest.TestCase):
     def test_yolotr(self):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
-        model = yolotr(upstream_version='r4.0', export_friendly=True, pretrained=True, score_thresh=0.45)
+
+        model = yolotr(
+            upstream_version='r4.0',
+            export_friendly=True,
+            pretrained=True,
+            size=(640, 640), 
+            score_thresh=0.45,
+        )
         model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input

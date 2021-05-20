@@ -28,9 +28,8 @@ class YOLOModule(LightningModule):
         arch: str = 'yolov5_darknet_pan_s_r31',
         pretrained: bool = False,
         progress: bool = True,
+        size: Tuple[int, int] = (640, 640),
         num_classes: int = 80,
-        min_size: int = 320,
-        max_size: int = 416,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
     ):
@@ -49,7 +48,7 @@ class YOLOModule(LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-        self.transform = YOLOTransform(min_size, max_size)
+        self.transform = YOLOTransform(min(size), max(size), fixed_size=size)
 
         # metrics
         self.evaluator = None

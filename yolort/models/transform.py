@@ -10,7 +10,7 @@ import torchvision
 from typing import Dict, Optional, List, Tuple
 
 
-class NestedTensor(object):
+class NestedTensor:
     """
     Structure that holds a list of images (of possibly
     varying sizes) as a single tensor.
@@ -45,12 +45,21 @@ class YOLOTransform(nn.Module):
 
     It returns a ImageList for the inputs, and a List[Dict[Tensor]] for the targets
     """
-    def __init__(self, min_size, max_size) -> None:
+    def __init__(
+        self,
+        min_size: int,
+        max_size: int,
+        fixed_size: Optional[Tuple[int, int]] = None,
+    ) -> None:
+        """
+        Note: When ``fixed_size`` is set, the ``min_size`` and ``max_size`` won't take effect.
+        """
         super().__init__()
         if not isinstance(min_size, (list, tuple)):
             min_size = (min_size,)
         self.min_size = min_size
         self.max_size = max_size
+        self.fixed_size = fixed_size
 
     def forward(
         self,
@@ -121,7 +130,7 @@ class YOLOTransform(nn.Module):
     def resize(
         self,
         image: Tensor,
-        target: Optional[Dict[str, Tensor]],
+        target: Optional[Dict[str, Tensor]] = None,
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
         h, w = image.shape[-2:]
@@ -131,7 +140,7 @@ class YOLOTransform(nn.Module):
             # FIXME assume for now that testing uses the largest scale
             size = float(self.min_size[-1])
 
-        image, target = _resize_image_and_masks(image, size, float(self.max_size), target)
+        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target)
 
         if target is None:
             return image, target
@@ -233,33 +242,43 @@ def _resize_image_and_masks(
     image: Tensor,
     self_min_size: float,
     self_max_size: float,
+    fixed_size: Optional[Tuple[int, int]] = None,
     target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-
+    """
+    Resize the image and its targets
+    """
     if torchvision._is_tracing():
-        im_shape = _get_shape_onnx(image).to(dtype=torch.float32)
+        im_shape = _get_shape_onnx(image)
     else:
-        im_shape = torch.tensor(image.shape[-2:], dtype=torch.float64)
+        im_shape = torch.tensor(image.shape[-2:])
 
-    min_size = self_min_size / torch.min(im_shape)
-    max_size = self_max_size / torch.max(im_shape)
-    scale = torch.min(min_size, max_size)
-
-    if torchvision._is_tracing():
-        scale_factor = _fake_cast_onnx(scale)
+    size: Optional[List[int]] = None
+    scale_factor: Optional[float] = None
+    recompute_scale_factor: Optional[bool] = None
+    if fixed_size is not None:
+        size = [fixed_size[1], fixed_size[0]]
     else:
-        scale_factor = scale.item()
+        min_size = torch.min(im_shape).to(dtype=torch.float32)
+        max_size = torch.max(im_shape).to(dtype=torch.float32)
+        scale = torch.min(self_min_size / min_size, self_max_size / max_size)
 
-    image = F.interpolate(image[None], size=None, scale_factor=scale_factor, mode='bilinear',
-                          recompute_scale_factor=True, align_corners=False)[0]
+        if torchvision._is_tracing():
+            scale_factor = _fake_cast_onnx(scale)
+        else:
+            scale_factor = scale.item()
+        recompute_scale_factor = True
+
+    image = F.interpolate(image[None], size=size, scale_factor=scale_factor, mode='bilinear',
+                          recompute_scale_factor=recompute_scale_factor, align_corners=False)[0]
 
     if target is None:
         return image, target
 
     if "masks" in target:
         mask = target["masks"]
-        mask = F.interpolate(mask[:, None].float(), scale_factor=scale_factor,
-                             recompute_scale_factor=True)[:, 0].byte()
+        mask = F.interpolate(mask[:, None].float(), size=size, scale_factor=scale_factor,
+                             recompute_scale_factor=recompute_scale_factor)[:, 0].byte()
         target["masks"] = mask
     return image, target
 

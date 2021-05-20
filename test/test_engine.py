@@ -100,8 +100,8 @@ class EngineTester(unittest.TestCase):
             coco_evaluator.update(preds, targets)
 
         results = coco_evaluator.compute()
-        self.assertGreater(results['AP'], 41.5)
-        self.assertGreater(results['AP50'], 62.0)
+        self.assertGreater(results['AP'], 38.1)
+        self.assertGreater(results['AP50'], 59.9)
 
     def test_test_epoch_end(self):
         # Acquire the annotation file
@@ -121,8 +121,8 @@ class EngineTester(unittest.TestCase):
         trainer.test(model, test_dataloaders=val_dataloader)
         # test epoch end
         results = model.evaluator.compute()
-        self.assertGreater(results['AP'], 41.5)
-        self.assertGreater(results['AP50'], 62.0)
+        self.assertGreater(results['AP'], 38.1)
+        self.assertGreater(results['AP50'], 59.9)
 
     def test_predict_with_vanilla_model(self):
         # Set image inputs
