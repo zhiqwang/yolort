@@ -58,6 +58,7 @@ class AnchorGenerator(nn.Module):
     def grid_anchors(
         self,
         grid_sizes: List[List[int]],
+        dtype: torch.dtype = torch.float32,
         device: torch.device = torch.device("cpu"),
     ) -> Tensor:
 
@@ -67,8 +68,8 @@ class AnchorGenerator(nn.Module):
             grid_height, grid_width = size
 
             # For output anchor, compute [x_center, y_center, x_center, y_center]
-            shifts_x = torch.arange(0, grid_width, dtype=torch.float32, device=device)
-            shifts_y = torch.arange(0, grid_height, dtype=torch.float32, device=device)
+            shifts_x = torch.arange(0, grid_width, dtype=dtype, device=device)
+            shifts_y = torch.arange(0, grid_height, dtype=dtype, device=device)
             shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x)
 
             shifts = torch.stack((shift_x, shift_y), dim=2)
@@ -87,6 +88,6 @@ class AnchorGenerator(nn.Module):
 
         wh_weights = self.set_wh_weights(grid_sizes, dtype, device)
         xy_weights = self.set_xy_weights(grid_sizes, dtype, device)
-        anchors = self.grid_anchors(grid_sizes, device)
+        anchors = self.grid_anchors(grid_sizes, dtype, device)
 
         return anchors, wh_weights, xy_weights
