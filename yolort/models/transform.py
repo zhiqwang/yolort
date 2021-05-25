@@ -245,7 +245,7 @@ def _resize_image_and_masks(
     self_max_size: float,
     fixed_size: Optional[Tuple[int, int]] = None,
     target: Optional[Dict[str, Tensor]] = None,
-	use_square_box=False,
+    use_square_box=False,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
     """
     Resize the image and its targets
