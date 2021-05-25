@@ -50,6 +50,7 @@ class YOLOTransform(nn.Module):
         min_size: int,
         max_size: int,
         fixed_size: Optional[Tuple[int, int]] = None,
+		use_square_box=False
     ) -> None:
         """
         Note: When ``fixed_size`` is set, the ``min_size`` and ``max_size`` won't take effect.
@@ -60,7 +61,7 @@ class YOLOTransform(nn.Module):
         self.min_size = min_size
         self.max_size = max_size
         self.fixed_size = fixed_size
-
+		self.use_square_box = use_square_box
     def forward(
         self,
         images: List[Tensor],
@@ -140,7 +141,7 @@ class YOLOTransform(nn.Module):
             # FIXME assume for now that testing uses the largest scale
             size = float(self.min_size[-1])
 
-        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target)
+        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target, self.use_square_box)
 
         if target is None:
             return image, target
@@ -244,6 +245,7 @@ def _resize_image_and_masks(
     self_max_size: float,
     fixed_size: Optional[Tuple[int, int]] = None,
     target: Optional[Dict[str, Tensor]] = None,
+	use_square_box=False,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
     """
     Resize the image and its targets
@@ -271,6 +273,14 @@ def _resize_image_and_masks(
 
     image = F.interpolate(image[None], size=size, scale_factor=scale_factor, mode='bilinear',
                           recompute_scale_factor=recompute_scale_factor, align_corners=False)[0]
+	if use_square_box:
+        h, w = image.shape[-2:]
+        max_size = int(torch.max(torch.tensor([w, h])))
+        w_side = int((max_size - w) / 2)
+        h_side = int((max_size - h) / 2)
+        pad_l, pad_r = w_side, max_size - w - w_side
+        pad_t, pad_d = h_side, max_size - h - h_side
+        image = torch.nn.functional.pad(image, (pad_l, pad_r, pad_t, pad_d), "constant", value=0)
 
     if target is None:
         return image, target
@@ -283,12 +293,24 @@ def _resize_image_and_masks(
     return image, target
 
 
-def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -> Tensor:
-    ratios = [
-        torch.tensor(s, dtype=torch.float32, device=boxes.device) /
-        torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
-        for s, s_orig in zip(new_size, original_size)
-    ]
+def resize_boxes(boxes: Tensor, new_size: List[int], original_size: List[int], use_square_box=False) -> Tensor:
+    ratios = []
+    if use_square_box:
+
+        if new_size[0] != new_size[1]:
+            print("wrong size image input")
+            exit()
+
+        min_ratio = torch.min(
+            torch.tensor([original_size[0] / new_size[0], original_size[1] / new_size[1]], device=boxes.device))
+        ratios = [min_ratio, min_ratio]
+    else:
+        ratios = [
+            torch.tensor(s_orig, dtype=torch.float32, device=boxes.device) /
+            torch.tensor(s, dtype=torch.float32, device=boxes.device)
+            for s, s_orig in zip(new_size, original_size)
+        ]
+
     ratio_height, ratio_width = ratios
     xmin, ymin, xmax, ymax = boxes.unbind(1)
 
@@ -296,4 +318,15 @@ def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -
     xmax = xmax * ratio_width
     ymin = ymin * ratio_height
     ymax = ymax * ratio_height
+
+    if use_square_box:
+        w = new_size[0] * ratio_width
+        h = new_size[1] * ratio_height
+        padding_w_stride = int(original_size[0] - w) / 2
+        padding_h_stride = int(original_size[0] - h) / 2
+        xmin = xmin + padding_w_stride
+        xmax = xmax + padding_w_stride
+        ymin = ymin + padding_h_stride
+        ymax = ymax + padding_h_stride
+
     return torch.stack((xmin, ymin, xmax, ymax), dim=1)
