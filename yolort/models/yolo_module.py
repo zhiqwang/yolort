@@ -49,7 +49,7 @@ class YOLOModule(LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-        self.transform = YOLOTransform(min(size), max(size), fixed_size=size,use_square_box=use_square_box)
+        self.transform = YOLOTransform(min(size), max(size), fixed_size=size, use_square_box=use_square_box)
 
         # metrics
         self.evaluator = None
