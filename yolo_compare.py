@@ -39,8 +39,7 @@ coco_evaluator = COCOEvaluator(coco_gt)
 # Model Definition and Initialization
 model = yolov5s(
     pretrained=True,
-    min_size=640,
-    max_size=640,
+    size = (640,640),
     score_thresh=0.001,
     use_square_box=True
 )
