@@ -61,7 +61,7 @@ class YOLOTransform(nn.Module):
         self.min_size = min_size
         self.max_size = max_size
         self.fixed_size = fixed_size
-	self.use_square_box = use_square_box
+        self.use_square_box = use_square_box
     def forward(
         self,
         images: List[Tensor],
