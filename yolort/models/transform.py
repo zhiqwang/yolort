@@ -50,7 +50,7 @@ class YOLOTransform(nn.Module):
         min_size: int,
         max_size: int,
         fixed_size: Optional[Tuple[int, int]] = None,
-		use_square_box=False
+        use_square_box=False
     ) -> None:
         """
         Note: When ``fixed_size`` is set, the ``min_size`` and ``max_size`` won't take effect.
