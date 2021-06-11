@@ -15,11 +15,11 @@ def collate_fn(batch):
     return tuple(zip(*batch))
 
 
-def default_train_transforms(hflip_prob=0.5, mean=(123., 117., 104.)):
+def default_train_transforms(hflip_prob=0.5):
 
     return Compose([
         RandomPhotometricDistort(),
-        RandomZoomOut(fill=list(mean)),
+        RandomZoomOut(),
         RandomIoUCrop(),
         RandomHorizontalFlip(p=hflip_prob),
         ToTensor(),
