@@ -19,7 +19,7 @@ def _evaluate_iou(target, pred):
     return box_iou(target["boxes"], pred["boxes"]).diag().mean()
 
 
-class BoxCoder(object):
+class BoxCoder:
     """
     This class encodes and decodes a set of bounding boxes into
     the representation used for training the regressors.

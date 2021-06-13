@@ -2,7 +2,7 @@ import torch
 import torchvision
 
 
-class ConvertVOCtoCOCO(object):
+class ConvertVOCtoCOCO:
 
     CLASSES = (
         'aeroplane', 'bicycle', 'bird', 'boat', 'bottle',

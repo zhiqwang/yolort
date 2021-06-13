@@ -32,7 +32,7 @@ class COCODetection(torchvision.datasets.CocoDetection):
         return img, target
 
 
-class ConvertCocoPolysToMask(object):
+class ConvertCocoPolysToMask:
     def __init__(self, json_category_id_maps, return_masks=False):
         self.json_category_id_to_contiguous_id = json_category_id_maps
         self.return_masks = return_masks
