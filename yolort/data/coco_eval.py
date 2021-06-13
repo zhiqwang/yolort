@@ -5,7 +5,6 @@ import copy
 import contextlib
 import logging
 import itertools
-from yolort.utils.logger import create_small_table
 from tabulate import tabulate
 
 import numpy as np
@@ -21,6 +20,7 @@ except ImportError:
     COCO, COCOeval = None, None
 
 from .distributed import all_gather
+from ..utils.logger import create_small_table
 
 from typing import List, Any, Callable, Optional, Union
 

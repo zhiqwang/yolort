@@ -4,7 +4,6 @@ COCO dataset which returns image_id for evaluation.
 Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references/detection/coco_utils.py
 """
 import torch
-import torch.utils.data
 import torchvision
 try:
     from pycocotools import mask as coco_mask

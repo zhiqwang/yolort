@@ -3,11 +3,11 @@ Transforms for Data Augmentation
 Mostly copy-paste from https://github.com/pytorch/vision/blob/0013d93/references/detection/transforms.py
 """
 import torch
-import torchvision
-
 from torch import nn, Tensor
+from torchvision.ops import boxes as box_ops
 from torchvision.transforms import functional as F
 from torchvision.transforms import transforms as T
+
 from typing import List, Tuple, Dict, Optional
 
 
@@ -96,9 +96,10 @@ class RandomIoUCrop(nn.Module):
         if target is None:
             raise ValueError("The targets can't be None for this transform.")
 
-        if isinstance(image, torch.Tensor):
+        if isinstance(image, Tensor):
             if image.ndimension() not in {2, 3}:
-                raise ValueError(f'image should be 2/3 dimensional. Got {image.ndimension()} dimensions.')
+                raise ValueError(
+                    f'image should be 2/3 dimensional. Got {image.ndimension()} dimensions.')
             elif image.ndimension() == 2:
                 image = image.unsqueeze(0)
 
@@ -138,7 +139,7 @@ class RandomIoUCrop(nn.Module):
 
                 # check at least 1 box with jaccard limitations
                 boxes = target["boxes"][is_within_crop_area]
-                ious = torchvision.ops.boxes.box_iou(
+                ious = box_ops.box_iou(
                     boxes,
                     torch.tensor([[left, top, right, bottom]],
                                  dtype=boxes.dtype, device=boxes.device),
@@ -184,10 +185,10 @@ class RandomZoomOut(nn.Module):
         image: Tensor,
         target: Optional[Dict[str, Tensor]] = None,
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        if isinstance(image, torch.Tensor):
+        if isinstance(image, Tensor):
             if image.ndimension() not in {2, 3}:
                 raise ValueError(
-                    'image should be 2/3 dimensional. Got {} dimensions.'.format(image.ndimension()))
+                    f'image should be 2/3 dimensional. Got {image.ndimension()} dimensions.')
             elif image.ndimension() == 2:
                 image = image.unsqueeze(0)
 
@@ -212,7 +213,7 @@ class RandomZoomOut(nn.Module):
             fill = self._get_fill_value(F._is_pil_image(image))
 
         image = F.pad(image, [left, top, right, bottom], fill=fill)
-        if isinstance(image, torch.Tensor):
+        if isinstance(image, Tensor):
             v = torch.tensor(self.fill, device=image.device, dtype=image.dtype).view(-1, 1, 1)
             image[..., :top, :] = image[..., :, :left] = image[..., (top + orig_h):, :] = \
                 image[..., :, (left + orig_w):] = v
@@ -245,7 +246,7 @@ class RandomPhotometricDistort(nn.Module):
         image: Tensor,
         target: Optional[Dict[str, Tensor]] = None,
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        if isinstance(image, torch.Tensor):
+        if isinstance(image, Tensor):
             if image.ndimension() not in {2, 3}:
                 raise ValueError(
                     f'image should be 2/3 dimensional. Got {image.ndimension()} dimensions.')
