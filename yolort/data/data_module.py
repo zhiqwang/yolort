@@ -82,6 +82,7 @@ class COCODetectionDataModule(DetectionDataModule):
     def __init__(
         self,
         data_path: str,
+        annotations_path: Optional[str] = None,
         year: str = "2017",
         train_transform: Optional[Callable] = default_train_transforms,
         val_transform: Optional[Callable] = default_val_transforms,
@@ -90,6 +91,10 @@ class COCODetectionDataModule(DetectionDataModule):
         *args: Any,
         **kwargs: Any,
     ) -> None:
+        if annotations_path is None:
+            annotations_path = Path(data_path) / 'annotations'
+        self.annotations_path = annotations_path
+
         train_dataset = self.build_datasets(
             data_path, image_set='train', year=year, transforms=train_transform)
         val_dataset = self.build_datasets(
@@ -100,9 +105,8 @@ class COCODetectionDataModule(DetectionDataModule):
 
         self.num_classes = 80
 
-    @staticmethod
-    def build_datasets(data_path, image_set, year, transforms):
-        ann_file = Path(data_path) / 'annotations' / f"instances_{image_set}{year}.json"
+    def build_datasets(self, data_path, image_set, year, transforms):
+        ann_file = self.annotations_path / f"instances_{image_set}{year}.json"
         return COCODetection(data_path, ann_file, transforms())
 
 

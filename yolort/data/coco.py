@@ -4,7 +4,6 @@ COCO dataset which returns image_id for evaluation.
 Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references/detection/coco_utils.py
 """
 import torch
-import torch.utils.data
 import torchvision
 try:
     from pycocotools import mask as coco_mask
@@ -12,7 +11,27 @@ except ImportError:
     coco_mask = None
 
 
-class ConvertCocoPolysToMask(object):
+class COCODetection(torchvision.datasets.CocoDetection):
+    def __init__(self, img_folder, ann_file, transforms, return_masks=False):
+        super().__init__(img_folder, ann_file)
+        self._transforms = transforms
+
+        json_category_id_to_contiguous_id = {
+            v: i for i, v in enumerate(self.coco.getCatIds())
+        }
+        self.prepare = ConvertCocoPolysToMask(json_category_id_to_contiguous_id, return_masks)
+
+    def __getitem__(self, idx):
+        img, target = super().__getitem__(idx)
+        image_id = self.ids[idx]
+        target = {'image_id': image_id, 'annotations': target}
+        img, target = self.prepare(img, target)
+        if self._transforms is not None:
+            img, target = self._transforms(img, target)
+        return img, target
+
+
+class ConvertCocoPolysToMask:
     def __init__(self, json_category_id_maps, return_masks=False):
         self.json_category_id_to_contiguous_id = json_category_id_maps
         self.return_masks = return_masks
@@ -78,26 +97,6 @@ class ConvertCocoPolysToMask(object):
         target["size"] = torch.as_tensor([int(h), int(w)])
 
         return image, target
-
-
-class COCODetection(torchvision.datasets.CocoDetection):
-    def __init__(self, img_folder, ann_file, transforms, return_masks=False):
-        super().__init__(img_folder, ann_file)
-        self._transforms = transforms
-
-        json_category_id_to_contiguous_id = {
-            v: i for i, v in enumerate(self.coco.getCatIds())
-        }
-        self.prepare = ConvertCocoPolysToMask(json_category_id_to_contiguous_id, return_masks)
-
-    def __getitem__(self, idx):
-        img, target = super().__getitem__(idx)
-        image_id = self.ids[idx]
-        target = {'image_id': image_id, 'annotations': target}
-        img, target = self.prepare(img, target)
-        if self._transforms is not None:
-            img, target = self._transforms(img, target)
-        return img, target
 
 
 def convert_coco_poly_to_mask(segmentations, height, width):

@@ -1,11 +1,9 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-# Modified by Zhiqiang Wang (me@zhiqwang.com)
 import argparse
 from pathlib import Path
 
 import pytorch_lightning as pl
 
-from .data import VOCDetectionDataModule
+from .data import COCODetectionDataModule
 from . import models
 
 
