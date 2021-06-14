@@ -142,6 +142,7 @@ def scale_coords(coords, img_shape, img_shape_origin, ratio_pad=None):
     coords[:, 2].clamp_(0, img_shape_origin[1])  # x2
     coords[:, 3].clamp_(0, img_shape_origin[0])  # y2
     return coords
+
 def xywh2xyxy(x):
     # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
@@ -150,6 +151,7 @@ def xywh2xyxy(x):
     y[:, 2] = x[:, 0] + x[:, 2] / 2  # bottom right x
     y[:, 3] = x[:, 1] + x[:, 3] / 2  # bottom right y
     return y
+
 def box_iou(box1, box2):
     # https://github.com/pytorch/vision/blob/master/torchvision/ops/boxes.py
     """
