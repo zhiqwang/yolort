@@ -309,9 +309,6 @@ def read_image_to_tensor(
     image = torch.from_numpy(image)
     image = image.half() if is_half else image.float()
 
-    # image = np.ascontiguousarray(image.transpose((2, 0, 1)), dtype=np.float32)  # BHWC to BCHW
-    # image = torch.from_numpy(image) / 255.  # uint8 to fp16/32
-
     return image
 
 
