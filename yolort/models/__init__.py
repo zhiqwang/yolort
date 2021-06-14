@@ -20,7 +20,7 @@ def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False,use_sq
     if upstream_version == 'r3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_s_r31", **kwargs)
     elif upstream_version == 'r4.0':
-        model = YOLOModule(arch="yolov5_darknet_pan_s_r40", use_square_box=use_square_box, **kwargs)
+        model = YOLOModule(arch="yolov5_darknet_pan_s_r40", **kwargs)
     else:
         raise NotImplementedError("Currently only supports r3.1 and r4.0 versions")
 
