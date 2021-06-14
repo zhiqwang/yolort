@@ -7,7 +7,7 @@ lightning_logs
 runs
 yolov5s.pt
 yolort/version.py
-
+.idea
 # macOS dir files
 .DS_Store
 
