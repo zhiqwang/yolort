@@ -9,7 +9,7 @@ from ..utils.activations import Hardswish, SiLU
 from typing import Any
 
 
-def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
+def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False,use_square_box = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -20,7 +20,7 @@ def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwa
     if upstream_version == 'r3.1':
         model = YOLOModule(arch="yolov5_darknet_pan_s_r31", **kwargs)
     elif upstream_version == 'r4.0':
-        model = YOLOModule(arch="yolov5_darknet_pan_s_r40", **kwargs)
+        model = YOLOModule(arch="yolov5_darknet_pan_s_r40", use_square_box=use_square_box, **kwargs)
     else:
         raise NotImplementedError("Currently only supports r3.1 and r4.0 versions")
 
