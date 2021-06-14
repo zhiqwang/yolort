@@ -308,7 +308,6 @@ def read_image_to_tensor(
 
     image = torch.from_numpy(image)
     image = image.half() if is_half else image.float()
-
     return image
 
 
