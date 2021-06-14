@@ -50,7 +50,6 @@ class YOLOTransform(nn.Module):
         min_size: int,
         max_size: int,
         fixed_size: Optional[Tuple[int, int]] = None,
-        use_square_box=False
     ) -> None:
         """
         Note: When ``fixed_size`` is set, the ``min_size`` and ``max_size`` won't take effect.
@@ -61,7 +60,6 @@ class YOLOTransform(nn.Module):
         self.min_size = min_size
         self.max_size = max_size
         self.fixed_size = fixed_size
-        self.use_square_box = use_square_box
     def forward(
         self,
         images: List[Tensor],
@@ -141,7 +139,7 @@ class YOLOTransform(nn.Module):
             # FIXME assume for now that testing uses the largest scale
             size = float(self.min_size[-1])
 
-        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target, self.use_square_box)
+        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target)
 
         if target is None:
             return image, target
