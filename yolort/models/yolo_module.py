@@ -31,7 +31,6 @@ class YOLOModule(LightningModule):
         size: Tuple[int, int] = (640, 640),
         num_classes: int = 80,
         annotation_path: Optional[Union[str, PosixPath]] = None,
-        use_square_box = False,
         **kwargs: Any,
     ):
         """
@@ -49,7 +48,7 @@ class YOLOModule(LightningModule):
         self.model = yolo.__dict__[arch](
             pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
-        self.transform = YOLOTransform(min(size), max(size), fixed_size=size, use_square_box=use_square_box)
+        self.transform = YOLOTransform(min(size), max(size), fixed_size=size)
 
         # metrics
         self.evaluator = None
