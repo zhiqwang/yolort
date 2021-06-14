@@ -238,6 +238,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
     return output
 
+
 def get_image_from_url(
     url: str,
     flags: int = cv2.IMREAD_COLOR,
