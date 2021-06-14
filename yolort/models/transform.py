@@ -60,6 +60,7 @@ class YOLOTransform(nn.Module):
         self.min_size = min_size
         self.max_size = max_size
         self.fixed_size = fixed_size
+        
     def forward(
         self,
         images: List[Tensor],
@@ -243,7 +244,6 @@ def _resize_image_and_masks(
     self_max_size: float,
     fixed_size: Optional[Tuple[int, int]] = None,
     target: Optional[Dict[str, Tensor]] = None,
-    use_square_box=False,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
     """
     Resize the image and its targets
@@ -271,15 +271,6 @@ def _resize_image_and_masks(
 
     image = F.interpolate(image[None], size=size, scale_factor=scale_factor, mode='bilinear',
                           recompute_scale_factor=recompute_scale_factor, align_corners=False)[0]
-    if use_square_box:
-        h, w = image.shape[-2:]
-        max_size = int(torch.max(torch.tensor([w, h])))
-        w_side = int((max_size - w) / 2)
-        h_side = int((max_size - h) / 2)
-        pad_l, pad_r = w_side, max_size - w - w_side
-        pad_t, pad_d = h_side, max_size - h - h_side
-        image = torch.nn.functional.pad(image, (pad_l, pad_r, pad_t, pad_d), "constant", value=0)
-
     if target is None:
         return image, target
 
