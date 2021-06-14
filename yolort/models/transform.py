@@ -42,8 +42,8 @@ class YOLOTransform(nn.Module):
     The transformations it perform are:
         - input normalization (mean subtraction and std division)
         - input / target resizing to match min_size / max_size
+        
     It returns a ImageList for the inputs, and a List[Dict[Tensor]] for the targets
-    
     """
     def __init__(
         self,
