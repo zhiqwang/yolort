@@ -38,11 +38,9 @@ class YOLOTransform(nn.Module):
     """
     Performs input / target transformation before feeding the data to a GeneralizedRCNN
     model.
-
     The transformations it perform are:
         - input normalization (mean subtraction and std division)
         - input / target resizing to match min_size / max_size
-
     It returns a ImageList for the inputs, and a List[Dict[Tensor]] for the targets
     """
     def __init__(
@@ -60,7 +58,7 @@ class YOLOTransform(nn.Module):
         self.min_size = min_size
         self.max_size = max_size
         self.fixed_size = fixed_size
-        
+
     def forward(
         self,
         images: List[Tensor],
@@ -271,6 +269,7 @@ def _resize_image_and_masks(
 
     image = F.interpolate(image[None], size=size, scale_factor=scale_factor, mode='bilinear',
                           recompute_scale_factor=recompute_scale_factor, align_corners=False)[0]
+
     if target is None:
         return image, target
 
@@ -282,24 +281,12 @@ def _resize_image_and_masks(
     return image, target
 
 
-def resize_boxes(boxes: Tensor, new_size: List[int], original_size: List[int], use_square_box=False) -> Tensor:
-    ratios = []
-    if use_square_box:
-
-        if new_size[0] != new_size[1]:
-            print("wrong size image input")
-            exit()
-
-        min_ratio = torch.min(
-            torch.tensor([original_size[0] / new_size[0], original_size[1] / new_size[1]], device=boxes.device))
-        ratios = [min_ratio, min_ratio]
-    else:
-        ratios = [
-            torch.tensor(s_orig, dtype=torch.float32, device=boxes.device) /
-            torch.tensor(s, dtype=torch.float32, device=boxes.device)
-            for s, s_orig in zip(new_size, original_size)
-        ]
-
+def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -> Tensor:
+    ratios = [
+        torch.tensor(s, dtype=torch.float32, device=boxes.device) /
+        torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
+        for s, s_orig in zip(new_size, original_size)
+    ]
     ratio_height, ratio_width = ratios
     xmin, ymin, xmax, ymax = boxes.unbind(1)
 
@@ -307,15 +294,4 @@ def resize_boxes(boxes: Tensor, new_size: List[int], original_size: List[int], u
     xmax = xmax * ratio_width
     ymin = ymin * ratio_height
     ymax = ymax * ratio_height
-
-    if use_square_box:
-        w = new_size[0] * ratio_width
-        h = new_size[1] * ratio_height
-        padding_w_stride = int(original_size[0] - w) / 2
-        padding_h_stride = int(original_size[0] - h) / 2
-        xmin = xmin + padding_w_stride
-        xmax = xmax + padding_w_stride
-        ymin = ymin + padding_h_stride
-        ymax = ymax + padding_h_stride
-
     return torch.stack((xmin, ymin, xmax, ymax), dim=1)
