@@ -12,7 +12,7 @@ import cv2
 import torch
 from torch import Tensor
 
-from torchvision.ops.boxes import box_convert
+from torchvision.ops.boxes import box_convert, box_iou
 import torchvision
 import time
 
@@ -20,6 +20,7 @@ from typing import Optional
 
 import logging
 
+logger = logging.getLogger(__name__)
 
 
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
@@ -143,38 +144,6 @@ def scale_coords(coords, img_shape, img_shape_origin, ratio_pad=None):
     coords[:, 3].clamp_(0, img_shape_origin[0])  # y2
     return coords
 
-def xywh2xyxy(x):
-    # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
-    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
-    y[:, 0] = x[:, 0] - x[:, 2] / 2  # top left x
-    y[:, 1] = x[:, 1] - x[:, 3] / 2  # top left y
-    y[:, 2] = x[:, 0] + x[:, 2] / 2  # bottom right x
-    y[:, 3] = x[:, 1] + x[:, 3] / 2  # bottom right y
-    return y
-
-def box_iou(box1, box2):
-    # https://github.com/pytorch/vision/blob/master/torchvision/ops/boxes.py
-    """
-    Return intersection-over-union (Jaccard index) of boxes.
-    Both sets of boxes are expected to be in (x1, y1, x2, y2) format.
-    Arguments:
-        box1 (Tensor[N, 4])
-        box2 (Tensor[M, 4])
-    Returns:
-        iou (Tensor[N, M]): the NxM matrix containing the pairwise
-            IoU values for every element in boxes1 and boxes2
-    """
-
-    def box_area(box):
-        # box = 4xn
-        return (box[2] - box[0]) * (box[3] - box[1])
-
-    area1 = box_area(box1.T)
-    area2 = box_area(box2.T)
-
-    # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
-    inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
-    return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, agnostic=False, multi_label=False,
                         labels=(), max_det=300):
@@ -223,7 +192,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
         x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
         # Box (center x, center y, width, height) to (x1, y1, x2, y2)
-        box = xywh2xyxy(x[:, :4])
+        box = box_convert(x[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
 
         # Detections matrix nx6 (xyxy, conf, cls)
         if multi_label:
@@ -264,7 +233,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
         output[xi] = x[i]
         if (time.time() - t) > time_limit:
-            print(f'WARNING: NMS time limit {time_limit}s exceeded')
+            logger.warning(f'NMS time limit {time_limit}s exceeded')
             break  # time limit exceeded
 
     return output
@@ -321,7 +290,6 @@ def load_names(category_path):
 
 @torch.no_grad()
 def overlay_boxes(detections, path, time_consume, args):
-    logger = logging.getLogger(__name__)
 
     img = cv2.imread(path) if args.save_img else None
 
