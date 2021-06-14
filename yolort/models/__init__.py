@@ -9,7 +9,7 @@ from ..utils.activations import Hardswish, SiLU
 from typing import Any
 
 
-def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False,use_square_box: bool = False, **kwargs: Any):
+def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
