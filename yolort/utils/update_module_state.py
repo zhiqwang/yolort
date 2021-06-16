@@ -61,8 +61,9 @@ def update_module_state_from_ultralytics(
         model = torch.hub.load(f'ultralytics/yolov5:{version}', 'custom', path_or_model=custom_path_or_model)
 
     key_arch = f'{arch}_{feature_fusion_type.lower()}_{version}'
-    assert key_arch in architecture_maps, (
-        "Currently does't support your architecture, fell free to report a issue to yolort")
+    if key_arch not in architecture_maps:
+        raise ValueError("Currently does't supports this architecture, "
+                         "fell free to file an issue labeled enhancement to us")
 
     module_state_updater = ModuleStateUpdate(
         arch=architecture_maps[key_arch],
