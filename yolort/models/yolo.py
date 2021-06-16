@@ -23,8 +23,8 @@ class YOLO(nn.Module):
         self,
         backbone: nn.Module,
         num_classes: int,
-        anchor_grids: List[List[int]],
         # Anchor parameters
+        anchor_grids: Optional[List[List[float]]] = None,
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
         # Training parameter
@@ -43,13 +43,20 @@ class YOLO(nn.Module):
                 "same for all the levels)")
         self.backbone = backbone
 
+        strides: List[int] = [8, 16, 32]
+
+        if anchor_grids is None:
+            anchor_grids: List[List[float]] = [
+                [10, 13, 16, 30, 33, 23],
+                [30, 61, 62, 45, 59, 119],
+                [116, 90, 156, 198, 373, 326],
+            ]
+
         if anchor_generator is None:
-            strides: List[int] = [8, 16, 32]
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
         if loss_calculator is None:
-            strides: List[int] = [8, 16, 32]
             loss_calculator = SetCriterion(strides, anchor_grids)
         self.compute_loss = loss_calculator
 
@@ -98,7 +105,6 @@ class YOLO(nn.Module):
                 like `scores`, `labels` and `mask` (for Mask R-CNN models).
         """
         # get the features from the backbone
-        print(samples.shape)
         features = self.backbone(samples)
 
         # compute the yolo heads outputs using the features
@@ -150,7 +156,6 @@ def _yolov5_darknet_pan(
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,
-    anchor_grids: list = None,
     **kwargs: Any,
 ) -> YOLO:
     """
@@ -191,12 +196,7 @@ def _yolov5_darknet_pan(
     """
     backbone = darknet_pan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
 
-    if anchor_grids == None:
-        anchor_grids = [[10, 13, 16, 30, 33, 23],
-                        [30, 61, 62, 45, 59, 119],
-                        [116, 90, 156, 198, 373, 326]]
-
-    model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
+    model = YOLO(backbone, num_classes, **kwargs)
     if pretrained:
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
@@ -207,7 +207,7 @@ def _yolov5_darknet_pan(
 
 
 def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                            anchor_grids: list = None, **kwargs: Any) -> YOLO:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 small release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -220,12 +220,11 @@ def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, nu
     width_multiple = 0.5
     version = 'r3.1'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, 
-                               anchor_grids=anchor_grids, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
 def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                            anchor_grids: list = None, **kwargs: Any) -> YOLO:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 medium release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -238,12 +237,11 @@ def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, nu
     width_multiple = 0.75
     version = 'r3.1'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, 
-                               anchor_grids=anchor_grids, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
 def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                            anchor_grids: list = None, **kwargs: Any) -> YOLO:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 large release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -256,12 +254,11 @@ def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, nu
     width_multiple = 1.0
     version = 'r3.1'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, 
-                               anchor_grids=anchor_grids, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
-def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80, 
-                            anchor_grids: list = None, **kwargs: Any) -> YOLO:
+def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 small release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -274,12 +271,11 @@ def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, nu
     width_multiple = 0.5
     version = 'r4.0'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, 
-                               anchor_grids=anchor_grids, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
 def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                            anchor_grids: list = None, **kwargs: Any) -> YOLO:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 medium release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -292,11 +288,11 @@ def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, nu
     width_multiple = 0.75
     version = 'r4.0'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, 
-                               anchor_grids=anchor_grids, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+
 
 def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                            anchor_grids: list = None, **kwargs: Any) -> YOLO:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 large release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
@@ -309,12 +305,11 @@ def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, nu
     width_multiple = 1.0
     version = 'r4.0'
     return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, 
-                               anchor_grids=anchor_grids, **kwargs)
+                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
 
 
 def yolov5_darknet_tan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                            anchor_grids: list = None, **kwargs: Any) -> YOLO:
+                             **kwargs: Any) -> YOLO:
     r"""yolov5 small with a transformer block model from
     `"dingyiwei/yolov5" <https://github.com/ultralytics/yolov5/pull/2333>`_.
     Args:
@@ -329,12 +324,7 @@ def yolov5_darknet_tan_s_r40(pretrained: bool = False, progress: bool = True, nu
 
     backbone = darknet_tan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
 
-    if anchor_grids == None:
-        anchor_grids = [[10, 13, 16, 30, 33, 23],
-                        [30, 61, 62, 45, 59, 119],
-                        [116, 90, 156, 198, 373, 326]]
-
-    model = YOLO(backbone, num_classes, anchor_grids, **kwargs)
+    model = YOLO(backbone, num_classes, **kwargs)
     if pretrained:
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
