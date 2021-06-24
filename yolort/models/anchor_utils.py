@@ -9,7 +9,7 @@ class AnchorGenerator(nn.Module):
     def __init__(
         self,
         strides: List[int],
-        anchor_grids: List[List[int]],
+        anchor_grids: List[List[float]],
     ):
         super().__init__()
         assert len(strides) == len(anchor_grids)
