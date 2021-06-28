@@ -41,7 +41,7 @@ def get_args_parser():
 
 def main(args):
     # Load the data
-    datamodule = VOCDetectionDataModule.from_argparse_args(args)
+    datamodule = COCODetectionDataModule.from_argparse_args(args)
 
     # Build the model
     model = models.__dict__[args.arch](num_classes=datamodule.num_classes)
@@ -51,6 +51,9 @@ def main(args):
 
     # Train the model
     trainer.fit(model, datamodule=datamodule)
+
+    # Save it!
+    trainer.save_checkpoint("object_detection_model.pt")
 
 
 if __name__ == "__main__":

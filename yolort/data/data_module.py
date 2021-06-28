@@ -82,8 +82,13 @@ class COCODetectionDataModule(DetectionDataModule):
     def __init__(
         self,
         data_path: str,
-        annotations_path: Optional[str] = None,
-        year: str = "2017",
+        anno_path: Optional[str] = None,
+        num_classes: int = 80,
+        data_task: str = "instances",
+        train_set: str = "train2017",
+        val_set: str = "val2017",
+        skip_train_set: bool = False,
+        skip_val_set: bool = False,
         train_transform: Optional[Callable] = default_train_transforms,
         val_transform: Optional[Callable] = default_val_transforms,
         batch_size: int = 1,
@@ -91,23 +96,17 @@ class COCODetectionDataModule(DetectionDataModule):
         *args: Any,
         **kwargs: Any,
     ) -> None:
-        if annotations_path is None:
-            annotations_path = Path(data_path) / 'annotations'
-        self.annotations_path = annotations_path
+        anno_path = Path(anno_path) if anno_path else Path(data_path) / 'annotations'
+        train_ann_file = anno_path / f"{data_task}_{train_set}.json"
+        val_ann_file = anno_path / f"{data_task}_{val_set}.json"
 
-        train_dataset = self.build_datasets(
-            data_path, image_set='train', year=year, transforms=train_transform)
-        val_dataset = self.build_datasets(
-            data_path, image_set='val', year=year, transforms=val_transform)
+        train_dataset = None if skip_train_set else COCODetection(data_path, train_ann_file, train_transform())
+        val_dataset = None if skip_val_set else COCODetection(data_path, val_ann_file, val_transform())
 
         super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
                          batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
 
-        self.num_classes = 80
-
-    def build_datasets(self, data_path, image_set, year, transforms):
-        ann_file = self.annotations_path / f"instances_{image_set}{year}.json"
-        return COCODetection(data_path, ann_file, transforms())
+        self.num_classes = num_classes
 
 
 class VOCDetectionDataModule(DetectionDataModule):
