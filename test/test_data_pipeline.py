@@ -1,6 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from pathlib import Path
-import pytest
 import numpy as np
 
 import torch
