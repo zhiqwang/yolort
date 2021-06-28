@@ -177,7 +177,7 @@ class YOLOModule(LightningModule):
             self.model.parameters(),
             lr=self.lr,
             momentum=0.9,
-            weight_decay=0.005,
+            weight_decay=5e-4,
         )
 
     @torch.no_grad()
@@ -251,8 +251,6 @@ class YOLOModule(LightningModule):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--arch', default='yolov5_darknet_pan_s_r40',
                             help='model architecture')
-        parser.add_argument('--num_classes', default=80, type=int,
-                            help='number classes of datasets')
         parser.add_argument('--pretrained', action='store_true',
                             help='Use pre-trained models from the modelzoo')
         parser.add_argument('--lr', default=0.01, type=float,

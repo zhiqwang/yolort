@@ -21,6 +21,8 @@ def get_args_parser():
                         help='root path of the dataset')
     parser.add_argument('--anno_path', default=None,
                         help='root path of annotation files')
+    parser.add_argument('--num_classes', default=80, type=int,
+                        help='number of classes')
     parser.add_argument('--data_task', default='instances',
                         help='dataset mode')
     parser.add_argument('--train_set', default='train2017',
