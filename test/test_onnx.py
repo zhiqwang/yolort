@@ -157,7 +157,7 @@ class ONNXExporterTester(unittest.TestCase):
             upstream_version='r4.0',
             export_friendly=True,
             pretrained=True,
-            size=(640, 640), 
+            size=(640, 640),
             score_thresh=0.45,
         )
         model.eval()

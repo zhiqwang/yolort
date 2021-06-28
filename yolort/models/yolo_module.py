@@ -25,7 +25,7 @@ class YOLOModule(LightningModule):
     def __init__(
         self,
         lr: float = 0.01,
-        arch: str = 'yolov5_darknet_pan_s_r31',
+        arch: str = 'yolov5_darknet_pan_s_r40',
         pretrained: bool = False,
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
@@ -177,7 +177,7 @@ class YOLOModule(LightningModule):
             self.model.parameters(),
             lr=self.lr,
             momentum=0.9,
-            weight_decay=0.005,
+            weight_decay=5e-4,
         )
 
     @torch.no_grad()
@@ -249,14 +249,12 @@ class YOLOModule(LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--arch', default='yolov5_darknet_pan_s_r31',
+        parser.add_argument('--arch', default='yolov5_darknet_pan_s_r40',
                             help='model architecture')
-        parser.add_argument('--num_classes', default=80, type=int,
-                            help='number classes of datasets')
         parser.add_argument('--pretrained', action='store_true',
                             help='Use pre-trained models from the modelzoo')
-        parser.add_argument('--lr', default=0.02, type=float,
-                            help='initial learning rate, 0.02 is the default value for training '
+        parser.add_argument('--lr', default=0.01, type=float,
+                            help='initial learning rate, 0.01 is the default value for training '
                             'on 8 gpus and 2 images_per_gpu')
         parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                             help='momentum')

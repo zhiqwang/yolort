@@ -22,7 +22,7 @@ class DetectionDataModule(LightningDataModule):
         train_dataset: Optional[Dataset] = None,
         val_dataset: Optional[Dataset] = None,
         test_dataset: Optional[Dataset] = None,
-        batch_size: int = 1,
+        batch_size: int = 16,
         num_workers: int = 0,
         *args: Any,
         **kwargs: Any,
@@ -36,7 +36,7 @@ class DetectionDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    def train_dataloader(self, batch_size: int = 16) -> None:
+    def train_dataloader(self) -> None:
         """
         VOCDetection and COCODetection
         Args:
@@ -44,8 +44,11 @@ class DetectionDataModule(LightningDataModule):
             transforms: custom transforms
         """
         # Creating data loaders
-        sampler = torch.utils.data.RandomSampler(self._train_dataset)
-        batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
+        batch_sampler = torch.utils.data.BatchSampler(
+            torch.utils.data.RandomSampler(self._train_dataset),
+            self.batch_size,
+            drop_last=True,
+        )
 
         loader = torch.utils.data.DataLoader(
             self._train_dataset,
@@ -56,7 +59,7 @@ class DetectionDataModule(LightningDataModule):
 
         return loader
 
-    def val_dataloader(self, batch_size: int = 16) -> None:
+    def val_dataloader(self) -> None:
         """
         VOCDetection and COCODetection
         Args:
@@ -68,7 +71,7 @@ class DetectionDataModule(LightningDataModule):
 
         loader = torch.utils.data.DataLoader(
             self._val_dataset,
-            batch_size,
+            self.batch_size,
             sampler=sampler,
             drop_last=False,
             collate_fn=collate_fn,
@@ -82,8 +85,13 @@ class COCODetectionDataModule(DetectionDataModule):
     def __init__(
         self,
         data_path: str,
-        annotations_path: Optional[str] = None,
-        year: str = "2017",
+        anno_path: Optional[str] = None,
+        num_classes: int = 80,
+        data_task: str = "instances",
+        train_set: str = "train2017",
+        val_set: str = "val2017",
+        skip_train_set: bool = False,
+        skip_val_set: bool = False,
         train_transform: Optional[Callable] = default_train_transforms,
         val_transform: Optional[Callable] = default_val_transforms,
         batch_size: int = 1,
@@ -91,23 +99,17 @@ class COCODetectionDataModule(DetectionDataModule):
         *args: Any,
         **kwargs: Any,
     ) -> None:
-        if annotations_path is None:
-            annotations_path = Path(data_path) / 'annotations'
-        self.annotations_path = annotations_path
+        anno_path = Path(anno_path) if anno_path else Path(data_path) / 'annotations'
+        train_ann_file = anno_path / f"{data_task}_{train_set}.json"
+        val_ann_file = anno_path / f"{data_task}_{val_set}.json"
 
-        train_dataset = self.build_datasets(
-            data_path, image_set='train', year=year, transforms=train_transform)
-        val_dataset = self.build_datasets(
-            data_path, image_set='val', year=year, transforms=val_transform)
+        train_dataset = None if skip_train_set else COCODetection(data_path, train_ann_file, train_transform())
+        val_dataset = None if skip_val_set else COCODetection(data_path, val_ann_file, val_transform())
 
         super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
                          batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
 
-        self.num_classes = 80
-
-    def build_datasets(self, data_path, image_set, year, transforms):
-        ann_file = self.annotations_path / f"instances_{image_set}{year}.json"
-        return COCODetection(data_path, ann_file, transforms())
+        self.num_classes = num_classes
 
 
 class VOCDetectionDataModule(DetectionDataModule):
