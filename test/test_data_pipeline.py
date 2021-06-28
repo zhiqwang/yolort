@@ -53,7 +53,7 @@ def test_detection_data_module():
     data_module = DetectionDataModule(train_dataset, batch_size=batch_size)
     assert data_module.batch_size == batch_size
 
-    data_loader = data_module.train_dataloader(batch_size=batch_size)
+    data_loader = data_module.train_dataloader()
     images, targets = next(iter(data_loader))
     assert len(images) == batch_size
     assert isinstance(images[0], Tensor)
