@@ -22,7 +22,7 @@ class DetectionDataModule(LightningDataModule):
         train_dataset: Optional[Dataset] = None,
         val_dataset: Optional[Dataset] = None,
         test_dataset: Optional[Dataset] = None,
-        batch_size: int = 1,
+        batch_size: int = 16,
         num_workers: int = 0,
         *args: Any,
         **kwargs: Any,
@@ -36,7 +36,7 @@ class DetectionDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    def train_dataloader(self, batch_size: int = 16) -> None:
+    def train_dataloader(self) -> None:
         """
         VOCDetection and COCODetection
         Args:
@@ -44,8 +44,11 @@ class DetectionDataModule(LightningDataModule):
             transforms: custom transforms
         """
         # Creating data loaders
-        sampler = torch.utils.data.RandomSampler(self._train_dataset)
-        batch_sampler = torch.utils.data.BatchSampler(sampler, batch_size, drop_last=True)
+        batch_sampler = torch.utils.data.BatchSampler(
+            torch.utils.data.RandomSampler(self._train_dataset),
+            self.batch_size,
+            drop_last=True,
+        )
 
         loader = torch.utils.data.DataLoader(
             self._train_dataset,
@@ -56,7 +59,7 @@ class DetectionDataModule(LightningDataModule):
 
         return loader
 
-    def val_dataloader(self, batch_size: int = 16) -> None:
+    def val_dataloader(self) -> None:
         """
         VOCDetection and COCODetection
         Args:
@@ -68,7 +71,7 @@ class DetectionDataModule(LightningDataModule):
 
         loader = torch.utils.data.DataLoader(
             self._val_dataset,
-            batch_size,
+            self.batch_size,
             sampler=sampler,
             drop_last=False,
             collate_fn=collate_fn,
