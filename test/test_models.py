@@ -1,5 +1,6 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import torch
+from torch import Tensor
 
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.transformer import darknet_tan_backbone
@@ -168,20 +169,23 @@ class ModelTester(TestCase):
 
         self.assertEqual(len(out), N)
         self.assertIsInstance(out[0], Dict)
-        self.assertIsInstance(out[0]["boxes"], torch.Tensor)
-        self.assertIsInstance(out[0]["labels"], torch.Tensor)
-        self.assertIsInstance(out[0]["scores"], torch.Tensor)
+        self.assertIsInstance(out[0]["boxes"], Tensor)
+        self.assertIsInstance(out[0]["labels"], Tensor)
+        self.assertIsInstance(out[0]["scores"], Tensor)
         self.check_jit_scriptable(model, (head_outputs, anchors_tuple))
 
-    def _init_test_criterion(self):
-        weights = (1.0, 1.0, 1.0, 1.0)
-        fg_iou_thresh = 0.5
-        bg_iou_thresh = 0.4
-        allow_low_quality_matches = True
-        criterion = SetCriterion(weights, fg_iou_thresh, bg_iou_thresh, allow_low_quality_matches)
-        return criterion
-
-    # @unittest.skip("Current it isn't well implemented")
-    # def test_criterion(self):
-    #     model = self._init_test_criterion()
-    #     scripted_model = torch.jit.script(model)  # noqa
+    def test_criterion(self):
+        N, H, W = 4, 416, 352
+        head_outputs = self._get_head_outputs(N, H, W)
+        targets = torch.tensor([
+            [ 0.0000, 7.0000, 0.0714, 0.3749, 0.0760, 0.0654],
+            [ 0.0000, 1.0000, 0.1027, 0.4402, 0.2053, 0.1920],
+            [ 1.0000, 5.0000, 0.4720, 0.6720, 0.3280, 0.1760],
+            [ 3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
+        ])
+        criterion = SetCriterion(self.strides, self.anchor_grids)
+        out = criterion(head_outputs, targets)
+        self.assertIsInstance(out, Dict)
+        self.assertIsInstance(out['cls_logits'], Tensor)
+        self.assertIsInstance(out['bbox_regression'], Tensor)
+        self.assertIsInstance(out['objectness'], Tensor)
