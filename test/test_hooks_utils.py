@@ -26,7 +26,3 @@ def test_feature_extractor(b, h, w):
     assert [f.shape for f in features] == expected_features
     assert isinstance(head_outputs, list)
     assert [h.shape for h in head_outputs] == expected_head_outputs
-
-
-if __name__ == '__main__':
-    pytest.main([__file__])
