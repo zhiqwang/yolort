@@ -113,7 +113,7 @@ class YOLOTransform(nn.Module):
                     targets_merged[:, 1] = target['labels']
                     targets_merged[:, 2:] = target['boxes']
                     targets_batched.append(targets_merged)
-            targets_batched = torch.cat(targets_batched, dim=0)
+            targets_batched = torch.cat(targets_batched, dim=0) if len(targets_batched) > 0 else None
         else:
             targets_batched = None
 
