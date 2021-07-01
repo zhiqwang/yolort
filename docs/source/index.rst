@@ -12,14 +12,15 @@ and with modules refactoring to make it available in deployment backends such as
    installation
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Examples:
 
-   notebooks/load_model_as_ultralytics
-   notebooks/visualize_jit_models
+   notebooks/how_to_align_with_ultralytics_yolov5
+   notebooks/model_graph_visualization
+   notebooks/anchor_label_assignment_visualization
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Deployment:
 
    notebooks/inference_pytorch_export_libtorch
