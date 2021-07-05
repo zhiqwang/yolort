@@ -90,20 +90,6 @@ class BoxCoder:
     This class encodes and decodes a set of bounding boxes into
     the representation used for training the regressors.
     """
-
-    def __init__(
-        self,
-        weights: Tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
-        bbox_xform_clip: float = math.log(1000. / 16),
-    ) -> None:
-        """
-        Arguments:
-            weights (4-element tuple)
-            bbox_xform_clip (float)
-        """
-        self.weights = weights
-        self.bbox_xform_clip = bbox_xform_clip
-
     def decode_single(
         self,
         rel_codes: Tensor,

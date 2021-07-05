@@ -75,10 +75,6 @@ class SetCriterion(nn.Module):
     Arguments:
         variances:
     """
-    __annotations__ = {
-        'box_coder': det_utils.BoxCoder,
-    }
-
     def __init__(
         self,
         strides: List[int],
@@ -275,8 +271,8 @@ class SetCriterion(nn.Module):
                 pred_logits_matched = pred_logits_per_layer[b, a, gj, gi]
 
                 # Regression head
-                bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
-                bbox_wh = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
+                bbox_xy = torch.sigmoid(pred_logits_matched[:, :2]) * 2. - 0.5
+                bbox_wh = (torch.sigmoid(pred_logits_matched[:, 2:4]) * 2) ** 2 * anchors[i]
                 bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
                 ciou = det_utils.bbox_ciou(bbox_regression.T, targets_box[i])
                 loss_box += (1.0 - ciou).mean()  # iou loss
