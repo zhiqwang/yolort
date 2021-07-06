@@ -113,19 +113,78 @@ class SetCriterion(nn.Module):
 
     def forward(
         self,
-        head_outputs: List[Tensor],
         targets: Tensor,
+        head_outputs: List[Tensor],
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
-            head_outputs: dict of tensors, see the output specification of the model for the format
             targets: list of dicts, such that len(targets) == batch_size.
                     The expected keys in each dict depends on the losses applied, see each loss' doc
+            head_outputs: dict of tensors, see the output specification of the model for the format
         """
-        targets_cls, targets_box, indices, anchors = self.select_training_samples(head_outputs, targets)
-        losses = self.compute_loss(head_outputs, targets_cls, targets_box, indices, anchors)
+        targets_cls, targets_box, matched_idxs, anchors = self.select_training_samples(head_outputs, targets)
 
-        return losses
+        device = head_outputs[0].device
+        num_classes = head_outputs[0].shape[-1] - 5
+        loss_cls = torch.zeros(1, device=device)
+        loss_box = torch.zeros(1, device=device)
+        loss_obj = torch.zeros(1, device=device)
+
+        # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
+        cls_positive, cls_negative = self.label_smooth_bce(eps=0.0)
+
+        assert len(head_outputs) == len(self.layer_balance)
+        # Losses
+        num_targets = 0  # number of targets
+        num_output = len(head_outputs)  # number of outputs
+
+        cls_pw = torch.tensor([self.cls_pw], device=device)
+        obj_pw = torch.tensor([self.obj_pw], device=device)
+
+        for i, pred_logits_per_layer in enumerate(head_outputs):  # layer index, layer predictions
+            b, a, gj, gi = matched_idxs[i]  # image, anchor, gridy, gridx
+            obj_logits = torch.zeros_like(pred_logits_per_layer[..., 0], device=device)  # target obj
+
+            num_target_per_layer = b.shape[0]  # number of targets
+            if num_target_per_layer:
+                num_targets += num_target_per_layer  # cumulative targets
+                # prediction subset corresponding to targets
+                pred_logits_matched = pred_logits_per_layer[b, a, gj, gi]
+
+                # Regression head
+                bbox_xy = torch.sigmoid(pred_logits_matched[:, :2]) * 2. - 0.5
+                bbox_wh = (torch.sigmoid(pred_logits_matched[:, 2:4]) * 2) ** 2 * anchors[i]
+                bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
+                ciou = det_utils.bbox_ciou(bbox_regression.T, targets_box[i])
+                loss_box += (1.0 - ciou).mean()  # iou loss
+
+                # Objectness head
+                # Compute the iou ratio
+                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + self.iou_ratio * ciou.detach().clamp(0)
+
+                # Classification head
+                if num_classes > 1:  # cls loss (only if multiple classes)
+                    cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)
+                    cls_logits[torch.arange(num_target_per_layer), targets_cls[i]] = cls_positive
+
+                    loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)
+
+            loss_obj += det_utils.obj_loss(
+                pred_logits_per_layer[..., 4],
+                obj_logits,
+                pos_weight=obj_pw,
+            ) * self.layer_balance[i]  # obj loss
+
+        out_scaling = 3 / num_output  # output count scaling
+        loss_box *= self.box * out_scaling
+        loss_obj *= self.obj * out_scaling * (1.4 if num_output == 4 else 1.)
+        loss_cls *= self.cls * out_scaling
+
+        return {
+            'cls_logits': loss_cls,
+            'bbox_regression': loss_box,
+            'objectness': loss_obj,
+        }
 
     def select_training_samples(
         self,
@@ -228,82 +287,6 @@ class SetCriterion(nn.Module):
         <https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441>
         '''
         return 1.0 - 0.5 * eps, 0.5 * eps
-
-    def compute_loss(
-        self,
-        head_outputs: List[Tensor],
-        targets_cls: List[Tensor],
-        targets_box: List[Tensor],
-        matched_idxs: List[Tuple[Tensor, Tensor, Tensor, Tensor]],
-        anchors: List[Tensor],
-    ) -> Dict[str, Tensor]:
-        """ This performs the loss computation.
-        Parameters:
-            outputs: dict of tensors, see the output specification of the model for the format
-            targets: list of dicts, such that len(targets) == batch_size.
-                The expected keys in each dict depends on the losses applied, see each loss' doc
-        """
-        device = head_outputs[0].device
-        num_classes = head_outputs[0].shape[-1] - 5
-        loss_cls = torch.zeros(1, device=device)
-        loss_box = torch.zeros(1, device=device)
-        loss_obj = torch.zeros(1, device=device)
-
-        # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
-        cls_positive, cls_negative = self.label_smooth_bce(eps=0.0)
-
-        assert len(head_outputs) == len(self.layer_balance)
-        # Losses
-        num_targets = 0  # number of targets
-        num_output = len(head_outputs)  # number of outputs
-
-        cls_pw = torch.tensor([self.cls_pw], device=device)
-        obj_pw = torch.tensor([self.obj_pw], device=device)
-
-        for i, pred_logits_per_layer in enumerate(head_outputs):  # layer index, layer predictions
-            b, a, gj, gi = matched_idxs[i]  # image, anchor, gridy, gridx
-            obj_logits = torch.zeros_like(pred_logits_per_layer[..., 0], device=device)  # target obj
-
-            num_target_per_layer = b.shape[0]  # number of targets
-            if num_target_per_layer:
-                num_targets += num_target_per_layer  # cumulative targets
-                # prediction subset corresponding to targets
-                pred_logits_matched = pred_logits_per_layer[b, a, gj, gi]
-
-                # Regression head
-                bbox_xy = torch.sigmoid(pred_logits_matched[:, :2]) * 2. - 0.5
-                bbox_wh = (torch.sigmoid(pred_logits_matched[:, 2:4]) * 2) ** 2 * anchors[i]
-                bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
-                ciou = det_utils.bbox_ciou(bbox_regression.T, targets_box[i])
-                loss_box += (1.0 - ciou).mean()  # iou loss
-
-                # Objectness head
-                # Compute the iou ratio
-                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + self.iou_ratio * ciou.detach().clamp(0)
-
-                # Classification head
-                if num_classes > 1:  # cls loss (only if multiple classes)
-                    cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)
-                    cls_logits[torch.arange(num_target_per_layer), targets_cls[i]] = cls_positive
-
-                    loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)
-
-            loss_obj += det_utils.obj_loss(
-                pred_logits_per_layer[..., 4],
-                obj_logits,
-                pos_weight=obj_pw,
-            ) * self.layer_balance[i]  # obj loss
-
-        out_scaling = 3 / num_output  # output count scaling
-        loss_box *= self.box * out_scaling
-        loss_obj *= self.obj * out_scaling * (1.4 if num_output == 4 else 1.)
-        loss_cls *= self.cls * out_scaling
-
-        return {
-            'cls_logits': loss_cls,
-            'bbox_regression': loss_box,
-            'objectness': loss_obj,
-        }
 
 
 class PostProcess(nn.Module):
