@@ -183,10 +183,9 @@ class ModelTester(TestCase):
             [1.0000, 5.0000, 0.4720, 0.6720, 0.3280, 0.1760],
             [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
         ])
-        model = SetCriterion(self.strides, self.anchor_grids)
-        out = model(head_outputs, targets)
+        loss_calculator = SetCriterion(self.strides, self.anchor_grids)
+        out = loss_calculator(targets, head_outputs)
         self.assertIsInstance(out, Dict)
         self.assertIsInstance(out['cls_logits'], Tensor)
         self.assertIsInstance(out['bbox_regression'], Tensor)
         self.assertIsInstance(out['objectness'], Tensor)
-        # self.check_jit_scriptable(model, (head_outputs, targets))
