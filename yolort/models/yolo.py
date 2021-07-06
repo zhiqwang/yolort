@@ -11,7 +11,7 @@ from .transformer import darknet_tan_backbone
 from .anchor_utils import AnchorGenerator
 from .box_head import YOLOHead, SetCriterion, PostProcess
 
-from typing import Tuple, Any, List, Dict, Optional
+from typing import Callable, Tuple, Any, List, Dict, Optional
 
 __all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
            'yolov5_darknet_pan_s_r40', 'yolov5_darknet_pan_m_r40', 'yolov5_darknet_pan_l_r40',
@@ -19,6 +19,13 @@ __all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolo
 
 
 class YOLO(nn.Module):
+    """
+    Implements YOLO series model.
+    """
+    __annotations__ = {
+        'compute_loss': SetCriterion,
+    }
+
     def __init__(
         self,
         backbone: nn.Module,
@@ -28,7 +35,7 @@ class YOLO(nn.Module):
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
         # Training parameter
-        loss_calculator: Optional[nn.Module] = None,
+        loss_calculator: Optional[Callable[..., Dict[str, Tensor]]] = None,
         # Post Process parameter
         post_process: Optional[nn.Module] = None,
         score_thresh: float = 0.05,

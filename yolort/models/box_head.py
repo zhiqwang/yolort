@@ -70,7 +70,19 @@ class YOLOHead(nn.Module):
         return all_pred_logits
 
 
-class SetCriterion(nn.Module):
+def smooth_BCE(eps: float = 0.1) -> Tuple[float, float]:
+    """
+    Smooth BCE
+    <https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441>
+
+    Returns:
+        positive label smoothing BCE targets
+        negative label smoothing BCE targets
+    """
+    return 1.0 - 0.5 * eps, 0.5 * eps
+
+
+class SetCriterion:
     """This class computes the loss for YOLOv5.
     Arguments:
         variances:
@@ -78,7 +90,7 @@ class SetCriterion(nn.Module):
     def __init__(
         self,
         strides: List[int],
-        anchor_grids: List[List[int]],
+        anchor_grids: List[List[float]],
         box: float = 0.05,  # box loss gain
         cls: float = 0.5,  # cls loss gain
         cls_pw: float = 1.0,  # cls BCELoss positive_weight
@@ -87,7 +99,7 @@ class SetCriterion(nn.Module):
         anchor_threshold: float = 4.0,  # anchor-multiple threshold
         iou_ratio: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
         fl_gamma: float = 0.0,  # focal loss gamma
-        layer_balance: List[float] = [4.0, 1.0, 0.4],
+        layer_balance: Tuple[float, float, float] = (4.0, 1.0, 0.4),
     ) -> None:
         """
         Arguments:
@@ -96,7 +108,6 @@ class SetCriterion(nn.Module):
             bg_iou_thresh (float)
             allow_low_quality_matches (bool)
         """
-        super().__init__()
         self.strides = strides
         self.anchor_grids = anchor_grids
         self.anchor_threshold = anchor_threshold
@@ -111,7 +122,7 @@ class SetCriterion(nn.Module):
 
         self.iou_ratio = iou_ratio
 
-    def forward(
+    def __call__(
         self,
         targets: Tensor,
         head_outputs: List[Tensor],
@@ -131,7 +142,7 @@ class SetCriterion(nn.Module):
         loss_obj = torch.zeros(1, device=device)
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
-        cls_positive, cls_negative = self.label_smooth_bce(eps=0.0)
+        cls_positive, cls_negative = smooth_BCE(eps=0.0)
 
         assert len(head_outputs) == len(self.layer_balance)
         # Losses
@@ -279,14 +290,6 @@ class SetCriterion(nn.Module):
             targets_cls.append(bc[1])  # class
 
         return targets_cls, targets_box, indices, anchors_encode
-
-    @staticmethod
-    def label_smooth_bce(eps: float = 0.1):
-        '''
-        Return positive, negative label smoothing BCE targets
-        <https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441>
-        '''
-        return 1.0 - 0.5 * eps, 0.5 * eps
 
 
 class PostProcess(nn.Module):
