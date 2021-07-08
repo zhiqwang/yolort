@@ -209,28 +209,7 @@ class SetCriterion:
         anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
         anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
-        targets_cls, targets_box, indices, anchors_encode = self.assign_targets_to_anchors(
-            head_outputs, anchors, targets)
 
-        return targets_cls, targets_box, indices, anchors_encode
-
-    def assign_targets_to_anchors(
-        self,
-        head_outputs: List[Tensor],
-        anchors: Tensor,
-        targets: Tensor,
-    ):
-        """Assign ground truth boxes and targets to anchors.
-        Args:
-            gt_boxes (List[Tensor]): with shape num_targets x 4, ground truth boxes
-            gt_labels (List[Tensor]): with shape num_targets, labels of targets
-            anchors (Tensor): with shape num_priors x 4, XYXY_REL BoxMode
-        Returns:
-            boxes (List[Tensor]): with shape num_priors x 4 real values for anchors.
-            labels (List[Tensor]): with shape num_priros, labels for anchors.
-        """
-        device = head_outputs[0].device
-        num_layers = len(head_outputs)
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
         num_anchors = len(self.anchor_grids)  # number of anchors
         num_targets = len(targets)  # number of targets
