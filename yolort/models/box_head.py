@@ -98,7 +98,12 @@ class SetCriterion:
 
         return self.compute_loss(targets, head_outputs, matched_idxs)
 
-    def compute_loss(self, targets, head_outputs, matched_idxs):
+    def compute_loss(
+        self,
+        targets: Tensor,
+        head_outputs: List[Tensor],
+        matched_idxs: List[Tensor],
+    ):
         device = targets.device
 
         loss_cls = torch.zeros(1, device=device)
