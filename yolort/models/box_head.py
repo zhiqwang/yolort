@@ -55,7 +55,7 @@ class YOLOHead(nn.Module):
         return out
 
     def forward(self, x: List[Tensor]) -> List[Tensor]:
-        all_pred_logits: List[Tensor] = []  # inference output
+        all_pred_logits = []  # inference output
 
         for i, features in enumerate(x):
             pred_logits = self.get_result_from_head(features, i)
