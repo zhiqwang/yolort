@@ -126,39 +126,22 @@ class Matcher:
     element m that matches to prediction n. If there is no match, a negative value
     is returned.
     """
-
-    BELOW_LOW_THRESHOLD = -1
-    BETWEEN_THRESHOLDS = -2
-
-    __annotations__ = {
-        'BELOW_LOW_THRESHOLD': int,
-        'BETWEEN_THRESHOLDS': int,
-    }
-
     def __init__(
         self,
-        high_threshold: float,
-        low_threshold: float,
+        iou_threshold: float,
         allow_low_quality_matches: bool = False,
     ) -> None:
         """
         Args:
-            high_threshold (float): quality values greater than or equal to
+            iou_threshold (float): quality values greater than or equal to
                 this value are candidate matches.
-            low_threshold (float): a lower quality threshold used to stratify
-                matches into three levels:
-                1) matches >= high_threshold
-                2) BETWEEN_THRESHOLDS matches in [low_threshold, high_threshold)
-                3) BELOW_LOW_THRESHOLD matches in [0, low_threshold)
             allow_low_quality_matches (bool): if True, produce additional matches
                 for predictions that have only low-quality match candidates. See
                 set_low_quality_matches_ for more details.
         """
         self.BELOW_LOW_THRESHOLD = -1
         self.BETWEEN_THRESHOLDS = -2
-        assert low_threshold <= high_threshold
-        self.high_threshold = high_threshold
-        self.low_threshold = low_threshold
+        self.iou_threshold = iou_threshold
         self.allow_low_quality_matches = allow_low_quality_matches
 
     def __call__(self, match_quality_matrix):
@@ -192,9 +175,9 @@ class Matcher:
             all_matches = None
 
         # Assign candidate matches with low quality to negative (unassigned) values
-        below_low_threshold = matched_vals < self.low_threshold
-        between_thresholds = (matched_vals >= self.low_threshold) & (
-            matched_vals < self.high_threshold
+        below_low_threshold = matched_vals < self.iou_threshold
+        between_thresholds = (matched_vals >= self.iou_threshold) & (
+            matched_vals < self.iou_threshold
         )
         matches[below_low_threshold] = self.BELOW_LOW_THRESHOLD
         matches[between_thresholds] = self.BETWEEN_THRESHOLDS
@@ -202,6 +185,12 @@ class Matcher:
         if self.allow_low_quality_matches:
             assert all_matches is not None
             self.set_low_quality_matches_(matches, all_matches, match_quality_matrix)
+
+        # For each gt, find the prediction with which it has the highest quality
+        _, highest_quality_pred_foreach_gt = match_quality_matrix.max(dim=1)
+        matches[highest_quality_pred_foreach_gt] = torch.arange(highest_quality_pred_foreach_gt.size(0),
+                                                                dtype=torch.int64,
+                                                                device=highest_quality_pred_foreach_gt.device)
 
         return matches
 
