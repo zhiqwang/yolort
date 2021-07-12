@@ -157,7 +157,7 @@ class PostProcess(nn.Module):
         """
         batch_size, _, _, _, K = head_outputs[0].shape
 
-        all_pred_logits: List[Tensor] = []
+        all_pred_logits = []
         for pred_logits in head_outputs:
             pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(NN, HWA, K)
             all_pred_logits.append(pred_logits)
