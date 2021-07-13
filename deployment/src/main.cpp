@@ -194,7 +194,6 @@ int main(int argc, const char* argv[]) {
 
   auto detections = output.toTuple()->elements()[1];
   std::cout << ">>> OKey, detections: " << detections << std::endl;
-  std::cout << ">>> detections type " << typeid(detections).name() << std::endl;
 
   return 0;
 }
