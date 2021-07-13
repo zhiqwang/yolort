@@ -35,6 +35,7 @@ std::vector<std::string> LoadNames(const std::string& path) {
 torch::Tensor ReadImage(const std::string& loc) {
   // Read Image from the location of image
   cv::Mat img = cv::imread(loc);
+  cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
   img.convertTo(img, CV_32FC3, 1.0f / 255.0f); // normalization 1/255
 
   // Convert image to tensor
