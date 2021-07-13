@@ -12,8 +12,7 @@
 #include <torch/torch.h>
 
 #include <torchvision/vision.h>
-#include <torchvision/ROIPool.h>
-#include <torchvision/nms.h>
+#include <torchvision/ops/nms.h>
 
 std::vector<std::string> LoadNames(const std::string& path) {
   // load class names
@@ -134,10 +133,6 @@ int main(int argc, const char* argv[]) {
     std::string weights = opt["checkpoint"].as<std::string>();
     module = torch::jit::load(weights);
     module.to(device_type);
-    if (is_gpu) {
-      module.to(torch::kHalf);
-    }
-
     module.eval();
     std::cout << ">>> Model loaded" << std::endl;
   } catch (const torch::Error& e) {
@@ -159,9 +154,7 @@ int main(int argc, const char* argv[]) {
   // Run once to warm up
   std::cout << ">>> Run once on empty image" << std::endl;
   auto img_dumy = torch::rand({3, 416, 320}, options);
-  if (is_gpu) {
-    img_dumy = img_dumy.to(torch::kHalf);
-  }
+
   images.push_back(img_dumy);
   inputs.push_back(images);
 
@@ -176,9 +169,6 @@ int main(int argc, const char* argv[]) {
   // Read image
   auto img = ReadImage(image_path);
   img = img.to(device_type);
-  if (is_gpu) {
-    img = img.to(torch::kHalf);
-  }
 
   images.push_back(img);
   inputs.push_back(images);
@@ -203,6 +193,7 @@ int main(int argc, const char* argv[]) {
 
   auto detections = output.toTuple()->elements()[1];
   std::cout << ">>> OKey, detections: " << detections << std::endl;
+  std::cout << ">>> detections type " << typeid(detections).name() << std::endl;
 
   return 0;
 }
