@@ -189,8 +189,10 @@ int main(int argc, char* argv[]) {
   // It should be known that it takes longer time at first time
   std::cout << ">>> Inference takes : " << duration.count() << " ms" << std::endl;
 
-  auto detections = output.toTuple()->elements()[1];
-  std::cout << ">>> OKey, detections: " << detections << std::endl;
+  auto detections = output.toTuple()->elements().at(1).toList().get(0).toGenericDict();
+  std::cout << ">>> detections labels: " << detections.at("labels") << std::endl;
+  std::cout << ">>> detections boxes: " << detections.at("boxes") << std::endl;
+  std::cout << ">>> detections scores: " << detections.at("scores") << std::endl;
 
   return 0;
 }
