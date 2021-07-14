@@ -20,9 +20,7 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 # This due to some headers importing Python.h
 find_package(Python3 COMPONENTS Development)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
-FILE(GLOB YOLO_SOURCE_FILES src/*.cpp)
+FILE(GLOB YOLO_SOURCE_FILES *.cpp)
 
 add_executable(yolo_inference ${YOLO_SOURCE_FILES})
 target_compile_features(yolo_inference PUBLIC cxx_range_for)
