@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     module.eval();
     std::cout << ">>> Model loaded" << std::endl;
   } catch (const torch::Error& e) {
-    std::cout << ">>> Error loading the model" << std::endl;
+    std::cout << ">>> Error loading the model: " << e.what() << std::endl;
     return -1;
   } catch (const std::exception& e) {
     std::cout << ">>> Other error: " << e.what() << std::endl;
