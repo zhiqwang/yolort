@@ -1,6 +1,6 @@
 # LibTorch Inference
 
-The LibTorch inference of yolort. Both GPU and CPU are supported.
+The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
 ## Dependencies
 
@@ -9,6 +9,8 @@ The LibTorch inference of yolort. Both GPU and CPU are supported.
 - TorchVision 0.9.0 / 0.10.0
 - OpenCV 3.4+
 - CUDA 10.2 [Optional]
+
+*We didn't impose too strong restrictions on the version of CUDA and Ubuntu systems.*
 
 ## Usage
 
@@ -24,7 +26,7 @@ The LibTorch inference of yolort. Both GPU and CPU are supported.
     ```bash
     git clone https://github.com/pytorch/vision.git
     cd vision
-    git checkout release/0.9  # replace to `nightly` branch instead if you are using the nightly version
+    git checkout release/0.9  # Double check the version of TorchVision currently in use
     mkdir build && cd build
     cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch  # Set `-DWITH_CUDA=ON` if you're using GPU
     make -j4
@@ -33,7 +35,7 @@ The LibTorch inference of yolort. Both GPU and CPU are supported.
 
 1. Generate `TorchScript` model
 
-    Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/master/models/export.py) trace (`torch.jit.trace`) mechanism, We're using `torch.jit.script` to trace the YOLOv5 models which containing the whole pre-processing (especially using the `letterbox` ops) and post-processing (especially with the `nms` ops) procedures, so you don't need to rewrite manually the C++ codes of pre-processing and post-processing.
+    Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/8ee9fd1/export.py) `torch.jit.trace` mechanism, We're using `torch.jit.script` to trace the YOLOv5 models which containing the whole pre-processing (especially with the [`letterbox`](https://github.com/ultralytics/yolov5/blob/8ee9fd1/utils/augmentations.py#L85-L115) ops) and post-processing (especially with the `nms` ops) procedures, as such you don't need to rewrite manually the C++ codes of pre-processing and post-processing.
 
     ```bash
     git clone https://github.com/zhiqwang/yolov5-rt-stack.git
@@ -44,7 +46,7 @@ The LibTorch inference of yolort. Both GPU and CPU are supported.
 1. Then compile the source code.
 
     ```bash
-    cd deployment
+    cd deployment/libtorch
     mkdir build && cd build
     cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
     make
@@ -53,9 +55,8 @@ The LibTorch inference of yolort. Both GPU and CPU are supported.
 1. Now, you can infer your own images.
 
     ```bash
-    ./yolo_inference [--input_source YOUR_IMAGE_SOURCE_PATH]
-                     [--checkpoint ../../checkpoints/yolov5/yolov5s.torchscript.pt]
-                     [--labelmap ../../notebooks/assets/coco.names]
-                     [--output_dir ../../data-bin/output]
-                     [--gpu]  # GPU switch, Set False as default
+    ./yolo_inference [--input_source ../../../test/assets/zidane.jpg]
+                     [--checkpoint ../../../test/tracing/yolov5s.torchscript.pt]
+                     [--labelmap ../../../notebooks/assets/coco.names]
+                     [--gpu]  # GPU switch, which is optional, and set False as default
     ```
