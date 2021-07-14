@@ -1,4 +1,8 @@
-#include "cxxopts.hpp"
+#ifdef _WIN32 // or _MSC_VER, as you wish
+#include <windows.h>
+#endif
+
+#include "cmdline.h"
 #include <iostream>
 #include <memory>
 #include <chrono>
@@ -7,7 +11,6 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <ATen/ATen.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -85,27 +88,21 @@ void OverlayBoxes(cv::Mat& img,
   cv::imwrite(img_name, img);
 }
 
-int main(int argc, const char* argv[]) {
-  cxxopts::Options parser(argv[0], "A LibTorch inference implementation of the yolov5");
+int main(int argc, char* argv[]) {
+  cmdline::parser cmd;
+  cmd.add<std::string>("checkpoint", 'c', "path of the generated torchscript file", true, "yolov5.torchscript.pt");
+  cmd.add<std::string>("input_source", 'i', "image source to be detected", true, "bus.jpg");
+  cmd.add<std::string>("labelmap", 'l', "path of dataset labels", true, "coco.names");
+  cmd.add("gpu", '\0', "Enable cuda device or cpu");
 
-  // TODO: add other args
-  parser.allow_unrecognised_options().add_options()
-      ("checkpoint", "yolov5.torchscript.pt path", cxxopts::value<std::string>())
-      ("input_source", "image source to be detected", cxxopts::value<std::string>())
-      ("labelmap", "label of datasets", cxxopts::value<std::string>())
-      ("gpu", "Enable cuda device or cpu", cxxopts::value<bool>()->default_value("false"))
-      ("view_img", "display results", cxxopts::value<bool>()->default_value("false"))
-      ("h,help", "Print usage");
-
-  auto opt = parser.parse(argc, argv);
-
-  if (opt.count("help")) {
-    std::cout << parser.help() << std::endl;
-    exit(0);
-  }
+#ifdef _WIN32
+  cmd.parse_check(GetCommandLineA());
+#else
+  cmd.parse_check(argc, argv);
+#endif
 
   // check if gpu flag is set
-  bool is_gpu = opt["gpu"].as<bool>();
+  bool is_gpu = cmd.exist("gpu");
 
   // set device type - CPU/GPU
   torch::DeviceType device_type;
@@ -118,20 +115,20 @@ int main(int argc, const char* argv[]) {
   }
 
   // load class names from dataset for visualization
-  std::string labelmap = opt["labelmap"].as<std::string>();
+  std::string labelmap = cmd.get<std::string>("labelmap");
   std::vector<std::string> class_names = LoadNames(labelmap);
   if (class_names.empty()) {
     return -1;
   }
 
   // load input image
-  std::string image_path = opt["input_source"].as<std::string>();
+  std::string image_path = cmd.get<std::string>("input_source");
 
   torch::jit::script::Module module;
   try {
     std::cout << ">>> Loading model" << std::endl;
     // Deserialize the ScriptModule from a file using torch::jit::load().
-    std::string weights = opt["checkpoint"].as<std::string>();
+    std::string weights = cmd.get<std::string>("checkpoint");
     module = torch::jit::load(weights);
     module.to(device_type);
     module.eval();
