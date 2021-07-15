@@ -21,7 +21,7 @@ std::vector<std::string> LoadNames(const std::string& path) {
   // load class names
   std::vector<std::string> class_names;
   std::ifstream infile(path);
-  if (infile.is_open()) {
+  if (infile.good()) {
     std::string line;
     while (getline (infile, line)) {
       class_names.emplace_back(line);
@@ -29,7 +29,8 @@ std::vector<std::string> LoadNames(const std::string& path) {
     infile.close();
   }
   else {
-    std::cerr << "Error loading the class names!\n";
+    std::cerr << ">>> ERROR: Failed to access class name path: " << path
+              << "\n>>>\tDoes the file exist? Permission to read it?\n"; 
   }
 
   return class_names;
@@ -123,18 +124,29 @@ int main(int argc, char* argv[]) {
 
   // load input image
   std::string image_path = cmd.get<std::string>("input_source");
+  if (std::ifstream(image_path).fail()) {
+    std::cerr << ">>> ERROR: Failed to access image file path: " << image_path
+              << "\n>>>\tDoes the file exist? Permission to read it?\n"; 
+    return -1; 
+  }
 
   torch::jit::script::Module module;
   try {
     std::cout << ">>> Loading model" << std::endl;
     // Deserialize the ScriptModule from a file using torch::jit::load().
     std::string weights = cmd.get<std::string>("checkpoint");
+    if (std::ifstream(weights).fail()) {
+      std::cerr << ">>> ERROR: Failed to access checkpoint file path: " << weights
+                << "\n>>>\tDoes the file exist? Permission to read it?\n"; 
+      return -1; 
+    }
+
     module = torch::jit::load(weights);
     module.to(device_type);
     module.eval();
     std::cout << ">>> Model loaded" << std::endl;
   } catch (const torch::Error& e) {
-    std::cout << ">>> error loading the model" << std::endl;
+    std::cout << ">>> Error loading the model: " << e.what() << std::endl;
     return -1;
   } catch (const std::exception& e) {
     std::cout << ">>> Other error: " << e.what() << std::endl;
