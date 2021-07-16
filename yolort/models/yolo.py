@@ -11,7 +11,7 @@ from .transformer import darknet_tan_backbone
 from .anchor_utils import AnchorGenerator
 from .box_head import YOLOHead, SetCriterion, PostProcess
 
-from typing import Tuple, Any, List, Dict, Optional
+from typing import Callable, Tuple, Any, List, Dict, Optional
 
 __all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
            'yolov5_darknet_pan_s_r40', 'yolov5_darknet_pan_m_r40', 'yolov5_darknet_pan_l_r40',
@@ -19,6 +19,35 @@ __all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolo
 
 
 class YOLO(nn.Module):
+    """
+    Implements YOLO series model.
+
+    The input to the model is expected to be a batched tensors, of shape ``[N, C, H, W]``, one for each
+    image, and should be in ``0-1`` range. Different images can have different sizes.
+
+    The behavior of the model changes depending if it is in training or evaluation mode.
+
+    During training, the model expects both the input tensors, as well as a targets (list of dictionary),
+    containing:
+        - boxes (``FloatTensor[N, 4]``): the ground-truth boxes in ``[x1, y1, x2, y2]`` format, with values
+          between ``0`` and ``H`` and ``0`` and ``W``
+        - labels (``Int64Tensor[N]``): the class label for each ground-truth box
+
+    The model returns a ``Dict[Tensor]`` during training, containing the classification and regression
+    losses.
+
+    During inference, the model requires only the input tensors, and returns the post-processed
+    predictions as a ``List[Dict[Tensor]]``, one for each input image. The fields of the ``Dict`` are as
+    follows:
+        - boxes (``FloatTensor[N, 4]``): the predicted boxes in ``[x1, y1, x2, y2]`` format, with values
+          between ``0`` and ``H`` and ``0`` and ``W``
+        - labels (``Int64Tensor[N]``): the predicted labels for each image
+        - scores (``Tensor[N]``): the scores or each prediction
+    """
+    __annotations__ = {
+        'compute_loss': SetCriterion,
+    }
+
     def __init__(
         self,
         backbone: nn.Module,
@@ -28,12 +57,13 @@ class YOLO(nn.Module):
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
         # Training parameter
-        loss_calculator: Optional[nn.Module] = None,
+        iou_thresh: float = 0.5,
+        criterion: Optional[Callable[..., Dict[str, Tensor]]] = None,
         # Post Process parameter
-        post_process: Optional[nn.Module] = None,
         score_thresh: float = 0.05,
         nms_thresh: float = 0.5,
         detections_per_img: int = 300,
+        post_process: Optional[nn.Module] = None,
     ):
         super().__init__()
         if not hasattr(backbone, "out_channels"):
@@ -56,9 +86,9 @@ class YOLO(nn.Module):
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
-        if loss_calculator is None:
-            loss_calculator = SetCriterion(strides, anchor_grids)
-        self.compute_loss = loss_calculator
+        if criterion is None:
+            criterion = SetCriterion(iou_thresh)
+        self.compute_loss = criterion
 
         if head is None:
             head = YOLOHead(
@@ -118,7 +148,7 @@ class YOLO(nn.Module):
         if self.training:
             assert targets is not None
             # compute the losses
-            losses = self.compute_loss(head_outputs, targets)
+            losses = self.compute_loss(targets, head_outputs, anchors_tuple)
         else:
             # compute the detections
             detections = self.post_process(head_outputs, anchors_tuple)
@@ -160,28 +190,6 @@ def _yolov5_darknet_pan(
 ) -> YOLO:
     """
     Constructs a YOLO model.
-
-    The input to the model is expected to be a batched tensors, of shape ``[N, C, H, W]``, one for each
-    image, and should be in ``0-1`` range. Different images can have different sizes.
-
-    The behavior of the model changes depending if it is in training or evaluation mode.
-
-    During training, the model expects both the input tensors, as well as a targets (list of dictionary),
-    containing:
-        - boxes (``FloatTensor[N, 4]``): the ground-truth boxes in ``[x1, y1, x2, y2]`` format, with values
-          between ``0`` and ``H`` and ``0`` and ``W``
-        - labels (``Int64Tensor[N]``): the class label for each ground-truth box
-
-    The model returns a ``Dict[Tensor]`` during training, containing the classification and regression
-    losses.
-
-    During inference, the model requires only the input tensors, and returns the post-processed
-    predictions as a ``List[Dict[Tensor]]``, one for each input image. The fields of the ``Dict`` are as
-    follows:
-        - boxes (``FloatTensor[N, 4]``): the predicted boxes in ``[x1, y1, x2, y2]`` format, with values
-          between ``0`` and ``H`` and ``0`` and ``W``
-        - labels (``Int64Tensor[N]``): the predicted labels for each image
-        - scores (``Tensor[N]``): the scores or each prediction
 
     Example::
 

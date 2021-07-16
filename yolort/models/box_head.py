@@ -1,9 +1,9 @@
-# Modified from ultralytics/yolov5 by Zhiqiang Wang
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import math
 import torch
 from torch import nn, Tensor
 
-from torchvision.ops import batched_nms
+from torchvision.ops import boxes as box_ops
 
 from . import _utils as det_utils
 
@@ -55,7 +55,7 @@ class YOLOHead(nn.Module):
         return out
 
     def forward(self, x: List[Tensor]) -> List[Tensor]:
-        all_pred_logits: List[Tensor] = []  # inference output
+        all_pred_logits = []  # inference output
 
         for i, features in enumerate(x):
             pred_logits = self.get_result_from_head(features, i)
@@ -70,238 +70,45 @@ class YOLOHead(nn.Module):
         return all_pred_logits
 
 
-class SetCriterion(nn.Module):
-    """This class computes the loss for YOLOv5.
-    Arguments:
-        variances:
+class SetCriterion:
     """
-    __annotations__ = {
-        'box_coder': det_utils.BoxCoder,
-    }
-
-    def __init__(
-        self,
-        strides: List[int],
-        anchor_grids: List[List[int]],
-        box: float = 0.05,  # box loss gain
-        cls: float = 0.5,  # cls loss gain
-        cls_pw: float = 1.0,  # cls BCELoss positive_weight
-        obj: float = 1.0,  # obj loss gain (scale with pixels)
-        obj_pw: float = 1.0,  # obj BCELoss positive_weight
-        anchor_threshold: float = 4.0,  # anchor-multiple threshold
-        iou_ratio: float = 1.0,  # iou loss ratio (obj_loss = 1.0 or iou)
-        fl_gamma: float = 0.0,  # focal loss gamma
-        layer_balance: List[float] = [4.0, 1.0, 0.4],
-    ) -> None:
+    This class computes the loss for YOLOv5.
+    """
+    def __init__(self, iou_thresh: float = 0.5) -> None:
         """
-        Arguments:
-            weights (4-element tuple)
-            fg_iou_thresh (float)
-            bg_iou_thresh (float)
-            allow_low_quality_matches (bool)
+        Args:
+            iou_thresh (float): quality values greater than or equal to
+                this value are candidate matches.
         """
-        super().__init__()
-        self.strides = strides
-        self.anchor_grids = anchor_grids
-        self.anchor_threshold = anchor_threshold
-        self.fl_gamma = fl_gamma
-        self.layer_balance = layer_balance
+        self.proposal_matcher = det_utils.Matcher(iou_threshold=iou_thresh)
 
-        self.cls_pw = cls_pw
-        self.obj_pw = obj_pw
-        self.cls = cls
-        self.obj = obj
-        self.box = box
-
-        self.iou_ratio = iou_ratio
-
-    def forward(
+    def __call__(
         self,
-        head_outputs: List[Tensor],
         targets: Tensor,
+        head_outputs: List[Tensor],
+        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> Dict[str, Tensor]:
         """ This performs the loss computation.
         Parameters:
-            head_outputs: dict of tensors, see the output specification of the model for the format
             targets: list of dicts, such that len(targets) == batch_size.
                     The expected keys in each dict depends on the losses applied, see each loss' doc
+            head_outputs: dict of tensors, see the output specification of the model for the format
         """
-        targets_cls, targets_box, indices, anchors = self.select_training_samples(head_outputs, targets)
-        losses = self.compute_loss(head_outputs, targets_cls, targets_box, indices, anchors)
+        matched_idxs = []
 
-        return losses
-
-    def select_training_samples(
-        self,
-        head_outputs: List[Tensor],
-        targets: Tensor,
-    ) -> Tuple[List[Tensor], List[Tensor], List[Tuple[Tensor, Tensor, Tensor, Tensor]], List[Tensor]]:
-        # get boxes indices for each anchors
-        device = head_outputs[0].device
-
-        num_layers = len(head_outputs)
-        anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device)
-        strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device)
-        anchors = anchors.view(num_layers, -1, 2) / strides.view(-1, 1, 1)
-        targets_cls, targets_box, indices, anchors_encode = self.assign_targets_to_anchors(
-            head_outputs, anchors, targets)
-
-        return targets_cls, targets_box, indices, anchors_encode
-
-    def assign_targets_to_anchors(
-        self,
-        head_outputs: List[Tensor],
-        anchors: Tensor,
-        targets: Tensor,
-    ):
-        """Assign ground truth boxes and targets to anchors.
-        Args:
-            gt_boxes (List[Tensor]): with shape num_targets x 4, ground truth boxes
-            gt_labels (List[Tensor]): with shape num_targets, labels of targets
-            anchors (Tensor): with shape num_priors x 4, XYXY_REL BoxMode
-        Returns:
-            boxes (List[Tensor]): with shape num_priors x 4 real values for anchors.
-            labels (List[Tensor]): with shape num_priros, labels for anchors.
-        """
-        device = head_outputs[0].device
-        num_layers = len(head_outputs)
-        # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
-        num_anchors = len(self.anchor_grids)  # number of anchors
-        num_targets = len(targets)  # number of targets
-
-        targets_cls, targets_box, anchors_encode = [], [], []
-        indices: List[Tuple[Tensor, Tensor, Tensor, Tensor]] = []
-        gain = torch.ones(7, device=device)  # normalized to gridspace gain
-        # same as .repeat_interleave(num_targets)
-        ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
-        targets = torch.cat((targets.repeat(num_anchors, 1, 1), ai[:, :, None]), 2)  # append anchor indices
-
-        g = 0.5  # bias
-        off = torch.tensor([[0, 0],
-                            [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
-                            # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
-                            ], device=device).float() * g  # offsets
-
-        for i in range(num_layers):
-            anchors_per_layer = anchors[i]
-            gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
-
-            # Match targets to anchors
-            targets_with_gain = targets * gain
-            if num_targets:
-                # Matches
-                ratios_wh = targets_with_gain[:, :, 4:6] / anchors_per_layer[:, None]  # wh ratio
-                ratios_filtering = torch.max(ratios_wh, 1. / ratios_wh).max(2)[0]
-                inds = torch.where(ratios_filtering < self.anchor_threshold)
-                targets_with_gain = targets_with_gain[inds]  # filter
-
-                # Offsets
-                grid_xy = targets_with_gain[:, 2:4]  # grid xy
-                grid_xy_inverse = gain[[2, 3]] - grid_xy  # inverse
-                inds_jk = (grid_xy % 1. < g) & (grid_xy > 1.)
-                inds_lm = (grid_xy_inverse % 1. < g) & (grid_xy_inverse > 1.)
-                inds_ones = torch.ones_like(inds_jk[:, 0])[:, None]
-                inds = torch.cat((inds_ones, inds_jk, inds_lm), dim=1).T
-                targets_with_gain = targets_with_gain.repeat((5, 1, 1))[inds]
-                offsets = (torch.zeros_like(grid_xy)[None] + off[:, None])[inds]
-            else:
-                targets_with_gain = targets[0]
-                offsets = torch.tensor(0, device=device)
-
-            # Define
-            bc = targets_with_gain[:, :2].long().T  # image, class
-            grid_xy = targets_with_gain[:, 2:4]  # grid xy
-            grid_wh = targets_with_gain[:, 4:6]  # grid wh
-            grid_ij = (grid_xy - offsets).long()
-
-            # Append
-            a = targets_with_gain[:, 6].long()  # anchor indices
-            # image, anchor, grid indices
-            indices.append((bc[0], a, grid_ij[:, 1].clamp_(0, gain[3] - 1),
-                            grid_ij[:, 0].clamp_(0, gain[2] - 1)))
-            targets_box.append(torch.cat((grid_xy - grid_ij, grid_wh), 1))  # box
-            anchors_encode.append(anchors_per_layer[a])  # anchors
-            targets_cls.append(bc[1])  # class
-
-        return targets_cls, targets_box, indices, anchors_encode
-
-    @staticmethod
-    def label_smooth_bce(eps: float = 0.1):
-        '''
-        Return positive, negative label smoothing BCE targets
-        <https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441>
-        '''
-        return 1.0 - 0.5 * eps, 0.5 * eps
+        return self.compute_loss(targets, head_outputs, matched_idxs)
 
     def compute_loss(
         self,
+        targets: Tensor,
         head_outputs: List[Tensor],
-        targets_cls: List[Tensor],
-        targets_box: List[Tensor],
-        matched_idxs: List[Tuple[Tensor, Tensor, Tensor, Tensor]],
-        anchors: List[Tensor],
-    ) -> Dict[str, Tensor]:
-        """ This performs the loss computation.
-        Parameters:
-            outputs: dict of tensors, see the output specification of the model for the format
-            targets: list of dicts, such that len(targets) == batch_size.
-                The expected keys in each dict depends on the losses applied, see each loss' doc
-        """
-        device = head_outputs[0].device
-        num_classes = head_outputs[0].shape[-1] - 5
+        matched_idxs: List[Tensor],
+    ):
+        device = targets.device
+
         loss_cls = torch.zeros(1, device=device)
         loss_box = torch.zeros(1, device=device)
         loss_obj = torch.zeros(1, device=device)
-
-        # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
-        cls_positive, cls_negative = self.label_smooth_bce(eps=0.0)
-
-        assert len(head_outputs) == len(self.layer_balance)
-        # Losses
-        num_targets = 0  # number of targets
-        num_output = len(head_outputs)  # number of outputs
-
-        cls_pw = torch.tensor([self.cls_pw], device=device)
-        obj_pw = torch.tensor([self.obj_pw], device=device)
-
-        for i, pred_logits_per_layer in enumerate(head_outputs):  # layer index, layer predictions
-            b, a, gj, gi = matched_idxs[i]  # image, anchor, gridy, gridx
-            obj_logits = torch.zeros_like(pred_logits_per_layer[..., 0], device=device)  # target obj
-
-            num_target_per_layer = b.shape[0]  # number of targets
-            if num_target_per_layer:
-                num_targets += num_target_per_layer  # cumulative targets
-                # prediction subset corresponding to targets
-                pred_logits_matched = pred_logits_per_layer[b, a, gj, gi]
-
-                # Regression head
-                bbox_xy = pred_logits_matched[:, :2].sigmoid() * 2. - 0.5
-                bbox_wh = (pred_logits_matched[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
-                bbox_regression = torch.cat((bbox_xy, bbox_wh), 1).to(device)  # predicted box
-                ciou = det_utils.bbox_ciou(bbox_regression.T, targets_box[i])
-                loss_box += (1.0 - ciou).mean()  # iou loss
-
-                # Objectness head
-                # Compute the iou ratio
-                obj_logits[b, a, gj, gi] = (1.0 - self.iou_ratio) + self.iou_ratio * ciou.detach().clamp(0)
-
-                # Classification head
-                if num_classes > 1:  # cls loss (only if multiple classes)
-                    cls_logits = torch.full_like(pred_logits_matched[:, 5:], cls_negative, device=device)
-                    cls_logits[torch.arange(num_target_per_layer), targets_cls[i]] = cls_positive
-
-                    loss_cls += det_utils.cls_loss(pred_logits_matched[:, 5:], cls_logits, pos_weight=cls_pw)
-
-            loss_obj += det_utils.obj_loss(
-                pred_logits_per_layer[..., 4],
-                obj_logits,
-                pos_weight=obj_pw,
-            ) * self.layer_balance[i]  # obj loss
-
-        out_scaling = 3 / num_output  # output count scaling
-        loss_box *= self.box * out_scaling
-        loss_obj *= self.obj * out_scaling * (1.4 if num_output == 4 else 1.)
-        loss_cls *= self.cls * out_scaling
 
         return {
             'cls_logits': loss_cls,
@@ -311,10 +118,10 @@ class SetCriterion(nn.Module):
 
 
 class PostProcess(nn.Module):
+    """Performs Non-Maximum Suppression (NMS) on inference results"""
     __annotations__ = {
         'box_coder': det_utils.BoxCoder,
     }
-    """Performs Non-Maximum Suppression (NMS) on inference results"""
     def __init__(
         self,
         score_thresh: float,
@@ -350,7 +157,7 @@ class PostProcess(nn.Module):
         """
         batch_size, _, _, _, K = head_outputs[0].shape
 
-        all_pred_logits: List[Tensor] = []
+        all_pred_logits = []
         for pred_logits in head_outputs:
             pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(NN, HWA, K)
             all_pred_logits.append(pred_logits)
@@ -373,7 +180,7 @@ class PostProcess(nn.Module):
             boxes, scores = boxes[inds], scores[inds, labels]
 
             # non-maximum suppression, independently done per level
-            keep = batched_nms(boxes, scores, labels, self.nms_thresh)
+            keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)
             # keep only topk scoring head_outputs
             keep = keep[:self.detections_per_img]
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]

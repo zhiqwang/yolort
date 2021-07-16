@@ -1,6 +1,6 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
-import unittest
 import torch
+from torch import Tensor
 
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.transformer import darknet_tan_backbone
@@ -21,34 +21,20 @@ script_model_unwrapper = {
 
 
 class ModelTester(TestCase):
-    def _get_strides(self):
-        return [8, 16, 32]
-
-    def _get_in_channels(self):
-        return [128, 256, 512]
-
-    def _get_anchor_grids(self):
-        return [
-            [10, 13, 16, 30, 33, 23],
-            [30, 61, 62, 45, 59, 119],
-            [116, 90, 156, 198, 373, 326],
-        ]
-
-    def _get_num_classes(self):
-        return 80
-
-    def _get_num_outputs(self):
-        return self._get_num_classes() + 5
-
-    def _get_num_anchors(self):
-        return len(self._get_anchor_grids())
-
-    def _get_anchors_shape(self):
-        return [(9009, 2), (9009, 1), (9009, 2)]
+    strides = [8, 16, 32]
+    in_channels = [128, 256, 512]
+    anchor_grids = [
+        [10, 13, 16, 30, 33, 23],
+        [30, 61, 62, 45, 59, 119],
+        [116, 90, 156, 198, 373, 326],
+    ]
+    num_classes = 80
+    num_outputs = num_classes + 5
+    num_anchors = len(anchor_grids)
 
     def _get_feature_shapes(self, h, w):
-        strides = self._get_strides()
-        in_channels = self._get_in_channels()
+        strides = self.strides
+        in_channels = self.in_channels
 
         return [(c, h // s, w // s) for (c, s) in zip(in_channels, strides)]
 
@@ -60,8 +46,8 @@ class ModelTester(TestCase):
     def _get_head_outputs(self, batch_size, h, w):
         feature_shapes = self._get_feature_shapes(h, w)
 
-        num_anchors = self._get_num_anchors()
-        num_outputs = self._get_num_outputs()
+        num_anchors = self.num_anchors
+        num_outputs = self.num_outputs
         head_shapes = [(batch_size, num_anchors, *f_shape[1:], num_outputs) for f_shape in feature_shapes]
         head_outputs = [torch.rand(*h_shape) for h_shape in head_shapes]
 
@@ -131,9 +117,7 @@ class ModelTester(TestCase):
         self.check_jit_scriptable(model, (x,))
 
     def _init_test_anchor_generator(self):
-        strides = self._get_strides()
-        anchor_grids = self._get_anchor_grids()
-        anchor_generator = AnchorGenerator(strides, anchor_grids)
+        anchor_generator = AnchorGenerator(self.strides, self.anchor_grids)
         return anchor_generator
 
     def test_anchor_generator(self):
@@ -149,11 +133,7 @@ class ModelTester(TestCase):
         self.check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_yolo_head(self):
-        in_channels = self._get_in_channels()
-        num_anchors = self._get_num_anchors()
-        num_classes = self._get_num_classes()
-        strides = self._get_strides()
-        box_head = YOLOHead(in_channels, num_anchors, strides, num_classes)
+        box_head = YOLOHead(self.in_channels, self.num_anchors, self.strides, self.num_classes)
         return box_head
 
     def test_yolo_head(self):
@@ -189,54 +169,27 @@ class ModelTester(TestCase):
 
         self.assertEqual(len(out), N)
         self.assertIsInstance(out[0], Dict)
-        self.assertIsInstance(out[0]["boxes"], torch.Tensor)
-        self.assertIsInstance(out[0]["labels"], torch.Tensor)
-        self.assertIsInstance(out[0]["scores"], torch.Tensor)
+        self.assertIsInstance(out[0]["boxes"], Tensor)
+        self.assertIsInstance(out[0]["labels"], Tensor)
+        self.assertIsInstance(out[0]["scores"], Tensor)
         self.check_jit_scriptable(model, (head_outputs, anchors_tuple))
 
-    def _init_test_criterion(self):
-        weights = (1.0, 1.0, 1.0, 1.0)
-        fg_iou_thresh = 0.5
-        bg_iou_thresh = 0.4
-        allow_low_quality_matches = True
-        criterion = SetCriterion(weights, fg_iou_thresh, bg_iou_thresh, allow_low_quality_matches)
-        return criterion
-
-    @unittest.skip("Current it isn't well implemented")
     def test_criterion(self):
-        model = self._init_test_criterion()
-        scripted_model = torch.jit.script(model)  # noqa
+        N, H, W = 4, 640, 640
+        anchor_generator = self._init_test_anchor_generator()
+        feature_maps = self._get_feature_maps(N, H, W)
+        head_outputs = self._get_head_outputs(N, H, W)
+        anchors_tuple = anchor_generator(feature_maps)
 
-
-class AnchorGeneratorTester(TestCase):
-    def _init_test_anchor_generator(self):
-        strides = [4]
-        anchor_grids = [[6, 14]]
-        anchor_generator = AnchorGenerator(strides, anchor_grids)
-
-        return anchor_generator
-
-    def get_features(self, images):
-        s0, s1 = images.shape[-2:]
-        features = [torch.rand(2, 8, s0 // 5, s1 // 5)]
-        return features
-
-    def test_anchor_generator(self):
-        images = torch.randn(2, 3, 10, 10)
-        features = self.get_features(images)
-
-        model = self._init_test_anchor_generator()
-        model.eval()
-        anchors = model(features)
-
-        anchor_output = torch.tensor([[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]])
-        wh_output = torch.tensor([[4.], [4.], [4.], [4.]])
-        xy_output = torch.tensor([[6., 14.], [6., 14.], [6., 14.], [6., 14.]])
-
-        self.assertEqual(len(anchors), 3)
-        self.assertEqual(tuple(anchors[0].shape), (4, 2))
-        self.assertEqual(tuple(anchors[1].shape), (4, 1))
-        self.assertEqual(tuple(anchors[2].shape), (4, 2))
-        self.assertEqual(anchors[0], anchor_output)
-        self.assertEqual(anchors[1], wh_output)
-        self.assertEqual(anchors[2], xy_output)
+        targets = torch.tensor([
+            [0.0000, 7.0000, 0.0714, 0.3749, 0.0760, 0.0654],
+            [0.0000, 1.0000, 0.1027, 0.4402, 0.2053, 0.1920],
+            [1.0000, 5.0000, 0.4720, 0.6720, 0.3280, 0.1760],
+            [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
+        ])
+        criterion = SetCriterion(iou_thresh=0.5)
+        out = criterion(targets, head_outputs, anchors_tuple)
+        self.assertIsInstance(out, Dict)
+        self.assertIsInstance(out['cls_logits'], Tensor)
+        self.assertIsInstance(out['bbox_regression'], Tensor)
+        self.assertIsInstance(out['objectness'], Tensor)
