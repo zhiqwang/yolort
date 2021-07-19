@@ -1,5 +1,4 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-import pytest
 from pathlib import Path
 
 import torch
@@ -75,7 +74,6 @@ def test_train_with_vanilla_module():
     assert isinstance(out["objectness"], Tensor)
 
 
-@pytest.mark.skip("Currently it is not well supported.")
 def test_training_step():
     # Setup the DataModule
     data_path = 'data-bin'
