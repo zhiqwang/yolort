@@ -179,7 +179,7 @@ static void nms_sorted_bboxes(
   }
 }
 
-static int generate_grids_and_stride(
+static void generate_grids_and_stride(
     const int target_size,
     std::vector<int>& strides,
     std::vector<GridAndStride>& grid_strides)
