@@ -1,7 +1,7 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import argparse
 import torch
-from .yolort_deploy_friendly import yolov5_deploy_friendly
+from .yolort_deploy_friendly import yolov5_darknet_pan_s_r40_deploy
 
 
 def get_parser():
@@ -36,13 +36,13 @@ def cli_main():
 
 def export_onnx(args):
 
-    model = yolov5_deploy_friendly(
+    model = yolov5_darknet_pan_s_r40_deploy(
         pretrained=True,
         num_classes=args.num_classes,
     )
     inputs = torch.rand(args.batch_size, 3, 320, 320)
     outputs = model(inputs)
-    print(outputs.shape)
+    print([out.shape for out in outputs])
 
 
 if __name__ == "__main__":
