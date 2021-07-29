@@ -15,10 +15,13 @@
 #include "layer.h"
 #include "net.h"
 
+#if defined(USE_NCNN_SIMPLEOCV)
+#include "simpleocv.h"
+#else
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
+#endif
 #include <float.h>
 #include <stdio.h>
 #include <vector>
@@ -79,13 +82,6 @@ struct Object
   cv::Rect_<float> rect;
   int label;
   float prob;
-};
-
-struct GridAndStride
-{
-  int grid0;
-  int grid1;
-  int stride;
 };
 
 static inline float intersection_area(const Object& a, const Object& b)
@@ -179,98 +175,128 @@ static void nms_sorted_bboxes(
   }
 }
 
-static void generate_grids_and_stride(
-    const int target_size,
-    std::vector<int>& strides,
-    std::vector<GridAndStride>& grid_strides)
+static inline float sigmoid(float x)
 {
-  for (auto stride : strides)
-  {
-    int num_grid = target_size / stride;
-    for (int g1 = 0; g1 < num_grid; g1++)
-    {
-      for (int g0 = 0; g0 < num_grid; g0++)
-      {
-        grid_strides.push_back((GridAndStride){g0, g1, stride});
-      }
-    }
-  }
+  return static_cast<float>(1.f / (1.f + exp(-x)));
 }
 
-static void generate_yolox_proposals(
-    std::vector<GridAndStride> grid_strides,
+static void generate_proposals(
+    const ncnn::Mat& anchors,
+    int stride,
+    const ncnn::Mat& in_pad,
     const ncnn::Mat& feat_blob,
     float prob_threshold,
     std::vector<Object>& objects)
 {
   const int num_grid = feat_blob.h;
-  fprintf(stderr, "output height: %d, width: %d, channels: %d, dims:%d\n",
-      feat_blob.h, feat_blob.w, feat_blob.c, feat_blob.dims);
+
+  int num_grid_x;
+  int num_grid_y;
+  if (in_pad.w > in_pad.h)
+  {
+    num_grid_x = in_pad.w / stride;
+    num_grid_y = num_grid / num_grid_x;
+  }
+  else
+  {
+    num_grid_y = in_pad.h / stride;
+    num_grid_x = num_grid / num_grid_y;
+  }
 
   const int num_class = feat_blob.w - 5;
 
-  const int num_anchors = grid_strides.size();
+  const int num_anchors = anchors.w / 2;
 
-  const float* feat_ptr = feat_blob.channel(0);
-  for (int anchor_idx = 0; anchor_idx < num_anchors; anchor_idx++)
+  for (int q = 0; q < num_anchors; q++)
   {
-    const int grid0 = grid_strides[anchor_idx].grid0;
-    const int grid1 = grid_strides[anchor_idx].grid1;
-    const int stride = grid_strides[anchor_idx].stride;
+    const float anchor_w = anchors[q * 2];
+    const float anchor_h = anchors[q * 2 + 1];
 
-    // yolox/models/yolo_head.py decode logic
-    //  outputs[..., :2] = (outputs[..., :2] + grids) * strides
-    //  outputs[..., 2:4] = torch.exp(outputs[..., 2:4]) * strides
-    float x_center = (feat_ptr[0] + grid0) * stride;
-    float y_center = (feat_ptr[1] + grid1) * stride;
-    float w = exp(feat_ptr[2]) * stride;
-    float h = exp(feat_ptr[3]) * stride;
-    float x0 = x_center - w * 0.5f;
-    float y0 = y_center - h * 0.5f;
+    const ncnn::Mat feat = feat_blob.channel(q);
 
-    float box_objectness = feat_ptr[4];
-    for (int class_idx = 0; class_idx < num_class; class_idx++)
+    for (int i = 0; i < num_grid_y; i++)
     {
-      float box_cls_score = feat_ptr[5 + class_idx];
-      float box_prob = box_objectness * box_cls_score;
-      if (box_prob > prob_threshold)
+      for (int j = 0; j < num_grid_x; j++)
       {
-        Object obj;
-        obj.rect.x = x0;
-        obj.rect.y = y0;
-        obj.rect.width = w;
-        obj.rect.height = h;
-        obj.label = class_idx;
-        obj.prob = box_prob;
+        const float* featptr = feat.row(i * num_grid_x + j);
 
-        objects.push_back(obj);
+        // find class index with max class score
+        int class_index = 0;
+        float class_score = -FLT_MAX;
+        for (int k = 0; k < num_class; k++)
+        {
+          float score = featptr[5 + k];
+          if (score > class_score)
+          {
+            class_index = k;
+            class_score = score;
+          }
+        }
+
+        float box_score = featptr[4];
+
+        float confidence = sigmoid(box_score) * sigmoid(class_score);
+
+        if (confidence >= prob_threshold)
+        {
+          // yolov5/models/yolo.py Detect forward
+          // y = x[i].sigmoid()
+          // y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i].to(x[i].device)) * self.stride[i]  # xy
+          // y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+
+          float dx = sigmoid(featptr[0]);
+          float dy = sigmoid(featptr[1]);
+          float dw = sigmoid(featptr[2]);
+          float dh = sigmoid(featptr[3]);
+
+          float pb_cx = (dx * 2.f - 0.5f + j) * stride;
+          float pb_cy = (dy * 2.f - 0.5f + i) * stride;
+
+          float pb_w = pow(dw * 2.f, 2) * anchor_w;
+          float pb_h = pow(dh * 2.f, 2) * anchor_h;
+
+          float x0 = pb_cx - pb_w * 0.5f;
+          float y0 = pb_cy - pb_h * 0.5f;
+          float x1 = pb_cx + pb_w * 0.5f;
+          float y1 = pb_cy + pb_h * 0.5f;
+
+          Object obj;
+          obj.rect.x = x0;
+          obj.rect.y = y0;
+          obj.rect.width = x1 - x0;
+          obj.rect.height = y1 - y0;
+          obj.label = class_index;
+          obj.prob = confidence;
+
+          objects.push_back(obj);
+        }
       }
-
-    } // class loop
-    feat_ptr += feat_blob.w;
-
-  } // point anchor loop
+    }
+  }
 }
 
-static int detect_yolox(const cv::Mat& bgr, std::vector<Object>& objects)
+static int detect_yolov5(const cv::Mat& bgr, std::vector<Object>& objects)
 {
-  ncnn::Net yolox;
+  ncnn::Net yolov5;
 
-  yolox.opt.use_vulkan_compute = true;
-  // yolox.opt.use_bf16_storage = true;
+  yolov5.opt.use_vulkan_compute = true;
+  // yolov5.opt.use_bf16_storage = true;
 
-  yolox.register_custom_layer("YOLOv5Focus", YOLOv5Focus_layer_creator);
+  yolov5.register_custom_layer("YOLOv5Focus", YOLOv5Focus_layer_creator);
 
-  yolox.load_param("yolox.param");
-  yolox.load_model("yolox.bin");
+  // original pretrained model from https://github.com/ultralytics/yolov5
+  // the ncnn model https://github.com/nihui/ncnn-assets/tree/master/models
+  yolov5.load_param("yolov5s.param");
+  yolov5.load_model("yolov5s.bin");
 
-  const int target_size = 416;
-  const float prob_threshold = 0.3f;
-  const float nms_threshold = 0.65f;
+  const int target_size = 640;
+  const float prob_threshold = 0.25f;
+  const float nms_threshold = 0.45f;
 
   int img_w = bgr.cols;
   int img_h = bgr.rows;
 
+  // letterbox pad to multiple of 32
   int w = img_w;
   int h = img_h;
   float scale = 1.f;
@@ -286,38 +312,90 @@ static int detect_yolox(const cv::Mat& bgr, std::vector<Object>& objects)
     h = target_size;
     w = w * scale;
   }
-  ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB,
-      img_w, img_h, w, h);
+
+  ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h, w, h);
 
   // pad to target_size rectangle
-  int wpad = target_size - w;
-  int hpad = target_size - h;
+  // yolov5/utils/datasets.py letterbox
+  int wpad = (w + 31) / 32 * 32 - w;
+  int hpad = (h + 31) / 32 * 32 - h;
   ncnn::Mat in_pad;
-  // different from yolov5, yolox only pad on bottom and right side,
-  // which means users don't need to extra padding info to decode boxes coordinate.
-  ncnn::copy_make_border(in, in_pad, 0, hpad, 0, wpad, ncnn::BORDER_CONSTANT, 114.f);
+  ncnn::copy_make_border(
+      in,
+      in_pad,
+      hpad / 2,
+      hpad - hpad / 2,
+      wpad / 2,
+      wpad - wpad / 2,
+      ncnn::BORDER_CONSTANT,
+      114.f);
 
-  // python 0-1 input tensor with rgb_means = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225)
-  // so for 0-255 input image, rgb_mean should multiply 255 and norm should div by std.
-  const float mean_vals[3] = {255.f * 0.485f, 255.f * 0.456, 255.f * 0.406f};
-  const float norm_vals[3] = {1 / (255.f * 0.229f), 1 / (255.f * 0.224f), 1 / (255.f * 0.225f)};
+  const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
+  in_pad.substract_mean_normalize(0, norm_vals);
 
-  in_pad.substract_mean_normalize(mean_vals, norm_vals);
-
-  ncnn::Extractor ex = yolox.create_extractor();
+  ncnn::Extractor ex = yolov5.create_extractor();
 
   ex.input("images", in_pad);
 
   std::vector<Object> proposals;
 
+  // anchor setting from yolov5/models/yolov5s.yaml
+
+  // stride 8
   {
     ncnn::Mat out;
     ex.extract("output", out);
 
-    std::vector<int> strides = {8, 16, 32}; // might have stride=64
-    std::vector<GridAndStride> grid_strides;
-    generate_grids_and_stride(target_size, strides, grid_strides);
-    generate_yolox_proposals(grid_strides, out, prob_threshold, proposals);
+    ncnn::Mat anchors(6);
+    anchors[0] = 10.f;
+    anchors[1] = 13.f;
+    anchors[2] = 16.f;
+    anchors[3] = 30.f;
+    anchors[4] = 33.f;
+    anchors[5] = 23.f;
+
+    std::vector<Object> objects8;
+    generate_proposals(anchors, 8, in_pad, out, prob_threshold, objects8);
+
+    proposals.insert(proposals.end(), objects8.begin(), objects8.end());
+  }
+
+  // stride 16
+  {
+    ncnn::Mat out;
+    ex.extract("781", out);
+
+    ncnn::Mat anchors(6);
+    anchors[0] = 30.f;
+    anchors[1] = 61.f;
+    anchors[2] = 62.f;
+    anchors[3] = 45.f;
+    anchors[4] = 59.f;
+    anchors[5] = 119.f;
+
+    std::vector<Object> objects16;
+    generate_proposals(anchors, 16, in_pad, out, prob_threshold, objects16);
+
+    proposals.insert(proposals.end(), objects16.begin(), objects16.end());
+  }
+
+  // stride 32
+  {
+    ncnn::Mat out;
+    ex.extract("801", out);
+
+    ncnn::Mat anchors(6);
+    anchors[0] = 116.f;
+    anchors[1] = 90.f;
+    anchors[2] = 156.f;
+    anchors[3] = 198.f;
+    anchors[4] = 373.f;
+    anchors[5] = 326.f;
+
+    std::vector<Object> objects32;
+    generate_proposals(anchors, 32, in_pad, out, prob_threshold, objects32);
+
+    proposals.insert(proposals.end(), objects32.begin(), objects32.end());
   }
 
   // sort all proposals by score from highest to lowest
@@ -335,10 +413,10 @@ static int detect_yolox(const cv::Mat& bgr, std::vector<Object>& objects)
     objects[i] = proposals[picked[i]];
 
     // adjust offset to original unpadded
-    float x0 = (objects[i].rect.x) / scale;
-    float y0 = (objects[i].rect.y) / scale;
-    float x1 = (objects[i].rect.x + objects[i].rect.width) / scale;
-    float y1 = (objects[i].rect.y + objects[i].rect.height) / scale;
+    float x0 = (objects[i].rect.x - (wpad / 2)) / scale;
+    float y0 = (objects[i].rect.y - (hpad / 2)) / scale;
+    float x1 = (objects[i].rect.x + objects[i].rect.width - (wpad / 2)) / scale;
+    float y1 = (objects[i].rect.y + objects[i].rect.height - (hpad / 2)) / scale;
 
     // clip
     x0 = std::max(std::min(x0, (float)(img_w - 1)), 0.f);
@@ -422,7 +500,7 @@ int main(int argc, char** argv)
   }
 
   std::vector<Object> objects;
-  detect_yolox(m, objects);
+  detect_yolov5(m, objects);
 
   draw_objects(m, objects);
 

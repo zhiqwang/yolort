@@ -22,8 +22,4 @@ add_executable(yolort_ncnn ${YOLO_SOURCE_FILES})
 
 target_compile_features(yolort_ncnn PUBLIC cxx_range_for)
 
-target_link_libraries(
-  yolort_ncnn
-  ${OpenCV_LIBS}
-  ncnn
-)
+target_link_libraries(yolort_ncnn ncnn ${OpenCV_LIBS})
