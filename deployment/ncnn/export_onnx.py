@@ -1,7 +1,7 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import argparse
 import torch
-from .yolort_deploy_friendly import yolov5_darknet_pan_s_r40_deploy
+from tools.yolort_deploy_friendly import yolov5s_r40_deploy_ncnn
 
 
 def get_parser():
@@ -36,7 +36,7 @@ def cli_main():
 
 def export_onnx(args):
 
-    model = yolov5_darknet_pan_s_r40_deploy(
+    model = yolov5s_r40_deploy_ncnn(
         pretrained=True,
         num_classes=args.num_classes,
     )
