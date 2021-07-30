@@ -286,8 +286,8 @@ static int detect_yolov5(const cv::Mat& bgr, std::vector<Object>& objects)
 
   // original pretrained model from https://github.com/ultralytics/yolov5
   // the ncnn model https://github.com/nihui/ncnn-assets/tree/master/models
-  yolov5.load_param("yolort-sim.param");
-  yolov5.load_model("yolort-sim.bin");
+  yolov5.load_param("yolort-opt.param");
+  yolov5.load_model("yolort-opt.bin");
 
   const int target_size = 640;
   const float prob_threshold = 0.25f;
