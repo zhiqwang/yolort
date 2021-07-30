@@ -175,7 +175,7 @@ def space_to_depth(x: Tensor) -> Tensor:
     N, C, H, W = x.size()
     x = x.reshape(N, C, H // 2, 2, W // 2, 2)
     x = x.permute(0, 5, 3, 1, 2, 4)
-    y = x.reshape(N, C*4, H // 2, W // 2)
+    y = x.reshape(N, C * 4, H // 2, W // 2)
     return y
 
 
