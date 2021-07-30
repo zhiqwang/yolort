@@ -286,8 +286,8 @@ static int detect_yolov5(const cv::Mat& bgr, std::vector<Object>& objects)
 
   // original pretrained model from https://github.com/ultralytics/yolov5
   // the ncnn model https://github.com/nihui/ncnn-assets/tree/master/models
-  yolov5.load_param("yolov5s.param");
-  yolov5.load_model("yolov5s.bin");
+  yolov5.load_param("yolort-sim.param");
+  yolov5.load_model("yolort-sim.bin");
 
   const int target_size = 640;
   const float prob_threshold = 0.25f;
@@ -313,7 +313,8 @@ static int detect_yolov5(const cv::Mat& bgr, std::vector<Object>& objects)
     w = w * scale;
   }
 
-  ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h, w, h);
+  ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB,
+      img_w, img_h, w, h);
 
   // pad to target_size rectangle
   // yolov5/utils/datasets.py letterbox
@@ -344,7 +345,7 @@ static int detect_yolov5(const cv::Mat& bgr, std::vector<Object>& objects)
   // stride 8
   {
     ncnn::Mat out;
-    ex.extract("output", out);
+    ex.extract("h1", out);
 
     ncnn::Mat anchors(6);
     anchors[0] = 10.f;
@@ -363,7 +364,7 @@ static int detect_yolov5(const cv::Mat& bgr, std::vector<Object>& objects)
   // stride 16
   {
     ncnn::Mat out;
-    ex.extract("781", out);
+    ex.extract("h2", out);
 
     ncnn::Mat anchors(6);
     anchors[0] = 30.f;
@@ -382,7 +383,7 @@ static int detect_yolov5(const cv::Mat& bgr, std::vector<Object>& objects)
   // stride 32
   {
     ncnn::Mat out;
-    ex.extract("801", out);
+    ex.extract("h3", out);
 
     ncnn::Mat anchors(6);
     anchors[0] = 116.f;
