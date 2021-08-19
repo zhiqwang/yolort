@@ -37,6 +37,7 @@ class COCOEvaluator(Metric):
         self,
         coco_gt: Union[str, PosixPath, COCO],
         iou_type: str = 'bbox',
+        eval_type: str = 'yolov5',
         compute_on_step: bool = True,
         dist_sync_on_step: bool = False,
         process_group: Optional[Any] = None,
@@ -49,6 +50,8 @@ class COCOEvaluator(Metric):
                 - PosixPath: a json file in COCO's result format, and is wrapped with Path.
                 - COCO: COCO api
             iou_type (str): iou type to compute.
+            eval_type (str): The categories predicted by yolov5 are continuous [1-80], which is
+                different from torchvision's discrete 91 categories. Default: yolov5.
         """
         super().__init__(
             compute_on_step=compute_on_step,
@@ -63,10 +66,15 @@ class COCOEvaluator(Metric):
         elif isinstance(coco_gt, COCO):
             coco_gt = copy.deepcopy(coco_gt)
         else:
-            raise NotImplementedError(f"Currently not support type {type(coco_gt)}")
+            raise NotImplementedError(f'Currently not supports type {type(coco_gt)}')
 
         self.coco_gt = coco_gt
-        self.contiguous_to_json_category = coco_gt.getCatIds()
+        if eval_type == 'yolov5':
+            self.category_id_maps = coco_gt.getCatIds()
+        elif eval_type == 'torchvision':
+            self.category_id_maps = list(range(coco_gt.getCatIds()[-1] + 1))
+        else:
+            raise NotImplementedError(f'Currently not supports eval type {eval_type}')
 
         self.iou_type = iou_type
         self.coco_eval = COCOeval(coco_gt, iouType=iou_type)
@@ -198,7 +206,7 @@ class COCOEvaluator(Metric):
                 [
                     {
                         "image_id": original_id,
-                        "category_id": self.contiguous_to_json_category[labels[k]],
+                        "category_id": self.category_id_maps[labels[k]],
                         "bbox": box,
                         "score": scores[k],
                     }

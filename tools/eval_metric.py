@@ -3,13 +3,13 @@ import io
 import contextlib
 import argparse
 import torch
+import torchvision
 
 import yolort
 
-from yolort.data import COCOEvaluator
+from yolort.data import COCOEvaluator, _helper as data_helper
 from yolort.data.coco import COCODetection
 from yolort.data.transforms import default_val_transforms, collate_fn
-from yolort.data import _helper as data_helper
 
 
 def get_parser():
@@ -21,16 +21,17 @@ def get_parser():
     parser.add_argument('--arch', default='yolov5s',
                         help='Model structure to train')
     parser.add_argument('--num_classes', default=80, type=int,
-                        help='Classes number of the model')
+                        help='Number of classes')
     parser.add_argument('--image_size', default=640, type=int,
                         help='Image size for evaluation (default: 640)')
-    parser.add_argument('--score_thresh', default=0.005, type=float,
-                        help='score threshold for mAP evaluation')
     # Dataset Configuration
     parser.add_argument('--image_path', default='./data-bin/coco128/images/train2017',
                         help='Root path of the dataset containing images')
     parser.add_argument('--annotation_path', default=None,
                         help='Path of the annotation file')
+    parser.add_argument('--eval_type', default='yolov5',
+                        help='Type of category id maps, yolov5 use continuous [1, 80], '
+                             'torchvision use discrete ids range in [1, 90]')
     parser.add_argument('--batch_size', default=32, type=int,
                         help='Images per gpu, the total batch size is $NGPU x batch_size')
     parser.add_argument('--num_workers', default=8, type=int, metavar='N',
@@ -87,15 +88,21 @@ def eval_metric(args):
         )
 
     coco_gt = data_helper.get_coco_api_from_dataset(data_set)
-    coco_evaluator = COCOEvaluator(coco_gt)
+    coco_evaluator = COCOEvaluator(coco_gt, eval_type=args.eval_type)
 
     # Model Definition and Initialization
-    model = yolort.models.__dict__[args.arch](
-        pretrained=True,
-        size=(args.image_size, args.image_size),
-        num_classes=args.num_classes,
-        score_thresh=args.score_thresh,
-    )
+    if args.eval_type == 'yolov5':
+        model = yolort.models.__dict__[args.arch](
+            pretrained=True,
+            num_classes=args.num_classes,
+        )
+    elif args.eval_type == 'torchvision':
+        model = torchvision.models.detection.__dict__[args.arch](
+            pretrained=True,
+            num_classes=args.num_classes,
+        )
+    else:
+        raise NotImplementedError(f'Currently not supports eval type: {args.eval_type}')
 
     model = model.eval()
     model = model.to(device)

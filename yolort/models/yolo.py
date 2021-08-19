@@ -60,8 +60,8 @@ class YOLO(nn.Module):
         iou_thresh: float = 0.5,
         criterion: Optional[Callable[..., Dict[str, Tensor]]] = None,
         # Post Process parameter
-        score_thresh: float = 0.05,
-        nms_thresh: float = 0.5,
+        score_thresh: float = 0.005,
+        nms_thresh: float = 0.45,
         detections_per_img: int = 300,
         post_process: Optional[nn.Module] = None,
     ):
