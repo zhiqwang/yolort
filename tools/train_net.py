@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 
-from .data import COCODetectionDataModule
-from . import models
+from yolort import models
+from yolort.data import COCODetectionDataModule
 
 
 def get_args_parser():
