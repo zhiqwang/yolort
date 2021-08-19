@@ -96,15 +96,15 @@ def test_vanilla_coco_evaluator():
     coco = data_helper.get_coco_api_from_dataset(val_dataloader.dataset)
     coco_evaluator = COCOEvaluator(coco)
     # Load model
-    model = yolov5s(pretrained=True, score_thresh=0.001)
+    model = yolov5s(pretrained=True)
     model.eval()
     for images, targets in val_dataloader:
         preds = model(images)
         coco_evaluator.update(preds, targets)
 
     results = coco_evaluator.compute()
-    assert results['AP'] > 38.1
-    assert results['AP50'] > 59.9
+    assert results['AP'] > 37.8
+    assert results['AP50'] > 59.6
 
 
 def test_test_epoch_end():
@@ -118,15 +118,15 @@ def test_test_epoch_end():
     val_dataloader = data_helper.get_dataloader(data_root=data_path, mode='val')
 
     # Load model
-    model = yolov5s(pretrained=True, score_thresh=0.001, annotation_path=annotation_file)
+    model = yolov5s(pretrained=True, annotation_path=annotation_file)
 
     # test step
     trainer = pl.Trainer(max_epochs=1)
     trainer.test(model, test_dataloaders=val_dataloader)
     # test epoch end
     results = model.evaluator.compute()
-    assert results['AP'] > 38.1
-    assert results['AP50'] > 59.9
+    assert results['AP'] > 37.8
+    assert results['AP50'] > 59.6
 
 
 def test_predict_with_vanilla_model():

@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 
-from .data import COCODetectionDataModule
-from . import models
+from yolort import models
+from yolort.data import COCODetectionDataModule
 
 
 def get_args_parser():
-    parser = argparse.ArgumentParser('You only look once detector', add_help=False)
+    parser = argparse.ArgumentParser('You only look once detector', add_help=True)
 
     parser.add_argument('--arch', default='yolov5s',
                         help='model structure to train')
