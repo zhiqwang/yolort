@@ -1,8 +1,10 @@
 from pathlib import Path
+import io
+import contextlib
 import argparse
 import torch
 
-from yolort import models
+import yolort
 
 from yolort.data import COCOEvaluator
 from yolort.data.coco import COCODetection
@@ -20,6 +22,8 @@ def get_parser():
                         help='Model structure to train')
     parser.add_argument('--num_classes', default=80, type=int,
                         help='Classes number of the model')
+    parser.add_argument('--image_size', default=640, type=int,
+                        help='Image size for evaluation (default: 640)')
     parser.add_argument('--score_thresh', default=0.005, type=float,
                         help='score threshold for mAP evaluation')
     # Dataset Configuration
@@ -62,30 +66,33 @@ def prepare_data(image_root, annotation_file, batch_size, num_workers):
 def eval_metric(args):
     if args.num_gpus == 0:
         device = torch.device('cpu')
+        print('Set CPU mode.')
     elif args.num_gpus == 1:
         device = torch.device('cuda')
+        print('Set GPU mode.')
     else:
-        raise NotImplementedError("Currently not supported multi-GPUs mode")
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        raise NotImplementedError('Currently not supported multi-GPUs mode')
 
     # Prepare the dataset and dataloader for evaluation
     image_path = Path(args.image_path)
     annotation_path = Path(args.annotation_path)
 
-    data_set, data_loader = prepare_data(
-        image_path,
-        annotation_path,
-        args.batch_size,
-        args.num_workers,
-    )
+    print('Loading annotations into memory...')
+    with contextlib.redirect_stdout(io.StringIO()):
+        data_set, data_loader = prepare_data(
+            image_path,
+            annotation_path,
+            args.batch_size,
+            args.num_workers,
+        )
 
     coco_gt = data_helper.get_coco_api_from_dataset(data_set)
     coco_evaluator = COCOEvaluator(coco_gt)
 
     # Model Definition and Initialization
-    model = models.__dict__[args.arch](
+    model = yolort.models.__dict__[args.arch](
         pretrained=True,
+        size=(args.image_size, args.image_size),
         num_classes=args.num_classes,
         score_thresh=args.score_thresh,
     )
@@ -94,6 +101,7 @@ def eval_metric(args):
     model = model.to(device)
 
     # COCO evaluation
+    print('Computing the mAP...')
     with torch.no_grad():
         for images, targets in data_loader:
             images = [image.to(device) for image in images]
@@ -103,14 +111,17 @@ def eval_metric(args):
     results = coco_evaluator.compute()
 
     # Format the results
-    coco_evaluator.derive_coco_results()
-    print(f'results: {results}')
+    # coco_evaluator.derive_coco_results()
+
+    # mAP results
+    print(f"The evaluated mAP 0.5:095 is {results['AP']:0.3f}, "
+          f"and mAP 0.5 is {results['AP50']:0.3f}.")
 
 
 def cli_main():
     parser = get_parser()
     args = parser.parse_args()
-    print(args)
+    print(f'Command Line Args: {args}')
     eval_metric(args)
 
 
