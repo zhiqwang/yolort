@@ -7,9 +7,11 @@ from typing import List, Tuple
 from pathlib import Path
 import io
 import pytest
+from PIL import Image
 
 import torch
 from torch import Tensor
+from torchvision import transforms
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
 
 from yolort.models import yolov5s, yolov5m, yolotr
@@ -87,19 +89,16 @@ class TestONNXExporter:
                 else:
                     raise
 
-    def get_image(self, rel_path, size) -> Tensor:
-        from PIL import Image
-        from torchvision import transforms
-        data_path = Path(__file__).parent.resolve() / "assets"
+    def get_image(self, img_name, size) -> Tensor:
 
-        img_path = data_path / rel_path
+        img_path = Path(__file__).parent.resolve() / "assets" / img_name
         image = Image.open(img_path).convert("RGB").resize(size, Image.BILINEAR)
 
         return transforms.ToTensor()(image)
 
     def get_test_images(self) -> Tuple[List[Tensor], List[Tensor]]:
         return ([self.get_image("bus.jpg", (416, 320))],
-                [self.get_image("zidane.png", (352, 480))])
+                [self.get_image("zidane.jpg", (352, 480))])
 
     def test_yolov5s_r31(self):
         images_one, images_two = self.get_test_images()
