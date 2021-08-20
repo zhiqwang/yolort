@@ -1,68 +1,69 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
-import unittest
-
 import torch
 
 from yolort.models import yolov5s, yolov5m, yolov5l, yolotr
 
 
-class TorchScriptTester(unittest.TestCase):
-    def test_yolov5s_script(self):
-        model = yolov5s(pretrained=True)
-        model.eval()
+def test_yolov5s_script():
+    model = yolov5s(pretrained=True, size=(320, 320), score_thresh=0.45)
+    model.eval()
 
-        scripted_model = torch.jit.script(model)
-        scripted_model.eval()
+    scripted_model = torch.jit.script(model)
+    scripted_model.eval()
 
-        x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
+    x = [torch.rand(3, 288, 320), torch.rand(3, 300, 256)]
 
-        out = model(x)
-        out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
+    out = model(x)
+    out_script = scripted_model(x)
 
-    def test_yolov5m_script(self):
-        model = yolov5m(pretrained=True)
-        model.eval()
+    torch.testing.assert_allclose(out[0]["scores"], out_script[1][0]["scores"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["labels"], out_script[1][0]["labels"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0., atol=0.)
 
-        scripted_model = torch.jit.script(model)
-        scripted_model.eval()
 
-        x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
+def test_yolov5m_script():
+    model = yolov5m(pretrained=True, size=(320, 320), score_thresh=0.45)
+    model.eval()
 
-        out = model(x)
-        out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
+    scripted_model = torch.jit.script(model)
+    scripted_model.eval()
 
-    def test_yolov5l_script(self):
-        model = yolov5l(pretrained=True)
-        model.eval()
+    x = [torch.rand(3, 288, 320), torch.rand(3, 300, 256)]
 
-        scripted_model = torch.jit.script(model)
-        scripted_model.eval()
+    out = model(x)
+    out_script = scripted_model(x)
+    torch.testing.assert_allclose(out[0]["scores"], out_script[1][0]["scores"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["labels"], out_script[1][0]["labels"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0., atol=0.)
 
-        x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
 
-        out = model(x)
-        out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
+def test_yolov5l_script():
+    model = yolov5l(pretrained=True, size=(320, 320), score_thresh=0.45)
+    model.eval()
 
-    def test_yolotr_script(self):
-        model = yolotr(pretrained=True)
-        model.eval()
+    scripted_model = torch.jit.script(model)
+    scripted_model.eval()
 
-        scripted_model = torch.jit.script(model)
-        scripted_model.eval()
+    x = [torch.rand(3, 288, 320), torch.rand(3, 300, 256)]
 
-        x = [torch.rand(3, 416, 320), torch.rand(3, 480, 352)]
+    out = model(x)
+    out_script = scripted_model(x)
+    torch.testing.assert_allclose(out[0]["scores"], out_script[1][0]["scores"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["labels"], out_script[1][0]["labels"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0., atol=0.)
 
-        out = model(x)
-        out_script = scripted_model(x)
-        self.assertTrue(out[0]["scores"].equal(out_script[1][0]["scores"]))
-        self.assertTrue(out[0]["labels"].equal(out_script[1][0]["labels"]))
-        self.assertTrue(out[0]["boxes"].equal(out_script[1][0]["boxes"]))
+
+def test_yolotr_script():
+    model = yolotr(pretrained=True, size=(320, 320), score_thresh=0.45)
+    model.eval()
+
+    scripted_model = torch.jit.script(model)
+    scripted_model.eval()
+
+    x = [torch.rand(3, 288, 320), torch.rand(3, 300, 256)]
+
+    out = model(x)
+    out_script = scripted_model(x)
+    torch.testing.assert_allclose(out[0]["scores"], out_script[1][0]["scores"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["labels"], out_script[1][0]["labels"], rtol=0., atol=0.)
+    torch.testing.assert_allclose(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0., atol=0.)
