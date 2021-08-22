@@ -115,8 +115,8 @@ def eval_metric(args):
     results = evaluate(model, data_loader, coco_evaluator, device, args.print_freq)
 
     # mAP results
-    print(f"The evaluated mAP 0.50:0.95 is {results['AP']:0.3f}, "
-          f"and mAP 0.50 is {results['AP50']:0.3f}.")
+    print(f"The evaluated mAP at 0.50:0.95 is {results['AP']:0.3f}, "
+          f"and mAP at 0.50 is {results['AP50']:0.3f}.")
 
 
 @torch.no_grad()
