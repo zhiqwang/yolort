@@ -1,15 +1,17 @@
 from pathlib import Path
 import io
+import time
 import contextlib
 import argparse
+
 import torch
 import torchvision
 
 import yolort
-
 from yolort.data import COCOEvaluator, _helper as data_helper
 from yolort.data.coco import COCODetection
 from yolort.data.transforms import default_val_transforms, collate_fn
+from yolort.utils.logger import MetricLogger
 
 
 def get_parser():
@@ -37,6 +39,8 @@ def get_parser():
     parser.add_argument('--num_workers', default=8, type=int, metavar='N',
                         help='Number of data loading workers (default: 8)')
 
+    parser.add_argument('--print_freq', default=20, type=int,
+                        help='The frequency of printing the logging')
     parser.add_argument('--output_dir', default='.',
                         help='Path where to save')
     return parser
@@ -107,22 +111,39 @@ def eval_metric(args):
     model = model.eval()
     model = model.to(device)
 
-    # COCO evaluation
     print('Computing the mAP...')
-    with torch.no_grad():
-        for images, targets in data_loader:
-            images = [image.to(device) for image in images]
-            preds = model(images)
-            coco_evaluator.update(preds, targets)
-
-    results = coco_evaluator.compute()
-
-    # Format the results
-    # coco_evaluator.derive_coco_results()
+    results = evaluate(model, data_loader, coco_evaluator, device, args.print_freq)
 
     # mAP results
-    print(f"The evaluated mAP 0.5:095 is {results['AP']:0.3f}, "
-          f"and mAP 0.5 is {results['AP50']:0.3f}.")
+    print(f"The evaluated mAP at 0.50:0.95 is {results['AP']:0.3f}, "
+          f"and mAP at 0.50 is {results['AP50']:0.3f}.")
+
+
+@torch.no_grad()
+def evaluate(model, data_loader, coco_evaluator, device, print_freq):
+    # COCO evaluation
+    metric_logger = MetricLogger(delimiter="  ")
+    header = 'Test:'
+    for images, targets in metric_logger.log_every(data_loader, print_freq, header):
+        images = list(image.to(device) for image in images)
+
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+
+        model_time = time.time()
+        preds = model(images)
+        model_time = time.time() - model_time
+
+        evaluator_time = time.time()
+        coco_evaluator.update(preds, targets)
+        evaluator_time = time.time() - evaluator_time
+
+        metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+
+    # gather the stats from all processes
+    metric_logger.synchronize_between_processes()
+    results = coco_evaluator.compute()
+    return results
 
 
 def cli_main():
