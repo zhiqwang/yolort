@@ -129,13 +129,15 @@ def evaluate(model, data_loader, coco_evaluator, device, print_freq):
 
         if torch.cuda.is_available():
             torch.cuda.synchronize()
-        model_time = time.time()
 
+        model_time = time.time()
         preds = model(images)
         model_time = time.time() - model_time
+
         evaluator_time = time.time()
         coco_evaluator.update(preds, targets)
         evaluator_time = time.time() - evaluator_time
+
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
     # gather the stats from all processes
