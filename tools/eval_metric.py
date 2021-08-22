@@ -116,7 +116,7 @@ def eval_metric(args):
 
     # mAP results
     print(f"The evaluated mAP 0.50:0.95 is {results['AP']:0.3f}, "
-          f"and mAP 0.5 is {results['AP50']:0.3f}.")
+          f"and mAP 0.50 is {results['AP50']:0.3f}.")
 
 
 @torch.no_grad()
