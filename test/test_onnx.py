@@ -105,7 +105,7 @@ class TestONNXExporter:
         ('yolov5m', 'r4.0'),
         ('yolotr', 'r4.0'),
     ])
-    def test_yolov5s_r31(self, arch, upstream_version):
+    def test_yolort_export_onnx(self, arch, upstream_version):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
 
