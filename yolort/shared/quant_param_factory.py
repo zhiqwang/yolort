@@ -20,10 +20,9 @@ import collections
 import numpy as np
 import logging
 
-from pyxir.graph.layer import xlayer
+from yolort.graph.layer import xlayer
 
 from .quant_params import QuantParams
-from ..graph import XGraph
 
 logger = logging.getLogger('pyxir')
 
@@ -651,7 +650,7 @@ class QuantParamFactory:
 
     def rebuild_from_scratch(
         self,
-        xgraph: XGraph,
+        xgraph,
         quant_params: QuantParams,
         quantizecfg: str,
         bitwidth: int = 8,

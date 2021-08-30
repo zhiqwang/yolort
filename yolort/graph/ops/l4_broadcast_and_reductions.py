@@ -22,7 +22,7 @@ from typing import Dict, List
 
 import logging
 
-from ...shapes import TensorShape, get_numpy_broadcasted_shape
+from yolort.shapes import TensorShape, get_numpy_broadcasted_shape
 
 from ..layer.xlayer import XLayer
 from ..layer.xlayer_factory import xop_register_factory, xop_register

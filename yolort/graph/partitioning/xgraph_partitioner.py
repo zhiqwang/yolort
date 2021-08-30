@@ -19,7 +19,7 @@ import logging
 
 from typing import List, Optional
 
-from ...shapes import TupleShape
+from yolort.shapes import TupleShape
 
 from .. import XGraph
 from ..xgraph_factory import XGraphFactory

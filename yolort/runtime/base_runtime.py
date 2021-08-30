@@ -22,9 +22,9 @@ import abc
 import logging
 import numpy as np
 
-from ..graph import XGraph, XLayer
-from ..graph.layer import xlayer
-from ..shared import fancy_logging
+from yolort.graph import XGraph, XLayer
+from yolort.graph.layer import xlayer
+from yolort.shared import fancy_logging
 
 logger = logging.getLogger("pyxir")
 fancy_logger = fancy_logging.getLogger("pyxir")

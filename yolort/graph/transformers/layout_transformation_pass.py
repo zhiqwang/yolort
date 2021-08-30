@@ -19,7 +19,7 @@ Module for transforming the layout of an XGraph
 from typing import List
 import logging
 
-from ...shared import fancy_logging
+from yolort.shared import fancy_logging
 
 from .. import XGraph, XLayer
 from ..layer.xlayer import defaultXLayer

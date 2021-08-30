@@ -21,7 +21,7 @@ import libpyxir as lpx
 from .vector import Vector, StrVector
 
 
-class HashMap(object):
+class HashMap:
 
     def __init__(self, h_map_):
         self._map = h_map_

@@ -23,7 +23,8 @@ from typing import Dict, List, Any
 import logging
 import numpy as np
 
-from ...shapes import TensorShape, get_numpy_broadcasted_shape
+from yolort.shapes import TensorShape, get_numpy_broadcasted_shape
+
 from ..layer.xlayer import XLayer, ConvData, ScaleData
 from ..layer.xlayer_factory import xop_register_factory, xop_register
 from ..xop_registry import xop_register_op_transpose_transform

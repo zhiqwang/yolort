@@ -26,10 +26,11 @@ import numpy as np
 
 from packaging import version
 
-from .json_io import XGraphJSONEncoder
+from ..xgraph import XGraph
 from ..xgraph_factory import XGraphFactory
 from ..layer import xlayer
-from ..xgraph import XGraph
+
+from .json_io import XGraphJSONEncoder
 
 logger = logging.getLogger('pyxir')
 

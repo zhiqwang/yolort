@@ -18,8 +18,8 @@ Module for generic subgraph build function
 
 import logging
 
-from ...shared import fancy_logging
-from ...shapes import TensorShape
+from yolort.shared import fancy_logging
+from yolort.shapes import TensorShape
 
 from .. import XGraph
 from ..layer.xlayer import defaultXLayer

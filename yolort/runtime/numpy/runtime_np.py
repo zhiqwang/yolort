@@ -21,8 +21,8 @@ from typing import Dict, List, Callable
 import logging
 import numpy as np
 
-from ...shared import fancy_logging
-from ...graph import XGraph
+from yolort.shared import fancy_logging
+from yolort.graph import XGraph
 
 from ..base_runtime import BaseRuntime
 from .. import base

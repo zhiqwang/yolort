@@ -23,8 +23,8 @@ import warnings
 
 import libpyxir as lpx
 
-from ..shared.vector import StrVector
-from ..shared.quantizer_output import QuantizerOutput
+from yolort.shared.vector import StrVector
+from yolort.shared.quantizer_output import QuantizerOutput
 
 from . import XLayer
 from .layer.xattr_dict import XAttrDict

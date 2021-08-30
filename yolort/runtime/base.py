@@ -22,10 +22,10 @@ import copy
 import logging
 import warnings
 
-from ..graph import XLayer
-from ..shapes import TensorShape
-from ..shared import fancy_logging
-from ..shared.vector import FloatVector
+from yolort.graph import XLayer
+from yolort.shapes import TensorShape
+from yolort.shared import fancy_logging
+from yolort.shared.vector import FloatVector
 
 from .rt_layer import BaseLayer, RtLayer, InputLayer, ConstantLayer
 

@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for XLayer definition"""
+"""
+Module for XLayer definition
+"""
 from typing import Dict, List
 import json
 import numpy as np
@@ -21,14 +23,14 @@ import libpyxir as lpx
 
 from collections import namedtuple
 
-from ...shapes import TensorShape, TupleShape
-from ...shared.vector import StrVector, IntVector, IntVector2D
+from yolort.shapes import TensorShape, TupleShape
+from yolort.shared.vector import StrVector, IntVector, IntVector2D
 
 from .xattr_dict import XAttrDict
 
 
 # Convolution Data: WX + B
-ConvData = namedtuple("ConvData",  ['weights', 'biases'])
+ConvData = namedtuple("ConvData", ['weights', 'biases'])
 
 # Scale Data: gamma*X + beta
 ScaleData = namedtuple("ScaleData", ['gamma', 'beta'])

@@ -20,7 +20,7 @@ from typing import List, Dict
 import abc
 import numpy as np
 
-from ..shapes import TupleShape, TensorShape
+from yolort.shapes import TupleShape, TensorShape
 
 
 class RtLayer:

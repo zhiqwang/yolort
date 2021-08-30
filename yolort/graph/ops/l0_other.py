@@ -23,7 +23,8 @@ from typing import Dict, List, Any, Optional
 import logging
 import numpy as np
 
-from ...shapes import TensorShape, TupleShape
+from yolort.shapes import TensorShape, TupleShape
+
 from ..layer.xlayer import defaultXLayer, XLayer
 from ..layer.xlayer_factory import xop_register_factory, xop_register
 

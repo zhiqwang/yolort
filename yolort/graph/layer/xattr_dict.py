@@ -18,8 +18,8 @@ import json
 
 import libpyxir as lpx
 
-from ...shared.hash_map import HashMap, MapStrStr, MapStrVectorStr
-from ...shared.vector import Vector, StrVector, IntVector, FloatVector, IntVector2D
+from yolort.shared.hash_map import HashMap, MapStrStr, MapStrVectorStr
+from yolort.shared.vector import Vector, StrVector, IntVector, FloatVector, IntVector2D
 
 
 class XAttrDict:

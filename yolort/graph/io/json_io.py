@@ -18,7 +18,7 @@ Module for XGraph JSON encoder and decoder
 
 import json
 
-from ...shapes import TensorShape, TupleShape
+from yolort.shapes import TensorShape, TupleShape
 
 
 class XGraphJSONEncoder(json.JSONEncoder):

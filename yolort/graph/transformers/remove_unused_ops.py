@@ -20,7 +20,9 @@ from ..layer.xlayer import XLayer
 
 
 class RemoveUnusedOps(XGraphMutator):
-    """Remove unused operators"""
+    """
+    Remove unused operators
+    """
 
     def __init__(self):
         super().__init__()

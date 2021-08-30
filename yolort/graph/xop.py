@@ -15,6 +15,7 @@
 """
 Module for XOp definition
 """
+
 from typing import Callable
 
 

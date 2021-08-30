@@ -19,7 +19,8 @@ Module for shared TupleShape data structure
 import numpy as np
 from collections import UserList
 
-from ..shared.vector import IntVector
+from yolort.shared.vector import IntVector
+
 from .tensor_shape import TensorShape
 
 

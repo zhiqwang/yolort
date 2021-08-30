@@ -14,8 +14,6 @@
 
 """
 Module for creating pydot utility functionality
-
-
 """
 
 from .factory import PydotFactory

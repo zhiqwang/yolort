@@ -27,14 +27,19 @@ from ..layer.xlayer import XLayer
 logger = logging.getLogger("pyxir")
 
 
-LAYER_STYLE_DEFAULT = {'shape': 'record',
-                       'fillcolor': '#495469',
-                       'style': 'filled'}
-BLOB_STYLE = {'shape': 'octagon',
-              'fillcolor': '#E0E0E0',
-              'style': 'filled'}
+LAYER_STYLE_DEFAULT = {
+    'shape': 'record',
+    'fillcolor': '#495469',
+    'style': 'filled',
+}
 
-      
+BLOB_STYLE = {
+    'shape': 'octagon',
+    'fillcolor': '#E0E0E0',
+    'style': 'filled',
+}
+
+
 def get_bottom_layers(
     layer_name: str,
     pydot_graph: pydot.Dot,

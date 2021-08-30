@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Module for XBuffer definition and functionality """
+"""
+Module for XBuffer definition and functionality
+"""
 
 import numpy as np
 import libpyxir as lpx

@@ -19,21 +19,20 @@ Module for testing the pyxir Decent quantizer simulation runtime
 """
 
 import numpy as np
-import pyxir as px
 
+import yolort
 from yolort.runtime.decentq_sim.runtime_decentq_sim import RuntimeDecentQSim
 from yolort.graph.xgraph_factory import XGraphFactory
 
 
 def test_decentq_sim_runtime():
-    K = np.reshape(
-        np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]], dtype=np.float32),
-        (2, 1, 2, 2),
-    )
+    K = np.array(
+        [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], dtype=np.float32
+    ).reshape(2, 1, 2, 2)
 
-    i = px.ops.input('input', [1, 1, 4, 4])
-    k = px.ops.constant('kernel', K)
-    c = px.ops.conv2d(
+    i = yolort.ops.input('input', [1, 1, 4, 4])
+    k = yolort.ops.constant('kernel', K)
+    c = yolort.ops.conv2d(
         op_name='conv1',
         input_layer=i,
         weights_layer=k,

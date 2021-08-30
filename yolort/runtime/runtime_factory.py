@@ -18,8 +18,8 @@ from typing import List
 
 import logging
 
-from ..graph import XGraph
-from ..graph.xgraph_factory import XGraphFactory
+from yolort.graph import XGraph
+from yolort.graph.xgraph_factory import XGraphFactory
 
 from .base_runtime import BaseRuntime
 

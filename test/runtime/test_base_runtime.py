@@ -20,9 +20,6 @@ import numpy as np
 
 from typing import List, Dict
 
-# ! Important for device registration
-import pyxir
-
 from yolort.graph import XGraph
 from yolort.graph.layer.xlayer import XLayer, ConvData
 from yolort.graph.xgraph_factory import XGraphFactory

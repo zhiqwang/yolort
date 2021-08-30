@@ -22,7 +22,7 @@ from typing import Dict, List, Any
 
 import logging
 
-from ...shapes import TensorShape, TupleShape
+from yolort.shapes import TensorShape, TupleShape
 
 from ..layer.xlayer import XLayer
 from ..layer.xlayer_factory import xop_register_factory, xop_register

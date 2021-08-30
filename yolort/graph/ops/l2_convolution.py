@@ -25,7 +25,7 @@ import logging
 
 import numpy as np
 
-from ...shapes import TensorShape
+from yolort.shapes import TensorShape
 
 from ..layer.xlayer import XLayer, BatchData, ConvData
 from ..layer.xlayer_factory import xop_register_factory, xop_register

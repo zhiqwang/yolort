@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for Decent quantizer simulation runtime"""
+"""
+Module for Decent quantizer simulation runtime
+"""
 
 import os
 import copy
 import numpy as np
 
-from typing import List, Dict, Callable, Union
+from typing import List, Dict, Union
 
-from ...graph import XLayer, XGraph
-from ...graph.xgraph_factory import XGraphFactory
-from ...graph.partitioning.xgraph_partitioner import XGraphPartitioner
-from ...target_registry import TargetRegistry
+from yolort.graph import XLayer, XGraph
+from yolort.graph.xgraph_factory import XGraphFactory
+from yolort.graph.partitioning.xgraph_partitioner import XGraphPartitioner
+from yolort.target_registry import TargetRegistry
 
 from ..base_runtime import BaseRuntime
 
