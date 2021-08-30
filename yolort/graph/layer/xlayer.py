@@ -19,11 +19,12 @@ Module for XLayer definition
 from typing import Dict, List
 import json
 import numpy as np
-import pyxir as px
+
 import libpyxir as lpx
 
 from collections import namedtuple
 
+from yolort.base import stringify
 from yolort.shapes import TensorShape, TupleShape
 from yolort.shared.vector import StrVector, IntVector, IntVector2D
 
@@ -133,7 +134,7 @@ class XLayer:
     @name.setter
     def name(self, name_: str):
         # Stringify for TF quantizer
-        self._xlayer.name = px.stringify(name_)
+        self._xlayer.name = stringify(name_)
 
     @property
     def type(self):
@@ -185,7 +186,7 @@ class XLayer:
 
     @tops.setter
     def tops(self, tops_: list):
-        self._xlayer.tops = lpx.StrVector([px.stringify(t) for t in tops_])
+        self._xlayer.tops = lpx.StrVector([stringify(t) for t in tops_])
 
     @property
     def bottoms(self):
@@ -193,7 +194,7 @@ class XLayer:
 
     @bottoms.setter
     def bottoms(self, bottoms_: list):
-        self._xlayer.bottoms = lpx.StrVector([px.stringify(b) for b in bottoms_])
+        self._xlayer.bottoms = lpx.StrVector([stringify(b) for b in bottoms_])
 
     @property
     def layer(self):
@@ -211,7 +212,8 @@ class XLayer:
         if len(self.type) > 0 and self.type[0] in ['Convolution', 'Conv2DTranspose', 'Dense']:
             assert len(_data) == 2, (
                 f"{self.type[0]} layer should have data attribute "
-                f"of size 2 but got: {len(_data)}")
+                f"of size 2 but got: {len(_data)}"
+            )
             return ConvData(*_data)
         elif 'Scale' in self.type:
             return ScaleData(*_data)
