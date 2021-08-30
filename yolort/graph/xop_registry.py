@@ -37,7 +37,7 @@ class XOpRegistry:
             Check whether the xop exists
             """
             if not self.is_xop(xop):
-                raise ValueError(f"Unknown XOp {device}, registered XOps are: {self.get_xop_names()}")
+                raise ValueError(f"Unknown XOp {xop}, registered XOps are: {self.get_xop_names()}")
 
         def is_xop(self, xop: str) -> bool:
             return xop in self.xops

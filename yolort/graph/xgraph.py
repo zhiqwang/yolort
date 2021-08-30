@@ -26,7 +26,7 @@ import libpyxir as lpx
 from yolort.shared.vector import StrVector
 from yolort.shared.quantizer_output import QuantizerOutput
 
-from . import XLayer
+from .layer import XLayer
 from .layer.xattr_dict import XAttrDict
 
 logger = logging.getLogger('pyxir')

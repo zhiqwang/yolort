@@ -20,11 +20,11 @@ from typing import Dict, List
 import json
 import numpy as np
 
+import yolort as yrt
 import libpyxir as lpx
 
 from collections import namedtuple
 
-from yolort.base import stringify
 from yolort.shapes import TensorShape, TupleShape
 from yolort.shared.vector import StrVector, IntVector, IntVector2D
 
@@ -134,7 +134,7 @@ class XLayer:
     @name.setter
     def name(self, name_: str):
         # Stringify for TF quantizer
-        self._xlayer.name = stringify(name_)
+        self._xlayer.name = yrt.stringify(name_)
 
     @property
     def type(self):
@@ -149,17 +149,15 @@ class XLayer:
         _shapes = self._xlayer.shapes
         _shapes_t = self._xlayer.shapes_t
         if _shapes_t == 'TensorShape' and len(_shapes) != 1:
-            raise ValueError("TensorShape can only be one dimensional"
-                             " but got: {}".format(len(_shapes)))
+            raise ValueError(f"TensorShape can only be one dimensional but got: {len(_shapes)}")
 
         if _shapes_t == 'TensorShape':
             return TensorShape(IntVector(_shapes[0]))
         elif _shapes_t == 'TupleShape':
             return TupleShape(IntVector2D(_shapes))
         else:
-            raise ValueError("Unsupported shapes type: {}, should be"
-                             " TensorShape or TupleShape"
-                             .format(_shapes_t))
+            raise ValueError(f"Unsupported shapes type: {_shapes_t}, should be "
+                             "TensorShape or TupleShape")
 
     @shapes.setter
     def shapes(self, shapes_):
@@ -186,7 +184,7 @@ class XLayer:
 
     @tops.setter
     def tops(self, tops_: list):
-        self._xlayer.tops = lpx.StrVector([stringify(t) for t in tops_])
+        self._xlayer.tops = lpx.StrVector([yrt.stringify(t) for t in tops_])
 
     @property
     def bottoms(self):
@@ -194,7 +192,7 @@ class XLayer:
 
     @bottoms.setter
     def bottoms(self, bottoms_: list):
-        self._xlayer.bottoms = lpx.StrVector([stringify(b) for b in bottoms_])
+        self._xlayer.bottoms = lpx.StrVector([yrt.stringify(b) for b in bottoms_])
 
     @property
     def layer(self):
@@ -263,7 +261,6 @@ class XLayer:
     @property
     def subgraph_data(self):
         return [XLayer._from_xlayer(x) for x in self._xlayer.subgraph_data]
-        # return make_any_vector(XLayer._from_xlayer, lpx.XLayerVector)(self._xlayer.subgraph_data)
 
     @subgraph_data.setter
     def subgraph_data(self, subgraph_data_: list):

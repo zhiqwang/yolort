@@ -8,8 +8,18 @@ from yolort import utils
 from yolort import graph
 from yolort.graph import ops
 
-from .targets.cpu import build_for_cpu_execution, cpu_xgraph_optimizer, cpu_xgraph_quantizer, cpu_xgraph_compiler
-from .graph.xop_registry import XOpRegistry, xop_register_op_layout_transform, xop_register_op_transpose_transform
+from .base import stringify
+
+from .targets.cpu import (
+    build_for_cpu_execution,
+    cpu_xgraph_optimizer,
+    cpu_xgraph_quantizer,
+    cpu_xgraph_compiler,
+)
+from .graph.xop_registry import (
+    xop_register_op_layout_transform,
+    xop_register_op_transpose_transform,
+)
 from .runtime.base_runtime import BaseRuntime
 from .runtime import rt_manager
 from .target_registry import TargetRegistry, register_op_support_check
@@ -61,11 +71,13 @@ def register_target(
     )
 
 
-register_target('cpu',
-                cpu_xgraph_optimizer,
-                cpu_xgraph_quantizer,
-                cpu_xgraph_compiler,
-                build_for_cpu_execution)
+register_target(
+    'cpu',
+    cpu_xgraph_optimizer,
+    cpu_xgraph_quantizer,
+    cpu_xgraph_compiler,
+    build_for_cpu_execution,
+)
 
 
 @register_op_support_check('cpu', 'All')

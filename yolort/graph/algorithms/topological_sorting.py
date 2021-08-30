@@ -15,9 +15,10 @@
 """
 Utility for topologically sorting a list of XLayer objects
 """
+
 from typing import List
 
-from ..layer.xlayer import XLayer
+from ..layer import XLayer
 
 
 def sort_topologically(net: List[XLayer]) -> List[XLayer]:

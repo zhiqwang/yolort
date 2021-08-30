@@ -16,5 +16,5 @@
 Graph level module
 """
 
-from .layer.xlayer import XLayer
+from .layer import XLayer
 from .xgraph import XGraph

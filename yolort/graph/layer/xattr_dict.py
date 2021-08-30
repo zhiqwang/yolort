@@ -124,8 +124,7 @@ class XAttrDict:
         elif _xattr.type == 'MAP_STR_VSTR':
             return MapStrVectorStr(_xattr.map_str_vstr).to_dict()
         else:
-            raise NotImplementedError("Unsupported attribute: {} of type: {}"
-                                      .format(_xattr, _xattr.type))
+            raise NotImplementedError(f"Unsupported attribute: {_xattr} of type: {_xattr.type}")
 
     def _get_xattr_map(self):
         return self._xattr_map
@@ -151,11 +150,11 @@ class XAttrDict:
         raise NotImplementedError()
 
     def __setitem__(self, key: str, value):
-        value_error = "Unsupported value: {} for attribute: {}. XAttr values"\
-                      " can only be of types: int, float, str, List[int],"\
-                      " List[float], List[str], List[List[int]],"\
-                      " Dict[str, str], Dict[Str, List[Str]]"\
-                      .format(value, key)
+        value_error = (
+            f"Unsupported value: {value} for attribute: {key}. XAttr values can only "
+            "be of types: int, float, str, List[int], List[float], List[str], "
+            "List[List[int]], Dict[str, str], Dict[Str, List[Str]]"
+        )
         # TODO: improve this code
         if isinstance(value, list):
             if all([isinstance(e, int) for e in value]):
@@ -179,19 +178,13 @@ class XAttrDict:
                 value = MapStrStr.from_dict(value).get_lpx_map()
             else:
                 value = MapStrVectorStr.from_dict(value).get_lpx_map()
-                # raise ValueError("Unsupported dictionary for XAttr with"
-                #                  " values"
-                #                  " of type: {}, only 'Str' and 'List[Str]'"
-                #                  " supported"
-                #                  .format(type(value.volues()[0])))
+
         elif isinstance(value, (MapStrVectorStr, MapStrStr)):
             value = value.get_lpx_map()
-        elif isinstance(value, (StrVector, IntVector, IntVector2D,
-                                FloatVector)):
+        elif isinstance(value, (StrVector, IntVector, IntVector2D, FloatVector)):
             value = value.get_lpx_vector()
-        elif value is not None and \
-            not isinstance(value, (float, int, str, StrVector, IntVector,
-                                   IntVector2D, FloatVector)):
+        elif value is not None and not isinstance(value, (float, int, str, StrVector, IntVector,
+                                                          IntVector2D, FloatVector)):
             raise ValueError(value_error)
 
         if value is not None:

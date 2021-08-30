@@ -96,7 +96,7 @@ def partition(
     return p_xgraph
 
 
-@register_opaque_func('pyxir.partition', [
+@register_opaque_func('yir.partition', [
     TypeCode.XGraph,
     TypeCode.vStr,
     TypeCode.Str,
@@ -171,7 +171,7 @@ def compile(xgraph: XGraph, target: str, **kwargs) -> XGraph:
     return c_xgraph
 
 
-@register_opaque_func('pyxir.compile', [
+@register_opaque_func('yir.compile', [
     TypeCode.XGraph,
     TypeCode.Str,
     TypeCode.vStr,
@@ -280,7 +280,7 @@ def _quantize(
     return q_xgraph
 
 
-@register_opaque_func('pyxir.quantize', [
+@register_opaque_func('yir.quantize', [
     TypeCode.XGraph,
     TypeCode.Str,
     TypeCode.vStr,
@@ -307,8 +307,7 @@ def quantization_opaque_func(
     """
 
     def inputs_func(iter):
-        inputs = {in_name: it.to_numpy()
-                  for in_name, it in zip(in_names, in_tensors)}
+        inputs = {in_name: it.to_numpy() for in_name, it in zip(in_names, in_tensors)}
         return inputs
 
     q_xgraph = _quantize(xgraph, target, inputs_func)
@@ -369,7 +368,7 @@ def build(
     )
 
 
-@register_opaque_func('pyxir.build_rt', [
+@register_opaque_func('yir.build_rt', [
     TypeCode.XGraph,
     TypeCode.Str,
     TypeCode.Str,
@@ -443,7 +442,7 @@ def build_rt_opaque_func(
     rt_callback.set_func(rt_func, [TypeCode.vXBuffer, TypeCode.vXBuffer])
 
 
-@register_opaque_func('pyxir.build_online_quant_rt', [
+@register_opaque_func('yir.build_online_quant_rt', [
     TypeCode.XGraph,
     TypeCode.Str,
     TypeCode.Str,
@@ -552,7 +551,6 @@ def build_online_quant_rt_opaque_func(
         # TODO: output order does not match
         for out, out_tensor in zip(outs, out_tensors):
             out_tensor.copy_from(out)
-            
 
     # Set the internal function in the rt_cpu_callback OpaqueFunc
     rt_cpu_callback.set_func(rt_func, [TypeCode.vXBuffer, TypeCode.vXBuffer])
@@ -644,7 +642,7 @@ def run(
 ########
 
 
-@register_opaque_func('pyxir.test.copy_xbuffers', [
+@register_opaque_func('yir.test.copy_xbuffers', [
     TypeCode.vXBuffer,
     TypeCode.vXBuffer,
 ])

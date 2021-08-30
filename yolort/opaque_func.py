@@ -38,32 +38,41 @@ class OpaqueFunc:
     type_codes_ = {
         TypeCode.vInt: (
             lambda arg_: IntVector(arg_.ints),
-            lambda arg_: lpx.OpaqueValue(lpx.IntVector(arg_))),
+            lambda arg_: lpx.OpaqueValue(lpx.IntVector(arg_))
+        ),
         TypeCode.Str: (
             lambda arg_: arg_.s,
-            lambda arg_: lpx.OpaqueValue(arg_)),
+            lambda arg_: lpx.OpaqueValue(arg_)
+        ),
         TypeCode.Byte: (
             lambda arg_: arg_.bytes,
-            lambda arg_: lpx.OpaqueValue(arg_)),
+            lambda arg_: lpx.OpaqueValue(arg_)
+        ),
         TypeCode.vStr: (
             lambda arg_: StrVector(arg_.strings),
-            lambda arg_: lpx.OpaqueValue(lpx.StrVector(arg_))),
+            lambda arg_: lpx.OpaqueValue(lpx.StrVector(arg_))
+        ),
         TypeCode.StrContainer: (
             lambda arg_: StrContainer.from_lib(arg_.str_c),
-            lambda arg_: lpx.OpaqueValue(arg_._str_c)),
+            lambda arg_: lpx.OpaqueValue(arg_._str_c)
+        ),
         TypeCode.BytesContainer: (
             lambda arg_: BytesContainer.from_lib(arg_.bytes_c),
-            lambda arg_: lpx.OpaqueValue(arg_._bytes_c)),
+            lambda arg_: lpx.OpaqueValue(arg_._bytes_c)
+        ),
         TypeCode.XGraph: (
             lambda arg_: XGraph._from_xgraph(arg_.xg),
-            lambda arg_: lpx.OpaqueValue(arg_._xgraph)),
+            lambda arg_: lpx.OpaqueValue(arg_._xgraph)
+        ),
         TypeCode.XBuffer: (
             lambda arg_: XBuffer.from_lib(arg_.xb),
-            lambda arg_: lpx.OpaqueValue(arg_._xb)),
+            lambda arg_: lpx.OpaqueValue(arg_._xb)
+        ),
         TypeCode.vXBuffer: (
             lambda arg_: [XBuffer.from_lib(e) for e in arg_.xbuffers],
             lambda arg_: lpx.OpaqueValue(
-                lpx.XBufferHolderVector([xb._xb for xb in arg_]))),
+                lpx.XBufferHolderVector([xb._xb for xb in arg_]))
+            ),
         TypeCode.OpaqueFunc: (
             lambda arg_: OpaqueFunc.from_lib(arg_.of),
             lambda arg_: lpx.OpaqueValue(arg_._of))

@@ -26,6 +26,7 @@ from yolort.graph.io.xgraph_io import XGraphIO
 from yolort.opaque_func_registry import register_opaque_func, OpaqueFuncRegistry
 from yolort.type import TypeCode
 from yolort.shared.container import BytesContainer
+
 from .util import zip_dir
 
 
@@ -48,7 +49,7 @@ def save(xgraph: XGraph, filename: str) -> None:
     XGraphIO.save(xgraph, filename)
 
 
-@register_opaque_func('pyxir.io.save', [
+@register_opaque_func('yir.io.save', [
     TypeCode.XGraph,
     TypeCode.Str,
 ])
@@ -72,7 +73,7 @@ def load(net_file: str, params_file: str) -> XGraph:
     return xgraph
 
 
-@register_opaque_func('pyxir.io.load', [
+@register_opaque_func('yir.io.load', [
     TypeCode.Str,
     TypeCode.Str,
     TypeCode.XGraph,
@@ -81,7 +82,7 @@ def load_opaque_func(net_file, params_file, xg_callback):
     xg_callback.copy_from(load(net_file, params_file))
 
 
-@register_opaque_func('pyxir.io.load_scheduled_xgraph_from_meta', [
+@register_opaque_func('yir.io.load_scheduled_xgraph_from_meta', [
     TypeCode.Str,
     TypeCode.XGraph,
 ])
@@ -119,7 +120,7 @@ def load_scheduled_xgraph_opaque_func(
     cb_scheduled_xgraph.copy_from(scheduled_xgraph)
 
 
-@register_opaque_func('pyxir.io.to_string', [
+@register_opaque_func('yir.io.to_string', [
     TypeCode.XGraph,
     TypeCode.BytesContainer,
     TypeCode.BytesContainer,
@@ -135,7 +136,7 @@ def write_to_string(
 
 
 def get_xgraph_str(xg: XGraph):
-    of = OpaqueFuncRegistry.Get("pyxir.io.get_serialized_xgraph")
+    of = OpaqueFuncRegistry.Get("yir.io.get_serialized_xgraph")
     s = BytesContainer(b"")
     of(xg, s)
     # import pdb; pdb.set_trace()
@@ -143,7 +144,7 @@ def get_xgraph_str(xg: XGraph):
 
 
 def read_xgraph_str(xg_str: bytes):
-    of = OpaqueFuncRegistry.Get("pyxir.io.deserialize_xgraph")
+    of = OpaqueFuncRegistry.Get("yir.io.deserialize_xgraph")
     xg = XGraph()
     s = BytesContainer(xg_str)
     # import pdb; pdb.set_trace()
@@ -151,7 +152,7 @@ def read_xgraph_str(xg_str: bytes):
     return xg
 
 
-@register_opaque_func('pyxir.io.from_string', [
+@register_opaque_func('yir.io.from_string', [
     TypeCode.XGraph,
     TypeCode.Byte,
     TypeCode.Byte,
@@ -166,7 +167,7 @@ def read_from_string(
     xg.copy_from(xg_load)
 
 
-@register_opaque_func('pyxir.io.serialize_dir', [
+@register_opaque_func('yir.io.serialize_dir', [
     TypeCode.Str,
     TypeCode.BytesContainer,
 ])
@@ -185,7 +186,7 @@ def serialize_dir(
         serial_str_cb.set_bytes(s)
 
 
-@register_opaque_func('pyxir.io.deserialize_dir', [
+@register_opaque_func('yir.io.deserialize_dir', [
     TypeCode.Str,
     TypeCode.Byte,
 ])
@@ -194,7 +195,7 @@ def deserialize_dir(
     serial_str,
 ):
     if serial_str != b"" and not os.path.exists(dir_path):
-        bio = io.BytesIO(serial_str) # .encode('latin1') bytes.fromhex(serial_str))
+        bio = io.BytesIO(serial_str)  # .encode('latin1') bytes.fromhex(serial_str))
         with zipfile.ZipFile(bio, 'r') as zip_f:
             zip_f.extractall(dir_path)
         

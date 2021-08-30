@@ -26,7 +26,9 @@ from .target import Target
 class TargetRegistry:
 
     class __TargetRegistry:
-        """ Implementation of singleton TargetRegistry """
+        """
+        Implementation of singleton TargetRegistry
+        """
 
         def __init__(self):
             self.targets = {}
