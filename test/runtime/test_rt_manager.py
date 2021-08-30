@@ -21,9 +21,9 @@ Module for testing the pyxir runtime manager
 from typing import List, Dict, Optional
 import numpy as np
 
-from pyxir.runtime.rt_manager import RtManager
-from pyxir.runtime.base_runtime import BaseRuntime
-from pyxir.runtime.runtime_factory import RuntimeFactory
+from yolort.runtime.rt_manager import RtManager
+from yolort.runtime.base_runtime import BaseRuntime
+from yolort.runtime.runtime_factory import RuntimeFactory
 
 
 def get_test_op_1(X, layout, input_shapes, params, quant_params):

@@ -23,8 +23,8 @@ from pathlib import Path
 import pytest
 import numpy as np
 
-from pyxir.shapes import TensorShape, TupleShape
-from pyxir.runtime.numpy.rt_layer_np import (
+from yolort.shapes import TensorShape, TupleShape
+from yolort.runtime.numpy.rt_layer_np import (
     InputLayer,
     CvxLayer,
     ConstantLayer,

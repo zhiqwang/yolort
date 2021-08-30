@@ -23,10 +23,10 @@ from typing import List, Dict
 # ! Important for device registration
 import pyxir
 
-from pyxir.graph import XGraph
-from pyxir.graph.layer.xlayer import XLayer, ConvData
-from pyxir.graph.xgraph_factory import XGraphFactory
-from pyxir.runtime.base_runtime import BaseRuntime
+from yolort.graph import XGraph
+from yolort.graph.layer.xlayer import XLayer, ConvData
+from yolort.graph.xgraph_factory import XGraphFactory
+from yolort.runtime.base_runtime import BaseRuntime
 
 
 class BaseRuntimeSubTest(BaseRuntime):

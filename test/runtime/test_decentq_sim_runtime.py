@@ -21,8 +21,8 @@ Module for testing the pyxir Decent quantizer simulation runtime
 import numpy as np
 import pyxir as px
 
-from pyxir.runtime.decentq_sim.runtime_decentq_sim import RuntimeDecentQSim
-from pyxir.graph.xgraph_factory import XGraphFactory
+from yolort.runtime.decentq_sim.runtime_decentq_sim import RuntimeDecentQSim
+from yolort.graph.xgraph_factory import XGraphFactory
 
 
 def test_decentq_sim_runtime():

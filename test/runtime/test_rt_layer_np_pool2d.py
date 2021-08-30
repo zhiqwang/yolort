@@ -20,9 +20,8 @@ Module for testing the pyxir numpy runtime
 
 import numpy as np
 
-from pyxir.shapes import TensorShape
-
-from pyxir.runtime.numpy.rt_layer_np import InputLayer, PoolingLayer
+from yolort.shapes import TensorShape
+from yolort.runtime.numpy.rt_layer_np import InputLayer, PoolingLayer
 
 
 def test_max_pool2d_layer_basic():
