@@ -56,7 +56,6 @@ class RtManager:
             op_type: str,
             setup_func: Callable,
         ):
-            # type: (str, str, Function) -> None
             """
             Registration of a new runtime operation
 

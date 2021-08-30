@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for partitioning XGraph objects"""
+"""
+Module for partitioning XGraph objects
+"""
 
 import copy
 import logging
@@ -30,7 +32,9 @@ logger = logging.getLogger("pyxir")
 
 
 class XGraphPartitioner:
-    """Partition an XGraph for a given target"""
+    """
+    Partition an XGraph for a given target
+    """
 
     xgraph_factory = XGraphFactory()
 
@@ -241,9 +245,7 @@ class XGraphPartitioner:
         )
 
         # Transpose optimizer
-        optimizer = XGraphTransposesOptimizer(
-            xgraph, target=target, opt_name="partitioning"
-        )
+        optimizer = XGraphTransposesOptimizer(xgraph, target=target, opt_name="partitioning")
         optimizer.optimize()
 
         return xgraph
@@ -330,18 +332,12 @@ class XGraphPartitioner:
                         # Keep track of input - original (model) bottom
                         #   connections, i.e. exclude internally added
                         #   operations here
-                        sg_orig_bottoms_ext = subgraphs[X.subgraph].attrs[
-                            "orig_bottom_tensors"
-                        ]
+                        sg_orig_bottoms_ext = subgraphs[X.subgraph].attrs["orig_bottom_tensors"]
                         if X.name not in sg_orig_bottoms_ext:
                             sg_orig_bottoms_ext.update({x_in_name: orig_bottoms})
                         else:
-                            new_orig_bottoms_ext = (
-                                sg_orig_bottoms_ext[x_in_name] + orig_bottoms
-                            )
-                            sg_orig_bottoms_ext.update(
-                                {x_in_name: new_orig_bottoms_ext}
-                            )
+                            new_orig_bottoms_ext = (sg_orig_bottoms_ext[x_in_name] + orig_bottoms)
+                            sg_orig_bottoms_ext.update({x_in_name: new_orig_bottoms_ext})
 
                         new_in_X = xlayer.defaultXLayer()
                         new_in_X = new_in_X._replace(

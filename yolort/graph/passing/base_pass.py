@@ -103,14 +103,12 @@ class XGraphBasePass:
 
     TODO 'replace layer pass' creates a copy but 'optimization pass' doesn't
 
-    Attributes
-    ----------
-    xgraph_factory: XGraphFactory
-        a factory object for constructing XGraph objects
-    name: str
-        the new name of the XGraph pass
-    output_png: str
-        the name of the png file for graph visualization if specified
+    Attributes:
+        xgraph_factory (XGraphFactory): a factory object for
+            constructing XGraph objects
+        name (str): the new name of the XGraph pass
+        output_png (str): the name of the png file for graph
+            visualization if specified
     """
 
     def __init__(self, name='XGraphBase', output_png=None):
@@ -122,8 +120,10 @@ class XGraphBasePass:
 
     @abc.abstractmethod
     def execute(self, xgraph: XGraph) -> XGraph:
-        """ Execute the XGraph pass, should be overwritten """
-        raise NotImplementedError("")
+        """
+        Execute the XGraph pass, should be overwritten
+        """
+        raise NotImplementedError
 
     def _replace_layer_pass(
         self,
@@ -256,23 +256,23 @@ class XGraphBasePass:
         Wrapper function where opt_funcs can be used to adjust layers in the
         xgraph and this function takes care of passing through the graph
 
-        Args
-        xgraph (XGraph): the provided graph for the replace layer pass
-        condition_funcs (List[Callable]): A list of conditional functions.
-            Functions return a boolean that indicates whether to execute the
-            adaptation function on a certain XLayer. The input is a XLayer
-            object.
-        opt_funcs (List[Callable]): the optimization functions to be executed
-            on each XLayer object in the graph. The input is an XLayer object,
-            a list of its bottom layers and a list of its top layers. Should
-            return None if the XLayer is to be removed and the XLayer otherwise
-        opt_names (List[str]): the names of the optimizations to be performed
-        opt_kwargs_lst (List[Dict]): list of kwargs
-        repeat_until_stable (bool): whether to repeat the graph optimization pass
-            until no more changes are recorded
-        name (str): the name of the adjusted graph
-        output_png (str): if specfied, the name of the png file to save a
-            visualization of the graph
+        Args:
+            xgraph (XGraph): the provided graph for the replace layer pass
+            condition_funcs (List[Callable]): A list of conditional functions.
+                Functions return a boolean that indicates whether to execute the
+                adaptation function on a certain XLayer. The input is a XLayer
+                object.
+            opt_funcs (List[Callable]): the optimization functions to be executed
+                on each XLayer object in the graph. The input is an XLayer object,
+                a list of its bottom layers and a list of its top layers. Should
+                return None if the XLayer is to be removed and the XLayer otherwise
+            opt_names (List[str]): the names of the optimizations to be performed
+            opt_kwargs_lst (List[Dict]): list of kwargs
+            repeat_until_stable (bool): whether to repeat the graph optimization pass
+                until no more changes are recorded
+            name (str): the name of the adjusted graph
+            output_png (str): if specfied, the name of the png file to save a
+                visualization of the graph
 
         Returns
             xgraph (XGraph): the adjusted XGraph

@@ -33,7 +33,7 @@ class XGraphTransposesOptimizer(XGraphBaseOptimizer):
         # 1. Merge transposes
         opt_pass = XGraphOptimizationPass(
             name='BasicOptimizationPass-1',
-            output_png='after_' + opt_name + '_merge_transposes.png',
+            output_png=f'after_{opt_name}_merge_transposes.png',
             repeat_until_stable=True
         )
 

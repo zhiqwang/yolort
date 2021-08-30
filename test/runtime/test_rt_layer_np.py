@@ -107,7 +107,7 @@ def test_cvx_layer_nchw():
         outpt = layer.forward_exec(inputs)
         inputs = [outpt]
 
-    assert(outpt.shape == (1, 3, 225, 225))
+    assert outpt.shape == (1, 3, 225, 225)
 
 
 @pytest.mark.skipif(skip_cvx, reason="Skipping Cvx related test because cvx is not available")
@@ -136,7 +136,7 @@ def test_cvx_layer_nhwc():
         outpt = layer.forward_exec(inputs)
         inputs = [outpt]
 
-    assert(outpt.shape == (1, 225, 225, 3))
+    assert outpt.shape == (1, 225, 225, 3)
 
 
 def test_constant_layer():

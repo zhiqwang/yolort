@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module defining graph optimization passes"""
+"""
+Module defining graph optimization passes
+"""
 
 import logging
 
@@ -22,12 +24,8 @@ logger = logging.getLogger("pyxir")
 
 
 class XGraphOptimizationPass(XGraphBasePass):
-
     """
     Responsible for optimizing XGraph models through graph passes
-
-    Attributes
-    ----------
     """
 
     def __init__(
@@ -57,7 +55,7 @@ class XGraphOptimizationPass(XGraphBasePass):
 
     def execute(self, xgraph):
         """
-        TODO:
+        TODO: docstring
         """
         condition_funcs = [opt['condition_func'] for opt in self.optimizations]
         opt_funcs = [opt['opt_func'] for opt in self.optimizations]

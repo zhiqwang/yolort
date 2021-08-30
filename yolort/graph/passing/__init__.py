@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for passing through xgraphs"""
+"""
+Module for passing through xgraphs
+"""
 
 from .base_pass import XGraphBasePass, XGraphMutator, XGraphVisitor, pass_factory

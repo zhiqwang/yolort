@@ -36,7 +36,7 @@ class Schedule:
         self.name = name if name is not None else ""
         self.III = len(self.time_to_layer)
 
-        assert(len(self.time_to_layer) == len(self.layer_to_time))
+        assert len(self.time_to_layer) == len(self.layer_to_time)
 
     def get_layer_names(self) -> List[str]:
         """
@@ -46,8 +46,8 @@ class Schedule:
 
     def append(self, layer_name: str) -> None:
         if layer_name in self:
-            raise ValueError("Could not append: {} because Schedule entries"
-                             " should be unique".format(layer_name))
+            raise ValueError(f"Could not append: {layer_name} because Schedule entries "
+                             "should be unique")
 
         self.time_to_layer[self.III] = [layer_name]
         self.layer_to_time[layer_name] = self.III

@@ -69,7 +69,7 @@ class TargetRegistry:
             if not self.is_target(target):
                 # Try importing it on the fly
                 try:
-                    importlib.import_module("pyxir.contrib.target." + target.split("-")[0])
+                    importlib.import_module("yolort.contrib.target." + target.split("-")[0])
                 except ModuleNotFoundError:
                     pass
             if not self.is_target(target):

@@ -161,8 +161,7 @@ def remove_node(
         t_q = pydot.quote_if_necessary(tX.name)
         pydot_graph.del_edge(node_name_q, t_q)
 
-        new_bottoms = [([tXb] if tXb != node_name else
-                        [bX.name for bX in bottom_Xs])
+        new_bottoms = [([tXb] if tXb != node_name else [bX.name for bX in bottom_Xs])
                        for tXb in tX.bottoms]
         # flatten
         new_bottoms = [e for sl in new_bottoms for e in sl]

@@ -14,8 +14,6 @@
 
 """
 Module responsible for optimizing XGraph structures for quantization
-
-
 """
 
 import logging

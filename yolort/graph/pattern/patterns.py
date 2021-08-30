@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for pattern matching on XGraph"""
+
+"""
+Module for pattern matching on XGraph
+"""
 
 import logging
 
@@ -30,10 +33,10 @@ def is_mul_max_leaky_relu_pattern(
     Check whether provided layer is part of leaky relu pattern
     TODO: make more extensible
     """
-    return 'Scale' in mulX.type and 'Maximum' in maxX.type \
-        and mulX.bottoms == [inX.name] and inX.name in maxX.bottoms \
-        and all(mulX.data.gamma == .1) \
-        and all(mulX.data.beta == 0.)
+    return ('Scale' in mulX.type and 'Maximum' in maxX.type
+            and mulX.bottoms == [inX.name] and inX.name in maxX.bottoms
+            and all(mulX.data.gamma == .1)
+            and all(mulX.data.beta == 0.))
 
 
 class XGraphPatternAnnotator(XGraphVisitor):

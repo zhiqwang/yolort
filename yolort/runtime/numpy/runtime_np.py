@@ -72,11 +72,7 @@ X_2_NP = {
 class RuntimeNP(BaseRuntime):
     """
     Runtime on top of Numpy for running XGraph models
-
-    Args:
-        TODO
     """
-
     def __init__(
         self,
         name,

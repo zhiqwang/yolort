@@ -32,9 +32,10 @@ class XOpRegistry:
 
             self.xops = {}
 
-        def check_xop(self, xop):
-            # type: (str) -> None
-            """ Check whether the xop exists """
+        def check_xop(self, xop: str) -> None:
+            """
+            Check whether the xop exists
+            """
             if not self.is_xop(xop):
                 raise ValueError(f"Unknown XOp {device}, registered XOps are: {self.get_xop_names()}")
 
@@ -65,11 +66,12 @@ class XOpRegistry:
             self.get_xop(xop_name).add_layout_transform(layout_transform_func)
 
         def get_xops_with_layout_transform(self) -> List[str]:
-            return [name for name, xop in self.xops.items()
-                    if xop.has_layout_transform()]
+            return [name for name, xop in self.xops.items() if xop.has_layout_transform()]
 
         def get_xop_layout_transform(self, xop: str) -> Callable:
-            """ Return the layout transformation function for the given XOp """
+            """
+            Return the layout transformation function for the given XOp
+            """
             self.check_xop(xop)
             return self.xops[xop].get_layout_transform()
 

@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Factory module for creating Runtimes"""
+"""
+Factory module for creating Runtimes
+"""
 
 from typing import List
 
@@ -28,8 +30,10 @@ logger = logging.getLogger('pyxir')
 
 class RuntimeFactory:
 
-    """ The RuntimeFactory Singleton is responsible for creating
-        BaseRuntime objects"""
+    """
+    The RuntimeFactory Singleton is responsible for creating
+    BaseRuntime objects
+    """
 
     class __RuntimeFactory:
 
@@ -100,9 +104,13 @@ class RuntimeFactory:
         self.__dict__['_RuntimeFactory__instance'] = RuntimeFactory.__instance
 
     def __getattr__(self, attr):
-        """Delegate access to implementation"""
+        """
+        Delegate access to implementation
+        """
         return getattr(self.__instance, attr)
 
     def __setattr__(self, attr, value):
-        """Delegate access to implementation"""
+        """
+        Delegate access to implementation
+        """
         return setattr(self.__instance, attr, value)
