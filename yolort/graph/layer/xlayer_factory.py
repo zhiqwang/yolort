@@ -14,9 +14,8 @@
 
 """
 Module for creating XLayer objects
-
-
 """
+
 from typing import List, Any, Callable
 import logging
 

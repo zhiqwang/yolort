@@ -16,7 +16,7 @@
 Module for Map definitions
 """
 
-import libpyxir as lpx
+from yolort import libyir
 
 from .vector import Vector, StrVector
 
@@ -111,7 +111,7 @@ class MapStrStr(HashMap):
 
     @classmethod
     def from_dict(cls, d):
-        instance = MapStrStr(lpx.MapStrStr())
+        instance = MapStrStr(libyir.MapStrStr())
         instance.update(d)
         return instance
 
@@ -126,13 +126,13 @@ class MapStrVectorStr(HashMap):
 
     def __setitem__(self, key, value):
         if isinstance(value, list):
-            value = lpx.StrVector(value)
+            value = libyir.StrVector(value)
         elif isinstance(value, StrVector):
             value = value.get_lpx_vector()
         self._map.__setitem__(key, value)
 
     @classmethod
     def from_dict(cls, d):
-        instance = MapStrVectorStr(lpx.MapStrVectorStr())
+        instance = MapStrVectorStr(libyir.MapStrVectorStr())
         instance.update(d)
         return instance

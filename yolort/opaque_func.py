@@ -21,7 +21,7 @@ functions in all languages where this structure is defined (e.g. C++, Python)
 
 from typing import List, Any, Callable
 
-import libpyxir as lpx
+from . import libyir
 
 from .type import TypeCode
 from .graph.xgraph import XGraph
@@ -38,44 +38,44 @@ class OpaqueFunc:
     type_codes_ = {
         TypeCode.vInt: (
             lambda arg_: IntVector(arg_.ints),
-            lambda arg_: lpx.OpaqueValue(lpx.IntVector(arg_))
+            lambda arg_: libyir.OpaqueValue(libyir.IntVector(arg_))
         ),
         TypeCode.Str: (
             lambda arg_: arg_.s,
-            lambda arg_: lpx.OpaqueValue(arg_)
+            lambda arg_: libyir.OpaqueValue(arg_)
         ),
         TypeCode.Byte: (
             lambda arg_: arg_.bytes,
-            lambda arg_: lpx.OpaqueValue(arg_)
+            lambda arg_: libyir.OpaqueValue(arg_)
         ),
         TypeCode.vStr: (
             lambda arg_: StrVector(arg_.strings),
-            lambda arg_: lpx.OpaqueValue(lpx.StrVector(arg_))
+            lambda arg_: libyir.OpaqueValue(libyir.StrVector(arg_))
         ),
         TypeCode.StrContainer: (
             lambda arg_: StrContainer.from_lib(arg_.str_c),
-            lambda arg_: lpx.OpaqueValue(arg_._str_c)
+            lambda arg_: libyir.OpaqueValue(arg_._str_c)
         ),
         TypeCode.BytesContainer: (
             lambda arg_: BytesContainer.from_lib(arg_.bytes_c),
-            lambda arg_: lpx.OpaqueValue(arg_._bytes_c)
+            lambda arg_: libyir.OpaqueValue(arg_._bytes_c)
         ),
         TypeCode.XGraph: (
             lambda arg_: XGraph._from_xgraph(arg_.xg),
-            lambda arg_: lpx.OpaqueValue(arg_._xgraph)
+            lambda arg_: libyir.OpaqueValue(arg_._xgraph)
         ),
         TypeCode.XBuffer: (
             lambda arg_: XBuffer.from_lib(arg_.xb),
-            lambda arg_: lpx.OpaqueValue(arg_._xb)
+            lambda arg_: libyir.OpaqueValue(arg_._xb)
         ),
         TypeCode.vXBuffer: (
             lambda arg_: [XBuffer.from_lib(e) for e in arg_.xbuffers],
-            lambda arg_: lpx.OpaqueValue(
-                lpx.XBufferHolderVector([xb._xb for xb in arg_]))
+            lambda arg_: libyir.OpaqueValue(
+                libyir.XBufferHolderVector([xb._xb for xb in arg_]))
             ),
         TypeCode.OpaqueFunc: (
             lambda arg_: OpaqueFunc.from_lib(arg_.of),
-            lambda arg_: lpx.OpaqueValue(arg_._of))
+            lambda arg_: libyir.OpaqueValue(arg_._of))
     }
 
     def __init__(
@@ -84,7 +84,7 @@ class OpaqueFunc:
         type_codes: List[TypeCode] = None,
     ) -> None:
 
-        self._of = lpx.OpaqueFunc()
+        self._of = libyir.OpaqueFunc()
         if type_codes is None:
             type_codes = []
 
@@ -92,7 +92,7 @@ class OpaqueFunc:
             self.set_func(func, type_codes)
 
     @classmethod
-    def from_lib(cls, _of: lpx.OpaqueFunc) -> 'OpaqueFunc':
+    def from_lib(cls, _of: libyir.OpaqueFunc) -> 'OpaqueFunc':
         of = OpaqueFunc.__new__(cls)
         of._of = _of
         return of
@@ -121,7 +121,7 @@ class OpaqueFunc:
 
             func(*new_args)
 
-        arg_type_codes_ = lpx.IntVector([tc.value for tc in type_codes])
+        arg_type_codes_ = libyir.IntVector([tc.value for tc in type_codes])
         self._of.set_func(opaque_func_wrapper, arg_type_codes_)
 
     def __call__(self, *args: Any) -> None:
@@ -141,7 +141,7 @@ class OpaqueFunc:
                 raise ValueError(f"Unsupported type code: {tc}")
             oa_v.append(OpaqueFunc.type_codes_[tc][1](arg_))
 
-        oa = lpx.OpaqueArgs(oa_v)
+        oa = libyir.OpaqueArgs(oa_v)
 
         self._of(oa)
 

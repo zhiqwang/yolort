@@ -18,7 +18,7 @@ Module for OpaqueFuncRegistry definition and functionality
 
 from typing import List, Callable
 
-import libpyxir as lpx
+from . import libyir
 
 from .type import TypeCode
 from .shared.vector import StrVector
@@ -28,10 +28,10 @@ from .opaque_func import OpaqueFunc
 class OpaqueFuncRegistry:
 
     def __init__(self):
-        self._ofr = lpx.OpaqueFuncRegistry()
+        self._ofr = libyir.OpaqueFuncRegistry()
 
     @classmethod
-    def from_lib(cls, _ofr: lpx.OpaqueFuncRegistry):
+    def from_lib(cls, _ofr: libyir.OpaqueFuncRegistry):
         ofr = OpaqueFuncRegistry.__new__(cls)
         ofr._ofr = _ofr
         return ofr
@@ -47,30 +47,30 @@ class OpaqueFuncRegistry:
 
     @classmethod
     def Register(cls, name: str) -> 'OpaqueFuncRegistry':
-        ofr_ = lpx.OpaqueFuncRegistry.Register(name)
+        ofr_ = libyir.OpaqueFuncRegistry.Register(name)
         return cls.from_lib(ofr_)
 
     @classmethod
     def Exists(cls, name: str) -> bool:
-        return lpx.OpaqueFuncRegistry.Exists(name)
+        return libyir.OpaqueFuncRegistry.Exists(name)
 
     @classmethod
     def Get(cls, name: str) -> OpaqueFunc:
-        of_ = lpx.OpaqueFuncRegistry.Get(name)
-        # args_type_codes_ = lpx.OpaqueFuncRegistry.GetArgsTypeCodes(name)
+        of_ = libyir.OpaqueFuncRegistry.Get(name)
+        # args_type_codes_ = libyir.OpaqueFuncRegistry.GetArgsTypeCodes(name)
         return OpaqueFunc.from_lib(of_)  # args_type_codes_)
 
     @classmethod
     def GetRegisteredFuncs(cls) -> StrVector:
-        return StrVector(lpx.OpaqueFuncRegistry.GetRegisteredFuncs())
+        return StrVector(libyir.OpaqueFuncRegistry.GetRegisteredFuncs())
 
     @classmethod
     def Size(cls) -> int:
-        return lpx.OpaqueFuncRegistry.Size()
+        return libyir.OpaqueFuncRegistry.Size()
 
     @classmethod
     def Clear(cls) -> int:
-        return lpx.OpaqueFuncRegistry.Clear()
+        return libyir.OpaqueFuncRegistry.Clear()
 
 
 def register_opaque_func(

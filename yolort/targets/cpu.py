@@ -16,10 +16,10 @@
 Module for building xgraph for cpu execution
 """
 
+import copy
+
 from yolort.graph import XGraph
 from yolort.graph.optimization.optimizers.basic_optimizer import XGraphBasicOptimizer
-
-import copy
 
 
 # TODO move functions

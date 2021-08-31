@@ -17,16 +17,17 @@ Module for XBuffer definition and functionality
 """
 
 import numpy as np
-import libpyxir as lpx
+
+from yolort import libyir
 
 
 class XBuffer:
 
     def __init__(self, ndarray: np.ndarray) -> None:
-        self._xb = lpx.XBuffer(ndarray)
+        self._xb = libyir.XBuffer(ndarray)
 
     @classmethod
-    def from_lib(cls, _xb: lpx.XBuffer) -> 'XBuffer':
+    def from_lib(cls, _xb: libyir.XBuffer) -> 'XBuffer':
         xb = XBuffer.__new__(cls)
         xb._xb = _xb
         return xb

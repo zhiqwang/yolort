@@ -2,11 +2,14 @@
 
 from typing import Dict, Optional, Callable
 
-from yolort import models
-from yolort import data
-from yolort import utils
-from yolort import graph
-from yolort.graph import ops
+from ._libpyxir import libpyxir as libyir
+
+from . import models
+from . import data
+from . import utils
+from . import graph
+
+from .graph import ops
 
 from .base import stringify
 

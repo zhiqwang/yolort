@@ -18,7 +18,7 @@ Module for XAttrs wrapper definition
 
 import json
 
-import libpyxir as lpx
+from yolort import libyir
 
 from yolort.shared.hash_map import HashMap, MapStrStr, MapStrVectorStr
 from yolort.shared.vector import Vector, StrVector, IntVector, FloatVector, IntVector2D
@@ -26,7 +26,7 @@ from yolort.shared.vector import Vector, StrVector, IntVector, FloatVector, IntV
 
 class XAttrDict:
 
-    def __init__(self, xattr_map: lpx.XAttrMap):
+    def __init__(self, xattr_map: libyir.XAttrMap):
         self._xattr_map = xattr_map
 
     def clear(self):
@@ -37,7 +37,7 @@ class XAttrDict:
         return key in self._xattr_map
 
     def copy(self):
-        copy_xattr_d = XAttrDict(lpx.XAttrMap())
+        copy_xattr_d = XAttrDict(libyir.XAttrMap())
         for k, v in self.items():
             copy_xattr_d.__setitem__(k, v)
         return copy_xattr_d
@@ -158,18 +158,18 @@ class XAttrDict:
         # TODO: improve this code
         if isinstance(value, list):
             if all([isinstance(e, int) for e in value]):
-                value = lpx.IntVector(value)
+                value = libyir.IntVector(value)
             elif all([isinstance(e, float) for e in value]):
-                value = lpx.FloatVector(value)
+                value = libyir.FloatVector(value)
             elif all([isinstance(e, str) for e in value]):
-                value = lpx.StrVector(value)
+                value = libyir.StrVector(value)
             elif all([isinstance(e, list) for e in value]):
                 if all([[isinstance(ee, int) for ee in e] for e in value]):
-                    value = lpx.IntVector2D([lpx.IntVector(v) for v in value])
+                    value = libyir.IntVector2D([libyir.IntVector(v) for v in value])
                 else:
                     raise ValueError(value_error)
             elif all([isinstance(e, IntVector) for e in value]):
-                value = lpx.IntVector2D([e.get_lpx_vector() for e in value])
+                value = libyir.IntVector2D([e.get_lpx_vector() for e in value])
             else:
                 raise ValueError(value_error)
         elif isinstance(value, dict):
@@ -188,9 +188,9 @@ class XAttrDict:
             raise ValueError(value_error)
 
         if value is not None:
-            xattr = lpx.XAttr(key, value)
+            xattr = libyir.XAttr(key, value)
         else:
-            xattr = lpx.XAttr(key)
+            xattr = libyir.XAttr(key)
 
         self._xattr_map[key] = xattr
 

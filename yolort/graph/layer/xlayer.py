@@ -20,10 +20,10 @@ from typing import Dict, List
 import json
 import numpy as np
 
-import yolort as yrt
-import libpyxir as lpx
-
 from collections import namedtuple
+
+import yolort as yrt
+from yolort import libyir
 
 from yolort.shapes import TensorShape, TupleShape
 from yolort.shared.vector import StrVector, IntVector, IntVector2D
@@ -54,7 +54,7 @@ class XLayer:
         return XLayer(**d)
 
     def __init__(self, *args, **kwargs):
-        self._xlayer = lpx.XLayer()
+        self._xlayer = libyir.XLayer()
         # Initialize shapes ! important for length
         self.shapes = []
 
@@ -68,7 +68,7 @@ class XLayer:
         return self._xlayer
 
     def _set_xlayer(self, _xlayer):
-        assert isinstance(_xlayer, lpx.XLayer)
+        assert isinstance(_xlayer, libyir.XLayer)
         self._xlayer = _xlayer
 
     def _set(self, *args, **kwargs):
@@ -142,7 +142,7 @@ class XLayer:
 
     @type.setter
     def type(self, value: List):
-        self._xlayer.xtype = lpx.StrVector(value)
+        self._xlayer.xtype = libyir.StrVector(value)
 
     @property
     def shapes(self):
@@ -163,11 +163,11 @@ class XLayer:
     def shapes(self, shapes_):
         if isinstance(shapes_, TensorShape) or (isinstance(shapes_, list) and (
                 len(shapes_) == 0 or isinstance(shapes_[0], int))):
-            self._xlayer.shapes = lpx.IntVector2D([lpx.IntVector(shapes_)])
+            self._xlayer.shapes = libyir.IntVector2D([libyir.IntVector(shapes_)])
             self._xlayer.shapes_t = "TensorShape"
         else:
             assert all([isinstance(e, (list, TensorShape)) for e in shapes_])
-            self._xlayer.shapes = lpx.IntVector2D([lpx.IntVector(s) for s in shapes_])
+            self._xlayer.shapes = libyir.IntVector2D([libyir.IntVector(s) for s in shapes_])
             self._xlayer.shapes_t = "TupleShape"
 
     @property
@@ -176,7 +176,7 @@ class XLayer:
 
     @sizes.setter
     def sizes(self, sizes_: list):
-        self._xlayer.sizes = lpx.IntVector(sizes_)
+        self._xlayer.sizes = libyir.IntVector(sizes_)
 
     @property
     def tops(self):
@@ -184,7 +184,7 @@ class XLayer:
 
     @tops.setter
     def tops(self, tops_: list):
-        self._xlayer.tops = lpx.StrVector([yrt.stringify(t) for t in tops_])
+        self._xlayer.tops = libyir.StrVector([yrt.stringify(t) for t in tops_])
 
     @property
     def bottoms(self):
@@ -192,7 +192,7 @@ class XLayer:
 
     @bottoms.setter
     def bottoms(self, bottoms_: list):
-        self._xlayer.bottoms = lpx.StrVector([yrt.stringify(b) for b in bottoms_])
+        self._xlayer.bottoms = libyir.StrVector([yrt.stringify(b) for b in bottoms_])
 
     @property
     def layer(self):
@@ -200,7 +200,7 @@ class XLayer:
 
     @layer.setter
     def layer(self, layer_: list):
-        self._xlayer.layer = lpx.StrVector(layer_)
+        self._xlayer.layer = libyir.StrVector(layer_)
 
     @property
     def data(self):
@@ -231,7 +231,7 @@ class XLayer:
             data_ = [data_.mu, data_.sigma_square, data_.gamma, data_.beta]
 
         assert all([isinstance(e, np.ndarray) for e in data_])
-        buffer_data = lpx.XBufferVector([lpx.XBuffer(d) for d in data_])
+        buffer_data = libyir.XBufferVector([libyir.XBuffer(d) for d in data_])
         self._xlayer.data = buffer_data
 
     @property
@@ -240,7 +240,7 @@ class XLayer:
 
     @targets.setter
     def targets(self, targets_: list):
-        self._xlayer.targets = lpx.StrVector(targets_)
+        self._xlayer.targets = libyir.StrVector(targets_)
 
     @property
     def target(self):
@@ -282,7 +282,7 @@ class XLayer:
 
     @attrs.setter
     def attrs(self, d: dict):
-        _xattr_dict = XAttrDict(lpx.XAttrMap())
+        _xattr_dict = XAttrDict(libyir.XAttrMap())
         for key, value in d.items():
             _xattr_dict[key] = value
 

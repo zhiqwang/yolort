@@ -21,7 +21,7 @@ import copy
 import logging
 import warnings
 
-import libpyxir as lpx
+from yolort import libyir
 
 from yolort.shared.vector import StrVector
 from yolort.shared.quantizer_output import QuantizerOutput
@@ -42,14 +42,14 @@ class XGraph:
     """
 
     @classmethod
-    def _from_xgraph(cls, _xgraph: lpx.XGraph):
+    def _from_xgraph(cls, _xgraph: libyir.XGraph):
         xg = XGraph.__new__(cls)
         xg._xgraph = _xgraph
         xg.init()
         return xg
 
     def __init__(self, name='XGraph'):
-        self._xgraph = lpx.XGraph(name)
+        self._xgraph = libyir.XGraph(name)
         self.init()
 
     def init(self):
@@ -91,7 +91,7 @@ class XGraph:
 
     @meta_attrs.setter
     def meta_attrs(self, d: Dict):
-        _xattr_dict = XAttrDict(lpx.XAttrMap())
+        _xattr_dict = XAttrDict(libyir.XAttrMap())
         for key, value in d.items():
             _xattr_dict[key] = value
 

@@ -15,9 +15,10 @@
 """
 Module for Vector definitions
 """
+
 from typing import List
 
-import libpyxir as lpx
+from yolort import libyir
 
 
 class Vector:
@@ -96,45 +97,45 @@ class Vector:
 
 class StrVector(Vector):
     """
-    Wrapper class to make lpx.StrVector more python-like
+    Wrapper class to make libyir.StrVector more python-like
     """
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            value = lpx.StrVector(value)
+            value = libyir.StrVector(value)
         return self.get_lpx_vector().__setitem__(key, value)
 
 
 class IntVector(Vector):
     """
-    Wrapper class to make lpx.IntVector more python-like
+    Wrapper class to make libyir.IntVector more python-like
     """
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            value = lpx.IntVector(value)
+            value = libyir.IntVector(value)
         return self.get_lpx_vector().__setitem__(key, value)
 
 
 class FloatVector(Vector):
     """
-    Wrapper class to make lpx.FloatVector more python-like
+    Wrapper class to make libyir.FloatVector more python-like
     """
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            value = lpx.FloatVector(value)
+            value = libyir.FloatVector(value)
         return self.get_lpx_vector().__setitem__(key, value)
 
 
 class XBufferVector(Vector):
     """
-    Wrapper class to make lpx.XBufferVector more python-like
+    Wrapper class to make libyir.XBufferVector more python-like
     """
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            value = lpx.XBufferVector(value)
+            value = libyir.XBufferVector(value)
         return self.get_lpx_vector().__setitem__(key, value)
 
 
@@ -142,7 +143,7 @@ def make_any_vector(elem_to_any_func, any_to_elem_func):
 
     class AnyVector(Vector):
         """
-        Wrapper class to make lpx.Vector more python-like
+        Wrapper class to make libyir.Vector more python-like
         """
 
         def append(self, value):
@@ -165,7 +166,7 @@ def make_any_vector(elem_to_any_func, any_to_elem_func):
 
 class IntVector2D(Vector):
     """
-    Wrapper class to make lpx.IntVector2D more python-like
+    Wrapper class to make libyir.IntVector2D more python-like
     """
 
     def __init__(self, vector):
@@ -176,18 +177,18 @@ class IntVector2D(Vector):
         self.__dict__['_Vector__vector'] = vector
 
     def append(self, value: List):
-        self.__vector.append(lpx.IntVector(value))
+        self.__vector.append(libyir.IntVector(value))
 
     def __contains__(self, value: List):
         if not isinstance(value, list):
             raise TypeError(f"Expecting 'list' argument but got: {type(value)}")
-        return lpx.IntVector(value) in self.__vector
+        return libyir.IntVector(value) in self.__vector
 
     def insert(self, index: int, value):
-        self.__vector.insert(index, lpx.IntVector(value))
+        self.__vector.insert(index, libyir.IntVector(value))
 
     def extend(self, value: List):
-        self.__vector.extend([lpx.IntVector(v) for v in value])
+        self.__vector.extend([libyir.IntVector(v) for v in value])
 
     def __getattr__(self, attr):
         """
@@ -204,10 +205,10 @@ class IntVector2D(Vector):
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            value = lpx.IntVector2D([lpx.IntVector(v) for v in value])
+            value = libyir.IntVector2D([libyir.IntVector(v) for v in value])
             self.__vector.__setitem__(key, value)
         else:
-            self.__vector.__setitem__(key, lpx.IntVector(value))
+            self.__vector.__setitem__(key, libyir.IntVector(value))
 
     def __repr__(self):
         return str(self)

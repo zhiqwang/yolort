@@ -51,7 +51,7 @@ def __pool(X, ksize, strides, op):
         X_res = X_col.mean(axis=1)
     else:
         raise NotImplementedError(f"Currently not implemented op: {op}.")
-    
+
     X_res = X_res.reshape(c_x, h_out, w_out, n_x)
     X_res = X_res.transpose(3, 0, 1, 2)
 
