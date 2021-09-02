@@ -27,13 +27,13 @@
 
 ## 🆕 What's New
 
-- Support exporting to `TorchScript` model. *Oct. 8, 2020*.
-- Support inferring with `LibTorch` C++ interface. *Oct. 10, 2020*.
-- Add `TorchScript` C++ inference example. *Nov. 4, 2020*.
-- Refactor YOLO modules and support *dynamic shape/batch* inference. *Nov. 16, 2020*.
-- Support exporting to `ONNX`, and inferring with `ONNXRuntime` interface. *Nov. 17, 2020*.
-- Add graph visualization tools. *Nov. 21, 2020*.
 - Add `TVM` compile and inference notebooks. *Feb. 5, 2021*.
+- Add graph visualization tools. *Nov. 21, 2020*.
+- Support exporting to `ONNX`, and inferring with `ONNXRuntime` interface. *Nov. 17, 2020*.
+- Refactor YOLO modules and support *dynamic shape/batch* inference. *Nov. 16, 2020*.
+- Add `TorchScript` C++ inference example. *Nov. 4, 2020*.
+- Support inferring with `LibTorch` C++ interface. *Oct. 10, 2020*.
+- Support exporting to `TorchScript` model. *Oct. 8, 2020*.
 
 ## 🛠️ Usage
 
