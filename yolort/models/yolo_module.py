@@ -35,10 +35,16 @@ class YOLOModule(LightningModule):
     ):
         """
         Args:
-            arch: architecture
-            lr: the learning rate
-            pretrained: if true, returns a model pre-trained on COCO train2017
-            num_classes: number of detection classes (doesn't including background)
+            lr (float): The initial learning rate
+            arch (str): YOLOv5 model architecture
+            pretrained (bool): If true, returns a model pre-trained on COCO train2017
+            progress (bool): If True, displays a progress bar of the download to stderr
+            size: (Tuple[int, int]): the width and height to which images will be rescaled
+                before feeding them to the backbone. Default: (640, 640).
+            num_classes (int): number of output classes of the model (doesn't including
+                background). Default: 80.
+            annotation_path (Optional[Union[str, PosixPath]]): Path of the COCO annotation file
+                Default: None.
         """
         super().__init__()
 

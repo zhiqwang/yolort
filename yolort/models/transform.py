@@ -41,10 +41,14 @@ class YOLOTransform(nn.Module):
     model.
 
     The transformations it perform are:
-        - input normalization (mean subtraction and std division)
+        - input normalization
+            YOLOv5 use (0, 1) as the default mean and std, so we just need to rescale
+            the image manually from uint8_t [0, 255] to float [0, 1] here.
         - input / target resizing to match min_size / max_size
+            When fixed_size is set, Different images can have different sizes but
+            they will be resized to a fixed size before passing it to the backbone.
 
-    It returns a ImageList for the inputs, and a List[Dict[Tensor]] for the targets
+    It returns a NestedTensor for the inputs, and a List[Dict[Tensor]] for the targets
     """
     def __init__(
         self,
@@ -53,7 +57,10 @@ class YOLOTransform(nn.Module):
         fixed_size: Optional[Tuple[int, int]] = None,
     ) -> None:
         """
-        Note: When ``fixed_size`` is set, the ``min_size`` and ``max_size`` won't take effect.
+        Args:
+            min_size (int) : minimum size of the image to be rescaled.
+            max_size (int) : maximum size of the image to be rescaled.
+            fixed_size (Optional[Tuple[int, int]]): Whether to specify and use the input size.
         """
         super().__init__()
         if not isinstance(min_size, (list, tuple)):
