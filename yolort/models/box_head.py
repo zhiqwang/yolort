@@ -77,8 +77,8 @@ class SetCriterion:
     def __init__(self, iou_thresh: float = 0.5) -> None:
         """
         Args:
-            iou_thresh (float): quality values greater than or equal to
-                this value are candidate matches.
+            iou_thresh (float): minimum IoU between the anchor and the GT box so that they can be
+                considered as positive during training.
         """
         self.proposal_matcher = det_utils.Matcher(iou_threshold=iou_thresh)
 
@@ -88,11 +88,15 @@ class SetCriterion:
         head_outputs: List[Tensor],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> Dict[str, Tensor]:
-        """ This performs the loss computation.
-        Parameters:
-            targets: list of dicts, such that len(targets) == batch_size.
-                    The expected keys in each dict depends on the losses applied, see each loss' doc
-            head_outputs: dict of tensors, see the output specification of the model for the format
+        """
+        This performs the loss computation.
+
+        Args:
+            targets (Tensor): list of dicts, such that len(targets) == batch_size. The
+                expected keys in each dict depends on the losses applied, see each loss' doc
+            head_outputs (List[Tensor]): dict of tensors, see the output specification
+                of the model for the format
+            anchors_tuple (Tuple[Tensor, Tensor, Tensor]): Anchor tuple
         """
         matched_idxs = []
 
@@ -118,7 +122,9 @@ class SetCriterion:
 
 
 class PostProcess(nn.Module):
-    """Performs Non-Maximum Suppression (NMS) on inference results"""
+    """
+    Performs Non-Maximum Suppression (NMS) on inference results
+    """
     __annotations__ = {
         'box_coder': det_utils.BoxCoder,
     }
@@ -129,10 +135,10 @@ class PostProcess(nn.Module):
         detections_per_img: int,
     ) -> None:
         """
-        Arguments:
-            score_thresh (float)
-            nms_thresh (float)
-            detections_per_img (int)
+        Args:
+            score_thresh (float): score_thresh (float): Score threshold used for postprocessing the detections.
+            nms_thresh (float): nms_thresh (float): NMS threshold used for postprocessing the detections.
+            detections_per_img (int): Number of best detections to keep after NMS.
         """
         super().__init__()
         self.box_coder = det_utils.BoxCoder()
@@ -145,21 +151,22 @@ class PostProcess(nn.Module):
         head_outputs: List[Tensor],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> List[Dict[str, Tensor]]:
-        """ Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
+        """
+        Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
         Decode location preds, apply non-maximum suppression to location predictions based on conf
         scores and threshold to a detections_per_img number of output predictions for both confidence
         score and locations.
 
-        Parameters:
-            head_outputs: [batch_size, num_anchors, num_classes + 5] predicted locations and
-                class/object confidence.
-            anchors_tuple:
+        Args:
+            head_outputs (List[Tensor]): The predicted locations and class/object confidence,
+                shape of the element is (N, A, H, W, K).
+            anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
         """
         batch_size, _, _, _, K = head_outputs[0].shape
 
         all_pred_logits = []
         for pred_logits in head_outputs:
-            pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(NN, HWA, K)
+            pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(N, HWA, K)
             all_pred_logits.append(pred_logits)
 
         all_pred_logits = torch.cat(all_pred_logits, dim=1)

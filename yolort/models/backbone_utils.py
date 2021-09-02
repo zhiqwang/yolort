@@ -14,6 +14,7 @@ class BackboneWithPAN(nn.Module):
     Internally, it uses torchvision.models._utils.IntermediateLayerGetter to
     extract a submodel that returns the feature maps specified in return_layers.
     The same limitations of IntermediatLayerGetter apply here.
+
     Args:
         backbone (nn.Module)
         return_layers (Dict[name, new_name]): a dict containing the names
@@ -22,7 +23,9 @@ class BackboneWithPAN(nn.Module):
             of the returned activation (which the user can specify).
         in_channels_list (List[int]): number of channels for each feature map
             that is returned, in the order they are present in the OrderedDict
+        depth_multiple (float): depth multiplier
         version (str): ultralytics release version: r3.1 or r4.0
+
     Attributes:
         out_channels (int): the number of channels in the PAN
     """
