@@ -35,9 +35,11 @@ class YOLOModule(LightningModule):
     ):
         """
         Args:
-            arch: architecture
-            lr: the learning rate
-            pretrained: if true, returns a model pre-trained on COCO train2017
+            lr (float): the learning rate
+            arch (str): architecture
+            pretrained (bool): If true, returns a model pre-trained on COCO train2017
+            progress (bool): If True, displays a progress bar of the download to stderr
+            size:
             num_classes: number of detection classes (doesn't including background)
         """
         super().__init__()
