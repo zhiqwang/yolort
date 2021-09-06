@@ -8,6 +8,9 @@ runs
 yolov5s.pt
 yolort/version.py
 .idea
+*.ttf
+wandb
+
 # macOS dir files
 .DS_Store
 

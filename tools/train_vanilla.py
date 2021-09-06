@@ -368,18 +368,20 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = epoch + 1 == epochs
             if not noval or final_epoch:  # Calculate mAP
-                results, maps, _ = val.run(data_dict,
-                                           batch_size=batch_size // WORLD_SIZE * 2,
-                                           imgsz=imgsz,
-                                           model=ema.ema,
-                                           single_cls=single_cls,
-                                           dataloader=val_loader,
-                                           save_dir=save_dir,
-                                           save_json=is_coco and final_epoch,
-                                           verbose=nc < 50 and final_epoch,
-                                           plots=plots and final_epoch,
-                                           callbacks=callbacks,
-                                           compute_loss=compute_loss)
+                results, maps, _ = val.run(
+                    data_dict,
+                    batch_size=batch_size // WORLD_SIZE * 2,
+                    imgsz=imgsz,
+                    model=ema.ema,
+                    single_cls=single_cls,
+                    dataloader=val_loader,
+                    save_dir=save_dir,
+                    save_json=is_coco and final_epoch,
+                    verbose=nc < 50 and final_epoch,
+                    plots=plots and final_epoch,
+                    callbacks=callbacks,
+                    compute_loss=compute_loss,
+                )
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
@@ -426,16 +428,18 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
         if not evolve:
             if is_coco:  # COCO dataset
                 for m in [last, best] if best.exists() else [last]:  # speed, mAP tests
-                    results, _, _ = val.run(data_dict,
-                                            batch_size=batch_size // WORLD_SIZE * 2,
-                                            imgsz=imgsz,
-                                            model=attempt_load(m, device).half(),
-                                            iou_thres=0.7,  # NMS IoU threshold for best pycocotools results
-                                            single_cls=single_cls,
-                                            dataloader=val_loader,
-                                            save_dir=save_dir,
-                                            save_json=True,
-                                            plots=False)
+                    results, _, _ = val.run(
+                        data_dict,
+                        batch_size=batch_size // WORLD_SIZE * 2,
+                        imgsz=imgsz,
+                        model=attempt_load(m, device).half(),
+                        iou_thres=0.7,  # NMS IoU threshold for best pycocotools results
+                        single_cls=single_cls,
+                        dataloader=val_loader,
+                        save_dir=save_dir,
+                        save_json=True,
+                        plots=False,
+                    )
             # Strip optimizers
             for f in last, best:
                 if f.exists():
@@ -453,14 +457,14 @@ def parse_opt(known=False):
                         help='initial weights path')
     parser.add_argument('--cfg', type=str, default='',
                         help='model.yaml path')
-    parser.add_argument('--data', type=str, default='data/coco128.yaml',
+    parser.add_argument('--data', type=str, default='configs/coco128.yaml',
                         help='dataset.yaml path')
-    parser.add_argument('--hyp', type=str, default='data/hyps/hyp.scratch.yaml',
+    parser.add_argument('--hyp', type=str, default='configs/hyp.scratch.yaml',
                         help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=300)
-    parser.add_argument('--batch-size', type=int, default=16,
+    parser.add_argument('--batch_size', type=int, default=16,
                         help='total batch size for all GPUs')
-    parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=640,
+    parser.add_argument('--imgsz', '--img', '--img_size', type=int, default=640,
                         help='train, val image size (pixels)')
     parser.add_argument('--rect', action='store_true',
                         help='rectangular training')
@@ -478,17 +482,17 @@ def parse_opt(known=False):
                         help='gsutil bucket')
     parser.add_argument('--cache', type=str, nargs='?', const='ram',
                         help='--cache images in "ram" (default) or "disk"')
-    parser.add_argument('--image-weights', action='store_true',
+    parser.add_argument('--image_weights', action='store_true',
                         help='use weighted image selection for training')
     parser.add_argument('--device', default='',
                         help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--multi-scale', action='store_true',
+    parser.add_argument('--multi_scale', action='store_true',
                         help='vary img-size +/- 50%%')
-    parser.add_argument('--single-cls', action='store_true',
+    parser.add_argument('--single_cls', action='store_true',
                         help='train multi-class data as single-class')
     parser.add_argument('--adam', action='store_true',
                         help='use torch.optim.Adam() optimizer')
-    parser.add_argument('--sync-bn', action='store_true',
+    parser.add_argument('--sync_bn', action='store_true',
                         help='use SyncBatchNorm, only available in DDP mode')
     parser.add_argument('--workers', type=int, default=8,
                         help='maximum number of dataloader workers')
@@ -498,13 +502,13 @@ def parse_opt(known=False):
                         help='W&B entity')
     parser.add_argument('--name', default='exp',
                         help='save to project/name')
-    parser.add_argument('--exist-ok', action='store_true',
+    parser.add_argument('--exist_ok', action='store_true',
                         help='existing project/name ok, do not increment')
     parser.add_argument('--quad', action='store_true',
                         help='quad dataloader')
-    parser.add_argument('--linear-lr', action='store_true',
+    parser.add_argument('--linear_lr', action='store_true',
                         help='linear LR')
-    parser.add_argument('--label-smoothing', type=float, default=0.0,
+    parser.add_argument('--label_smoothing', type=float, default=0.0,
                         help='Label smoothing epsilon')
     parser.add_argument('--upload_dataset', action='store_true',
                         help='Upload dataset as W&B artifact table')
