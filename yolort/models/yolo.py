@@ -87,7 +87,7 @@ class YOLO(nn.Module):
         self.anchor_generator = anchor_generator
 
         if criterion is None:
-            criterion = SetCriterion(iou_thresh)
+            criterion = SetCriterion(anchor_generator.num_anchors, num_classes)
         self.compute_loss = criterion
 
         if head is None:

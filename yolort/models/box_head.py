@@ -73,14 +73,63 @@ class YOLOHead(nn.Module):
 class SetCriterion:
     """
     This class computes the loss for YOLOv5.
+
+    Args:
+        num_anchors (int): The number of anchors.
+        num_classes (int): The number of output classes of the model.
+        fl_gamma (float): focal loss gamma (efficientDet default gamma=1.5). Default: 0.0.
+        box_gain (float): box loss gain. Default: 0.05.
+        cls_gain (float): class loss gain. Default: 0.5.
+        cls_pos (float): cls BCELoss positive_weight. Default: 1.0.
+        obj_gain (float): obj loss gain (scale with pixels). Default: 1.0.
+        obj_pos (float): obj BCELoss positive_weight. Default: 1.0.
+        anchor_thresh (float): anchor-multiple threshold. Default: 4.0.
+        label_smoothing (float): Label smoothing epsilon. Default: 0.0.
+        auto_balance (bool): Auto balance. Default: False.
     """
-    def __init__(self, iou_thresh: float = 0.5) -> None:
-        """
-        Args:
-            iou_thresh (float): minimum IoU between the anchor and the GT box so that they can be
-                considered as positive during training.
-        """
-        self.proposal_matcher = det_utils.Matcher(iou_threshold=iou_thresh)
+    def __init__(
+        self,
+        num_anchors: int,
+        num_classes: int,
+        fl_gamma: float = 0.0,
+        box_gain: float = 0.05,
+        cls_gain: float = 0.5,
+        cls_pos: float = 1.0,
+        obj_gain: float = 1.0,
+        obj_pos: float = 1.0,
+        anchor_thresh: float = 4.0,
+        label_smoothing: float = 0.0,
+        auto_balance: bool = False,
+    ) -> None:
+
+        self.num_anchors = num_anchors
+        self.num_classes = num_classes
+        self.balance = [4.0, 1.0, 0.4]
+        self.ssi = 0  # stride 16 index
+
+        self.sort_obj_iou = False
+
+        # Define criteria
+        BCE_cls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([cls_pos]))
+        BCE_obj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([obj_pos]))
+
+        # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
+        self.cp, self.cn = det_utils.smooth_BCE(eps=label_smoothing)  # positive, negative BCE targets
+
+        # Focal loss
+        if fl_gamma > 0:
+            BCE_cls = det_utils.FocalLoss(BCE_cls, fl_gamma)
+            BCE_obj = det_utils.FocalLoss(BCE_obj, fl_gamma)
+
+        self.BCE_cls, self.BCE_obj = BCE_cls, BCE_obj
+
+        # Parameters for training
+        self.gr = 1.0
+        self.auto_balance = auto_balance
+        self.box_gain = box_gain
+        self.cls_gain = cls_gain
+        self.obj_gain = obj_gain
+        self.anchor_thresh = anchor_thresh
 
     def __call__(
         self,
@@ -98,7 +147,22 @@ class SetCriterion:
                 of the model for the format
             anchors_tuple (Tuple[Tensor, Tensor, Tensor]): Anchor tuple
         """
+        device = targets.device
+        num_layers = len(head_outputs)
+        num_anchors = self.num_anchors
+        num_targets = targets.shape[0]
         matched_idxs = []
+
+        gain = torch.ones(7, device=device)  # normalized to gridspace gain
+        ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
+        # append anchor indices
+        targets = torch.cat((targets.repeat(num_anchors, 1, 1), ai[:, :, None]), 2)
+
+        g_bias = 0.5
+        offset = torch.tensor([[0, 0],
+                               [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
+                               # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
+                               ], device=device).float() * g_bias  # offsets
 
         return self.compute_loss(targets, head_outputs, matched_idxs)
 
