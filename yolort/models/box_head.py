@@ -155,18 +155,19 @@ class SetCriterion:
 
         tcls, tbox, indices, anchors = self.build_targets(targets, head_outputs, anchors_tuple)
 
-        # Losses
-        for i, pi in enumerate(head_outputs):  # layer index, layer predictions
+        # Computing the losses
+        for i, pred_logits in enumerate(head_outputs):  # layer index, layer predictions
             b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
-            tobj = torch.zeros_like(pi[..., 0], device=device)  # target obj
+            tobj = torch.zeros_like(pred_logits[..., 0], device=device)  # target obj
 
             num_targets = b.shape[0]  # number of targets
             if num_targets > 0:
-                ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
+                # prediction subset corresponding to targets
+                pred_logits_subset = pred_logits[b, a, gj, gi]
 
                 # Regression
-                pxy = ps[:, :2].sigmoid() * 2. - 0.5
-                pwh = (ps[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
+                pxy = pred_logits_subset[:, :2].sigmoid() * 2. - 0.5
+                pwh = (pred_logits_subset[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
                 pbox = torch.cat((pxy, pwh), 1)  # predicted box
                 iou = det_utils.bbox_iou(pbox.T, tbox[i], x1y1x2y2=False, CIoU=True)
                 lbox += (1.0 - iou).mean()  # iou loss
@@ -181,11 +182,11 @@ class SetCriterion:
 
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(ps[:, 5:], self.cn, device=device)  # targets
+                    t = torch.full_like(pred_logits_subset[:, 5:], self.cn, device=device)  # targets
                     t[range(num_targets), tcls[i]] = self.cp
-                    lcls += self.BCE_cls(ps[:, 5:], t)  # BCE
+                    lcls += self.BCE_cls(pred_logits_subset[:, 5:], t)  # BCE
 
-            obji = self.BCE_obj(pi[..., 4], tobj)
+            obji = self.BCE_obj(pred_logits[..., 4], tobj)
             lobj += obji * self.balance[i]  # obj loss
             if self.auto_balance:
                 self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
