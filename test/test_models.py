@@ -176,10 +176,7 @@ class ModelTester(TestCase):
 
     def test_criterion(self):
         N, H, W = 4, 640, 640
-        anchor_generator = self._init_test_anchor_generator()
-        feature_maps = self._get_feature_maps(N, H, W)
         head_outputs = self._get_head_outputs(N, H, W)
-        anchors_tuple = anchor_generator(feature_maps)
 
         targets = torch.tensor([
             [0.0000, 7.0000, 0.0714, 0.3749, 0.0760, 0.0654],
@@ -187,8 +184,9 @@ class ModelTester(TestCase):
             [1.0000, 5.0000, 0.4720, 0.6720, 0.3280, 0.1760],
             [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
         ])
-        criterion = SetCriterion(iou_thresh=0.5)
-        out = criterion(targets, head_outputs, anchors_tuple)
+        criterion = SetCriterion(self.num_anchors, self.strides,
+                                 self.anchor_grids, self.num_classes)
+        out = criterion(targets, head_outputs)
         self.assertIsInstance(out, Dict)
         self.assertIsInstance(out['cls_logits'], Tensor)
         self.assertIsInstance(out['bbox_regression'], Tensor)
