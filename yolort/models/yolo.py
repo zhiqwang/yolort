@@ -57,7 +57,6 @@ class YOLO(nn.Module):
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
         # Training parameter
-        iou_thresh: float = 0.5,
         criterion: Optional[Callable[..., Dict[str, Tensor]]] = None,
         # Post Process parameter
         score_thresh: float = 0.005,
@@ -87,7 +86,8 @@ class YOLO(nn.Module):
         self.anchor_generator = anchor_generator
 
         if criterion is None:
-            criterion = SetCriterion(anchor_generator.num_anchors, num_classes)
+            criterion = SetCriterion(anchor_generator.num_anchors, anchor_generator.strides,
+                                     anchor_generator.anchor_grids, num_classes)
         self.compute_loss = criterion
 
         if head is None:

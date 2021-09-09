@@ -90,6 +90,8 @@ class SetCriterion:
     def __init__(
         self,
         num_anchors: int,
+        strides: List[int],
+        anchor_grids: List[List[float]],
         num_classes: int,
         fl_gamma: float = 0.0,
         box_gain: float = 0.05,
@@ -100,10 +102,17 @@ class SetCriterion:
         anchor_thresh: float = 4.0,
         label_smoothing: float = 0.0,
         auto_balance: bool = False,
+        device: torch.device = torch.device("cpu"),
     ) -> None:
+        assert len(strides) == len(anchor_grids)
 
         self.num_anchors = num_anchors
         self.num_classes = num_classes
+
+        anchors = torch.as_tensor(anchor_grids, dtype=torch.float32, device=device).view(3, -1, 2)
+        strides = torch.as_tensor(strides, dtype=torch.float32, device=device).view(-1, 1, 1)
+        self.anchors = anchors / strides
+
         self.balance = [4.0, 1.0, 0.4]
         self.ssi = 0  # stride 16 index
         self.box_coder = det_utils.BoxCoder()
@@ -111,8 +120,10 @@ class SetCriterion:
         self.sort_obj_iou = False
 
         # Define criteria
-        BCE_cls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([cls_pos]))
-        BCE_obj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([obj_pos]))
+        pos_weight_cls = torch.as_tensor([cls_pos], device=device)
+        pos_weight_obj = torch.as_tensor([obj_pos], device=device)
+        BCE_cls = nn.BCEWithLogitsLoss(pos_weight=pos_weight_cls)
+        BCE_obj = nn.BCEWithLogitsLoss(pos_weight=pos_weight_obj)
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
         self.cp, self.cn = det_utils.smooth_BCE(eps=label_smoothing)  # positive, negative BCE targets
@@ -136,7 +147,6 @@ class SetCriterion:
         self,
         targets: Tensor,
         head_outputs: List[Tensor],
-        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
     ) -> Dict[str, Tensor]:
         """
         This performs the loss computation.
@@ -146,16 +156,13 @@ class SetCriterion:
                 expected keys in each dict depends on the losses applied, see each loss' doc
             head_outputs (List[Tensor]): dict of tensors, see the output specification
                 of the model for the format
-            anchors_tuple (Tuple[Tensor, Tensor, Tensor]): Anchor tuple
         """
-        device = targets.device
+        target_cls, target_box, indices, anchors = self.build_targets(targets, head_outputs)
 
+        device = targets.device
         loss_cls = torch.zeros(1, device=device)
         loss_box = torch.zeros(1, device=device)
         loss_obj = torch.zeros(1, device=device)
-
-        target_cls, target_box, indices, anchors = self.build_targets(
-            targets, head_outputs, anchors_tuple)
 
         # Computing the losses
         for i, pred_logits in enumerate(head_outputs):  # layer index, layer predictions
@@ -200,7 +207,7 @@ class SetCriterion:
 
         return (loss_box + loss_obj + loss_cls) * batch_size
 
-    def build_targets(self, targets, head_outputs, anchors_tuple):
+    def build_targets(self, targets, head_outputs):
         device = targets.device
         num_layers = len(head_outputs)
         num_anchors = self.num_anchors
@@ -221,7 +228,7 @@ class SetCriterion:
         tcls, tbox, indices, anch = [], [], [], []
 
         for i in range(num_layers):
-            anchors = anchors_tuple[i]
+            anchors = self.anchors[i]
             gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
 
             # Match targets to anchors
