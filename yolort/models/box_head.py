@@ -203,9 +203,12 @@ class SetCriterion:
         loss_box *= self.box_gain
         loss_obj *= self.obj_gain
         loss_cls *= self.cls_gain
-        batch_size = target_obj.shape[0]  # batch size
 
-        return (loss_box + loss_obj + loss_cls) * batch_size
+        return {
+            'cls_logits': loss_cls,
+            'bbox_regression': loss_box,
+            'objectness': loss_obj,
+        }
 
     def build_targets(self, targets, head_outputs):
         device = targets.device
