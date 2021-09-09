@@ -239,36 +239,36 @@ class SetCriterion:
             gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
 
             # Match targets to anchors
-            t = targets * gain
+            targets_with_gain = targets * gain
             if num_targets > 0:
                 # Matches
-                r = t[:, :, 4:6] / anchors[:, None]  # wh ratio
+                r = targets_with_gain[:, :, 4:6] / anchors[:, None]  # wh ratio
                 j = torch.max(r, 1. / r).max(2)[0] < self.anchor_thresh  # compare
-                # j = wh_iou(anchors, t[:, 4:6]) > model.hyp['iou_t']
+                # j = wh_iou(anchors, targets_with_gain[:, 4:6]) > model.hyp['iou_t']
                 # iou(3, n) = wh_iou(anchors(3, 2), gwh(n, 2))
-                t = t[j]  # filter
+                targets_with_gain = targets_with_gain[j]  # filter
 
                 # Offsets
-                gxy = t[:, 2:4]  # grid xy
+                gxy = targets_with_gain[:, 2:4]  # grid xy
                 gxi = gain[[2, 3]] - gxy  # inverse
                 j, k = ((gxy % 1. < g_bias) & (gxy > 1.)).T
                 l, m = ((gxi % 1. < g_bias) & (gxi > 1.)).T
                 j = torch.stack((torch.ones_like(j), j, k, l, m))
-                t = t.repeat((5, 1, 1))[j]
+                targets_with_gain = targets_with_gain.repeat((5, 1, 1))[j]
                 offsets = (torch.zeros_like(gxy)[None] + offset[:, None])[j]
             else:
-                t = targets[0]
+                targets_with_gain = targets[0]
                 offsets = 0
 
             # Define
-            b, c = t[:, :2].long().T  # image, class
-            gxy = t[:, 2:4]  # grid xy
-            gwh = t[:, 4:6]  # grid wh
+            b, c = targets_with_gain[:, :2].long().T  # image, class
+            gxy = targets_with_gain[:, 2:4]  # grid xy
+            gwh = targets_with_gain[:, 4:6]  # grid wh
             gij = (gxy - offsets).long()
             gi, gj = gij.T  # grid xy indices
 
             # Append
-            a = t[:, 6].long()  # anchor indices
+            a = targets_with_gain[:, 6].long()  # anchor indices
             # image, anchor, grid indices
             indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))
             target_box.append(torch.cat((gxy - gij, gwh), 1))  # box
