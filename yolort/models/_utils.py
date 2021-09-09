@@ -22,6 +22,9 @@ class BoxCoder:
     This class encodes and decodes a set of bounding boxes into
     the representation used for training the regressors.
     """
+    def encode_single(self):
+        pass
+
     def decode_single(
         self,
         rel_codes: Tensor,

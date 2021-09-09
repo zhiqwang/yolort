@@ -91,12 +91,8 @@ class YOLO(nn.Module):
         self.compute_loss = criterion
 
         if head is None:
-            head = YOLOHead(
-                backbone.out_channels,
-                anchor_generator.num_anchors,
-                anchor_generator.strides,
-                num_classes,
-            )
+            head = YOLOHead(backbone.out_channels, anchor_generator.num_anchors,
+                            anchor_generator.strides, num_classes)
         self.head = head
 
         if post_process is None:
@@ -123,7 +119,7 @@ class YOLO(nn.Module):
         targets: Optional[Tensor] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
-        Arguments:
+        Args:
             samples (NestedTensor): Expects a NestedTensor, which consists of:
                - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
             targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
