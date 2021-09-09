@@ -109,7 +109,7 @@ class SetCriterion:
         self.num_anchors = num_anchors
         self.num_classes = num_classes
 
-        anchors = torch.as_tensor(anchor_grids, dtype=torch.float32, device=device).view(3, -1, 2)
+        anchors = torch.as_tensor(anchor_grids, dtype=torch.float32, device=device).view(num_anchors, -1, 2)
         strides = torch.as_tensor(strides, dtype=torch.float32, device=device).view(-1, 1, 1)
         self.anchors = anchors / strides
 
@@ -167,7 +167,7 @@ class SetCriterion:
         # Computing the losses
         for i, pred_logits in enumerate(head_outputs):  # layer index, layer predictions
             b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
-            tobj = torch.zeros_like(pred_logits[..., 0], device=device)  # target obj
+            target_obj = torch.zeros_like(pred_logits[..., 0], device=device)  # target obj
 
             num_targets = b.shape[0]  # number of targets
             if num_targets > 0:
@@ -180,12 +180,12 @@ class SetCriterion:
                 loss_box += (1.0 - iou).mean()  # iou loss
 
                 # Objectness
-                score_iou = iou.detach().clamp(0).type(tobj.dtype)
+                score_iou = iou.detach().clamp(0).type(target_obj.dtype)
                 if self.sort_obj_iou:
                     sort_id = torch.argsort(score_iou)
                     b, a, gj, gi = b[sort_id], a[sort_id], gj[sort_id], gi[sort_id]
                     score_iou = score_iou[sort_id]
-                tobj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * score_iou  # iou ratio
+                target_obj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * score_iou  # iou ratio
 
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
@@ -193,7 +193,7 @@ class SetCriterion:
                     t[range(num_targets), target_cls[i]] = self.cp
                     loss_cls += self.BCE_cls(pred_logits_subset[:, 5:], t)  # BCE
 
-            obji = self.BCE_obj(pred_logits[..., 4], tobj)
+            obji = self.BCE_obj(pred_logits[..., 4], target_obj)
             loss_obj += obji * self.balance[i]  # obj loss
             if self.auto_balance:
                 self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
@@ -203,7 +203,7 @@ class SetCriterion:
         loss_box *= self.box_gain
         loss_obj *= self.obj_gain
         loss_cls *= self.cls_gain
-        batch_size = tobj.shape[0]  # batch size
+        batch_size = target_obj.shape[0]  # batch size
 
         return (loss_box + loss_obj + loss_cls) * batch_size
 
@@ -225,7 +225,7 @@ class SetCriterion:
                                # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
                                ], device=device).float() * g_bias  # offsets
 
-        tcls, tbox, indices, anch = [], [], [], []
+        target_cls, target_box, indices, anch = [], [], [], []
 
         for i in range(num_layers):
             anchors = self.anchors[i]
@@ -264,11 +264,11 @@ class SetCriterion:
             a = t[:, 6].long()  # anchor indices
             # image, anchor, grid indices
             indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))
-            tbox.append(torch.cat((gxy - gij, gwh), 1))  # box
+            target_box.append(torch.cat((gxy - gij, gwh), 1))  # box
             anch.append(anchors[a])  # anchors
-            tcls.append(c)  # class
+            target_cls.append(c)  # class
 
-        return tcls, tbox, indices, anch
+        return target_cls, target_box, indices, anch
 
 
 class PostProcess(nn.Module):
