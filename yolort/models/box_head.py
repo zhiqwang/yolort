@@ -173,7 +173,7 @@ class SetCriterion:
 
                 # Regression
                 pred_box = det_utils.encode_single(pred_logits_subset, anchors[i])
-                iou = det_utils.bbox_iou(pred_box.T, target_box[i], x1y1x2y2=False, CIoU=True)
+                iou = det_utils.bbox_iou(pred_box.T, target_box[i], x1y1x2y2=False)
                 loss_box += (1.0 - iou).mean()  # iou loss
 
                 # Objectness
@@ -187,7 +187,7 @@ class SetCriterion:
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
                     t = torch.full_like(pred_logits_subset[:, 5:], self.cn, device=device)  # targets
-                    t[range(num_targets), target_cls[i]] = self.cp
+                    t[torch.arange(num_targets), target_cls[i]] = self.cp
                     loss_cls += F.binary_cross_entropy_with_logits(
                         pred_logits_subset[:, 5:], t, pos_weight=pos_weight_cls)
 
@@ -214,7 +214,7 @@ class SetCriterion:
         targets: Tensor,
         head_outputs: List[Tensor],
         anchor_grids: Tensor,
-    ):
+    ) -> Tuple[List[Tensor], List[Tensor], List[Tuple[Tensor, Tensor, Tensor, Tensor]], List[Tensor]]:
         device = targets.device
         num_anchors = self.num_anchors
 
@@ -232,7 +232,8 @@ class SetCriterion:
                                # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
                                ], device=device).float() * g_bias  # offsets
 
-        target_cls, target_box, indices, anch = [], [], [], []
+        target_cls, target_box, anch = [], [], []
+        indices: List[Tuple[Tensor, Tensor, Tensor, Tensor]] = []
 
         for i in range(num_anchors):
             anchors = anchor_grids[i]
@@ -251,29 +252,29 @@ class SetCriterion:
                 # Offsets
                 gxy = targets_with_gain[:, 2:4]  # grid xy
                 gxi = gain[[2, 3]] - gxy  # inverse
-                j, k = ((gxy % 1. < g_bias) & (gxy > 1.)).T
-                l, m = ((gxi % 1. < g_bias) & (gxi > 1.)).T
-                j = torch.stack((torch.ones_like(j), j, k, l, m))
+                idx_jk = ((gxy % 1. < g_bias) & (gxy > 1.)).T
+                idx_lm = ((gxi % 1. < g_bias) & (gxi > 1.)).T
+                j = torch.stack((torch.ones_like(idx_jk[0]), idx_jk[0], idx_jk[1], idx_lm[0], idx_lm[1]))
                 targets_with_gain = targets_with_gain.repeat((5, 1, 1))[j]
                 offsets = (torch.zeros_like(gxy)[None] + offset[:, None])[j]
             else:
                 targets_with_gain = targets[0]
-                offsets = 0
+                offsets = torch.tensor(0, device=device)
 
             # Define
-            b, c = targets_with_gain[:, :2].long().T  # image, class
+            idx_bc = targets_with_gain[:, :2].long().T  # image, class
             gxy = targets_with_gain[:, 2:4]  # grid xy
             gwh = targets_with_gain[:, 4:6]  # grid wh
             gij = (gxy - offsets).long()
-            gi, gj = gij.T  # grid xy indices
+            idx_gij = gij.T  # grid xy indices
 
             # Append
             a = targets_with_gain[:, 6].long()  # anchor indices
             # image, anchor, grid indices
-            indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))
+            indices.append((idx_bc[0], a, idx_gij[1].clamp_(0, gain[3] - 1), idx_gij[0].clamp_(0, gain[2] - 1)))
             target_box.append(torch.cat((gxy - gij, gwh), 1))  # box
             anch.append(anchors[a])  # anchors
-            target_cls.append(c)  # class
+            target_cls.append(idx_bc[1])  # class
 
         return target_cls, target_box, indices, anch
 
