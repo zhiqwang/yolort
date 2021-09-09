@@ -100,7 +100,6 @@ class QFocalLoss(nn.Module):
 class ComputeLoss:
     # Compute losses
     def __init__(self, model, autobalance=False):
-        super().__init__()
         self.sort_obj_iou = False
         device = next(model.parameters()).device  # get model device
         h = model.hyp  # hyperparameters
