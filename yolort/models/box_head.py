@@ -2,7 +2,7 @@
 import math
 import torch
 from torch import nn, Tensor
-
+import torch.nn.functional as F
 from torchvision.ops import boxes as box_ops
 
 from . import _utils as det_utils
@@ -102,38 +102,26 @@ class SetCriterion:
         anchor_thresh: float = 4.0,
         label_smoothing: float = 0.0,
         auto_balance: bool = False,
-        device: torch.device = torch.device("cpu"),
     ) -> None:
         assert len(strides) == len(anchor_grids)
 
         self.num_anchors = num_anchors
         self.num_classes = num_classes
-
-        anchors = torch.as_tensor(anchor_grids, dtype=torch.float32, device=device).view(num_anchors, -1, 2)
-        strides = torch.as_tensor(strides, dtype=torch.float32, device=device).view(-1, 1, 1)
-        self.anchors = anchors / strides
+        self.strides = strides
+        self.anchor_grids = anchor_grids
 
         self.balance = [4.0, 1.0, 0.4]
         self.ssi = 0  # stride 16 index
-        self.box_coder = det_utils.BoxCoder()
 
         self.sort_obj_iou = False
 
         # Define criteria
-        pos_weight_cls = torch.as_tensor([cls_pos], device=device)
-        pos_weight_obj = torch.as_tensor([obj_pos], device=device)
-        BCE_cls = nn.BCEWithLogitsLoss(pos_weight=pos_weight_cls)
-        BCE_obj = nn.BCEWithLogitsLoss(pos_weight=pos_weight_obj)
+        self.cls_pos = cls_pos
+        self.obj_pos = obj_pos
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
-        self.cp, self.cn = det_utils.smooth_BCE(eps=label_smoothing)  # positive, negative BCE targets
-
-        # Focal loss
-        if fl_gamma > 0:
-            BCE_cls = det_utils.FocalLoss(BCE_cls, fl_gamma)
-            BCE_obj = det_utils.FocalLoss(BCE_obj, fl_gamma)
-
-        self.BCE_cls, self.BCE_obj = BCE_cls, BCE_obj
+        # positive, negative BCE targets
+        self.cp, self.cn = det_utils.smooth_binary_cross_entropy(eps=label_smoothing)
 
         # Parameters for training
         self.gr = 1.0
@@ -157,9 +145,18 @@ class SetCriterion:
             head_outputs (List[Tensor]): dict of tensors, see the output specification
                 of the model for the format
         """
-        target_cls, target_box, indices, anchors = self.build_targets(targets, head_outputs)
-
         device = targets.device
+        anchor_grids = torch.as_tensor(self.anchor_grids, dtype=torch.float32,
+                                       device=device).view(self.num_anchors, -1, 2)
+        strides = torch.as_tensor(self.strides, dtype=torch.float32,
+                                  device=device).view(-1, 1, 1)
+        anchor_grids /= strides
+
+        target_cls, target_box, indices, anchors = self.build_targets(targets, head_outputs, anchor_grids)
+
+        pos_weight_cls = torch.as_tensor([self.cls_pos], device=device)
+        pos_weight_obj = torch.as_tensor([self.obj_pos], device=device)
+
         loss_cls = torch.zeros(1, device=device)
         loss_box = torch.zeros(1, device=device)
         loss_obj = torch.zeros(1, device=device)
@@ -175,7 +172,7 @@ class SetCriterion:
                 pred_logits_subset = pred_logits[b, a, gj, gi]
 
                 # Regression
-                pred_box = self.box_coder.encode_single(pred_logits_subset, anchors[i])
+                pred_box = det_utils.encode_single(pred_logits_subset, anchors[i])
                 iou = det_utils.bbox_iou(pred_box.T, target_box[i], x1y1x2y2=False, CIoU=True)
                 loss_box += (1.0 - iou).mean()  # iou loss
 
@@ -191,9 +188,11 @@ class SetCriterion:
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
                     t = torch.full_like(pred_logits_subset[:, 5:], self.cn, device=device)  # targets
                     t[range(num_targets), target_cls[i]] = self.cp
-                    loss_cls += self.BCE_cls(pred_logits_subset[:, 5:], t)  # BCE
+                    loss_cls += F.binary_cross_entropy_with_logits(
+                        pred_logits_subset[:, 5:], t, pos_weight=pos_weight_cls)
 
-            obji = self.BCE_obj(pred_logits[..., 4], target_obj)
+            obji = F.binary_cross_entropy_with_logits(
+                pred_logits[..., 4], target_obj, pos_weight=pos_weight_obj)
             loss_obj += obji * self.balance[i]  # obj loss
             if self.auto_balance:
                 self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
@@ -210,10 +209,15 @@ class SetCriterion:
             'objectness': loss_obj,
         }
 
-    def build_targets(self, targets, head_outputs):
+    def build_targets(
+        self,
+        targets: Tensor,
+        head_outputs: List[Tensor],
+        anchor_grids: Tensor,
+    ):
         device = targets.device
-        num_layers = len(head_outputs)
         num_anchors = self.num_anchors
+
         num_targets = targets.shape[0]
 
         gain = torch.ones(7, device=device)  # normalized to gridspace gain
@@ -230,8 +234,8 @@ class SetCriterion:
 
         target_cls, target_box, indices, anch = [], [], [], []
 
-        for i in range(num_layers):
-            anchors = self.anchors[i]
+        for i in range(num_anchors):
+            anchors = anchor_grids[i]
             gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
 
             # Match targets to anchors
@@ -278,9 +282,6 @@ class PostProcess(nn.Module):
     """
     Performs Non-Maximum Suppression (NMS) on inference results
     """
-    __annotations__ = {
-        'box_coder': det_utils.BoxCoder,
-    }
     def __init__(
         self,
         score_thresh: float,
@@ -294,10 +295,9 @@ class PostProcess(nn.Module):
             detections_per_img (int): Number of best detections to keep after NMS.
         """
         super().__init__()
-        self.box_coder = det_utils.BoxCoder()
         self.score_thresh = score_thresh
         self.nms_thresh = nms_thresh
-        self.detections_per_img = detections_per_img  # maximum number of detections per image
+        self.detections_per_img = detections_per_img
 
     def forward(
         self,
@@ -333,7 +333,7 @@ class PostProcess(nn.Module):
             # box_conf x class_conf, w/ shape: num_anchors x num_classes
             scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
 
-            boxes = self.box_coder.decode_single(pred_logits[:, :4], anchors_tuple)
+            boxes = det_utils.decode_single(pred_logits[:, :4], anchors_tuple)
 
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)
