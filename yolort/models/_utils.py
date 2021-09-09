@@ -22,8 +22,27 @@ class BoxCoder:
     This class encodes and decodes a set of bounding boxes into
     the representation used for training the regressors.
     """
-    def encode_single(self):
-        pass
+
+    def encode_single(
+        self,
+        reference_boxes: Tensor,
+        anchors: Tensor,
+    ):
+        """
+        Encode a set of anchors with respect to some
+        reference boxes
+
+        Args:
+            reference_boxes (Tensor): reference boxes
+            anchors_tuple (Tensor): boxes to be encoded
+        """
+        reference_boxes = torch.sigmoid(reference_boxes)
+
+        pred_xy = reference_boxes[:, :2] * 2. - 0.5
+        pred_wh = (reference_boxes[:, 2:4] * 2) ** 2 * anchors
+        pred_boxes = torch.cat((pred_xy, pred_wh), 1)
+
+        return pred_boxes
 
     def decode_single(
         self,

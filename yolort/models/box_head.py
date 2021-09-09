@@ -106,6 +106,7 @@ class SetCriterion:
         self.num_classes = num_classes
         self.balance = [4.0, 1.0, 0.4]
         self.ssi = 0  # stride 16 index
+        self.box_coder = det_utils.BoxCoder()
 
         self.sort_obj_iou = False
 
@@ -149,11 +150,12 @@ class SetCriterion:
         """
         device = targets.device
 
-        lcls = torch.zeros(1, device=device)
-        lbox = torch.zeros(1, device=device)
-        lobj = torch.zeros(1, device=device)
+        loss_cls = torch.zeros(1, device=device)
+        loss_box = torch.zeros(1, device=device)
+        loss_obj = torch.zeros(1, device=device)
 
-        tcls, tbox, indices, anchors = self.build_targets(targets, head_outputs, anchors_tuple)
+        target_cls, target_box, indices, anchors = self.build_targets(
+            targets, head_outputs, anchors_tuple)
 
         # Computing the losses
         for i, pred_logits in enumerate(head_outputs):  # layer index, layer predictions
@@ -166,11 +168,9 @@ class SetCriterion:
                 pred_logits_subset = pred_logits[b, a, gj, gi]
 
                 # Regression
-                pxy = pred_logits_subset[:, :2].sigmoid() * 2. - 0.5
-                pwh = (pred_logits_subset[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
-                pbox = torch.cat((pxy, pwh), 1)  # predicted box
-                iou = det_utils.bbox_iou(pbox.T, tbox[i], x1y1x2y2=False, CIoU=True)
-                lbox += (1.0 - iou).mean()  # iou loss
+                pred_box = self.box_coder.encode_single(pred_logits_subset, anchors[i])
+                iou = det_utils.bbox_iou(pred_box.T, target_box[i], x1y1x2y2=False, CIoU=True)
+                loss_box += (1.0 - iou).mean()  # iou loss
 
                 # Objectness
                 score_iou = iou.detach().clamp(0).type(tobj.dtype)
@@ -183,22 +183,22 @@ class SetCriterion:
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
                     t = torch.full_like(pred_logits_subset[:, 5:], self.cn, device=device)  # targets
-                    t[range(num_targets), tcls[i]] = self.cp
-                    lcls += self.BCE_cls(pred_logits_subset[:, 5:], t)  # BCE
+                    t[range(num_targets), target_cls[i]] = self.cp
+                    loss_cls += self.BCE_cls(pred_logits_subset[:, 5:], t)  # BCE
 
             obji = self.BCE_obj(pred_logits[..., 4], tobj)
-            lobj += obji * self.balance[i]  # obj loss
+            loss_obj += obji * self.balance[i]  # obj loss
             if self.auto_balance:
                 self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
 
         if self.auto_balance:
             self.balance = [x / self.balance[self.ssi] for x in self.balance]
-        lbox *= self.box_gain
-        lobj *= self.obj_gain
-        lcls *= self.cls_gain
+        loss_box *= self.box_gain
+        loss_obj *= self.obj_gain
+        loss_cls *= self.cls_gain
         batch_size = tobj.shape[0]  # batch size
 
-        return (lbox + lobj + lcls) * batch_size, torch.cat((lbox, lobj, lcls)).detach()
+        return (loss_box + loss_obj + loss_cls) * batch_size
 
     def build_targets(self, targets, head_outputs, anchors_tuple):
         device = targets.device
