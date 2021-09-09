@@ -57,7 +57,6 @@ class YOLO(nn.Module):
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
         # Training parameter
-        iou_thresh: float = 0.5,
         criterion: Optional[Callable[..., Dict[str, Tensor]]] = None,
         # Post Process parameter
         score_thresh: float = 0.005,
@@ -87,16 +86,13 @@ class YOLO(nn.Module):
         self.anchor_generator = anchor_generator
 
         if criterion is None:
-            criterion = SetCriterion(iou_thresh)
+            criterion = SetCriterion(anchor_generator.num_anchors, anchor_generator.strides,
+                                     anchor_generator.anchor_grids, num_classes)
         self.compute_loss = criterion
 
         if head is None:
-            head = YOLOHead(
-                backbone.out_channels,
-                anchor_generator.num_anchors,
-                anchor_generator.strides,
-                num_classes,
-            )
+            head = YOLOHead(backbone.out_channels, anchor_generator.num_anchors,
+                            anchor_generator.strides, num_classes)
         self.head = head
 
         if post_process is None:
@@ -123,7 +119,7 @@ class YOLO(nn.Module):
         targets: Optional[Tensor] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
         """
-        Arguments:
+        Args:
             samples (NestedTensor): Expects a NestedTensor, which consists of:
                - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
             targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
@@ -148,7 +144,7 @@ class YOLO(nn.Module):
         if self.training:
             assert targets is not None
             # compute the losses
-            losses = self.compute_loss(targets, head_outputs, anchors_tuple)
+            losses = self.compute_loss(targets, head_outputs)
         else:
             # compute the detections
             detections = self.post_process(head_outputs, anchors_tuple)
