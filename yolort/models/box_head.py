@@ -121,7 +121,9 @@ class SetCriterion:
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
         # positive, negative BCE targets
-        self.cp, self.cn = det_utils.smooth_binary_cross_entropy(eps=label_smoothing)
+        smooth_bce = det_utils.smooth_binary_cross_entropy(eps=label_smoothing)
+        self.smooth_pos = smooth_bce[0]
+        self.smooth_neg = smooth_bce[1]
 
         # Parameters for training
         self.gr = 1.0
@@ -177,7 +179,7 @@ class SetCriterion:
                 loss_box += (1.0 - iou).mean()  # iou loss
 
                 # Objectness
-                score_iou = iou.detach().clamp(0).type(target_obj.dtype)
+                score_iou = iou.detach().clamp(0).to(dtype=target_obj.dtype)
                 if self.sort_obj_iou:
                     sort_id = torch.argsort(score_iou)
                     b, a, gj, gi = b[sort_id], a[sort_id], gj[sort_id], gi[sort_id]
@@ -186,8 +188,8 @@ class SetCriterion:
 
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(pred_logits_subset[:, 5:], self.cn, device=device)  # targets
-                    t[torch.arange(num_targets), target_cls[i]] = self.cp
+                    t = torch.full_like(pred_logits_subset[:, 5:], self.smooth_neg, device=device)  # targets
+                    t[torch.arange(num_targets), target_cls[i]] = self.smooth_pos
                     loss_cls += F.binary_cross_entropy_with_logits(
                         pred_logits_subset[:, 5:], t, pos_weight=pos_weight_cls)
 
