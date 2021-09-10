@@ -1,4 +1,9 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+import os
+import io
+import contextlib
+import warnings
+
 import torch
 from torch import Tensor
 
@@ -7,20 +12,81 @@ from yolort.models.transformer import darknet_tan_backbone
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
 
-from .common_utils import TestCase
 
-from typing import Dict
+@contextlib.contextmanager
+def freeze_rng_state():
+    rng_state = torch.get_rng_state()
+    if torch.cuda.is_available():
+        cuda_rng_state = torch.cuda.get_rng_state()
+    yield
+    if torch.cuda.is_available():
+        torch.cuda.set_rng_state(cuda_rng_state)
+    torch.set_rng_state(rng_state)
 
 
-# If 'unwrapper' is provided it will be called with the script model outputs
-# before they are compared to the eager model outputs. This is useful if the
-# model outputs are different between TorchScript / Eager mode
-script_model_unwrapper = {
-    "PostProcess": lambda x: x[1],
-}
+def _check_jit_scriptable(nn_module, args, unwrapper=None, skip=False):
+    """
+    Check that a nn.Module's results in TorchScript match eager and that it can be exported
+    https://github.com/pytorch/vision/blob/12fd3a6/test/test_models.py#L90-L141
+    """
+
+    def assert_export_import_module(m, args):
+        """
+        Check that the results of a model are the same after saving and loading
+        """
+        def get_export_import_copy(m):
+            """
+            Save and load a TorchScript model
+            """
+            buffer = io.BytesIO()
+            torch.jit.save(m, buffer)
+            buffer.seek(0)
+            imported = torch.jit.load(buffer)
+            return imported
+
+        m_import = get_export_import_copy(m)
+        with freeze_rng_state():
+            results = m(*args)
+        with freeze_rng_state():
+            results_from_imported = m_import(*args)
+        tol = 3e-4
+        try:
+            torch.testing.assert_close(results, results_from_imported, atol=tol, rtol=tol)
+        except ValueError:
+            # custom check for the models that return named tuples:
+            # we compare field by field while ignoring None as assert_close can't handle None
+            for a, b in zip(results, results_from_imported):
+                if a is not None:
+                    torch.testing.assert_close(a, b, atol=tol, rtol=tol)
+
+    TEST_WITH_SLOW = os.getenv('PYTORCH_TEST_WITH_SLOW', '0') == '1'
+    if not TEST_WITH_SLOW or skip:
+        # TorchScript is not enabled, skip these tests
+        msg = (
+            f"The check_jit_scriptable test for {nn_module.__class__.__name__} "
+            "was skipped. This test checks if the module's results in TorchScript "
+            "match eager and that it can be exported. To run these tests make "
+            "sure you set the environment variable PYTORCH_TEST_WITH_SLOW=1 and "
+            "that the test is not manually skipped."
+        )
+        warnings.warn(msg, RuntimeWarning)
+        return None
+
+    sm = torch.jit.script(nn_module)
+
+    with freeze_rng_state():
+        eager_out = nn_module(*args)
+
+    with freeze_rng_state():
+        script_out = sm(*args)
+        if unwrapper:
+            script_out = unwrapper(script_out)
+
+    torch.testing.assert_close(eager_out, script_out, atol=1e-4, rtol=1e-4)
+    assert_export_import_module(sm, args)
 
 
-class ModelTester(TestCase):
+class TestModel:
     strides = [8, 16, 32]
     in_channels = [128, 256, 512]
     anchor_grids = [
@@ -68,11 +134,11 @@ class ModelTester(TestCase):
         model = self._init_test_backbone_with_pan_r3_1()
         out = model(x)
 
-        self.assertEqual(len(out), 3)
-        self.assertEqual(tuple(out[0].shape), (N, *out_shape[0]))
-        self.assertEqual(tuple(out[1].shape), (N, *out_shape[1]))
-        self.assertEqual(tuple(out[2].shape), (N, *out_shape[2]))
-        self.check_jit_scriptable(model, (x,))
+        assert len(out) == 3
+        assert tuple(out[0].shape) == (N, *out_shape[0])
+        assert tuple(out[1].shape) == (N, *out_shape[1])
+        assert tuple(out[2].shape) == (N, *out_shape[2])
+        _check_jit_scriptable(model, (x,))
 
     def _init_test_backbone_with_pan_r4_0(self):
         backbone_name = 'darknet_s_r4_0'
@@ -89,11 +155,11 @@ class ModelTester(TestCase):
         model = self._init_test_backbone_with_pan_r4_0()
         out = model(x)
 
-        self.assertEqual(len(out), 3)
-        self.assertEqual(tuple(out[0].shape), (N, *out_shape[0]))
-        self.assertEqual(tuple(out[1].shape), (N, *out_shape[1]))
-        self.assertEqual(tuple(out[2].shape), (N, *out_shape[2]))
-        self.check_jit_scriptable(model, (x,))
+        assert len(out) == 3
+        assert tuple(out[0].shape) == (N, *out_shape[0])
+        assert tuple(out[1].shape) == (N, *out_shape[1])
+        assert tuple(out[2].shape) == (N, *out_shape[2])
+        _check_jit_scriptable(model, (x,))
 
     def _init_test_backbone_with_pan_tr(self):
         backbone_name = 'darknet_s_r4_0'
@@ -110,11 +176,11 @@ class ModelTester(TestCase):
         model = self._init_test_backbone_with_pan_tr()
         out = model(x)
 
-        self.assertEqual(len(out), 3)
-        self.assertEqual(tuple(out[0].shape), (N, *out_shape[0]))
-        self.assertEqual(tuple(out[1].shape), (N, *out_shape[1]))
-        self.assertEqual(tuple(out[2].shape), (N, *out_shape[2]))
-        self.check_jit_scriptable(model, (x,))
+        assert len(out) == 3
+        assert tuple(out[0].shape) == (N, *out_shape[0])
+        assert tuple(out[1].shape) == (N, *out_shape[1])
+        assert tuple(out[2].shape) == (N, *out_shape[2])
+        _check_jit_scriptable(model, (x,))
 
     def _init_test_anchor_generator(self):
         anchor_generator = AnchorGenerator(self.strides, self.anchor_grids)
@@ -126,11 +192,11 @@ class ModelTester(TestCase):
         model = self._init_test_anchor_generator()
         anchors = model(feature_maps)
 
-        self.assertEqual(len(anchors), 3)
-        self.assertEqual(tuple(anchors[0].shape), (9009, 2))
-        self.assertEqual(tuple(anchors[1].shape), (9009, 1))
-        self.assertEqual(tuple(anchors[2].shape), (9009, 2))
-        self.check_jit_scriptable(model, (feature_maps,))
+        assert len(anchors) == 3
+        assert tuple(anchors[0].shape) == (9009, 2)
+        assert tuple(anchors[1].shape) == (9009, 1)
+        assert tuple(anchors[2].shape) == (9009, 2)
+        _check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_yolo_head(self):
         box_head = YOLOHead(self.in_channels, self.num_anchors, self.strides, self.num_classes)
@@ -141,14 +207,14 @@ class ModelTester(TestCase):
         feature_maps = self._get_feature_maps(N, H, W)
         model = self._init_test_yolo_head()
         head_outputs = model(feature_maps)
-        self.assertEqual(len(head_outputs), 3)
+        assert len(head_outputs) == 3
 
         target_head_outputs = self._get_head_outputs(N, H, W)
 
-        self.assertEqual(head_outputs[0].shape, target_head_outputs[0].shape)
-        self.assertEqual(head_outputs[1].shape, target_head_outputs[1].shape)
-        self.assertEqual(head_outputs[2].shape, target_head_outputs[2].shape)
-        self.check_jit_scriptable(model, (feature_maps,))
+        assert head_outputs[0].shape == target_head_outputs[0].shape
+        assert head_outputs[1].shape == target_head_outputs[1].shape
+        assert head_outputs[2].shape == target_head_outputs[2].shape
+        _check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_postprocessors(self):
         score_thresh = 0.5
@@ -167,12 +233,12 @@ class ModelTester(TestCase):
         model = self._init_test_postprocessors()
         out = model(head_outputs, anchors_tuple)
 
-        self.assertEqual(len(out), N)
-        self.assertIsInstance(out[0], Dict)
-        self.assertIsInstance(out[0]["boxes"], Tensor)
-        self.assertIsInstance(out[0]["labels"], Tensor)
-        self.assertIsInstance(out[0]["scores"], Tensor)
-        self.check_jit_scriptable(model, (head_outputs, anchors_tuple))
+        assert len(out) == N
+        assert isinstance(out[0], dict)
+        assert isinstance(out[0]["boxes"], Tensor)
+        assert isinstance(out[0]["labels"], Tensor)
+        assert isinstance(out[0]["scores"], Tensor)
+        _check_jit_scriptable(model, (head_outputs, anchors_tuple))
 
     def test_criterion(self):
         N, H, W = 4, 640, 640
@@ -186,8 +252,8 @@ class ModelTester(TestCase):
         ])
         criterion = SetCriterion(self.num_anchors, self.strides,
                                  self.anchor_grids, self.num_classes)
-        out = criterion(targets, head_outputs)
-        self.assertIsInstance(out, Dict)
-        self.assertIsInstance(out['cls_logits'], Tensor)
-        self.assertIsInstance(out['bbox_regression'], Tensor)
-        self.assertIsInstance(out['objectness'], Tensor)
+        losses = criterion(targets, head_outputs)
+        assert isinstance(losses, dict)
+        assert isinstance(losses['cls_logits'], Tensor)
+        assert isinstance(losses['bbox_regression'], Tensor)
+        assert isinstance(losses['objectness'], Tensor)
