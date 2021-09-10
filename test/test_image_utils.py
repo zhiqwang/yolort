@@ -37,8 +37,7 @@ def test_scale_coords():
                                [0., 0., 0., 0.],
                                [7.9250, 16.6875, 30.1750, 38.9375],
                                [19.05, 38.9375, 96.9250, 105.6875]], dtype=torch.float)
-    TOLERANCE = 1e-5
 
     box_coords_scaled = scale_coords(box_tensor, (160, 128), (178, 136))
     assert tuple(box_coords_scaled.shape) == (4, 4)
-    assert (exp_coords - box_coords_scaled).abs().max() < TOLERANCE
+    torch.testing.assert_close(box_coords_scaled, exp_coords)

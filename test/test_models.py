@@ -1,4 +1,3 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import os
 import io
 import contextlib
@@ -273,6 +272,6 @@ def test_torchscript(arch):
     out = model(x)
     out_script = scripted_model(x)
 
-    torch.testing.assert_allclose(out[0]["scores"], out_script[1][0]["scores"], rtol=0., atol=0.)
-    torch.testing.assert_allclose(out[0]["labels"], out_script[1][0]["labels"], rtol=0., atol=0.)
-    torch.testing.assert_allclose(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0., atol=0.)
+    torch.testing.assert_close(out[0]["scores"], out_script[1][0]["scores"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["labels"], out_script[1][0]["labels"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0, atol=0)

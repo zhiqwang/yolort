@@ -27,6 +27,6 @@ class TestAnchorGenerator:
         assert tuple(anchors[1].shape) == (4, 1)
         assert tuple(anchors[2].shape) == (4, 2)
 
-        torch.testing.assert_allclose(anchors[0], expected_anchor_output, rtol=0., atol=0.)
-        torch.testing.assert_allclose(anchors[1], expected_wh_output, rtol=0., atol=0.)
-        torch.testing.assert_allclose(anchors[2], expected_xy_output, rtol=0., atol=0.)
+        torch.testing.assert_close(anchors[0], expected_anchor_output, rtol=0, atol=0)
+        torch.testing.assert_close(anchors[1], expected_wh_output, rtol=0, atol=0)
+        torch.testing.assert_close(anchors[2], expected_xy_output, rtol=0, atol=0)

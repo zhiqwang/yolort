@@ -8,4 +8,4 @@ def test_space_to_depth(n, b, h, w):
     tensor_input = torch.randn((n, b, h, w))
     out1 = focus_transform(tensor_input)
     out2 = space_to_depth(tensor_input)
-    torch.testing.assert_allclose(out1, out2)
+    torch.testing.assert_close(out2, out1)
