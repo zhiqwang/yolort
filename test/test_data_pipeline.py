@@ -7,8 +7,6 @@ from torch import Tensor
 
 from yolort.data import DetectionDataModule, contains_any_tensor, _helper as data_helper
 
-from typing import Dict
-
 
 def test_contains_any_tensor():
     dummy_numpy = np.random.randn(3, 6)
@@ -25,7 +23,7 @@ def test_get_dataset():
     # Test the datasets
     image, target = next(iter(train_dataset))
     assert isinstance(image, Tensor)
-    assert isinstance(target, Dict)
+    assert isinstance(target, dict)
 
 
 def test_get_dataloader():
@@ -38,7 +36,7 @@ def test_get_dataloader():
     assert isinstance(images[0], Tensor)
     assert len(images[0]) == 3
     assert len(targets) == batch_size
-    assert isinstance(targets[0], Dict)
+    assert isinstance(targets[0], dict)
     assert isinstance(targets[0]["image_id"], Tensor)
     assert isinstance(targets[0]["boxes"], Tensor)
     assert isinstance(targets[0]["labels"], Tensor)
@@ -58,7 +56,7 @@ def test_detection_data_module():
     assert isinstance(images[0], Tensor)
     assert len(images[0]) == 3
     assert len(targets) == batch_size
-    assert isinstance(targets[0], Dict)
+    assert isinstance(targets[0], dict)
     assert isinstance(targets[0]["image_id"], Tensor)
     assert isinstance(targets[0]["boxes"], Tensor)
     assert isinstance(targets[0]["labels"], Tensor)

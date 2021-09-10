@@ -1,9 +1,6 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 """
 Test for exporting model to ONNX and inference with ONNXRuntime
 """
-from typing import List, Tuple
-
 from pathlib import Path
 import io
 import pytest
@@ -14,7 +11,7 @@ from torch import Tensor
 from torchvision import transforms
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
 
-import yolort
+from yolort import models
 
 # In environments without onnxruntime we prefer to
 # invoke all tests in the repo and have this one skipped rather than fail.
@@ -82,34 +79,34 @@ class TestONNXExporter:
 
         for i in range(0, len(outputs)):
             try:
-                torch.testing.assert_allclose(outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05)
+                torch.testing.assert_close(outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05)
             except AssertionError as error:
                 if tolerate_small_mismatch:
                     self.assertIn("(0.00%)", str(error), str(error))
                 else:
                     raise
 
-    def get_image(self, img_name, size) -> Tensor:
+    def get_image(self, img_name, size):
 
         img_path = Path(__file__).parent.resolve() / "assets" / img_name
         image = Image.open(img_path).convert("RGB").resize(size, Image.BILINEAR)
 
         return transforms.ToTensor()(image)
 
-    def get_test_images(self) -> Tuple[List[Tensor], List[Tensor]]:
+    def get_test_images(self):
         return ([self.get_image("bus.jpg", (416, 320))],
                 [self.get_image("zidane.jpg", (352, 480))])
 
     @pytest.mark.parametrize('arch, upstream_version', [
         ('yolov5s', 'r3.1'),
         ('yolov5m', 'r4.0'),
-        ('yolotr', 'r4.0'),
+        # ('yolotr', 'r4.0'),
     ])
     def test_yolort_export_onnx(self, arch, upstream_version):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
 
-        model = yolort.models.__dict__[arch](
+        model = models.__dict__[arch](
             upstream_version=upstream_version,
             export_friendly=True,
             pretrained=True,

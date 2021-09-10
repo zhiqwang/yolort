@@ -8,12 +8,9 @@ from torchvision.io import read_image
 import pytorch_lightning as pl
 
 from yolort.data import COCOEvaluator, DetectionDataModule, _helper as data_helper
-
 from yolort.models import yolov5s
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
-
-from typing import Dict
 
 
 def default_loader(img_name, is_half=False):
@@ -44,7 +41,7 @@ def test_train_with_vanilla_model():
     model = yolov5_darknet_pan_s_r31(num_classes=12)
     model.train()
     out = model(images, targets)
-    assert isinstance(out, Dict)
+    assert isinstance(out, dict)
     assert isinstance(out["cls_logits"], Tensor)
     assert isinstance(out["bbox_regression"], Tensor)
     assert isinstance(out["objectness"], Tensor)
@@ -68,7 +65,7 @@ def test_train_with_vanilla_module():
     model.train()
 
     out = model(images, targets)
-    assert isinstance(out, Dict)
+    assert isinstance(out, dict)
     assert isinstance(out["cls_logits"], Tensor)
     assert isinstance(out["bbox_regression"], Tensor)
     assert isinstance(out["objectness"], Tensor)
@@ -139,7 +136,7 @@ def test_predict_with_vanilla_model():
     out = model([img_input])
     assert isinstance(out, list)
     assert len(out) == 1
-    assert isinstance(out[0], Dict)
+    assert isinstance(out[0], dict)
     assert isinstance(out[0]["boxes"], Tensor)
     assert isinstance(out[0]["labels"], Tensor)
     assert isinstance(out[0]["scores"], Tensor)
@@ -157,7 +154,7 @@ def test_predict_with_tensor():
     predictions = model.predict(img_tensor)
     assert isinstance(predictions, list)
     assert len(predictions) == 1
-    assert isinstance(predictions[0], Dict)
+    assert isinstance(predictions[0], dict)
     assert isinstance(predictions[0]["boxes"], Tensor)
     assert isinstance(predictions[0]["labels"], Tensor)
     assert isinstance(predictions[0]["scores"], Tensor)
@@ -177,7 +174,7 @@ def test_predict_with_tensors():
     predictions = model.predict(img_tensors)
     assert isinstance(predictions, list)
     assert len(predictions) == 2
-    assert isinstance(predictions[0], Dict)
+    assert isinstance(predictions[0], dict)
     assert isinstance(predictions[0]["boxes"], Tensor)
     assert isinstance(predictions[0]["labels"], Tensor)
     assert isinstance(predictions[0]["scores"], Tensor)
@@ -193,7 +190,7 @@ def test_predict_with_image_file():
     predictions = model.predict(img_name)
     assert isinstance(predictions, list)
     assert len(predictions) == 1
-    assert isinstance(predictions[0], Dict)
+    assert isinstance(predictions[0], dict)
     assert isinstance(predictions[0]["boxes"], Tensor)
     assert isinstance(predictions[0]["labels"], Tensor)
     assert isinstance(predictions[0]["scores"], Tensor)
@@ -211,7 +208,7 @@ def test_predict_with_image_files():
     predictions = model.predict(img_names)
     assert isinstance(predictions, list)
     assert len(predictions) == 2
-    assert isinstance(predictions[0], Dict)
+    assert isinstance(predictions[0], dict)
     assert isinstance(predictions[0]["boxes"], Tensor)
     assert isinstance(predictions[0]["labels"], Tensor)
     assert isinstance(predictions[0]["scores"], Tensor)

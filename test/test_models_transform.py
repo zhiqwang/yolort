@@ -17,5 +17,5 @@ def test_yolo_transform():
     assert targets.shape[1] == 6
 
     # Test annotations after transformation
-    torch.testing.assert_allclose(annotations[0]['boxes'], annotations_copy[0]['boxes'], rtol=0., atol=0.)
-    torch.testing.assert_allclose(annotations[1]['boxes'], annotations_copy[1]['boxes'], rtol=0., atol=0.)
+    torch.testing.assert_close(annotations[0]['boxes'], annotations_copy[0]['boxes'], rtol=0, atol=0)
+    torch.testing.assert_close(annotations[1]['boxes'], annotations_copy[1]['boxes'], rtol=0, atol=0)
