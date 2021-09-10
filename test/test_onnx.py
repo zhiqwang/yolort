@@ -2,8 +2,6 @@
 """
 Test for exporting model to ONNX and inference with ONNXRuntime
 """
-from typing import List, Tuple
-
 from pathlib import Path
 import io
 import pytest
@@ -96,7 +94,7 @@ class TestONNXExporter:
 
         return transforms.ToTensor()(image)
 
-    def get_test_images(self) -> Tuple[List[Tensor], List[Tensor]]:
+    def get_test_images(self):
         return ([self.get_image("bus.jpg", (416, 320))],
                 [self.get_image("zidane.jpg", (352, 480))])
 
