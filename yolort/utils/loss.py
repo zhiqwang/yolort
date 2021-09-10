@@ -99,10 +99,14 @@ class QFocalLoss(nn.Module):
 
 class ComputeLoss:
     # Compute losses
-    def __init__(self, model, autobalance=False):
+    def __init__(self, model, autobalance=False, hyperparameters=None):
         self.sort_obj_iou = False
         device = next(model.parameters()).device  # get model device
-        h = model.hyp  # hyperparameters
+        # hyperparameters
+        if hyperparameters is not None:
+            h = hyperparameters
+        else:
+            h = model.hyp
 
         # Define criteria
         BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['cls_pw']], device=device))
