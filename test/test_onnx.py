@@ -100,7 +100,7 @@ class TestONNXExporter:
     @pytest.mark.parametrize('arch, upstream_version', [
         ('yolov5s', 'r3.1'),
         ('yolov5m', 'r4.0'),
-        ('yolotr', 'r4.0'),
+        # ('yolotr', 'r4.0'),
     ])
     def test_yolort_export_onnx(self, arch, upstream_version):
         images_one, images_two = self.get_test_images()
