@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Thomas Viehmann. All Rights Reserved.
+# Copyright (c) 2020, Thomas Viehmann
 """
 Visualizing JIT Modules
 
