@@ -33,7 +33,7 @@ def get_trace_module(model_func: Callable[..., nn.Module]):
     """
     Get the tarcing of a given model function.
 
-    Example::
+    Example:
 
         >>> from yolort.models import yolov5s
         >>> from yolort.relaying.trace_wrapper import get_trace_module
@@ -43,8 +43,8 @@ def get_trace_module(model_func: Callable[..., nn.Module]):
         >>> print(tracing_module.code)
         def forward(self,
             x: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        _0, _1, _2, = (self.model).forward(x, )
-        return (_0, _1, _2)
+          _0, _1, _2, = (self.model).forward(x, )
+          return (_0, _1, _2)
 
     Args:
         model_func (Callable): The model function to be traced.
