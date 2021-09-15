@@ -82,7 +82,7 @@ class TorchScriptVisualizer:
                         or fq_submodule_name in classes_to_visit))):
 
                     # go into subgraph
-                    sub_prefix = prefix + submodule_name + '.'
+                    sub_prefix = f'{prefix}{submodule_name}.'
                     with dot.subgraph(name=f'cluster_{name}') as sub_dot:
                         sub_dot.attr(label=label)
                         sub_module = module
@@ -100,7 +100,7 @@ class TorchScriptVisualizer:
                         )
 
                     for i, o in enumerate(node.outputs()):
-                        preds[o] = {sub_prefix + f'output_{i}'}, set()
+                        preds[o] = {f'{sub_prefix}output_{i}'}, set()
                 else:
                     dot.node(name, label=label, shape='box')
                     for i in relevant_inputs:
@@ -111,7 +111,7 @@ class TorchScriptVisualizer:
 
             elif node.kind() == 'prim::CallFunction':
                 funcname = list(node.inputs())[0].type().__repr__().split('.')[-1]
-                name = prefix + '.' + node.output().debugName()
+                name = f'{prefix}.{node.output().debugName()}'
                 label = funcname
                 dot.node(name, label=label, shape='box')
                 for i in relevant_inputs:
@@ -138,7 +138,7 @@ class TorchScriptVisualizer:
                     preds[o] = pr, op
 
         for i, o in enumerate(graph.outputs()):
-            name = prefix + f'output_{i}'
+            name = f'{prefix}output_{i}'
             dot.node(name, shape='ellipse')
             pr, op = preds[o]
             self.make_edges(pr, f'input_{name}', name, op, dot)
