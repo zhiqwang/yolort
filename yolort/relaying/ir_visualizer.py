@@ -37,10 +37,14 @@ class TorchScriptVisualizer:
 
     def render(self, classes_to_visit={'YOLO', 'YOLOHead'}):
         model_input = next(self.module.graph.inputs())
-        model_type = model_input.type().str().split('.')[-1]
+        model_type = self.get_node_names(model_input)[-1]
         dot = Digraph(format='svg', graph_attr={'label': model_type, 'labelloc': 't'})
         self.make_graph(self.module, dot=dot, classes_to_visit=classes_to_visit)
         return dot
+
+    @staticmethod
+    def get_node_names(node):
+        return node.type().str().split('.')
 
     def make_graph(self, module, dot=None, parent_dot=None, prefix="", input_preds=None,
                    classes_to_visit=None, classes_found=None):
@@ -66,9 +70,9 @@ class TorchScriptVisualizer:
             relevant_outputs = [o for o in node.outputs() if is_relevant_type(o.type())]
 
             if node.kind() == 'prim::CallMethod':
-                fq_submodule_name = '.'.join([
-                    nc for nc in list(node.inputs())[0].type().str().split('.') if not nc.startswith('__')])
-                submodule_type = list(node.inputs())[0].type().str().split('.')[-1]
+                fq_submodule_name = '.'.join([nc for nc in self.get_node_names(
+                    list(node.inputs())[0]) if not nc.startswith('__')])
+                submodule_type = self.get_node_names(list(node.inputs())[0])[-1]
                 submodule_name = find_name(list(node.inputs())[0], self_input)
                 name = f'{prefix}.{node.output().debugName()}'
                 label = f'{prefix}{submodule_name} ({submodule_type})'
