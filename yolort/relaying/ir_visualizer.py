@@ -20,13 +20,17 @@ class TorchScriptVisualizer:
         self.seen_input_names = set()
 
         self.unseen_ops = {
-            'prim::ListConstruct', 'prim::TupleConstruct', 'aten::index', 'aten::size',
-            'aten::slice', 'aten::unsqueeze', 'aten::squeeze', 'aten::to',
-            'aten::view', 'aten::permute', 'aten::transpose', 'aten::contiguous',
-            'aten::permute', 'aten::Int', 'prim::TupleUnpack', 'prim::ListUnpack',
-            'aten::unbind', 'aten::select', 'aten::detach', 'aten::stack',
-            'aten::reshape', 'aten::split_with_sizes', 'aten::cat', 'aten::expand',
-            'aten::expand_as', 'aten::_shape_as_tensor',
+            'aten::Int',
+            'prim::ListConstruct', 'prim::ListUnpack',
+            'prim::TupleConstruct', 'prim::TupleUnpack',
+            'aten::unbind', 'aten::detach',
+            'aten::contiguous', 'aten::to',
+            'aten::unsqueeze', 'aten::squeeze',
+            'aten::index', 'aten::slice', 'aten::select',
+            'aten::constant_pad_nd',
+            'aten::size', 'aten::split_with_sizes',
+            'aten::expand_as', 'aten::expand',
+            'aten::_shape_as_tensor',
         }
         # probably also partially absorbing ops. :/
         self.absorbing_ops = ('aten::size', 'aten::_shape_as_tensor')
