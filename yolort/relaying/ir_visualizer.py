@@ -36,7 +36,11 @@ class TorchScriptVisualizer:
         self.absorbing_ops = ('aten::size', 'aten::_shape_as_tensor')
 
     def render(self, classes_to_visit={'YOLO', 'YOLOHead'}):
-        return self.make_graph(self.module, classes_to_visit=classes_to_visit)
+        model_input = next(self.module.graph.inputs())
+        model_type = model_input.type().str().split('.')[-1]
+        dot = Digraph(format='svg', graph_attr={'label': model_type, 'labelloc': 't'})
+        self.make_graph(self.module, dot=dot, classes_to_visit=classes_to_visit)
+        return dot
 
     def make_graph(self, module, dot=None, parent_dot=None, prefix="", input_preds=None,
                    classes_to_visit=None, classes_found=None):
@@ -44,11 +48,7 @@ class TorchScriptVisualizer:
         preds = {}
 
         self_input = next(graph.inputs())
-        self_type = self_input.type().str().split('.')[-1]
         preds[self_input] = (set(), set())  # inps, ops
-
-        if dot is None:
-            dot = Digraph(format='svg', graph_attr={'label': self_type, 'labelloc': 't'})
 
         for nr, i in enumerate(list(graph.inputs())[1:]):
             name = f'{prefix}input_{i.debugName()}'
@@ -142,8 +142,6 @@ class TorchScriptVisualizer:
             dot.node(name, shape='ellipse')
             pr, op = preds[o]
             self.make_edges(pr, f'input_{name}', name, op, dot)
-
-        return dot
 
     def add_edge(self, dot, n1, n2):
         if (n1, n2) not in self.seen_edges:
