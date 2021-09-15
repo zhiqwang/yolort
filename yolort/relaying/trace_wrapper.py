@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from typing import Dict, Tuple, Callable
 
 import torch
