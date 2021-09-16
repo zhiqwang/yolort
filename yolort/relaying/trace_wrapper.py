@@ -51,6 +51,7 @@ def get_trace_module(
 
     Args:
         model_func (Callable): The model function to be traced.
+        input_shape (Tuple[int, int]): Shape size of the input image.
     """
     model = TraceWrapper(model_func)
     model.eval()
