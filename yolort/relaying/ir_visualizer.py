@@ -93,6 +93,10 @@ class TorchScriptVisualizer:
 
                     # go into subgraph
                     sub_prefix = f'{prefix}{submodule_name}.'
+
+                    for i, o in enumerate(node.outputs()):
+                        self.predictions[o] = {f'{sub_prefix}output_{i}'}, set()
+
                     with dot.subgraph(name=f'cluster_{name}') as sub_dot:
                         sub_dot.attr(label=label)
                         sub_module = module
@@ -109,8 +113,6 @@ class TorchScriptVisualizer:
                             classes_found=classes_found,
                         )
 
-                    for i, o in enumerate(node.outputs()):
-                        self.predictions[o] = {f'{sub_prefix}output_{i}'}, set()
                 else:
                     dot.node(name, label=label, shape='box')
                     for i in relevant_inputs:
