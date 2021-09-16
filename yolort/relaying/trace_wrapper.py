@@ -29,7 +29,10 @@ class TraceWrapper(nn.Module):
 
 
 @torch.no_grad()
-def get_trace_module(model_func: Callable[..., nn.Module]):
+def get_trace_module(
+    model_func: Callable[..., nn.Module],
+    input_shape: Tuple[int, int] = (416, 416),
+):
     """
     Get the tarcing of a given model function.
 
@@ -52,7 +55,7 @@ def get_trace_module(model_func: Callable[..., nn.Module]):
     model = TraceWrapper(model_func)
     model.eval()
 
-    dummy_input = torch.rand(1, 3, 416, 320)
+    dummy_input = torch.rand(1, 3, *input_shape)
     trace_module = torch.jit.trace(model, dummy_input)
     trace_module.eval()
 
