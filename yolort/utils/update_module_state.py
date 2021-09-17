@@ -8,8 +8,17 @@ from torch import nn
 from yolort.models import yolo
 
 
+ARCHITECTURE_MAPS = {
+    'yolov5s_pan_v4.0': 'yolov5_darknet_pan_s_r40',
+    'yolov5m_pan_v4.0': 'yolov5_darknet_pan_m_r40',
+    'yolov5l_pan_v4.0': 'yolov5_darknet_pan_l_r40',
+    'yolov5s_tan_v4.0': 'yolov5_darknet_tan_s_r40',
+}
+
+
 def update_module_state_from_ultralytics(
     custom_path_path: str,
+    path_to_yolov5: Optional[str] = None,
     arch: str = 'yolov5s',
     feature_fusion_type: str = 'PAN',
     num_classes: int = 80,
@@ -23,6 +32,8 @@ def update_module_state_from_ultralytics(
 
     Args:
         custom_path_path (str): Path to your custom model.
+        path_to_yolov5 (Optional[str]): Path of the local yolov5 repo.
+            Default: None.
         arch (str): yolo architecture. Possible values are 'yolov5s', 'yolov5m' and 'yolov5l'.
             Default: 'yolov5s'.
         feature_fusion_type (str): the type of fature fusion. Possible values are PAN and TAN.
@@ -32,21 +43,21 @@ def update_module_state_from_ultralytics(
         set_fp16 (bool): allow selective conversion to fp16 or not.
             Default: True.
     """
-    architecture_maps = {
-        'yolov5s_pan_v4.0': 'yolov5_darknet_pan_s_r40',
-        'yolov5m_pan_v4.0': 'yolov5_darknet_pan_m_r40',
-        'yolov5l_pan_v4.0': 'yolov5_darknet_pan_l_r40',
-        'yolov5s_tan_v4.0': 'yolov5_darknet_tan_s_r40',
-    }
-    model = torch.hub.load('ultralytics/yolov5', 'custom', path=custom_path_path)
+
+    if path_to_yolov5 is not None:
+        model = torch.hub.load(path_to_yolov5, 'custom', path=custom_path_path, source='local')
+    else:
+        model = torch.hub.load('ultralytics/yolov5', 'custom', path=custom_path_path)
 
     key_arch = f'{arch}_{feature_fusion_type.lower()}_v4.0'
-    if key_arch not in architecture_maps:
-        raise ValueError("Currently does't supports this architecture, "
-                         "fell free to file an issue labeled enhancement to us")
+    if key_arch not in ARCHITECTURE_MAPS:
+        raise NotImplementedError(
+            "Currently does't supports this architecture, "
+            "fell free to file an issue labeled enhancement to us"
+        )
 
     module_state_updater = ModuleStateUpdate(
-        arch=architecture_maps[key_arch],
+        arch=ARCHITECTURE_MAPS[key_arch],
         num_classes=num_classes,
         **kwargs,
     )
