@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# YOLOv5 by Ultralytics, GPL-3.0 license
 """
 General utils
 """
@@ -163,10 +163,10 @@ def check_git_status():
     branch = check_output('git rev-parse --abbrev-ref HEAD', shell=True).decode().strip()  # checked out
     n = int(check_output(f'git rev-list {branch}..origin/master --count', shell=True))  # commits behind
     if n > 0:
-        s = (f"⚠️ YOLOv5 is out of date by {n} commit{'s' * (n > 1)}. "
+        s = (f"WARNING YOLOv5 is out of date by {n} commit{'s' * (n > 1)}. "
              f"Use `git pull` or `git clone {url}` to update.")
     else:
-        s = f'up to date with {url} ✅'
+        s = f'up to date with {url} DONE!'
     print(emojis(s))  # emoji-safe
 
 
@@ -216,7 +216,7 @@ def check_requirements(requirements='requirements.txt', exclude=(), install=True
     if n:  # if packages updated
         source = file.resolve() if 'file' in locals() else requirements
         s = (f"{prefix} {n} package{'s' * (n > 1)} updated per {source}\n"
-             f"{prefix} ⚠️ {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n")
+             f"{prefix} WARNING {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n")
         print(emojis(s))
 
 

@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# YOLOv5 by Ultralytics, GPL-3.0 license
 """
 YOLO-specific modules
 
@@ -12,9 +12,9 @@ from copy import deepcopy
 from pathlib import Path
 
 from yolort.models.common import *
-from yolort.models.experimental import *
 
 from .common import *
+from .experimental import *
 from .autoanchor import check_anchor_order
 from .general import make_divisible, check_file, set_logging
 from .plots import feature_visualization

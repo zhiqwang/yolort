@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# YOLOv5 by Ultralytics, GPL-3.0 license
 """
 Logging utils
 """
@@ -44,7 +44,7 @@ class Loggers():
         # Message
         if not wandb:
             prefix = colorstr('Weights & Biases: ')
-            s = f"{prefix}run 'pip install wandb' to automatically track and visualize YOLOv5 🚀 runs (RECOMMENDED)"
+            s = f"{prefix}run 'pip install wandb' to automatically track and visualize YOLOv5 runs (RECOMMENDED)"
             print(emojis(s))
 
         # TensorBoard
