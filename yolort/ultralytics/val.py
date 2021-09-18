@@ -16,10 +16,10 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from yolort.models.experimental import attempt_load
+from .helpers import attempt_load
 
-from .datasets import create_dataloader
-from .general import (
+from .utils.datasets import create_dataloader
+from .utils.general import (
     coco80_to_coco91_class,
     check_dataset,
     check_file,
@@ -33,10 +33,10 @@ from .general import (
     increment_path,
     colorstr,
 )
-from .metrics import ConfusionMatrix, ap_per_class, box_iou
-from .plots import plot_images, output_to_target, plot_study_txt
-from .torch_utils import select_device, time_sync
-from .callbacks import Callbacks
+from .utils.metrics import ConfusionMatrix, ap_per_class, box_iou
+from .utils.plots import plot_images, output_to_target, plot_study_txt
+from .utils.torch_utils import select_device, time_sync
+from .utils.callbacks import Callbacks
 
 
 def save_one_txt(predn, save_conf, shape, file):

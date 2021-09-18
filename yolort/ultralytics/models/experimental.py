@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from yolort.models.common import Conv
+from .common import Conv
 
 
 class CrossConv(nn.Module):

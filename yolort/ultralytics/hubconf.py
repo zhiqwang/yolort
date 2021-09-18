@@ -7,19 +7,18 @@ Usage:
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 """
 
-from pathlib import Path
 import torch
+from pathlib import Path
 
-from .models.yolo import Model
-from .helpers import attempt_load, yolov5_in_syspath
-from .utils.general import set_logging
+from . import Model
+from .helpers import attempt_load
+from .utils.general import check_requirements, set_logging
 from .utils.downloads import attempt_download
 from .utils.torch_utils import select_device
 
 
 def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbose=True, device=None):
-    """
-    Creates a specified YOLOv5 model
+    """Creates a specified YOLOv5 model
 
     Arguments:
         name (str): name of model, i.e. 'yolov5s'
@@ -33,8 +32,8 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
     Returns:
         YOLOv5 pytorch model
     """
-
     file = Path(__file__).resolve()
+    check_requirements(requirements=file.parent / 'requirements.txt', exclude=('tensorboard', 'thop', 'opencv-python'))
     set_logging(verbose=verbose)
 
     save_dir = Path('') if str(name).endswith('.pt') else file.parent
@@ -48,8 +47,7 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
             cfg = list((Path(__file__).parent / 'models').rglob(f'{name}.yaml'))[0]  # model.yaml path
             model = Model(cfg, channels, classes)  # create model
             if pretrained:
-                with yolov5_in_syspath:
-                    ckpt = torch.load(attempt_download(path), map_location=device)  # load
+                ckpt = torch.load(attempt_download(path), map_location=device)  # load
                 msd = model.state_dict()  # model state_dict
                 csd = ckpt['model'].float().state_dict()  # checkpoint state_dict as FP32
                 csd = {k: v for k, v in csd.items() if msd[k].shape == v.shape}  # filter
@@ -68,7 +66,7 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
 
 def custom(path='path/to/model.pt', autoshape=True, verbose=True, device=None):
     # YOLOv5 custom or local model
-    return _create(path, autoshape=autoshape, verbose=verbose, device=device)
+    return _create(path, pretrained=False, autoshape=autoshape, verbose=verbose, device=device)
 
 
 def yolov5s(pretrained=True, channels=3, classes=80, autoshape=True, verbose=True, device=None):

@@ -10,10 +10,11 @@ from torchvision.io import read_image
 from pytorch_lightning import LightningModule
 from typing import Any, Callable, List, Dict, Tuple, Optional, Union
 
-from . import yolo
+from yolort.data import COCOEvaluator, contains_any_tensor
+
+from . import yolo_vanilla as yolo
 from .transform import YOLOTransform
 from ._utils import _evaluate_iou
-from ..data import COCOEvaluator, contains_any_tensor
 
 __all__ = ['YOLOModule']
 

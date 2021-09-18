@@ -3,28 +3,305 @@
 Common modules
 """
 
+from typing import List
 import logging
+import math
+import warnings
 from copy import copy
 from pathlib import Path
 
+from PIL import Image
 import numpy as np
 import pandas as pd
 import requests
+
 import torch
-import torch.nn as nn
-from PIL import Image
+from torch import nn, Tensor
 from torch.cuda import amp
 
-from yolort.models.common import Conv, DWConv
-
 from ..utils.datasets import exif_transpose, letterbox
-from ..utils.general import (colorstr, increment_path, is_ascii, make_divisible, save_one_box,
-                      non_max_suppression, scale_coords, xyxy2xywh)
-
+from ..utils.general import (colorstr, increment_path, is_ascii, make_divisible, non_max_suppression,
+                             save_one_box, scale_coords, xyxy2xywh)
 from ..utils.plots import Annotator, colors
 from ..utils.torch_utils import time_sync
 
 LOGGER = logging.getLogger(__name__)
+
+
+def autopad(k, p=None):  # kernel, padding
+    # Pad to 'same'
+    if p is None:
+        p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
+    return p
+
+
+class Conv(nn.Module):
+    # Standard convolution
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version='r4.0'):
+        """
+        Args:
+            c1 (int): ch_in
+            c2 (int): ch_out
+            k (int): kernel
+            s (int): stride
+            p (Optional[int]): padding
+            g (int): groups
+            act (bool): determine the activation function
+            version (str): ultralytics release version: r3.1 or r4.0
+        """
+        super().__init__()
+        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
+        self.bn = nn.BatchNorm2d(c2)
+        if version == 'r4.0':
+            self.act = nn.SiLU() if act else nn.Identity()
+        elif version == 'r3.1':
+            self.act = nn.Hardswish() if act else nn.Identity()
+        else:
+            raise NotImplementedError("Currently only supports version r3.1 and r4.0")
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.act(self.bn(self.conv(x)))
+
+    def fuseforward(self, x):
+        return self.act(self.conv(x))
+
+
+class DWConv(Conv):
+    # Depth-wise convolution class
+    def __init__(self, c1, c2, k=1, s=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups
+        super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
+
+
+class Bottleneck(nn.Module):
+    # Standard bottleneck
+    def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version='r4.0'):
+        """
+        Args:
+            c1 (int): ch_in
+            c2 (int): ch_out
+            shortcut (bool): shortcut
+            g (int): groups
+            e (float): expansion
+            version (str): ultralytics release version: r3.1 or r4.0
+        """
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1, version=version)
+        self.cv2 = Conv(c_, c2, 3, 1, g=g, version=version)
+        self.add = shortcut and c1 == c2
+
+    def forward(self, x):
+        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+
+
+class BottleneckCSP(nn.Module):
+    # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+        """
+        Args:
+            c1 (int): ch_in
+            c2 (int): ch_out
+            n (int): number
+            shortcut (bool): shortcut
+            g (int): groups
+            e (float): expansion
+        """
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1, version='r3.1')
+        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
+        self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
+        self.cv4 = Conv(2 * c_, c2, 1, 1, version='r3.1')
+        self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
+        self.act = nn.LeakyReLU(0.1, inplace=True)
+        self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0, version='r3.1') for _ in range(n)])
+
+    def forward(self, x):
+        y1 = self.cv3(self.m(self.cv1(x)))
+        y2 = self.cv2(x)
+        return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
+
+class C3(nn.Module):
+    # CSP Bottleneck with 3 convolutions
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+        """
+        Args:
+            c1 (int): ch_in
+            c2 (int): ch_out
+            n (int): number
+            shortcut (bool): shortcut
+            g (int): groups
+            e (float): expansion
+        """
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1)
+        self.cv2 = Conv(c1, c_, 1, 1)
+        self.cv3 = Conv(2 * c_, c2, 1)  # act=FReLU(c2)
+        self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)])
+
+    def forward(self, x):
+        return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
+
+
+class SPP(nn.Module):
+    # Spatial pyramid pooling layer used in YOLOv3-SPP
+    def __init__(self, c1, c2, k=(5, 9, 13), version='r4.0'):
+        super().__init__()
+        c_ = c1 // 2  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1, version=version)
+        self.cv2 = Conv(c_ * (len(k) + 1), c2, 1, 1, version=version)
+        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
+
+    def forward(self, x):
+        x = self.cv1(x)
+        return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
+
+
+class SPPF(nn.Module):
+    """
+    Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
+
+    equivalent to SPP(k=(5, 9, 13))
+    """
+    def __init__(self, c1, c2, k=5, version='r4.0'):
+        super().__init__()
+        c_ = c1 // 2  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1, version=version)
+        self.cv2 = Conv(c_ * 4, c2, 1, 1, version=version)
+        self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
+
+    def forward(self, x):
+        x = self.cv1(x)
+        y1 = self.m(x)
+        y2 = self.m(y1)
+        return self.cv2(torch.cat([x, y1, y2, self.m(y2)], 1))
+
+
+class Focus(nn.Module):
+    # Focus wh information into c-space
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version='r4.0'):
+        """
+        Args:
+            c1 (int): ch_in
+            c2 (int): ch_out
+            k (int): kernel
+            s (int): stride
+            p (Optional[int]): padding
+            g (int): groups
+            act (bool): determine the activation function
+            version (str): ultralytics release version: r3.1 or r4.0
+        """
+        super().__init__()
+        self.conv = Conv(c1 * 4, c2, k, s, p, g, act, version=version)
+
+    def forward(self, x: Tensor) -> Tensor:
+        y = focus_transform(x)
+        out = self.conv(y)
+
+        return out
+
+
+def focus_transform(x: Tensor) -> Tensor:
+    '''x(b,c,w,h) -> y(b,4c,w/2,h/2)'''
+    y = torch.cat([x[..., ::2, ::2],
+                   x[..., 1::2, ::2],
+                   x[..., ::2, 1::2],
+                   x[..., 1::2, 1::2]], 1)
+    return y
+
+
+def space_to_depth(x: Tensor) -> Tensor:
+    '''x(b,c,w,h) -> y(b,4c,w/2,h/2)'''
+    N, C, H, W = x.size()
+    x = x.reshape(N, C, H // 2, 2, W // 2, 2)
+    x = x.permute(0, 5, 3, 1, 2, 4)
+    y = x.reshape(N, C * 4, H // 2, W // 2)
+    return y
+
+
+class Concat(nn.Module):
+    # Concatenate a list of tensors along dimension
+    def __init__(self, dimension: int = 1):
+        super().__init__()
+        self.d = dimension
+
+    # torchscript does not yet support *args, so we overload method
+    # allowing it to take either a List[Tensor] or single Tensor
+    def forward(self, x: List[Tensor]) -> Tensor:
+        if isinstance(x, Tensor):
+            prev_features = [x]
+        else:
+            prev_features = x
+        return torch.cat(prev_features, self.d)
+
+
+class Flatten(nn.Module):
+    # Use after nn.AdaptiveAvgPool2d(1) to remove last 2 dimensions
+    @staticmethod
+    def forward(x):
+        return x.view(x.size(0), -1)
+
+
+class TransformerLayer(nn.Module):
+    # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)
+    def __init__(self, c, num_heads):
+        super().__init__()
+        self.q = nn.Linear(c, c, bias=False)
+        self.k = nn.Linear(c, c, bias=False)
+        self.v = nn.Linear(c, c, bias=False)
+        self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
+        self.fc1 = nn.Linear(c, c, bias=False)
+        self.fc2 = nn.Linear(c, c, bias=False)
+
+    def forward(self, x):
+        x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x
+        x = self.fc2(self.fc1(x)) + x
+        return x
+
+
+class TransformerBlock(nn.Module):
+    # Vision Transformer https://arxiv.org/abs/2010.11929
+    def __init__(self, c1, c2, num_heads, num_layers):
+        super().__init__()
+        self.conv = None
+        if c1 != c2:
+            self.conv = Conv(c1, c2)
+        self.linear = nn.Linear(c2, c2)  # learnable position embedding
+        self.tr = nn.Sequential(*[TransformerLayer(c2, num_heads) for _ in range(num_layers)])
+        self.c2 = c2
+
+    def forward(self, x):
+        if self.conv is not None:
+            x = self.conv(x)
+        b, _, w, h = x.shape
+        p = x.flatten(2).unsqueeze(0).transpose(0, 3).squeeze(3)
+        return self.tr(p + self.linear(p)).unsqueeze(3).transpose(0, 3).reshape(b, self.c2, w, h)
+
+
+class C3TR(C3):
+    # C3 module with TransformerBlock()
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+        super().__init__(c1, c2, n, shortcut, g, e)
+        c_ = int(c2 * e)
+        self.m = TransformerBlock(c_, c_, 4, n)
+
+
+class C3SPP(C3):
+    # C3 module with SPP()
+    def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5):
+        super().__init__(c1, c2, n, shortcut, g, e)
+        c_ = int(c2 * e)
+        self.m = SPP(c_, c_, k)
+
+
+class C3Ghost(C3):
+    # C3 module with GhostBottleneck()
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+        super().__init__(c1, c2, n, shortcut, g, e)
+        c_ = int(c2 * e)  # hidden channels
+        self.m = nn.Sequential(*[GhostBottleneck(c_, c_) for _ in range(n)])
 
 
 class GhostConv(nn.Module):
@@ -88,6 +365,7 @@ class AutoShape(nn.Module):
     conf = 0.25  # NMS confidence threshold
     iou = 0.45  # NMS IoU threshold
     classes = None  # (optional list) filter by class
+    multi_label = False  # NMS multiple labels per box
     max_det = 1000  # maximum number of detections per image
 
     def __init__(self, model):
@@ -147,7 +425,8 @@ class AutoShape(nn.Module):
             t.append(time_sync())
 
             # Post-process
-            y = non_max_suppression(y, self.conf, iou_thres=self.iou, classes=self.classes, max_det=self.max_det)  # NMS
+            y = non_max_suppression(y, self.conf, iou_thres=self.iou, classes=self.classes,
+                                    multi_label=self.multi_label, max_det=self.max_det)  # NMS
             for i in range(n):
                 scale_coords(shape1, y[i][:, :4], shape0[i])
 
@@ -175,6 +454,7 @@ class Detections:
         self.s = shape  # inference BCHW shape
 
     def display(self, pprint=False, show=False, save=False, crop=False, render=False, save_dir=Path('')):
+        crops = []
         for i, (im, pred) in enumerate(zip(self.imgs, self.pred)):
             str = f'image {i + 1}/{len(self.pred)}: {im.shape[0]}x{im.shape[1]} '
             if pred.shape[0]:
@@ -186,7 +466,9 @@ class Detections:
                     for *box, conf, cls in reversed(pred):  # xyxy, confidence, class
                         label = f'{self.names[int(cls)]} {conf:.2f}'
                         if crop:
-                            save_one_box(box, im, file=save_dir / 'crops' / self.names[int(cls)] / self.files[i])
+                            file = save_dir / 'crops' / self.names[int(cls)] / self.files[i] if save else None
+                            crops.append({'box': box, 'conf': conf, 'cls': cls, 'label': label,
+                                          'im': save_one_box(box, im, file=file, save=save)})
                         else:  # all others
                             annotator.box_label(box, label, color=colors(cls))
                     im = annotator.im
@@ -205,6 +487,10 @@ class Detections:
                     LOGGER.info(f"Saved {self.n} image{'s' * (self.n > 1)} to {colorstr('bold', save_dir)}")
             if render:
                 self.imgs[i] = np.asarray(im)
+        if crop:
+            if save:
+                LOGGER.info(f'Saved results to {save_dir}\n')
+            return crops
 
     def print(self):
         self.display(pprint=True)  # print results
@@ -218,10 +504,9 @@ class Detections:
         save_dir = increment_path(save_dir, exist_ok=save_dir != 'runs/detect/exp', mkdir=True)  # increment save_dir
         self.display(save=True, save_dir=save_dir)  # save results
 
-    def crop(self, save_dir='runs/detect/exp'):
-        save_dir = increment_path(save_dir, exist_ok=save_dir != 'runs/detect/exp', mkdir=True)  # increment save_dir
-        self.display(crop=True, save_dir=save_dir)  # crop results
-        LOGGER.info(f'Saved results to {save_dir}\n')
+    def crop(self, save=True, save_dir='runs/detect/exp'):
+        save_dir = increment_path(save_dir, exist_ok=save_dir != 'runs/detect/exp', mkdir=True) if save else None
+        return self.display(crop=True, save=save, save_dir=save_dir)  # crop results
 
     def render(self):
         self.display(render=True)  # render results
@@ -247,3 +532,16 @@ class Detections:
 
     def __len__(self):
         return self.n
+
+
+class Classify(nn.Module):
+    # Classification head, i.e. x(b,c1,20,20) to x(b,c2)
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1):  # ch_in, ch_out, kernel, stride, padding, groups
+        super().__init__()
+        self.aap = nn.AdaptiveAvgPool2d(1)  # to x(b,c1,1,1)
+        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g)  # to x(b,c2,1,1)
+        self.flat = nn.Flatten()
+
+    def forward(self, x):
+        z = torch.cat([self.aap(y) for y in (x if isinstance(x, list) else [x])], 1)  # cat if list
+        return self.flat(self.conv(z))  # flatten to x(b,c2)

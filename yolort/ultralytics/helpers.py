@@ -5,12 +5,11 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from yolort.models.common import Conv
-
-from .models.yolo import Model, Detect
 from .models.experimental import Ensemble
 from .utils.downloads import attempt_download
 from .utils.general import set_logging
+
+from . import Conv, Model, Detect
 
 
 @contextlib.contextmanager

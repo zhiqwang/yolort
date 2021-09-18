@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 
 from yolort.data import COCOEvaluator, DetectionDataModule, _helper as data_helper
 from yolort.models import yolov5s
-from yolort.models.yolo import yolov5_darknet_pan_s_r31
+from yolort.models.yolo_vanilla import yolov5_darknet_pan_s_r31
 from yolort.models.transform import nested_tensor_from_tensor_list
 
 

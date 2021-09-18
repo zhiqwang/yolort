@@ -14,15 +14,14 @@ import math
 import torch
 from torch import nn
 
-from yolort.models.common import (Conv, Bottleneck, SPP, SPPF, DWConv,
-                                  Focus, BottleneckCSP, C3, Concat)
-
 from ..utils.autoanchor import check_anchor_order
 from ..utils.general import make_divisible
 from ..utils.plots import feature_visualization
 from ..utils.torch_utils import (time_sync, fuse_conv_and_bn, model_info, scale_img,
-                          initialize_weights, copy_attr)
-from .common import GhostConv, GhostBottleneck, AutoShape, Contract, Expand
+                                 initialize_weights, copy_attr)
+
+from .common import (Conv, Bottleneck, SPP, SPPF, DWConv, Focus, BottleneckCSP, C3,
+                     Concat, GhostConv, GhostBottleneck, AutoShape, Contract, Expand)
 from .experimental import CrossConv, MixConv2d
 
 try:
