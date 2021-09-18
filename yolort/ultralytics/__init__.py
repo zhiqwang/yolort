@@ -1,3 +1,4 @@
 from .models.common import *
 from .models.yolo import Model, Detect
-from .helpers import YOLOv5, load_model as load
+from .helpers import yolov5_in_syspath
+from .hubconf import yolov5s

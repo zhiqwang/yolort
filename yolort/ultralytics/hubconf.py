@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# YOLOv5 by Ultralytics, GPL-3.0 license
 """
 PyTorch Hub models https://pytorch.org/hub/ultralytics_yolov5/
 
@@ -7,18 +7,19 @@ Usage:
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 """
 
-import torch
 from pathlib import Path
+import torch
 
-from . import Model
 from .helpers import attempt_load
-from .utils.general import check_requirements, set_logging
+from .utils.general import set_logging
 from .utils.downloads import attempt_download
 from .utils.torch_utils import select_device
+from .models.yolo import Model
 
 
 def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbose=True, device=None):
-    """Creates a specified YOLOv5 model
+    """
+    Creates a specified YOLOv5 model
 
     Arguments:
         name (str): name of model, i.e. 'yolov5s'
@@ -33,7 +34,6 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
         YOLOv5 pytorch model
     """
     file = Path(__file__).resolve()
-    check_requirements(requirements=file.parent / 'requirements.txt', exclude=('tensorboard', 'thop', 'opencv-python'))
     set_logging(verbose=verbose)
 
     save_dir = Path('') if str(name).endswith('.pt') else file.parent

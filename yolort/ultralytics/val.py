@@ -19,20 +19,11 @@ from tqdm import tqdm
 from .helpers import attempt_load
 
 from .utils.datasets import create_dataloader
-from .utils.general import (
-    coco80_to_coco91_class,
-    check_dataset,
-    check_file,
-    check_img_size,
-    check_requirements,
-    non_max_suppression,
-    scale_coords,
-    xyxy2xywh,
-    xywh2xyxy,
-    set_logging,
-    increment_path,
-    colorstr,
-)
+from .utils.general import (coco80_to_coco91_class, check_dataset, check_file,
+                            check_img_size, check_requirements, non_max_suppression,
+                            scale_coords, xyxy2xywh, xywh2xyxy, set_logging,
+                            increment_path, colorstr)
+
 from .utils.metrics import ConfusionMatrix, ap_per_class, box_iou
 from .utils.plots import plot_images, output_to_target, plot_study_txt
 from .utils.torch_utils import select_device, time_sync

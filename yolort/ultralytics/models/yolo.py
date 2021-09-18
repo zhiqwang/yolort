@@ -29,6 +29,8 @@ try:
 except ImportError:
     thop = None
 
+__all__ = ['Model', 'Detect']
+
 LOGGER = logging.getLogger(__name__)
 
 
