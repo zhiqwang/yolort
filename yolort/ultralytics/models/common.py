@@ -17,12 +17,12 @@ from torch.cuda import amp
 
 from yolort.models.common import Conv, DWConv
 
-from .datasets import exif_transpose, letterbox
-from .general import (colorstr, increment_path, is_ascii, make_divisible, save_one_box,
+from ..utils.datasets import exif_transpose, letterbox
+from ..utils.general import (colorstr, increment_path, is_ascii, make_divisible, save_one_box,
                       non_max_suppression, scale_coords, xyxy2xywh)
 
-from .plots import Annotator, colors
-from .torch_utils import time_sync
+from ..utils.plots import Annotator, colors
+from ..utils.torch_utils import time_sync
 
 LOGGER = logging.getLogger(__name__)
 
