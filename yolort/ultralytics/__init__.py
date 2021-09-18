@@ -10,10 +10,9 @@ from pathlib import Path
 
 import torch
 
-
 from .yolo import Model
-from .general import check_requirements, set_logging
-from .experimental import attempt_load
+from .general import set_logging
+from .utils import attempt_load
 from .downloads import attempt_download
 from .torch_utils import select_device
 
@@ -35,7 +34,6 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
     """
 
     file = Path(__file__).resolve()
-    check_requirements(requirements=file.parent / 'requirements.txt', exclude=('tensorboard', 'thop', 'opencv-python'))
     set_logging(verbose=verbose)
 
     save_dir = Path('') if str(name).endswith('.pt') else file.parent
