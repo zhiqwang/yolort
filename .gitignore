@@ -5,7 +5,7 @@ logs
 lightning_logs
 *.ipynb
 runs
-yolov5s.pt
+*.pt
 yolort/version.py
 .idea
 *.ttf
@@ -42,6 +42,7 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+test-output.xml
 nosetests.xml
 coverage.xml
 *.cover
