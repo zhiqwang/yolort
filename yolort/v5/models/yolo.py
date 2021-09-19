@@ -14,10 +14,10 @@ import math
 import torch
 from torch import nn
 
-from yolort.ultralytics.utils.autoanchor import check_anchor_order
-from yolort.ultralytics.utils.general import make_divisible
-from yolort.ultralytics.utils.plots import feature_visualization
-from yolort.ultralytics.utils.torch_utils import (
+from yolort.v5.utils.autoanchor import check_anchor_order
+from yolort.v5.utils.general import make_divisible
+from yolort.v5.utils.plots import feature_visualization
+from yolort.v5.utils.torch_utils import (
     time_sync, fuse_conv_and_bn, model_info,
     scale_img, initialize_weights, copy_attr,
 )

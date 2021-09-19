@@ -14,7 +14,6 @@ import time
 from itertools import repeat
 from multiprocessing.pool import ThreadPool, Pool
 from pathlib import Path
-from threading import Thread
 
 import cv2
 import numpy as np
@@ -25,23 +24,12 @@ from PIL import Image, ExifTags
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from .augmentations import (
-    Albumentations,
-    augment_hsv,
-    copy_paste,
-    letterbox,
-    mixup,
-    random_perspective,
-)
-from .general import (
-    check_file,
-    check_dataset,
-    xywh2xyxy,
-    xywhn2xyxy,
-    xyxy2xywhn,
-    xyn2xy,
-    segments2boxes,
-)
+from .augmentations import (Albumentations, augment_hsv, copy_paste,
+                            letterbox, mixup, random_perspective)
+
+from .general import (check_file, check_dataset, xywh2xyxy, xywhn2xyxy,
+                      xyxy2xywhn, xyn2xy, segments2boxes)
+
 from .torch_utils import torch_distributed_zero_first
 
 # Parameters

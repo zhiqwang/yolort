@@ -8,7 +8,7 @@ from typing import Callable, List, Optional
 
 from torch import nn
 
-from yolort.ultralytics import Conv, C3
+from yolort.v5 import Conv, C3
 
 from .path_aggregation_network import PathAggregationNetwork
 from .backbone_utils import BackboneWithPAN

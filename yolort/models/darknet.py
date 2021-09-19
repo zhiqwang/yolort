@@ -5,7 +5,7 @@ import torch
 from torch import nn, Tensor
 from torch.hub import load_state_dict_from_url
 
-from yolort.ultralytics import Conv, SPP, Focus, BottleneckCSP, C3
+from yolort.v5 import Conv, SPP, Focus, BottleneckCSP, C3
 
 
 __all__ = ['DarkNet', 'darknet_s_r3_1', 'darknet_m_r3_1', 'darknet_l_r3_1',

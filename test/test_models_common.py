@@ -1,6 +1,6 @@
 import pytest
 import torch
-from yolort.ultralytics import focus_transform, space_to_depth
+from yolort.v5 import focus_transform, space_to_depth
 
 
 @pytest.mark.parametrize('n, b, h, w', [(1, 3, 480, 640), (4, 3, 416, 320), (4, 3, 320, 416)])

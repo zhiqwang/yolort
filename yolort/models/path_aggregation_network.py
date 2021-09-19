@@ -4,7 +4,7 @@ from typing import Callable, List, Dict, Optional
 import torch
 from torch import nn, Tensor
 
-from yolort.ultralytics import Conv, BottleneckCSP, C3
+from yolort.v5 import Conv, BottleneckCSP, C3
 
 
 class PathAggregationNetwork(nn.Module):

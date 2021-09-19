@@ -19,13 +19,13 @@ import torch
 from torch import nn, Tensor
 from torch.cuda import amp
 
-from yolort.ultralytics.utils.datasets import exif_transpose, letterbox
-from yolort.ultralytics.utils.general import (
+from yolort.v5.utils.datasets import exif_transpose, letterbox
+from yolort.v5.utils.general import (
     colorstr, increment_path, is_ascii, make_divisible, non_max_suppression,
     save_one_box, scale_coords, xyxy2xywh,
 )
-from yolort.ultralytics.utils.plots import Annotator, colors
-from yolort.ultralytics.utils.torch_utils import time_sync
+from yolort.v5.utils.plots import Annotator, colors
+from yolort.v5.utils.torch_utils import time_sync
 
 LOGGER = logging.getLogger(__name__)
 

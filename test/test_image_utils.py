@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from yolort.utils.image_utils import box_cxcywh_to_xyxy
-from yolort.ultralytics import letterbox, scale_coords
+from yolort.v5 import letterbox, scale_coords
 
 
 def test_letterbox():
