@@ -3,7 +3,8 @@ import numpy as np
 
 import torch
 
-from yolort.utils.image_utils import box_cxcywh_to_xyxy, letterbox, scale_coords
+from yolort.utils.image_utils import box_cxcywh_to_xyxy
+from yolort.ultralytics import letterbox, scale_coords
 
 
 def test_letterbox():
@@ -16,11 +17,11 @@ def test_box_cxcywh_to_xyxy():
     box_cxcywh = np.asarray([[50, 50, 100, 100],
                             [0, 0, 0, 0],
                             [20, 25, 20, 20],
-                            [58, 65, 70, 60]], dtype=np.float32)
+                            [58, 65, 70, 60]], dtype=np.float)
     exp_xyxy = np.asarray([[0, 0, 100, 100],
                            [0, 0, 0, 0],
                            [10, 15, 30, 35],
-                           [23, 35, 93, 95]], dtype=np.float32)
+                           [23, 35, 93, 95]], dtype=np.float)
 
     box_xyxy = box_cxcywh_to_xyxy(box_cxcywh)
     assert exp_xyxy.shape == (4, 4)
@@ -38,6 +39,6 @@ def test_scale_coords():
                                [7.9250, 16.6875, 30.1750, 38.9375],
                                [19.05, 38.9375, 96.9250, 105.6875]], dtype=torch.float)
 
-    box_coords_scaled = scale_coords(box_tensor, (160, 128), (178, 136))
+    box_coords_scaled = scale_coords((160, 128), box_tensor, (178, 136))
     assert tuple(box_coords_scaled.shape) == (4, 4)
     torch.testing.assert_close(box_coords_scaled, exp_coords)

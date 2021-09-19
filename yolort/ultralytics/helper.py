@@ -12,7 +12,7 @@ from .utils.downloads import attempt_download
 
 
 @contextlib.contextmanager
-def load_yolov5_model():
+def add_yolov5_context():
     """
     Temporarily add yolov5 folder to `sys.path`. Modified from:
     https://github.com/fcakyon/yolov5-pip/blob/0d03de6/yolov5/utils/general.py#L739-L754
@@ -38,7 +38,6 @@ def attempt_load(weights, map_location=None, inplace=True, fuse=True):
         else:
             model.append(ckpt['ema' if ckpt.get('ema') else 'model'].float().eval())  # without layer fuse
 
-
     # Compatibility updates
     for m in model.modules():
         if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, Model]:
@@ -52,5 +51,6 @@ def attempt_load(weights, map_location=None, inplace=True, fuse=True):
         print(f'Ensemble created with {weights}\n')
         for k in ['names']:
             setattr(model, k, getattr(model[-1], k))
-        model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride  # max stride
+        # max stride
+        model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride
         return model  # return ensemble
