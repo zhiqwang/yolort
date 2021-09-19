@@ -4,20 +4,12 @@ Download utils
 """
 
 import os
-import platform
 import subprocess
-import time
 import urllib
 from pathlib import Path
 
 import requests
 import torch
-
-
-def gsutil_getsize(url=''):
-    # gs://bucket/file size https://cloud.google.com/storage/docs/gsutil/commands/du
-    s = subprocess.check_output(f'gsutil du {url}', shell=True).decode('utf-8')
-    return eval(s.split(' ')[0]) if len(s) else 0  # bytes
 
 
 def safe_download(file, url, url2=None, min_bytes=1E0, error_msg=''):
@@ -31,7 +23,8 @@ def safe_download(file, url, url2=None, min_bytes=1E0, error_msg=''):
     except Exception as e:  # url2
         file.unlink(missing_ok=True)  # remove partial downloads
         print(f'ERROR: {e}\nRe-attempting {url2 or url} to {file}...')
-        os.system(f"curl -L '{url2 or url}' -o '{file}' --retry 3 -C -")  # curl download, retry and resume on fail
+        # curl download, retry and resume on fail
+        os.system(f"curl -L '{url2 or url}' -o '{file}' --retry 3 -C -")
     finally:
         if not file.exists() or file.stat().st_size < min_bytes:  # check
             file.unlink(missing_ok=True)  # remove partial downloads
@@ -55,60 +48,30 @@ def attempt_download(file, repo='ultralytics/yolov5'):  # from utils.downloads i
         # GitHub assets
         file.parent.mkdir(parents=True, exist_ok=True)  # make parent dir (if required)
         try:
-            response = requests.get(f'https://api.github.com/repos/{repo}/releases/latest').json()  # github api
-            assets = [x['name'] for x in response['assets']]  # release assets, i.e. ['yolov5s.pt', 'yolov5m.pt', ...]
+            # github api
+            response = requests.get(f'https://api.github.com/repos/{repo}/releases/latest').json()
+            # release assets, i.e. ['yolov5s.pt', 'yolov5m.pt', ...]
+            assets = [x['name'] for x in response['assets']]
             tag = response['tag_name']  # i.e. 'v1.0'
         except:  # fallback plan
             assets = ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt',
                       'yolov5s6.pt', 'yolov5m6.pt', 'yolov5l6.pt', 'yolov5x6.pt']
             try:
-                tag = subprocess.check_output('git tag', shell=True, stderr=subprocess.STDOUT).decode().split()[-1]
+                tag = subprocess.check_output(
+                    'git tag', shell=True, stderr=subprocess.STDOUT).decode().split()[-1]
             except:
                 tag = 'v5.0'  # current release
 
         if name in assets:
-            safe_download(file,
-                          url=f'https://github.com/{repo}/releases/download/{tag}/{name}',
-                          # url2=f'https://storage.googleapis.com/{repo}/ckpt/{name}',  # backup url (optional)
-                          min_bytes=1E5,
-                          error_msg=f'{file} missing, try downloading from https://github.com/{repo}/releases/')
+            safe_download(
+                file,
+                url=f'https://github.com/{repo}/releases/download/{tag}/{name}',
+                # url2=f'https://storage.googleapis.com/{repo}/ckpt/{name}',  # backup url (optional)
+                min_bytes=1E5,
+                error_msg=f'{file} missing, try downloading from https://github.com/{repo}/releases/',
+            )
 
     return str(file)
-
-
-def gdrive_download(id='16TiPfZj7htmTyhntwcZyEEAejOUxuT6m', file='tmp.zip'):
-    # Downloads a file from Google Drive. from yolov5.utils.downloads import *; gdrive_download()
-    t = time.time()
-    file = Path(file)
-    cookie = Path('cookie')  # gdrive cookie
-    print(f'Downloading https://drive.google.com/uc?export=download&id={id} as {file}... ', end='')
-    file.unlink(missing_ok=True)  # remove existing file
-    cookie.unlink(missing_ok=True)  # remove existing cookie
-
-    # Attempt file download
-    out = "NUL" if platform.system() == "Windows" else "/dev/null"
-    os.system(f'curl -c ./cookie -s -L "drive.google.com/uc?export=download&id={id}" > {out}')
-    if os.path.exists('cookie'):  # large file
-        s = f'curl -Lb ./cookie "drive.google.com/uc?export=download&confirm={get_token()}&id={id}" -o {file}'
-    else:  # small file
-        s = f'curl -s -L -o {file} "drive.google.com/uc?export=download&id={id}"'
-    r = os.system(s)  # execute, capture return
-    cookie.unlink(missing_ok=True)  # remove existing cookie
-
-    # Error check
-    if r != 0:
-        file.unlink(missing_ok=True)  # remove partial
-        print('Download error ')  # raise Exception('Download error')
-        return r
-
-    # Unzip if archive
-    if file.suffix == '.zip':
-        print('unzipping... ', end='')
-        os.system(f'unzip -q {file}')  # unzip
-        file.unlink()  # remove zip to free space
-
-    print(f'Done ({time.time() - t:.1f}s)')
-    return r
 
 
 def get_token(cookie="./cookie"):

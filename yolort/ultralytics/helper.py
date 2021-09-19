@@ -3,18 +3,17 @@ import sys
 from pathlib import Path
 
 import torch
-from torch import nn
 
-from .models.common import Conv
-from .models.yolo import Model, Detect
-from .models.experimental import Ensemble
-from .utils.downloads import attempt_download
+from .models.yolo import Model
+from .utils import attempt_download, set_logging
+
+__all__ = ['add_yolov5_context', 'load_model']
 
 
 @contextlib.contextmanager
 def add_yolov5_context():
     """
-    Temporarily add yolov5 folder to `sys.path`. Modified from:
+    Temporarily add yolov5 folder to `sys.path`. Adapted from
     https://github.com/fcakyon/yolov5-pip/blob/0d03de6/yolov5/utils/general.py#L739-L754
 
     torch.hub handles it in the same way:
@@ -28,29 +27,30 @@ def add_yolov5_context():
         sys.path.remove(path_ultralytics_yolov5)
 
 
-def attempt_load(weights, map_location=None, inplace=True, fuse=True):
-    # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
-    model = Ensemble()
-    for w in weights if isinstance(weights, list) else [weights]:
-        ckpt = torch.load(attempt_download(w), map_location=map_location)  # load
-        if fuse:
-            model.append(ckpt['ema' if ckpt.get('ema') else 'model'].float().fuse().eval())  # FP32 model
-        else:
-            model.append(ckpt['ema' if ckpt.get('ema') else 'model'].float().eval())  # without layer fuse
+def load_model(model_path: str, autoshape: bool = False, verbose: bool = True):
+    """
+    Creates a specified YOLOv5 model
 
-    # Compatibility updates
-    for m in model.modules():
-        if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, Model]:
-            m.inplace = inplace  # pytorch 1.7.0 compatibility
-        elif type(m) is Conv:
-            m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatibility
+    Args:
+        model_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'
+        autoshape (bool): apply YOLOv5 .autoshape() wrapper to model. Default: False.
+        verbose (bool): print all information to screen. Default: True.
 
-    if len(model) == 1:
-        return model[-1]  # return model
-    else:
-        print(f'Ensemble created with {weights}\n')
-        for k in ['names']:
-            setattr(model, k, getattr(model[-1], k))
-        # max stride
-        model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride
-        return model  # return ensemble
+    Returns:
+        YOLOv5 pytorch model
+    """
+    set_logging(verbose=verbose)
+
+    with add_yolov5_context():
+        ckpt = torch.load(attempt_download(model_path), map_location=torch.device('cpu'))
+
+    if isinstance(ckpt, dict):
+        model_ckpt = ckpt["model"]  # load model
+
+    model = Model(model_ckpt.yaml)  # create model
+    model.load_state_dict(model_ckpt.float().state_dict())  # load state_dict
+
+    if autoshape:
+        model = model.autoshape()
+
+    return model

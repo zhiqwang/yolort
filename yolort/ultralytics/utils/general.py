@@ -27,7 +27,6 @@ import torch
 import torchvision
 import yaml
 
-from .downloads import gsutil_getsize
 from .metrics import box_iou, fitness
 from .torch_utils import init_torch_seeds
 
@@ -701,7 +700,7 @@ def strip_optimizer(f='best.pt', s=''):  # from utils.general import *; strip_op
     print(f"Optimizer stripped from {f},{(' saved as %s,' % s) if s else ''} {mb:.1f}MB")
 
 
-def print_mutation(results, hyp, save_dir, bucket):
+def print_mutation(results, hyp, save_dir):
     evolve_csv, evolve_yaml = save_dir / 'evolve.csv', save_dir / 'hyp_evolve.yaml'
     keys = (
         'metrics/precision',
@@ -715,12 +714,6 @@ def print_mutation(results, hyp, save_dir, bucket):
     keys = tuple(x.strip() for x in keys)
     vals = results + tuple(hyp.values())
     n = len(keys)
-
-    # Download (optional)
-    if bucket:
-        url = f'gs://{bucket}/evolve.csv'
-        if gsutil_getsize(url) > (os.path.getsize(evolve_csv) if os.path.exists(evolve_csv) else 0):
-            os.system(f'gsutil cp {url} {save_dir}')  # download evolve.csv if larger than local
 
     # Log to evolve.csv
     s = '' if evolve_csv.exists() else (('%20s,' * n % keys).rstrip(',') + '\n')  # add header
@@ -742,9 +735,6 @@ def print_mutation(results, hyp, save_dir, bucket):
                 f'# ' + ', '.join(f'{x.strip():>20s}' for x in keys[:7]) + '\n' +
                 f'# ' + ', '.join(f'{x:>20.5g}' for x in data.values[i, :7]) + '\n\n')
         yaml.safe_dump(hyp, f, sort_keys=False)
-
-    if bucket:
-        os.system(f'gsutil cp {evolve_csv} {evolve_yaml} gs://{bucket}')  # upload
 
 
 def apply_classifier(x, model, img, im0):

@@ -17,8 +17,10 @@ from torch import nn
 from yolort.ultralytics.utils.autoanchor import check_anchor_order
 from yolort.ultralytics.utils.general import make_divisible
 from yolort.ultralytics.utils.plots import feature_visualization
-from yolort.ultralytics.utils.torch_utils import (time_sync, fuse_conv_and_bn, model_info, scale_img,
-                                 initialize_weights, copy_attr)
+from yolort.ultralytics.utils.torch_utils import (
+    time_sync, fuse_conv_and_bn, model_info,
+    scale_img, initialize_weights, copy_attr,
+)
 
 from .common import (Conv, Bottleneck, SPP, SPPF, DWConv, Focus, BottleneckCSP, C3,
                      Concat, GhostConv, GhostBottleneck, AutoShape, Contract, Expand)
