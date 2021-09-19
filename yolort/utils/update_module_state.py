@@ -1,8 +1,7 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
-from typing import Any, Optional
+from typing import Any
 
 from functools import reduce
-import torch
 from torch import nn
 
 from yolort.models import yolo
@@ -17,12 +16,12 @@ ARCHITECTURE_MAPS = {
 
 
 def update_module_state_from_ultralytics(
-    custom_path_path: str,
-    path_to_yolov5: Optional[str] = None,
+    model_path: str,
     arch: str = 'yolov5s',
     feature_fusion_type: str = 'PAN',
     num_classes: int = 80,
     set_fp16: bool = True,
+    verbose: bool = False,
     **kwargs: Any,
 ):
     """
@@ -31,9 +30,7 @@ def update_module_state_from_ultralytics(
     wish to re-train.
 
     Args:
-        custom_path_path (str): Path to your custom model.
-        path_to_yolov5 (Optional[str]): Path of the local yolov5 repo.
-            Default: None.
+        model_path (str): Path to your custom model.
         arch (str): yolo architecture. Possible values are 'yolov5s', 'yolov5m' and 'yolov5l'.
             Default: 'yolov5s'.
         feature_fusion_type (str): the type of fature fusion. Possible values are PAN and TAN.
@@ -42,12 +39,11 @@ def update_module_state_from_ultralytics(
             Default: 80.
         set_fp16 (bool): allow selective conversion to fp16 or not.
             Default: True.
+        verbose (bool): print all information to screen. Default: True.
     """
 
-    if path_to_yolov5 is not None:
-        model = torch.hub.load(path_to_yolov5, 'custom', path=custom_path_path, source='local')
-    else:
-        model = torch.hub.load('ultralytics/yolov5', 'custom', path=custom_path_path)
+    from yolort.v5 import load_model
+    model = load_model(model_path, autoshape=False, verbose=verbose)
 
     key_arch = f'{arch}_{feature_fusion_type.lower()}_v4.0'
     if key_arch not in ARCHITECTURE_MAPS:
