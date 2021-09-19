@@ -17,8 +17,8 @@ def test_feature_extractor(b, h, w):
     model = yolov5s()
     model = model.train()
     yolo_features = FeatureExtractor(model.model, return_layers=['backbone', 'head'])
-    images = torch.randn(b, c, h, w)
-    targets = torch.randn(61, 6)
+    images = torch.rand(b, c, h, w)
+    targets = torch.rand(61, 6)
     intermediate_features = yolo_features(images, targets)
     features = intermediate_features['backbone']
     head_outputs = intermediate_features['head']

@@ -11,9 +11,9 @@ from yolort.data import DetectionDataModule, contains_any_tensor, _helper as dat
 def test_contains_any_tensor():
     dummy_numpy = np.random.randn(3, 6)
     assert not contains_any_tensor(dummy_numpy)
-    dummy_tensor = torch.randn(3, 6)
+    dummy_tensor = torch.rand(3, 6)
     assert contains_any_tensor(dummy_tensor)
-    dummy_tensors = [torch.randn(3, 6), torch.randn(9, 5)]
+    dummy_tensors = [torch.rand(3, 6), torch.rand(9, 5)]
     assert contains_any_tensor(dummy_tensors)
 
 

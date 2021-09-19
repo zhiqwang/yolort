@@ -12,7 +12,7 @@ class TestAnchorGenerator:
         return features
 
     def test_anchor_generator(self):
-        images = torch.randn(2, 3, 10, 10)
+        images = torch.rand(2, 3, 10, 10)
         features = self.get_features(images)
         model = AnchorGenerator(self.strides, self.anchor_grids)
         model.eval()
