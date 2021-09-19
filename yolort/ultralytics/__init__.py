@@ -1,5 +1,3 @@
-from .models.common import *
-from .models.yolo import Model, Detect
-from .models.experimental import attempt_load
-from .utils import attempt_download
+from .models import *
+from .utils import *
 from .helper import add_yolov5_context, load_model
