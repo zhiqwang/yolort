@@ -12,7 +12,7 @@ from typing import Any, Callable, List, Dict, Tuple, Optional, Union
 
 from yolort.data import COCOEvaluator, contains_any_tensor
 
-from . import yolo_vanilla as yolo
+from . import yolo
 from .transform import YOLOTransform
 from ._utils import _evaluate_iou
 

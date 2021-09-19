@@ -5,7 +5,7 @@ from functools import reduce
 import torch
 from torch import nn
 
-from yolort.models import yolo_vanilla
+from yolort.models import yolo
 
 
 ARCHITECTURE_MAPS = {
@@ -89,7 +89,7 @@ class ModuleStateUpdate:
         self.head_ind = head_ind
         self.head_name = head_name
         # Set model
-        self.model = yolo_vanilla.__dict__[arch](num_classes=num_classes)
+        self.model = yolo.__dict__[arch](num_classes=num_classes)
 
     def updating(self, state_dict):
         # Obtain module state
