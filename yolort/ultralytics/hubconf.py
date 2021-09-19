@@ -10,7 +10,7 @@ Usage:
 from pathlib import Path
 import torch
 
-from .helpers import attempt_load
+from .helper import attempt_load
 from .utils.general import set_logging
 from .utils.downloads import attempt_download
 from .utils.torch_utils import select_device

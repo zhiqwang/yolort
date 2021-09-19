@@ -12,22 +12,20 @@ from .utils.downloads import attempt_download
 
 
 @contextlib.contextmanager
-def yolov5_in_syspath():
+def load_yolov5_model():
     """
-    Temporarily add yolov5 folder to `sys.path`.
+    Temporarily add yolov5 folder to `sys.path`. Modified from:
+    https://github.com/fcakyon/yolov5-pip/blob/0d03de6/yolov5/utils/general.py#L739-L754
 
     torch.hub handles it in the same way:
-    <https://github.com/pytorch/pytorch/blob/d3e36fa/torch/hub.py#L387-L416>
-
-    Copy-Pasted from:
-    <https://github.com/fcakyon/yolov5-pip/blob/0d03de6/yolov5/utils/general.py#L739-L754>
+    https://github.com/pytorch/pytorch/blob/d3e36fa/torch/hub.py#L387-L416
     """
-    yolov5_folder_dir = str(Path(__file__).parents[1].absolute())
+    path_ultralytics_yolov5 = str(Path(__file__).parent.resolve())
     try:
-        sys.path.insert(0, yolov5_folder_dir)
+        sys.path.insert(0, path_ultralytics_yolov5)
         yield
     finally:
-        sys.path.remove(yolov5_folder_dir)
+        sys.path.remove(path_ultralytics_yolov5)
 
 
 def attempt_load(weights, map_location=None, inplace=True, fuse=True):

@@ -14,10 +14,10 @@ import math
 import torch
 from torch import nn
 
-from ..utils.autoanchor import check_anchor_order
-from ..utils.general import make_divisible
-from ..utils.plots import feature_visualization
-from ..utils.torch_utils import (time_sync, fuse_conv_and_bn, model_info, scale_img,
+from yolort.ultralytics.utils.autoanchor import check_anchor_order
+from yolort.ultralytics.utils.general import make_divisible
+from yolort.ultralytics.utils.plots import feature_visualization
+from yolort.ultralytics.utils.torch_utils import (time_sync, fuse_conv_and_bn, model_info, scale_img,
                                  initialize_weights, copy_attr)
 
 from .common import (Conv, Bottleneck, SPP, SPPF, DWConv, Focus, BottleneckCSP, C3,
@@ -138,7 +138,6 @@ class Model(nn.Module):
         for si, fi in zip(s, f):
             xi = scale_img(x.flip(fi) if fi else x, si, gs=int(self.stride.max()))
             yi = self._forward_once(xi)[0]  # forward
-            # cv2.imwrite(f'img_{si}.jpg', 255 * xi[0].cpu().numpy().transpose((1, 2, 0))[:, :, ::-1])  # save
             yi = self._descale_pred(yi, fi, si, img_size)
             y.append(yi)
         return torch.cat(y, 1), None  # augmented inference, train
@@ -244,8 +243,8 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
                 pass
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
-        if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3]:
+        if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF,
+                 DWConv, MixConv2d, Focus, CrossConv, BottleneckCSP, C3]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
