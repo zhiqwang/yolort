@@ -81,7 +81,8 @@ def select_device(device='', batch_size=None):
         # set environment variable
         os.environ['CUDA_VISIBLE_DEVICES'] = device
         # check availability
-        assert torch.cuda.is_available(), f'CUDA unavailable, invalid device {device} requested'
+        assert torch.cuda.is_available(), (
+            f'CUDA unavailable, invalid device {device} requested')
 
     cuda = not cpu and torch.cuda.is_available()
     if cuda:
@@ -89,7 +90,8 @@ def select_device(device='', batch_size=None):
         devices = device.split(',') if device else '0'
         n = len(devices)  # device count
         if n > 1 and batch_size:  # check batch_size is divisible by device_count
-            assert batch_size % n == 0, f'batch-size {batch_size} not multiple of GPU count {n}'
+            assert batch_size % n == 0, (
+                f'batch-size {batch_size} not multiple of GPU count {n}')
         space = ' ' * (len(s) + 1)
         for i, d in enumerate(devices):
             p = torch.cuda.get_device_properties(i)

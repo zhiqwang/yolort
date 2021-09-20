@@ -414,7 +414,8 @@ class AutoShape(nn.Module):
             g = (size / max(s))  # gain
             shape1.append([y * g for y in s])
             imgs[i] = im if im.data.contiguous else np.ascontiguousarray(im)  # update
-        shape1 = [make_divisible(x, int(self.stride.max())) for x in np.stack(shape1, 0).max(0)]  # inference shape
+        # inference shape
+        shape1 = [make_divisible(x, int(self.stride.max())) for x in np.stack(shape1, 0).max(0)]
         x = [letterbox(im, new_shape=shape1, auto=False)[0] for im in imgs]  # pad
         x = np.stack(x, 0) if n > 1 else x[0][None]  # stack
         x = np.ascontiguousarray(x.transpose((0, 3, 1, 2)))  # BHWC to BCHW
@@ -441,7 +442,8 @@ class Detections:
     def __init__(self, imgs, pred, files, times=None, names=None, shape=None):
         super().__init__()
         d = pred[0].device  # device
-        gn = [torch.tensor([*[im.shape[i] for i in [1, 0, 1, 0]], 1., 1.], device=d) for im in imgs]  # normalizations
+        # normalizations
+        gn = [torch.tensor([*[im.shape[i] for i in [1, 0, 1, 0]], 1., 1.], device=d) for im in imgs]
         self.imgs = imgs  # list of images as numpy arrays
         self.pred = pred  # list of tensors pred[0] = (xyxy, conf, cls)
         self.names = names  # class names
@@ -496,14 +498,15 @@ class Detections:
 
     def print(self):
         self.display(pprint=True)  # print results
-        LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {tuple(self.s)}' %
-                    self.t)
+        LOGGER.info(f'Speed: {self.t[0]:.1f}ms pre-process, {self.t[1]:.1f}ms inference, '
+                    f'{self.t[2]:.1f}ms NMS per image at shape {tuple(self.s)}')
 
     def show(self):
         self.display(show=True)  # show results
 
     def save(self, save_dir='runs/detect/exp'):
-        save_dir = increment_path(save_dir, exist_ok=save_dir != 'runs/detect/exp', mkdir=True)  # increment save_dir
+        # increment save_dir
+        save_dir = increment_path(save_dir, exist_ok=save_dir != 'runs/detect/exp', mkdir=True)
         self.display(save=True, save_dir=save_dir)  # save results
 
     def crop(self, save=True, save_dir='runs/detect/exp'):
@@ -520,7 +523,8 @@ class Detections:
         ca = 'xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name'  # xyxy columns
         cb = 'xcenter', 'ycenter', 'width', 'height', 'confidence', 'class', 'name'  # xywh columns
         for k, c in zip(['xyxy', 'xyxyn', 'xywh', 'xywhn'], [ca, ca, cb, cb]):
-            a = [[x[:5] + [int(x[5]), self.names[int(x[5])]] for x in x.tolist()] for x in getattr(self, k)]  # update
+            # update
+            a = [[x[:5] + [int(x[5]), self.names[int(x[5])]] for x in x.tolist()] for x in getattr(self, k)]
             setattr(new, k, [pd.DataFrame(x, columns=c) for x in a])
         return new
 

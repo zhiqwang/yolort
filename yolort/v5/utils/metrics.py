@@ -19,7 +19,8 @@ def fitness(x):
 
 
 def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names=()):
-    """ Compute the average precision, given the recall and precision curves.
+    """
+    Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
         tp:  True positives (nparray, nx1 or nx10).
@@ -285,7 +286,9 @@ def box_iou(box1, box2):
     area2 = box_area(box2.T)
 
     # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
-    inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
+    inter = (
+        torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])
+    ).clamp(0).prod(2)
     return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 
@@ -304,8 +307,8 @@ def bbox_ioa(box1, box2, eps=1E-7):
     b2_x1, b2_y1, b2_x2, b2_y2 = box2[0], box2[1], box2[2], box2[3]
 
     # Intersection area
-    inter_area = (np.minimum(b1_x2, b2_x2) - np.maximum(b1_x1, b2_x1)).clip(0) * \
-                 (np.minimum(b1_y2, b2_y2) - np.maximum(b1_y1, b2_y1)).clip(0)
+    inter_area = (np.minimum(b1_x2, b2_x2) - np.maximum(b1_x1, b2_x1)).clip(0) * (
+        np.minimum(b1_y2, b2_y2) - np.maximum(b1_y1, b2_y1)).clip(0)
 
     # box2 area
     box2_area = (b2_x2 - b2_x1) * (b2_y2 - b2_y1) + eps
@@ -357,7 +360,8 @@ def plot_pr_curve(px, py, ap, save_dir='pr_curve.png', names=()):
     plt.close()
 
 
-def plot_mc_curve(px, py, save_dir='mc_curve.png', names=(), xlabel='Confidence', ylabel='Metric'):
+def plot_mc_curve(px, py, save_dir='mc_curve.png', names=(),
+                  xlabel='Confidence', ylabel='Metric'):
     # Metric-confidence curve
     fig, ax = plt.subplots(1, 1, figsize=(9, 6), tight_layout=True)
     # display per-class legend if < 21 classes

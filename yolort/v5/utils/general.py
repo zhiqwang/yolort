@@ -104,20 +104,28 @@ def get_latest_run(search_dir='.'):
 
 
 def user_config_dir(dir='Ultralytics', env_var='YOLOV5_CONFIG_DIR'):
-    # Return path of user configuration directory. Prefer environment variable if exists. Make dir if required.
+    # Return path of user configuration directory. Prefer environment
+    # variable if exists. Make dir if required.
     env = os.getenv(env_var)
     if env:
         path = Path(env)  # use environment variable
     else:
-        cfg = {'Windows': 'AppData/Roaming', 'Linux': '.config', 'Darwin': 'Library/Application Support'}  # 3 OS dirs
+        # 3 OS dirs
+        cfg = {
+            'Windows': 'AppData/Roaming',
+            'Linux': '.config',
+            'Darwin': 'Library/Application Support',
+        }
         path = Path.home() / cfg.get(platform.system(), '')  # OS-specific config dir
-        path = (path if is_writeable(path) else Path('/tmp')) / dir  # GCP and AWS lambda fix, only /tmp is writeable
+        # GCP and AWS lambda fix, only /tmp is writeable
+        path = (path if is_writeable(path) else Path('/tmp')) / dir
     path.mkdir(exist_ok=True)  # make if required
     return path
 
 
 def is_writeable(dir, test=False):
-    # Return True if directory has write permissions, test opening a file with write permissions if test=True
+    # Return True if directory has write permissions, test opening
+    # a file with write permissions if test=True
     if test:  # method 1
         file = Path(dir) / 'tmp.txt'
         try:
@@ -243,7 +251,8 @@ def check_requirements(requirements='requirements.txt', exclude=(), install=True
     if n:  # if packages updated
         source = file.resolve() if 'file' in locals() else requirements
         s = (f"{prefix} {n} package{'s' * (n > 1)} updated per {source}\n"
-             f"{prefix} WARNING {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n")
+             f"{prefix} WARNING "
+             f"{colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n")
         print(emojis(s))
 
 
@@ -254,7 +263,8 @@ def check_img_size(imgsz, s=32, floor=0):
     else:  # list i.e. img_size=[640, 480]
         new_size = [max(make_divisible(x, int(s)), floor) for x in imgsz]
     if new_size != imgsz:
-        print(f'WARNING: --img-size {imgsz} must be multiple of max stride {s}, updating to {new_size}')
+        print(f'WARNING: --img-size {imgsz} must be multiple of '
+              f'max stride {s}, updating to {new_size}')
     return new_size
 
 
@@ -285,7 +295,8 @@ def check_file(file):
         file = Path(urllib.parse.unquote(file)).name.split('?')[0]
         print(f'Downloading {url} to {file}...')
         torch.hub.download_url_to_file(url, file)
-        assert Path(file).exists() and Path(file).stat().st_size > 0, f'File download failed: {url}'
+        assert Path(file).exists() and Path(file).stat().st_size > 0, (
+            f'File download failed: {url}')
         return file
     else:  # search
         files = glob.glob('./**/' + file, recursive=True)  # find file
@@ -461,7 +472,8 @@ def coco80_to_coco91_class():  # converts 80-index (val2014) to 91-index (paper)
     # a = np.loadtxt('data/coco.names', dtype='str', delimiter='\n')
     # b = np.loadtxt('data/coco_paper.names', dtype='str', delimiter='\n')
     # x1 = [list(a[i] == b).index(True) + 1 for i in range(80)]  # darknet to coco
-    # x2 = [list(b[i] == a).index(True) if any(b[i] == a) else None for i in range(91)]  # coco to darknet
+    # # coco to darknet
+    # x2 = [list(b[i] == a).index(True) if any(b[i] == a) else None for i in range(91)]
     x = [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18,
         19, 20, 21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35,
@@ -600,9 +612,13 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Checks
-    assert 0 <= conf_thres <= 1, (f'Invalid Confidence threshold {conf_thres}, '
-                                  'valid values are between 0.0 and 1.0')
-    assert 0 <= iou_thres <= 1, f'Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0'
+    assert 0 <= conf_thres <= 1, (
+        f'Invalid Confidence threshold {conf_thres}, '
+        'valid values are between 0.0 and 1.0'
+    )
+    assert 0 <= iou_thres <= 1, (
+        f'Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0'
+    )
 
     # Settings
     min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
