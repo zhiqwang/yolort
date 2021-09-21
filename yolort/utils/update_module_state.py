@@ -17,7 +17,7 @@ ARCHITECTURE_MAPS = {
 
 
 def update_module_state_from_ultralytics(
-    model_path: str,
+    checkpoint_path: str,
     arch: str = 'yolov5s',
     feature_fusion_type: str = 'PAN',
     num_classes: int = 80,
@@ -31,7 +31,7 @@ def update_module_state_from_ultralytics(
     wish to re-train.
 
     Args:
-        model_path (str): Path to your custom model.
+        checkpoint_path (str): Path to your custom model.
         arch (str): yolo architecture. Possible values are 'yolov5s', 'yolov5m' and 'yolov5l'.
             Default: 'yolov5s'.
         feature_fusion_type (str): the type of fature fusion. Possible values are PAN and TAN.
@@ -42,7 +42,7 @@ def update_module_state_from_ultralytics(
             Default: True.
         verbose (bool): print all information to screen. Default: True.
     """
-    model = load_yolov5_model(model_path, autoshape=False, verbose=verbose)
+    model = load_yolov5_model(checkpoint_path, autoshape=False, verbose=verbose)
 
     key_arch = f'{arch}_{feature_fusion_type.lower()}_v4.0'
     if key_arch not in ARCHITECTURE_MAPS:
