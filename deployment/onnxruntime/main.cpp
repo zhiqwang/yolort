@@ -64,18 +64,24 @@ private:
 };
 
 
-Yolov5Detector::Yolov5Detector(const std::string& modelPath, const std::string& device = "cpu")
+Yolov5Detector::Yolov5Detector(const std::string& modelPath, const std::string& device = "gpu")
 {
     env = Ort::Env(OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, "ONNX_DETECTION");
     sessionOptions = Ort::SessionOptions();
-    std::vector<std::string> availableProviders = Ort::GetAvailableProviders();
 
-    std::cout << "Ort::GetAvailableProviders: " << std::endl;
-    for (auto provider : availableProviders)
-        std::cout << provider << std::endl;
-//    OrtCUDAProviderOptions options;
-//    sessionOptions.AppendExecutionProvider_CUDA(options);
-    // sessionOptions.SetIntraOpNumThreads(4);
+    std::vector<std::string> availableProviders = Ort::GetAvailableProviders();
+    auto cudaAvailable = std::find(availableProviders.begin(), availableProviders.end(), "CUDAExecutionProvider");
+    OrtCUDAProviderOptions cudaOption;
+
+    if ((device == "gpu" || device == "GPU") && (cudaAvailable == availableProviders.end()))
+    {
+        std::cout << "GPU is not supported by your ONNXRuntime build. Fallback to CPU." << std::endl;
+    }
+    else if ((device == "gpu" || device == "GPU") && (cudaAvailable != availableProviders.end()))
+    {
+        std::cout << "Inference device: GPU" << std::endl;
+        sessionOptions.AppendExecutionProvider_CUDA(cudaOption);
+    }
 
 #ifdef _WIN32
     std::wstring w_modelPath = utils::charToWstring(modelPath.c_str());
@@ -84,10 +90,6 @@ Yolov5Detector::Yolov5Detector(const std::string& modelPath, const std::string& 
     session = Ort::Session(env, modelPath.c_str(), sessionOptions);
 #endif
 
-    if (device == "gpu" || device == "GPU" || device == "cuda" || device == "CUDA")
-    {
-        // TODO
-    }
     Ort::AllocatorWithDefaultOptions allocator;
 
     const char* inputName = session.GetInputName(0, allocator);
@@ -203,7 +205,7 @@ int main(int argc, char* argv[])
             "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
     };
 
-    Yolov5Detector detector(modelPath, "cpu");
+    Yolov5Detector detector(modelPath, "gpu");
 
     cv::Mat image = cv::imread(imagePath);
     std::vector<Detection> result = detector.detect(image);
