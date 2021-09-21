@@ -7,7 +7,7 @@ import torch
 from .models.yolo import Model
 from .utils import attempt_download, set_logging
 
-__all__ = ['add_yolov5_context', 'load_model']
+__all__ = ['add_yolov5_context', 'load_yolov5_model']
 
 
 @contextlib.contextmanager
@@ -27,7 +27,7 @@ def add_yolov5_context():
         sys.path.remove(path_ultralytics_yolov5)
 
 
-def load_model(model_path: str, autoshape: bool = False, verbose: bool = True):
+def load_yolov5_model(model_path: str, autoshape: bool = False, verbose: bool = True):
     """
     Creates a specified YOLOv5 model
 

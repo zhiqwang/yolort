@@ -5,6 +5,7 @@ from functools import reduce
 from torch import nn
 
 from yolort.models import yolo
+from yolort.v5 import load_yolov5_model
 
 
 ARCHITECTURE_MAPS = {
@@ -41,9 +42,7 @@ def update_module_state_from_ultralytics(
             Default: True.
         verbose (bool): print all information to screen. Default: True.
     """
-
-    from yolort.v5 import load_model
-    model = load_model(model_path, autoshape=False, verbose=verbose)
+    model = load_yolov5_model(model_path, autoshape=False, verbose=verbose)
 
     key_arch = f'{arch}_{feature_fusion_type.lower()}_v4.0'
     if key_arch not in ARCHITECTURE_MAPS:
@@ -141,7 +140,7 @@ class ModuleStateUpdate:
 def rgetattr(obj, attr, *args):
     """
     Nested version of getattr.
-    See <https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects>
+    Ref: https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects
     """
     def _getattr(obj, attr):
         return getattr(obj, attr, *args)
