@@ -68,7 +68,14 @@ Yolov5Detector::Yolov5Detector(const std::string& modelPath, const std::string& 
 {
     env = Ort::Env(OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, "ONNX_DETECTION");
     sessionOptions = Ort::SessionOptions();
+    std::vector<std::string> availableProviders = Ort::GetAvailableProviders();
 
+    std::cout << "Ort::GetAvailableProviders: " << std::endl;
+    for (auto provider : availableProviders)
+        std::cout << provider << std::endl;
+//    OrtCUDAProviderOptions options;
+//    sessionOptions.AppendExecutionProvider_CUDA(options);
+    // sessionOptions.SetIntraOpNumThreads(4);
 
 #ifdef _WIN32
     std::wstring w_modelPath = utils::charToWstring(modelPath.c_str());
