@@ -8,12 +8,15 @@ from torch import Tensor
 from torchvision.io import read_image
 
 from pytorch_lightning import LightningModule
-from typing import Any, Callable, List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union, Callable
+
+from yolort.data import COCOEvaluator, contains_any_tensor
+from yolort.utils.update_module_state import ModuleStateUpdate
+from yolort.v5 import load_yolov5_model
 
 from . import yolo
 from .transform import YOLOTransform
 from ._utils import _evaluate_iou
-from ..data import COCOEvaluator, contains_any_tensor
 
 __all__ = ['YOLOModule']
 
@@ -49,6 +52,7 @@ class YOLOModule(LightningModule):
         super().__init__()
 
         self.lr = lr
+        self.arch = arch
         self.num_classes = num_classes
 
         self.model = yolo.__dict__[arch](
@@ -267,3 +271,16 @@ class YOLOModule(LightningModule):
         parser.add_argument('--weight-decay', default=5e-4, type=float,
                             metavar='W', help='weight decay (default: 5e-4)')
         return parser
+
+    def load_from_yolov5(self, checkpoint_path: str):
+        """
+        Load model state from the checkpoint trained by YOLOv5.
+
+        Args:
+            checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+        """
+        checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
+        module_state_updater = ModuleStateUpdate(arch=self.arch, num_classes=self.num_classes)
+        module_state_updater.updating(checkpoint_yolov5)
+        state_dict = module_state_updater.model.state_dict()
+        self.model.load_state_dict(state_dict)

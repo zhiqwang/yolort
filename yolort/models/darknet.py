@@ -1,11 +1,11 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+from typing import Callable, List, Optional, Any
+
 import torch
 from torch import nn, Tensor
 from torch.hub import load_state_dict_from_url
 
-from .common import Conv, SPP, Focus, BottleneckCSP, C3
-
-from typing import Callable, List, Optional, Any
+from yolort.v5 import Conv, SPP, Focus, BottleneckCSP, C3
 
 
 __all__ = ['DarkNet', 'darknet_s_r3_1', 'darknet_m_r3_1', 'darknet_l_r3_1',

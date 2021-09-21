@@ -1,10 +1,10 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+from typing import Callable, List, Dict, Optional
+
 import torch
 from torch import nn, Tensor
 
-from .common import Conv, BottleneckCSP, C3
-
-from typing import Callable, List, Dict, Optional
+from yolort.v5 import Conv, BottleneckCSP, C3
 
 
 class PathAggregationNetwork(nn.Module):
