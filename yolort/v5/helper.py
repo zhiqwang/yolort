@@ -27,12 +27,12 @@ def add_yolov5_context():
         sys.path.remove(path_ultralytics_yolov5)
 
 
-def load_yolov5_model(model_path: str, autoshape: bool = False, verbose: bool = True):
+def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bool = True):
     """
     Creates a specified YOLOv5 model
 
     Args:
-        model_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'
+        checkpoint_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'
         autoshape (bool): apply YOLOv5 .autoshape() wrapper to model. Default: False.
         verbose (bool): print all information to screen. Default: True.
 
@@ -42,7 +42,7 @@ def load_yolov5_model(model_path: str, autoshape: bool = False, verbose: bool = 
     set_logging(verbose=verbose)
 
     with add_yolov5_context():
-        ckpt = torch.load(attempt_download(model_path), map_location=torch.device('cpu'))
+        ckpt = torch.load(attempt_download(checkpoint_path), map_location=torch.device('cpu'))
 
     if isinstance(ckpt, dict):
         model_ckpt = ckpt["model"]  # load model
