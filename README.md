@@ -90,17 +90,23 @@ The models are also available via torch hub, to load `yolov5s` with pretrained w
 model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 ```
 
-### Updating checkpoint from ultralytics/yolov5
+### Loading checkpoint from ultralytics/yolov5
 
 The module state of `yolort` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's release [v3.1](https://github.com/ultralytics/yolov5/releases/tag/v3.1) and [v4.0](https://github.com/ultralytics/yolov5/releases/tag/v4.0). For example, if you want to convert a `yolov5s` (release 4.0) model, you can just run the following script. You can also see our [how-to-align-with-ultralytics-yolov5](http://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
 
-```python
-from yolort.utils import update_module_state_from_ultralytics
+And we supply an interface to load the checkpoint weights trained with ultralytics/yolov5 as follows.
 
-# Update module state from ultralytics
-model = update_module_state_from_ultralytics(arch='yolov5s', version='v4.0')
-# Save updated module
-torch.save(model.state_dict(), 'yolov5s_updated.pt')
+```python
+from yolort.models import yolov5s
+
+# 'yolov5s.pt' is downloaded from https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s.pt
+ckpt_path_from_ultralytics = 'yolov5s.pt'
+model = yolov5s(score_thresh=0.25)
+model.load_from_yolov5(ckpt_path_from_ultralytics)
+
+model.eval()
+img_path = 'test/assets/bus.jpg'
+predictions = model.predict(img_path)
 ```
 
 ### Inference on `LibTorch` backend 🚀
