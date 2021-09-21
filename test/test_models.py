@@ -1,8 +1,10 @@
 import os
 import io
+from pathlib import Path
 import contextlib
 import warnings
 import pytest
+
 import torch
 from torch import Tensor
 
@@ -235,9 +237,9 @@ class TestModel:
 
         assert len(out) == N
         assert isinstance(out[0], dict)
-        assert isinstance(out[0]["boxes"], Tensor)
-        assert isinstance(out[0]["labels"], Tensor)
-        assert isinstance(out[0]["scores"], Tensor)
+        assert isinstance(out[0]['boxes'], Tensor)
+        assert isinstance(out[0]['labels'], Tensor)
+        assert isinstance(out[0]['scores'], Tensor)
         _check_jit_scriptable(model, (head_outputs, anchors_tuple))
 
     def test_criterion(self):
@@ -272,6 +274,35 @@ def test_torchscript(arch):
     out = model(x)
     out_script = scripted_model(x)
 
-    torch.testing.assert_close(out[0]["scores"], out_script[1][0]["scores"], rtol=0, atol=0)
-    torch.testing.assert_close(out[0]["labels"], out_script[1][0]["labels"], rtol=0, atol=0)
-    torch.testing.assert_close(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]['scores'], out_script[1][0]['scores'], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]['labels'], out_script[1][0]['labels'], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]['boxes'], out_script[1][0]['boxes'], rtol=0, atol=0)
+
+
+@pytest.mark.parametrize('arch, version, hash_prefix', [
+    ('yolov5s', 'v4.0', '9ca9a642')
+])
+def test_load_from_yolov5(arch, version, hash_prefix):
+    img_path = 'test/assets/bus.jpg'
+    yolov5s_r40_path = Path(f'{arch}.pt')
+
+    if not yolov5s_r40_path.is_file():
+        yolov5s_r40_url = f'https://github.com/ultralytics/yolov5/releases/download/{version}/{arch}.pt'
+        torch.hub.download_url_to_file(yolov5s_r40_url, yolov5s_r40_path, hash_prefix=hash_prefix)
+
+    model_load_from_yolov5 = models.__dict__[arch](score_thresh=0.25)
+    model_load_from_yolov5.load_from_yolov5(yolov5s_r40_path)
+    model_load_from_yolov5.eval()
+    out_from_yolov5 = model_load_from_yolov5.predict(img_path)
+    assert isinstance(out_from_yolov5[0], dict)
+    assert isinstance(out_from_yolov5[0]['boxes'], Tensor)
+    assert isinstance(out_from_yolov5[0]['labels'], Tensor)
+    assert isinstance(out_from_yolov5[0]['scores'], Tensor)
+
+    model = models.__dict__[arch](pretrained=True, score_thresh=0.25)
+    model.eval()
+    out = model.predict(img_path)
+
+    torch.testing.assert_close(out_from_yolov5[0]['scores'], out[0]['scores'], rtol=0, atol=0)
+    torch.testing.assert_close(out_from_yolov5[0]['labels'], out[0]['labels'], rtol=0, atol=0)
+    torch.testing.assert_close(out_from_yolov5[0]['boxes'], out[0]['boxes'], rtol=0, atol=0)
