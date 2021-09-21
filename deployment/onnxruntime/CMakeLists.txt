@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(yolort_onnx VERSION 0.1.0)
+project(yolort_onnx)
 
 option(ONNXRUNTIME_DIR "Path to built ONNX Runtime directory." STRING)
 message(STATUS "ONNXRUNTIME_DIR: ${ONNXRUNTIME_DIR}")

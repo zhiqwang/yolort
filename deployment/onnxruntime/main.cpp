@@ -181,15 +181,14 @@ std::vector<Detection> Yolov5Detector::detect(cv::Mat &image)
 
 int main(int argc, char* argv[])
 {
-    std::cout << "in main" << std::endl;
-    if (argc == 3)
+    if (argc != 3)
     {
-        std::cout << "Im here" << std::endl;
-        std::cerr << "Usage: " << argv[0] << " model_path image_path" << std::endl;
+        std::cerr << "ERROR. You should pass two arguments: model_path image_path" << std::endl;
+        return -1;
     }
 
-    std::string modelPath = "yolov5s_.simp.onnx"; // argv[1];
-    std::string imagePath = "zidane.jpg"; // argv[2];
+    std::string modelPath = argv[1];
+    std::string imagePath = argv[2];
 
     const std::vector<std::string> classNames {
             "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck",
