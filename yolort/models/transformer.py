@@ -4,15 +4,16 @@ The transformer attention network blocks.
 
 Mostly copy-paste from <https://github.com/dingyiwei/yolov5/tree/Transformer>.
 """
+from typing import Callable, List, Optional
+
 from torch import nn
 
-from .common import Conv, C3
+from yolort.v5 import Conv, C3
+
 from .path_aggregation_network import PathAggregationNetwork
 from .backbone_utils import BackboneWithPAN
 
 from . import darknet
-
-from typing import Callable, List, Optional
 
 
 def darknet_tan_backbone(

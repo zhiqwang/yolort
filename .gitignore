@@ -5,9 +5,12 @@ logs
 lightning_logs
 *.ipynb
 runs
-yolov5s.pt
+*.pt
 yolort/version.py
 .idea
+*.ttf
+wandb
+
 # macOS dir files
 .DS_Store
 
@@ -39,6 +42,7 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+test-output.xml
 nosetests.xml
 coverage.xml
 *.cover

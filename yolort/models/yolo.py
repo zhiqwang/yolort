@@ -1,4 +1,7 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+
+from typing import Callable, Tuple, Any, List, Dict, Optional
+
 import warnings
 
 import torch
@@ -10,8 +13,6 @@ from .backbone_utils import darknet_pan_backbone
 from .transformer import darknet_tan_backbone
 from .anchor_utils import AnchorGenerator
 from .box_head import YOLOHead, SetCriterion, PostProcess
-
-from typing import Callable, Tuple, Any, List, Dict, Optional
 
 __all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
            'yolov5_darknet_pan_s_r40', 'yolov5_darknet_pan_m_r40', 'yolov5_darknet_pan_l_r40',

@@ -4,7 +4,7 @@ import torch
 from torch import nn, Tensor
 from torchvision.ops import box_convert, box_iou
 
-from typing import Tuple, List
+from typing import Tuple
 
 
 def _evaluate_iou(target, pred):

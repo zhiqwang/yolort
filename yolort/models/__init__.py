@@ -1,12 +1,11 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+from typing import Any
 from torch import nn
 
-from .common import Conv
+from yolort.utils.activations import Hardswish, SiLU
+from yolort.v5 import Conv
+
 from .yolo_module import YOLOModule
-
-from ..utils.activations import Hardswish, SiLU
-
-from typing import Any
 
 
 def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
