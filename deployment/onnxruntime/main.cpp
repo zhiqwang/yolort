@@ -120,8 +120,7 @@ Yolov5Detector::Yolov5Detector(const std::string& modelPath, const bool& isGPU =
 
     Ort::AllocatorWithDefaultOptions allocator;
 
-    const char* inputName = session.GetInputName(0, allocator);
-    inputNames.push_back(inputName);
+    inputNames.push_back(session.GetInputName(0, allocator));
 
     for (int i = 0; i < 3; ++i)
         outputNames.push_back(session.GetOutputName(i, allocator));
