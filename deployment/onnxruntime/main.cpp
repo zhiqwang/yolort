@@ -221,7 +221,6 @@ int main(int argc, char* argv[])
     }
 
     Yolov5Detector detector{nullptr};
-
     try
     {
         detector = Yolov5Detector(modelPath, isGPU);
