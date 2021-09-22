@@ -1,8 +1,9 @@
 #include <iostream>
+#include <fstream>
 #include <codecvt>
 #include <opencv2/opencv.hpp>
 #include <onnxruntime_cxx_api.h>
-
+#include "cmdline.h"
 
 struct Detection
 {
@@ -19,6 +20,28 @@ namespace utils
         std::wstring_convert<convert_type, wchar_t> converter;
 
         return converter.from_bytes(str);
+    }
+
+    std::vector<std::string> loadNames(const std::string& path)
+    {
+        // load class names
+        std::vector<std::string> classNames;
+        std::ifstream infile(path);
+        if (infile.good())
+        {
+            std::string line;
+            while (getline (infile, line))
+            {
+                classNames.emplace_back(line);
+            }
+            infile.close();
+        }
+        else
+        {
+            std::cerr << "ERROR: Failed to access class name path: " << path << std::endl;
+        }
+
+        return classNames;
     }
 
     void visualizeDetection(cv::Mat& image, std::vector<Detection>& detections, const std::vector<std::string>& classNames)
@@ -46,8 +69,8 @@ namespace utils
 class Yolov5Detector
 {
 public:
-    Yolov5Detector(const std::string& modelPath,
-                   const std::string& device);
+    explicit Yolov5Detector(std::nullptr_t) {};
+    Yolov5Detector(const std::string& modelPath, const bool& isGPU);
 
     std::vector<Detection> detect(cv::Mat& image);
 
@@ -64,7 +87,7 @@ private:
 };
 
 
-Yolov5Detector::Yolov5Detector(const std::string& modelPath, const std::string& device = "gpu")
+Yolov5Detector::Yolov5Detector(const std::string& modelPath, const bool& isGPU = true)
 {
     env = Ort::Env(OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, "ONNX_DETECTION");
     sessionOptions = Ort::SessionOptions();
@@ -73,14 +96,19 @@ Yolov5Detector::Yolov5Detector(const std::string& modelPath, const std::string& 
     auto cudaAvailable = std::find(availableProviders.begin(), availableProviders.end(), "CUDAExecutionProvider");
     OrtCUDAProviderOptions cudaOption;
 
-    if ((device == "gpu" || device == "GPU") && (cudaAvailable == availableProviders.end()))
+    if (isGPU && (cudaAvailable == availableProviders.end()))
     {
         std::cout << "GPU is not supported by your ONNXRuntime build. Fallback to CPU." << std::endl;
+        std::cout << "Inference device: CPU" << std::endl;
     }
-    else if ((device == "gpu" || device == "GPU") && (cudaAvailable != availableProviders.end()))
+    else if (isGPU && (cudaAvailable != availableProviders.end()))
     {
         std::cout << "Inference device: GPU" << std::endl;
         sessionOptions.AppendExecutionProvider_CUDA(cudaOption);
+    }
+    else
+    {
+        std::cout << "Inference device: CPU" << std::endl;
     }
 
 #ifdef _WIN32
@@ -93,19 +121,10 @@ Yolov5Detector::Yolov5Detector(const std::string& modelPath, const std::string& 
     Ort::AllocatorWithDefaultOptions allocator;
 
     const char* inputName = session.GetInputName(0, allocator);
-    const char* outputName1 = session.GetOutputName(0, allocator);
-    std::cout << "Output Name: " << outputName1 << std::endl;
-
-    const char* outputName2 = session.GetOutputName(1, allocator);
-    std::cout << "Output Name: " << outputName2 << std::endl;
-
-    const char* outputName3 = session.GetOutputName(2, allocator);
-    std::cout << "Output Name: " << outputName3 << std::endl;
-
     inputNames.push_back(inputName);
-    outputNames.push_back(outputName1);
-    outputNames.push_back(outputName2);
-    outputNames.push_back(outputName3);
+
+    for (int i = 0; i < 3; ++i)
+        outputNames.push_back(session.GetOutputName(i, allocator));
 
 }
 
@@ -181,38 +200,45 @@ std::vector<Detection> Yolov5Detector::detect(cv::Mat &image)
 
 int main(int argc, char* argv[])
 {
-    if (argc != 3)
+    cmdline::parser cmd;
+    cmd.add<std::string>("model_path", 'm', "Path to onnx model.", true, "yolov5.onnx");
+    cmd.add<std::string>("image", 'i', "Image source to be detected", true, "bus.jpg");
+    cmd.add<std::string>("class_names", 'c', "Path of dataset labels", true, "coco.names");
+    cmd.add("gpu", '\0', "Enable cuda device or cpu.");
+
+    cmd.parse_check(argc, argv);
+
+    bool isGPU = cmd.exist("gpu");
+    std::string classNamesPath = cmd.get<std::string>("class_names");
+    std::vector<std::string> classNames = utils::loadNames(classNamesPath);
+    std::string imagePath = cmd.get<std::string>("image");
+    std::string modelPath = cmd.get<std::string>("model_path");
+
+    if (classNames.empty())
     {
-        std::cerr << "ERROR. You should pass two arguments: model_path image_path" << std::endl;
+        std::cout << "Empty class names file." << std::endl;
         return -1;
     }
 
-    std::string modelPath = argv[1];
-    std::string imagePath = argv[2];
+    Yolov5Detector detector{nullptr};
 
-    const std::vector<std::string> classNames {
-            "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck",
-            "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
-            "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra",
-            "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
-            "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove",
-            "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork",
-            "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
-            "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant",
-            "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard",
-            "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book",
-            "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
-    };
-
-    Yolov5Detector detector(modelPath, "gpu");
-
+    try
+    {
+        detector = Yolov5Detector(modelPath, isGPU);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
+    
     cv::Mat image = cv::imread(imagePath);
+    
     std::vector<Detection> result = detector.detect(image);
 
     utils::visualizeDetection(image, result, classNames);
 
     cv::imshow("result", image);
-
     //cv::imwrite("result.jpg", image);
     cv::waitKey(0);
 
