@@ -24,11 +24,11 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
     ```bash
     cd deployment/onnxruntime
     mkdir build && cd build
-    cmake .. -DONNXRUNTIME_DIR=ORT_DIR
+    cmake .. -DONNXRUNTIME_DIR=$ORT_DIR
     cmake --build .
     ```
 
-3. Update your model weights from ultralytics to yolort and export to ONNX following the [notebooks with tutorials](https://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/).
+3. Update your PyTorch model weights from ultralytics to yolort and export to ONNX following the [notebooks with tutorials](https://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/).
 
 4. Now, you can infer your own images.
 
