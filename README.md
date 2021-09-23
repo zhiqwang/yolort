@@ -30,10 +30,10 @@
 - *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface. Added by [itsnine](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
 - *Nov. 21, 2020*. Add graph visualization tools.
-- *Nov. 17, 2020*. Support exporting to `ONNX`, and inferring with `ONNXRuntime` interface.
+- *Nov. 17, 2020*. Support exporting to `ONNX`, and inferencing with `ONNXRuntime` Python interface.
 - *Nov. 16, 2020*. Refactor YOLO modules and support *dynamic shape/batch* inference.
 - *Nov. 4, 2020*. Add `TorchScript` C++ inference example.
-- *Oct. 10, 2020*. Support inferring with `LibTorch` C++ interface.
+- *Oct. 10, 2020*. Support inferencing with `LibTorch` C++ interface.
 - *Oct. 8, 2020*. Support exporting to `TorchScript` model.
 
 ## 🛠️ Usage
