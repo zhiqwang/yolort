@@ -9,7 +9,7 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
 - OpenCV 4.5 +
 - CUDA 11 [Optional]
 
-*We didn't impose too strong restrictions on the versions of dependecies.*
+*We didn't impose too strong restrictions on the versions of dependencies.*
 
 ## Usage
 
@@ -34,7 +34,7 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
 
     ```bash
     ./yolort_onnx [--image ../../../test/assets/zidane.jpg]
-                    [--model_path ../../../test/tracing/yolov5s.torchscript.pt]
+                    [--model_path ../../../test/tracing/yolov5s.onnx]
                     [--class_names ../../../notebooks/assets/coco.names]
                     [--gpu]  # GPU switch, which is optional, and set False as default
     ```
