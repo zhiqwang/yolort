@@ -27,7 +27,7 @@
 
 ## 🆕 What's New
 
-- *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface. Thanks to [itsnine](https://github.com/itsnine).
+- *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [itsnine](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
 - *Nov. 21, 2020*. Add graph visualization tools.
 - *Nov. 17, 2020*. Support exporting to `ONNX`, and inferencing with `ONNXRuntime` Python interface.
