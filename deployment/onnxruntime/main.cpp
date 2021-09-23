@@ -66,11 +66,11 @@ namespace utils
     }
 }
 
-class Yolov5Detector
+class YOLOv5Detector
 {
 public:
-    explicit Yolov5Detector(std::nullptr_t) {};
-    Yolov5Detector(const std::string& modelPath, const bool& isGPU);
+    explicit YOLOv5Detector(std::nullptr_t) {};
+    YOLOv5Detector(const std::string& modelPath, const bool& isGPU);
 
     std::vector<Detection> detect(cv::Mat& image);
 
@@ -87,7 +87,7 @@ private:
 };
 
 
-Yolov5Detector::Yolov5Detector(const std::string& modelPath, const bool& isGPU = true)
+YOLOv5Detector::YOLOv5Detector(const std::string& modelPath, const bool& isGPU = true)
 {
     env = Ort::Env(OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, "ONNX_DETECTION");
     sessionOptions = Ort::SessionOptions();
@@ -127,7 +127,7 @@ Yolov5Detector::Yolov5Detector(const std::string& modelPath, const bool& isGPU =
 
 }
 
-void Yolov5Detector::preprocessing(cv::Mat &image, float* blob)
+void YOLOv5Detector::preprocessing(cv::Mat &image, float* blob)
 {
     cv::Mat floatImage;
     cv::cvtColor(image, floatImage, cv::COLOR_BGR2RGB);
@@ -144,7 +144,7 @@ void Yolov5Detector::preprocessing(cv::Mat &image, float* blob)
     cv::split(floatImage, chw);
 }
 
-std::vector<Detection> Yolov5Detector::postprocessing(cv::Mat& image, std::vector<Ort::Value>& outputTensors)
+std::vector<Detection> YOLOv5Detector::postprocessing(cv::Mat& image, std::vector<Ort::Value>& outputTensors)
 {
     const auto* scoresTensor = outputTensors[0].GetTensorData<float>();
     const auto* classIdsTensor = outputTensors[1].GetTensorData<float>();
@@ -169,7 +169,7 @@ std::vector<Detection> Yolov5Detector::postprocessing(cv::Mat& image, std::vecto
     return detections;
 }
 
-std::vector<Detection> Yolov5Detector::detect(cv::Mat &image)
+std::vector<Detection> YOLOv5Detector::detect(cv::Mat &image)
 {
     size_t inputTensorSize = image.rows * image.cols * image.channels();
     std::vector<int64_t> imageShape {image.channels(), image.rows, image.cols};
@@ -201,8 +201,8 @@ int main(int argc, char* argv[])
 {
     cmdline::parser cmd;
     cmd.add<std::string>("model_path", 'm', "Path to onnx model.", true, "yolov5.onnx");
-    cmd.add<std::string>("image", 'i', "Image source to be detected", true, "bus.jpg");
-    cmd.add<std::string>("class_names", 'c', "Path of dataset labels", true, "coco.names");
+    cmd.add<std::string>("image", 'i', "Image source to be detected.", true, "bus.jpg");
+    cmd.add<std::string>("class_names", 'c', "Path of dataset labels.", true, "coco.names");
     cmd.add("gpu", '\0', "Enable cuda device or cpu.");
 
     cmd.parse_check(argc, argv);
@@ -219,10 +219,10 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    Yolov5Detector detector{nullptr};
+    YOLOv5Detector detector{nullptr};
     try
     {
-        detector = Yolov5Detector(modelPath, isGPU);
+        detector = YOLOv5Detector(modelPath, isGPU);
     }
     catch(const std::exception& e)
     {
