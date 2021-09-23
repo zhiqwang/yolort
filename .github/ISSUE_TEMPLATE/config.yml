@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Usage questions
+    url: https://github.com/zhiqwang/yolov5-rt-stack/discussions
+    about: Ask questions and discuss with other yolort community members
