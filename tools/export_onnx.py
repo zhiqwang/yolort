@@ -24,7 +24,6 @@ def get_parser():
     
     parser.add_argument('--export_friendly', type=bool, default=False,
                         help='Replace torch.nn.silu with Silu')
-
     parser.add_argument('--num_classes', default=80, type=int,
                         help='The number of classes')
 
@@ -101,17 +100,6 @@ def export_onnx(model, input, save_name, input_names='input',
         onnx.save(model_sim, onnxsim_path)
         print("End of Simplified!")
 
-def export_module_friendly(model):
-    for m in model.modules():
-        m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatibility
-        if isinstance(m, Conv):
-            if isinstance(m.act, nn.Hardswish):
-                m.act = Hardswish()  # assign activation
-            if isinstance(m.act, nn.SiLU):
-                m.act = SiLU()
-
-    return model
-
 def cli_main():
     parser = get_parser()
     args = parser.parse_args()
@@ -140,11 +128,10 @@ def cli_main():
 
     model = yolort.models.__dict__[args.arch](
     num_classes=args.num_classes,
+    export_friendly=args.export_friendly,
     )
+    
     model.load_from_yolov5(args.checkpoint_path)
-
-    if (args.export_friendly) :
-        model = export_module_friendly(model)
     model.eval()
 
     # export onnx
