@@ -127,10 +127,10 @@ def cli_main():
     input = torch.randn(batch_size, 3, image_size, image_size)
 
     model = yolort.models.__dict__[args.arch](
-    num_classes=args.num_classes,
-    export_friendly=args.export_friendly,
+        num_classes=args.num_classes,
+        export_friendly=args.export_friendly,
     )
-    
+
     model.load_from_yolov5(args.checkpoint_path)
     model.eval()
 
