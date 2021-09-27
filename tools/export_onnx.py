@@ -15,43 +15,33 @@ from yolort.utils.activations import Hardswish, SiLU
 
 def get_parser():
     parser = argparse.ArgumentParser('export onnx CLI for yolort', add_help=True)
-
-    parser.add_argument('--arch', type=str, required=True,
-                        help='yolov5s, yolov5m, yolov5l, yolotr')
-
+    parser.add_argument('--arch', default='yolov5s', choices=['yolov5s', 'yolov5m', 'yolov5l'],
+                    help='Model architecture to export')
     parser.add_argument('--checkpoint_path', type=str, required=True,
                         help='The path of model path')
-    
     parser.add_argument('--export_friendly', type=bool, default=False,
                         help='Replace torch.nn.silu with Silu')
     parser.add_argument('--num_classes', default=80, type=int,
                         help='The number of classes')
-
     parser.add_argument('--image_size', default=640, type=int,
                         help='Image size for evaluation (default: 640)')
-    
     parser.add_argument('--batch_size', default=1, type=int,
                         help='Images per gpu, the total batch size is $NGPU x batch_size')
     parser.add_argument('--output_path', default='./yolov5s.onnx',
                         help='The output name of convert onnx model')
-
     parser.add_argument('--input_names', default='input', type=str,
                         help='input name of model')
-    
     parser.add_argument('--output_names', nargs='+', default=['scores', 'label', 'boxes'],
                         help='output name of model')
-
     parser.add_argument('--opset_version', default=11, type=int,
                         help='opset_version')
-
     parser.add_argument('--do_constant', default=True, type=bool,
                         help='do_constant')
-
     parser.add_argument('--dynamic', default=True, type=bool,
                         help='dynamic_axes')
-
     parser.add_argument('--simplify', default=True, type=bool,
                         help='simplified ONNX model')
+                        
     return parser
 
 
