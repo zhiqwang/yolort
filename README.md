@@ -4,18 +4,33 @@
 
 **YOLOv5 Runtime Stack**
 
-[![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
-[![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+______________________________________________________________________
+
+[Documentation](#%EF%B8%8F-usage) •
+[Installation Instructions](#installation-and-inference-examples) •
+[Deployment](#-deployment) •
+[Contributing](#-contributing) •
+[Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
+
+______________________________________________________________________
+
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/yolort)](https://pypi.org/project/yolort/)
 [![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=blue&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
 [![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=downloads&logo=github&logoColor=lightgrey)](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=Downloads&logo=github&logoColor=lightgrey)
+
+[![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
+[![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+[![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
 
----
+______________________________________________________________________
 
 </div>
 
-**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5), and with modules refactoring to adapt to different deployment scenarios such as `libtorch`, `onnxruntime`, `tvm` and so on.
+## 🤗 Introduction
+
+**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNXRuntime`, `TVM` and so on.
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
@@ -32,8 +47,7 @@
 - *Nov. 21, 2020*. Add graph visualization tools.
 - *Nov. 17, 2020*. Support exporting to `ONNX`, and inferencing with `ONNXRuntime` Python interface.
 - *Nov. 16, 2020*. Refactor YOLO modules and support *dynamic shape/batch* inference.
-- *Nov. 4, 2020*. Add `TorchScript` C++ inference example.
-- *Oct. 10, 2020*. Support inferencing with `LibTorch` C++ interface.
+- *Nov. 4, 2020*. Add `LibTorch` C++ inference example.
 - *Oct. 8, 2020*. Support exporting to `TorchScript` model.
 
 ## 🛠️ Usage
@@ -93,7 +107,7 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 
 ### Loading checkpoint from official yolov5
 
-The module state of `yolort` has some differences comparing to `ultralytics/yolov5`. We can load ultralytics's trained model checkpoint with minor changes, and we have converted ultralytics's release [v3.1](https://github.com/ultralytics/yolov5/releases/tag/v3.1) and [v4.0](https://github.com/ultralytics/yolov5/releases/tag/v4.0). And now we supply an interface to load the checkpoint weights trained with `ultralytics/yolov5` as follows. See our [how-to-align-with-ultralytics-yolov5](http://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
+The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. See our [how-to-align-with-ultralytics-yolov5](http://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
 
 ```python
 from yolort.models import yolov5s
@@ -108,9 +122,13 @@ img_path = 'test/assets/bus.jpg'
 predictions = model.predict(img_path)
 ```
 
-### Inference on `LibTorch` backend 🚀
+## 🚀 Deployment
+
+### Inference on `LibTorch` backend
 
 We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](./deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
+
+### Inference on `ONNXRuntime` backend
 
 ## 🎨 Model Graph Visualization
 
