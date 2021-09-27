@@ -19,7 +19,7 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
 
     ```bash
     python example.py [--image ../../../test/assets/zidane.jpg]
-                  [--model_path ../../../notebooks/yolov5s.onnx]
-                  [--class_names ../../../notebooks/assets/coco.names]
-                  [--gpu]  # GPU switch, which is optional, and set False as default
+                      [--model_path ../../../notebooks/yolov5s.onnx]
+                      [--class_names ../../../notebooks/assets/coco.names]
+                      [--gpu]  # GPU switch, which is optional, and set False as default
     ```
