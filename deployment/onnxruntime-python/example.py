@@ -36,6 +36,8 @@ class YOLOv5Detector:
         scores, class_ids, boxes = self._model.run(output_names=None,
                                                    input_feed={self._input_names: blob})
         boxes = boxes.astype(np.int32)
+        boxes[:, [2, 3]] -= boxes[:, [0, 1]]  # from xyxy to xywh format
+
         return scores.tolist(), class_ids.tolist(), boxes.tolist()
 
 
@@ -46,15 +48,15 @@ def visualize_detection(image: np.ndarray,
                         boxes: List[List[int]]) -> None:
 
     for i, class_id in enumerate(class_ids):
-        x1, y1, x2, y2 = boxes[i]
+        x, y, w, h = boxes[i]
         conf = round(scores[i], 2)
 
         label = class_names[class_id] + " " + str(conf)
         text_size = cv2.getTextSize(label, cv2.FONT_ITALIC, 0.8, 2)[0]
 
-        cv2.rectangle(image, (x1, y1), (x2, y2), (229, 160, 21), 2)
-        cv2.rectangle(image, (x1, y1 - 25), (x1 + text_size[0], y1), (229, 160, 21), -1)
-        cv2.putText(image, label, (x1, y1 - 3), cv2.FONT_ITALIC, 0.8, (255, 255, 255), 2)
+        cv2.rectangle(image, (x, y), (x + w, y + h), (229, 160, 21), 2)
+        cv2.rectangle(image, (x, y - 25), (x + text_size[0], y), (229, 160, 21), -1)
+        cv2.putText(image, label, (x, y - 3), cv2.FONT_ITALIC, 0.8, (255, 255, 255), 2)
 
 
 def get_parser() -> argparse.ArgumentParser:
