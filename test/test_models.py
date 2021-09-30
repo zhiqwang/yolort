@@ -9,6 +9,7 @@ import torch
 from torch import Tensor
 
 from yolort import models
+from yolort.models import YOLOv5
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.transformer import darknet_tan_backbone
 from yolort.models.anchor_utils import AnchorGenerator
@@ -290,10 +291,10 @@ def test_load_from_yolov5(arch, version, hash_prefix):
         yolov5s_r40_url = f'https://github.com/ultralytics/yolov5/releases/download/{version}/{arch}.pt'
         torch.hub.download_url_to_file(yolov5s_r40_url, yolov5s_r40_path, hash_prefix=hash_prefix)
 
-    model_load_from_yolov5 = models.__dict__[arch](score_thresh=0.25)
-    model_load_from_yolov5.load_from_yolov5(yolov5s_r40_path)
-    model_load_from_yolov5.eval()
-    out_from_yolov5 = model_load_from_yolov5.predict(img_path)
+    yolov5 = YOLOv5()
+    model_yolov5 = yolov5.load_from_yolov5(yolov5s_r40_path, score_thresh=0.25)
+    model_yolov5.eval()
+    out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)
     assert isinstance(out_from_yolov5[0]['boxes'], Tensor)
     assert isinstance(out_from_yolov5[0]['labels'], Tensor)
