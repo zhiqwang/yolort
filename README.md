@@ -110,12 +110,14 @@ model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
 The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. See our [how-to-align-with-ultralytics-yolov5](http://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
 
 ```python
-from yolort.models import yolov5s
+from yolort.models import YOLOv5
+
+# Model
+yolov5 = YOLOv5()
 
 # 'yolov5s.pt' is downloaded from https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s.pt
 ckpt_path_from_ultralytics = 'yolov5s.pt'
-model = yolov5s(score_thresh=0.25)
-model.load_from_yolov5(ckpt_path_from_ultralytics)
+model = yolov5.load_from_yolov5(ckpt_path_from_ultralytics, score_thresh=0.25)
 
 model.eval()
 img_path = 'test/assets/bus.jpg'
