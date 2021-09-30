@@ -7,7 +7,7 @@ import torch
 from .models.yolo import Model
 from .utils import attempt_download, set_logging
 
-__all__ = ['add_yolov5_context', 'load_yolov5_model']
+__all__ = ['add_yolov5_context', 'load_yolov5_model', 'get_yolov5_size']
 
 
 @contextlib.contextmanager
@@ -25,6 +25,20 @@ def add_yolov5_context():
         yield
     finally:
         sys.path.remove(path_ultralytics_yolov5)
+
+
+def get_yolov5_size(depth_multiple, width_multiple):
+    if depth_multiple == 0.33 and width_multiple == 0.5:
+        return 's'
+    elif depth_multiple == 0.67 and width_multiple == 0.75:
+        return 'm'
+    elif depth_multiple == 1.0 and width_multiple == 1.0:
+        return 'l'
+    else:
+        raise NotImplementedError(
+            f"Currently does't support architecture with depth: {depth_multiple} "
+            f"and {width_multiple}, fell free to create a ticket labeled enhancement to us"
+        )
 
 
 def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bool = True):

@@ -1,11 +1,11 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
-from typing import Any
+from typing import Optional
 
 from functools import reduce
 from torch import nn
 
 from yolort.models import yolo
-from yolort.v5 import load_yolov5_model
+from yolort.v5 import load_yolov5_model, get_yolov5_size
 
 
 ARCHITECTURE_MAPS = {
@@ -23,7 +23,7 @@ def update_module_state_from_ultralytics(
     num_classes: int = 80,
     set_fp16: bool = True,
     verbose: bool = False,
-    **kwargs: Any,
+    **kwargs,
 ):
     """
     Allows the user to specify a file to use when loading an ultralytics model for conversion.
@@ -47,7 +47,7 @@ def update_module_state_from_ultralytics(
     key_arch = f'{arch}_{feature_fusion_type.lower()}_v4.0'
     if key_arch not in ARCHITECTURE_MAPS:
         raise NotImplementedError(
-            "Currently does't supports this architecture, "
+            "Currently does't support this architecture, "
             "fell free to file an issue labeled enhancement to us"
         )
 
@@ -71,7 +71,10 @@ class ModuleStateUpdate:
     """
     def __init__(
         self,
-        arch: str = 'yolov5_darknet_pan_s_r31',
+        arch: Optional[str] = 'yolov5_darknet_pan_s_r31',
+        depth_multiple: Optional[float] = None,
+        width_multiple: Optional[float] = None,
+        version: str = 'r4.0',
         num_classes: int = 80,
         inner_block_maps: dict = {'0': '9', '1': '10', '3': '13', '4': '14'},
         layer_block_maps: dict = {'0': '17', '1': '18', '2': '20', '3': '21', '4': '23'},
@@ -84,7 +87,23 @@ class ModuleStateUpdate:
         self.head_ind = head_ind
         self.head_name = head_name
         # Set model
-        self.model = yolo.__dict__[arch](num_classes=num_classes)
+        if arch is not None:
+            model = yolo.__dict__[arch](num_classes=num_classes)
+        elif depth_multiple is not None and width_multiple is not None:
+            yolov5_size = get_yolov5_size(depth_multiple, width_multiple)
+            backbone_name = f"darknet_{yolov5_size}_{version.replace('.', '_')}"
+            weights_name = f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}_coco"
+            model = yolo._yolov5_darknet_pan(
+                backbone_name,
+                depth_multiple,
+                width_multiple,
+                version,
+                weights_name,
+                num_classes=num_classes,
+            )
+        else:
+            raise NotImplementedError("Currently either arch or multiples must be set.")
+        self.model = model
 
     def updating(self, state_dict):
         # Obtain module state
