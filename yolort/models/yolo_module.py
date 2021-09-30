@@ -12,16 +12,16 @@ from typing import Any, List, Dict, Tuple, Optional, Union, Callable
 
 from yolort.data import COCOEvaluator, contains_any_tensor
 from yolort.utils.update_module_state import ModuleStateUpdate
-from yolort.v5 import load_yolov5_model
+from yolort.v5 import load_yolov5_model, get_yolov5_size
 
 from . import yolo
 from .transform import YOLOTransform
 from ._utils import _evaluate_iou
 
-__all__ = ['YOLOModule']
+__all__ = ['YOLOv5']
 
 
-class YOLOModule(LightningModule):
+class YOLOv5(LightningModule):
     """
     PyTorch Lightning wrapper of `YOLO`
     """
@@ -118,7 +118,7 @@ class YOLOModule(LightningModule):
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLOModule always returns a (Losses, Detections) tuple in scripting.")
+                warnings.warn("YOLOv5 always returns a (Losses, Detections) tuple in scripting.")
                 self._has_warned = True
             return losses, detections
         else:
@@ -272,7 +272,16 @@ class YOLOModule(LightningModule):
                             metavar='W', help='weight decay (default: 5e-4)')
         return parser
 
-    def load_from_yolov5(self, checkpoint_path: str):
+    @classmethod
+    def load_from_yolov5(
+        cls,
+        checkpoint_path: str,
+        lr: float = 0.01,
+        size: Tuple[int, int] = (640, 640),
+        score_thresh: float = 0.25,
+        nms_thresh: float = 0.45,
+        version: str = 'r4.0',
+    ):
         """
         Load model state from the checkpoint trained by YOLOv5.
 
@@ -280,7 +289,31 @@ class YOLOModule(LightningModule):
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
         """
         checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
-        module_state_updater = ModuleStateUpdate(arch=self.arch, num_classes=self.num_classes)
+        num_classes = checkpoint_yolov5.yaml['nc']
+        anchor_grids = checkpoint_yolov5.yaml['anchors']
+        depth_multiple = checkpoint_yolov5.yaml['depth_multiple']
+        width_multiple = checkpoint_yolov5.yaml['width_multiple']
+
+        module_state_updater = ModuleStateUpdate(
+            arch=None,
+            depth_multiple=depth_multiple,
+            width_multiple=width_multiple,
+            version=version,
+            num_classes=num_classes,
+        )
         module_state_updater.updating(checkpoint_yolov5)
         state_dict = module_state_updater.model.state_dict()
-        self.model.load_state_dict(state_dict)
+        yolov5_size = get_yolov5_size(depth_multiple, width_multiple)
+        arch = f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}"
+        yolov5_custom = cls(
+            lr=lr,
+            arch=arch,
+            size=size,
+            num_classes=num_classes,
+            anchor_grids=anchor_grids,
+            score_thresh=score_thresh,
+            nms_thresh=nms_thresh,
+        )
+
+        yolov5_custom.model.load_state_dict(state_dict)
+        return yolov5_custom

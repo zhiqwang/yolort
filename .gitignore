@@ -6,6 +6,7 @@ lightning_logs
 *.ipynb
 runs
 *.pt
+*.onnx
 yolort/version.py
 .idea
 *.ttf
