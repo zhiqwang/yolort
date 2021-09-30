@@ -18,10 +18,10 @@ from . import yolo
 from .transform import YOLOTransform
 from ._utils import _evaluate_iou
 
-__all__ = ['YOLOModule']
+__all__ = ['YOLOv5']
 
 
-class YOLOModule(LightningModule):
+class YOLOv5(LightningModule):
     """
     PyTorch Lightning wrapper of `YOLO`
     """
@@ -118,7 +118,7 @@ class YOLOModule(LightningModule):
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLOModule always returns a (Losses, Detections) tuple in scripting.")
+                warnings.warn("YOLOv5 always returns a (Losses, Detections) tuple in scripting.")
                 self._has_warned = True
             return losses, detections
         else:
