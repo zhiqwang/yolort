@@ -112,12 +112,9 @@ The following is the interface for loading the checkpoint weights trained with `
 ```python
 from yolort.models import YOLOv5
 
-# Model
-yolov5 = YOLOv5()
-
 # 'yolov5s.pt' is downloaded from https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s.pt
 ckpt_path_from_ultralytics = 'yolov5s.pt'
-model = yolov5.load_from_yolov5(ckpt_path_from_ultralytics, score_thresh=0.25)
+model = YOLOv5.load_from_yolov5(ckpt_path_from_ultralytics, score_thresh=0.25)
 
 model.eval()
 img_path = 'test/assets/bus.jpg'
@@ -131,6 +128,8 @@ predictions = model.predict(img_path)
 We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](./deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
 
 ### Inference on `ONNXRuntime` backend
+
+TBD
 
 ## 🎨 Model Graph Visualization
 
