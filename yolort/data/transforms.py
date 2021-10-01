@@ -231,8 +231,8 @@ class RandomZoomOut(nn.Module):
                 -1, 1, 1
             )
             image[..., :top, :] = image[..., :, :left] = image[
-                ..., (top + orig_h):, :
-            ] = image[..., :, (left + orig_w):] = v
+                ..., (top + orig_h) :, :
+            ] = image[..., :, (left + orig_w) :] = v
 
         if target is not None:
             target["boxes"][:, 0::2] += left
