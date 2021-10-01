@@ -67,7 +67,7 @@ def git_describe(path=Path(__file__).parent):
         return subprocess.check_output(
             s, shell=True, stderr=subprocess.STDOUT
         ).decode()[:-1]
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         return ""  # not a git repository
 
 
@@ -158,7 +158,7 @@ def profile(input, ops, n=10, device=None):
             try:
                 # GFLOPs
                 flops = thop.profile(m, inputs=(x,), verbose=False)[0] / 1e9 * 2
-            except:
+            except ImportError:
                 flops = 0
 
             try:
@@ -261,7 +261,7 @@ def prune(model, amount=0.3):
     import torch.nn.utils.prune as prune
 
     print("Pruning model... ", end="")
-    for name, m in model.named_modules():
+    for _, m in model.named_modules():
         if isinstance(m, nn.Conv2d):
             # prune
             prune.l1_unstructured(m, name="weight", amount=amount)

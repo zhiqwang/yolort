@@ -31,4 +31,3 @@ repos:
           - mdformat-gfm
           - mdformat-black
           - mdformat_frontmatter
-        exclude: CHANGELOG.md

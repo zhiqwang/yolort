@@ -157,7 +157,7 @@ def is_colab():
         import google.colab
 
         return True
-    except Exception as e:
+    except ImportError:
         return False
 
 
@@ -238,49 +238,6 @@ def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=Fals
     assert (
         result
     ), f"{name}{minimum} required by YOLOv5, but {name}{current} is currently installed"
-
-
-@try_except
-def check_requirements(requirements="requirements.txt", exclude=(), install=True):
-    # Check installed dependencies meet requirements (pass *.txt file or list of packages)
-    prefix = colorstr("red", "bold", "requirements:")
-    check_python()  # check python version
-    if isinstance(requirements, (str, Path)):  # requirements.txt file
-        file = Path(requirements)
-        assert file.exists(), f"{prefix} {file.resolve()} not found, check failed."
-        requirements = [
-            f"{x.name}{x.specifier}"
-            for x in pkg.parse_requirements(file.open())
-            if x.name not in exclude
-        ]
-    else:  # list or tuple of packages
-        requirements = [x for x in requirements if x not in exclude]
-
-    n = 0  # number of packages updates
-    for r in requirements:
-        try:
-            pkg.require(r)
-        except Exception as e:  # DistributionNotFound or VersionConflict if requirements not met
-            s = f"{prefix} {r} not found and is required by YOLOv5"
-            if install:
-                print(f"{s}, attempting auto-update...")
-                try:
-                    assert check_online(), f"'pip install {r}' skipped (offline)"
-                    print(check_output(f"pip install '{r}'", shell=True).decode())
-                    n += 1
-                except Exception as e:
-                    print(f"{prefix} {e}")
-            else:
-                print(f"{s}. Please install and rerun your command.")
-
-    if n:  # if packages updated
-        source = file.resolve() if "file" in locals() else requirements
-        s = (
-            f"{prefix} {n} package{'s' * (n > 1)} updated per {source}\n"
-            f"{prefix} WARNING "
-            f"{colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n"
-        )
-        print(emojis(s))
 
 
 def check_img_size(imgsz, s=32, floor=0):
@@ -674,7 +631,7 @@ def non_max_suppression(
     ), f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     # Settings
-    min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
+    _, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
     max_nms = 30000  # maximum number of boxes into torchvision.ops.nms()
     time_limit = 10.0  # seconds to quit after
     redundant = True  # require redundant detections
@@ -771,7 +728,7 @@ def strip_optimizer(
     torch.save(x, s or f)
     mb = os.path.getsize(s or f) / 1e6  # filesize
     print(
-        f"Optimizer stripped from {f},{(' saved as %s,' % s) if s else ''} {mb:.1f}MB"
+        f"Optimizer stripped from {f},{' saved as {s},' if s else ''} {mb:.1f}MB"
     )
 
 
@@ -809,13 +766,13 @@ def print_mutation(results, hyp, save_dir):
         data = data.rename(columns=lambda x: x.strip())  # strip keys
         i = np.argmax(fitness(data.values[:, :7]))  #
         f.write(
-            f"# YOLOv5 Hyperparameter Evolution Results\n"
+            "# YOLOv5 Hyperparameter Evolution Results\n"
             + f"# Best generation: {i}\n"
             + f"# Last generation: {len(data)}\n"
-            + f"# "
+            + "# "
             + ", ".join(f"{x.strip():>20s}" for x in keys[:7])
             + "\n"
-            + f"# "
+            + "# "
             + ", ".join(f"{x:>20.5g}" for x in data.values[i, :7])
             + "\n\n"
         )
