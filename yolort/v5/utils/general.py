@@ -17,7 +17,6 @@ import urllib
 from itertools import repeat
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from subprocess import check_output
 
 import cv2
 import numpy as np
@@ -146,21 +145,6 @@ def is_writeable(dir, test=False):
         return os.access(dir, os.R_OK)  # possible issues on Windows
 
 
-def is_docker():
-    # Is environment a Docker container?
-    return Path("/workspace").exists()  # or Path('/.dockerenv').exists()
-
-
-def is_colab():
-    # Is environment a Google Colab instance?
-    try:
-        import google.colab
-
-        return True
-    except ImportError:
-        return False
-
-
 def is_pip():
     # Is file in a pip package?
     return "site-packages" in Path(__file__).absolute().parts
@@ -197,35 +181,6 @@ def check_online():
         return False
 
 
-@try_except
-def check_git_status():
-    # Recommend 'git pull' if code is out of date
-    msg = ", for updates see https://github.com/ultralytics/yolov5"
-    print(colorstr("github: "), end="")
-    assert Path(".git").exists(), "skipping check (not a git repository)" + msg
-    assert not is_docker(), "skipping check (Docker image)" + msg
-    assert check_online(), "skipping check (offline)" + msg
-
-    cmd = "git fetch && git config --get remote.origin.url"
-    url = (
-        check_output(cmd, shell=True, timeout=5).decode().strip().rstrip(".git")
-    )  # git fetch
-    branch = (
-        check_output("git rev-parse --abbrev-ref HEAD", shell=True).decode().strip()
-    )  # checked out
-    n = int(
-        check_output(f"git rev-list {branch}..origin/master --count", shell=True)
-    )  # commits behind
-    if n > 0:
-        s = (
-            f"WARNING YOLOv5 is out of date by {n} commit{'s' * (n > 1)}. "
-            f"Use `git pull` or `git clone {url}` to update."
-        )
-    else:
-        s = f"up to date with {url} DONE!"
-    print(emojis(s))  # emoji-safe
-
-
 def check_python(minimum="3.6.2"):
     # Check current python version vs. required python version
     check_version(platform.python_version(), minimum, name="Python ")
@@ -252,24 +207,6 @@ def check_img_size(imgsz, s=32, floor=0):
             f"max stride {s}, updating to {new_size}"
         )
     return new_size
-
-
-def check_imshow():
-    # Check if environment supports image displays
-    try:
-        assert not is_docker(), "cv2.imshow() is disabled in Docker environments"
-        assert not is_colab(), "cv2.imshow() is disabled in Google Colab environments"
-        cv2.imshow("test", np.zeros((1, 1, 3)))
-        cv2.waitKey(1)
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
-        return True
-    except Exception as e:
-        print(
-            "WARNING: Environment does not support cv2.imshow() "
-            f"or PIL Image.show() image displays\n{e}"
-        )
-        return False
 
 
 def check_file(file):
