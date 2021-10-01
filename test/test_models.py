@@ -309,10 +309,11 @@ def test_load_from_yolov5(arch, version, hash_prefix):
     img_path = "test/assets/bus.jpg"
     yolov5s_r40_path = Path(f"{arch}.pt")
 
-    if not yolov5s_r40_path.is_file():
-        yolov5s_r40_url = f"https://github.com/ultralytics/yolov5/releases/download/{version}/{arch}.pt"
+    if not yolov5s_r40_path.exists():
         torch.hub.download_url_to_file(
-            yolov5s_r40_url, yolov5s_r40_path, hash_prefix=hash_prefix
+            f"https://github.com/ultralytics/yolov5/releases/download/{version}/{arch}.pt",
+            yolov5s_r40_path,
+            hash_prefix=hash_prefix,
         )
 
     yolov5 = YOLOv5()
