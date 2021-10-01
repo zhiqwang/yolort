@@ -74,7 +74,7 @@ def check_font(font="Arial.ttf", size=10):
     font = font if font.exists() else (CONFIG_DIR / font.name)
     try:
         return ImageFont.truetype(str(font) if font.exists() else font.name, size)
-    except FileNotFoundError:  # download if missing
+    except OSError:  # download if missing
         url = "https://ultralytics.com/assets/" + font.name
         print(f"Downloading {url} to {font}...")
         torch.hub.download_url_to_file(url, str(font))
