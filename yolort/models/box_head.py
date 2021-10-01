@@ -355,8 +355,8 @@ class PostProcess(nn.Module):
     ) -> None:
         """
         Args:
-            score_thresh (float): score_thresh (float): Score threshold used for postprocessing the detections.
-            nms_thresh (float): nms_thresh (float): NMS threshold used for postprocessing the detections.
+            score_thresh (float): Score threshold used for postprocessing the detections.
+            nms_thresh (float): NMS threshold used for postprocessing the detections.
             detections_per_img (int): Number of best detections to keep after NMS.
         """
         super().__init__()

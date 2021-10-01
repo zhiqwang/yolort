@@ -396,7 +396,8 @@ class Expand(nn.Module):
 
 
 class AutoShape(nn.Module):
-    # YOLOv5 input-robust model wrapper for passing cv2/np/PIL/torch inputs. Includes preprocessing, inference and NMS
+    # YOLOv5 input-robust model wrapper for passing cv2/np/PIL/torch inputs.
+    # Includes preprocessing, inference and NMS
     conf = 0.25  # NMS confidence threshold
     iou = 0.45  # NMS IoU threshold
     classes = None  # (optional list) filter by class
