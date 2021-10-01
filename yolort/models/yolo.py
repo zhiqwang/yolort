@@ -1,22 +1,28 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 
-from typing import Callable, Tuple, Any, List, Dict, Optional
-
 import warnings
+from typing import Callable, Tuple, Any, List, Dict, Optional
 
 import torch
 from torch import nn, Tensor
-
 from torchvision.models.utils import load_state_dict_from_url
 
-from .backbone_utils import darknet_pan_backbone
-from .transformer import darknet_tan_backbone
 from .anchor_utils import AnchorGenerator
+from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead, SetCriterion, PostProcess
+from .transformer import darknet_tan_backbone
 
-__all__ = ['YOLO', 'yolov5_darknet_pan_s_r31', 'yolov5_darknet_pan_m_r31', 'yolov5_darknet_pan_l_r31',
-           'yolov5_darknet_pan_s_r40', 'yolov5_darknet_pan_m_r40', 'yolov5_darknet_pan_l_r40',
-           'yolov5_darknet_tan_s_r40', '_yolov5_darknet_pan']
+__all__ = [
+    "YOLO",
+    "yolov5_darknet_pan_s_r31",
+    "yolov5_darknet_pan_m_r31",
+    "yolov5_darknet_pan_l_r31",
+    "yolov5_darknet_pan_s_r40",
+    "yolov5_darknet_pan_m_r40",
+    "yolov5_darknet_pan_l_r40",
+    "yolov5_darknet_tan_s_r40",
+    "_yolov5_darknet_pan",
+]
 
 
 class YOLO(nn.Module):
@@ -45,8 +51,9 @@ class YOLO(nn.Module):
         - labels (``Int64Tensor[N]``): the predicted labels for each image
         - scores (``Tensor[N]``): the scores or each prediction
     """
+
     __annotations__ = {
-        'compute_loss': SetCriterion,
+        "compute_loss": SetCriterion,
     }
 
     def __init__(
@@ -70,7 +77,8 @@ class YOLO(nn.Module):
             raise ValueError(
                 "backbone should contain an attribute out_channels "
                 "specifying the number of output channels (assumed to be the "
-                "same for all the levels)")
+                "same for all the levels)"
+            )
         self.backbone = backbone
 
         strides: List[int] = [8, 16, 32]
@@ -87,13 +95,21 @@ class YOLO(nn.Module):
         self.anchor_generator = anchor_generator
 
         if criterion is None:
-            criterion = SetCriterion(anchor_generator.num_anchors, anchor_generator.strides,
-                                     anchor_generator.anchor_grids, num_classes)
+            criterion = SetCriterion(
+                anchor_generator.num_anchors,
+                anchor_generator.strides,
+                anchor_generator.anchor_grids,
+                num_classes,
+            )
         self.compute_loss = criterion
 
         if head is None:
-            head = YOLOHead(backbone.out_channels, anchor_generator.num_anchors,
-                            anchor_generator.strides, num_classes)
+            head = YOLOHead(
+                backbone.out_channels,
+                anchor_generator.num_anchors,
+                anchor_generator.strides,
+                num_classes,
+            )
         self.head = head
 
         if post_process is None:
@@ -152,25 +168,27 @@ class YOLO(nn.Module):
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLO always returns a (Losses, Detections) tuple in scripting.")
+                warnings.warn(
+                    "YOLO always returns a (Losses, Detections) tuple in scripting."
+                )
                 self._has_warned = True
             return losses, detections
         else:
             return self.eager_outputs(losses, detections)
 
 
-model_urls_root = 'https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0'
+model_urls_root = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
 
 model_urls = {
     # Path Aggregation Network
-    'yolov5_darknet_pan_s_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r31_coco-eb728698.pt',
-    'yolov5_darknet_pan_m_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r31_coco-670dc553.pt',
-    'yolov5_darknet_pan_l_r31_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt',
-    'yolov5_darknet_pan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt',
-    'yolov5_darknet_pan_m_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt',
-    'yolov5_darknet_pan_l_r40_coco': f'{model_urls_root}/yolov5_darknet_pan_l_r40_coco-4416841f.pt',
+    "yolov5_darknet_pan_s_r31_coco": f"{model_urls_root}/yolov5_darknet_pan_s_r31_coco-eb728698.pt",
+    "yolov5_darknet_pan_m_r31_coco": f"{model_urls_root}/yolov5_darknet_pan_m_r31_coco-670dc553.pt",
+    "yolov5_darknet_pan_l_r31_coco": f"{model_urls_root}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt",
+    "yolov5_darknet_pan_s_r40_coco": f"{model_urls_root}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt",
+    "yolov5_darknet_pan_m_r40_coco": f"{model_urls_root}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt",
+    "yolov5_darknet_pan_l_r40_coco": f"{model_urls_root}/yolov5_darknet_pan_l_r40_coco-4416841f.pt",
     # Tranformer Attention Network
-    'yolov5_darknet_tan_s_r40_coco': f'{model_urls_root}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt',
+    "yolov5_darknet_tan_s_r40_coco": f"{model_urls_root}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt",
 }
 
 
@@ -199,141 +217,231 @@ def _yolov5_darknet_pan(
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone = darknet_pan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
+    backbone = darknet_pan_backbone(
+        backbone_name, depth_multiple, width_multiple, version=version
+    )
 
     model = YOLO(backbone, num_classes, **kwargs)
     if pretrained:
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
-        state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
+        state_dict = load_state_dict_from_url(
+            model_urls[weights_name], progress=progress
+        )
         model.load_state_dict(state_dict)
 
     return model
 
 
-def yolov5_darknet_pan_s_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> YOLO:
+def yolov5_darknet_pan_s_r31(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     r"""yolov5 small release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = 'darknet_s_r3_1'
-    weights_name = 'yolov5_darknet_pan_s_r31_coco'
+    backbone_name = "darknet_s_r3_1"
+    weights_name = "yolov5_darknet_pan_s_r31_coco"
     depth_multiple = 0.33
     width_multiple = 0.5
-    version = 'r3.1'
-    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    version = "r3.1"
+    return _yolov5_darknet_pan(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
 
 
-def yolov5_darknet_pan_m_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> YOLO:
+def yolov5_darknet_pan_m_r31(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     r"""yolov5 medium release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = 'darknet_m_r3_1'
-    weights_name = 'yolov5_darknet_pan_m_r31_coco'
+    backbone_name = "darknet_m_r3_1"
+    weights_name = "yolov5_darknet_pan_m_r31_coco"
     depth_multiple = 0.67
     width_multiple = 0.75
-    version = 'r3.1'
-    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    version = "r3.1"
+    return _yolov5_darknet_pan(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
 
 
-def yolov5_darknet_pan_l_r31(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> YOLO:
+def yolov5_darknet_pan_l_r31(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     r"""yolov5 large release 3.1 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = 'darknet_l_r3_1'
-    weights_name = 'yolov5_darknet_pan_l_r31_coco'
+    backbone_name = "darknet_l_r3_1"
+    weights_name = "yolov5_darknet_pan_l_r31_coco"
     depth_multiple = 1.0
     width_multiple = 1.0
-    version = 'r3.1'
-    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    version = "r3.1"
+    return _yolov5_darknet_pan(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
 
 
-def yolov5_darknet_pan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> YOLO:
+def yolov5_darknet_pan_s_r40(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     r"""yolov5 small release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = 'darknet_s_r4_0'
-    weights_name = 'yolov5_darknet_pan_s_r40_coco'
+    backbone_name = "darknet_s_r4_0"
+    weights_name = "yolov5_darknet_pan_s_r40_coco"
     depth_multiple = 0.33
     width_multiple = 0.5
-    version = 'r4.0'
-    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    version = "r4.0"
+    return _yolov5_darknet_pan(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
 
 
-def yolov5_darknet_pan_m_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> YOLO:
+def yolov5_darknet_pan_m_r40(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     r"""yolov5 medium release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = 'darknet_m_r4_0'
-    weights_name = 'yolov5_darknet_pan_m_r40_coco'
+    backbone_name = "darknet_m_r4_0"
+    weights_name = "yolov5_darknet_pan_m_r40_coco"
     depth_multiple = 0.67
     width_multiple = 0.75
-    version = 'r4.0'
-    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    version = "r4.0"
+    return _yolov5_darknet_pan(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
 
 
-def yolov5_darknet_pan_l_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> YOLO:
+def yolov5_darknet_pan_l_r40(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     r"""yolov5 large release 4.0 model from
     `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = 'darknet_l_r4_0'
-    weights_name = 'yolov5_darknet_pan_l_r40_coco'
+    backbone_name = "darknet_l_r4_0"
+    weights_name = "yolov5_darknet_pan_l_r40_coco"
     depth_multiple = 1.0
     width_multiple = 1.0
-    version = 'r4.0'
-    return _yolov5_darknet_pan(backbone_name, depth_multiple, width_multiple, version, weights_name,
-                               pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+    version = "r4.0"
+    return _yolov5_darknet_pan(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
 
 
-def yolov5_darknet_tan_s_r40(pretrained: bool = False, progress: bool = True, num_classes: int = 80,
-                             **kwargs: Any) -> YOLO:
+def yolov5_darknet_tan_s_r40(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
     r"""yolov5 small with a transformer block model from
     `"dingyiwei/yolov5" <https://github.com/ultralytics/yolov5/pull/2333>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = 'darknet_s_r4_0'
-    weights_name = 'yolov5_darknet_tan_s_r40_coco'
+    backbone_name = "darknet_s_r4_0"
+    weights_name = "yolov5_darknet_tan_s_r40_coco"
     depth_multiple = 0.33
     width_multiple = 0.5
-    version = 'r4.0'
+    version = "r4.0"
 
-    backbone = darknet_tan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
+    backbone = darknet_tan_backbone(
+        backbone_name, depth_multiple, width_multiple, version=version
+    )
 
     model = YOLO(backbone, num_classes, **kwargs)
     if pretrained:
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
-        state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
+        state_dict = load_state_dict_from_url(
+            model_urls[weights_name], progress=progress
+        )
         model.load_state_dict(state_dict)
 
     return model

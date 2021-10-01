@@ -92,9 +92,9 @@ There are no extra compiled components in `yolort` and package dependencies are 
   model.eval()
 
   # Perform inference on an image file
-  predictions = model.predict('bus.jpg')
+  predictions = model.predict("bus.jpg")
   # Perform inference on a list of image files
-  predictions = model.predict(['bus.jpg', 'zidane.jpg'])
+  predictions = model.predict(["bus.jpg", "zidane.jpg"])
   ```
 
 ### Loading via `torch.hub`
@@ -102,7 +102,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
 
 ```python
-model = torch.hub.load('zhiqwang/yolov5-rt-stack', 'yolov5s', pretrained=True)
+model = torch.hub.load("zhiqwang/yolov5-rt-stack", "yolov5s", pretrained=True)
 ```
 
 ### Loading checkpoint from official yolov5
@@ -113,11 +113,11 @@ The following is the interface for loading the checkpoint weights trained with `
 from yolort.models import YOLOv5
 
 # 'yolov5s.pt' is downloaded from https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s.pt
-ckpt_path_from_ultralytics = 'yolov5s.pt'
+ckpt_path_from_ultralytics = "yolov5s.pt"
 model = YOLOv5.load_from_yolov5(ckpt_path_from_ultralytics, score_thresh=0.25)
 
 model.eval()
-img_path = 'test/assets/bus.jpg'
+img_path = "test/assets/bus.jpg"
 predictions = model.predict(img_path)
 ```
 

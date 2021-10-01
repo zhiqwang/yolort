@@ -1,16 +1,15 @@
 """
 Test for exporting model to ONNX and inference with ONNXRuntime
 """
-from pathlib import Path
 import io
-import pytest
-from PIL import Image
+from pathlib import Path
 
+import pytest
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision import transforms
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
-
 from yolort import models
 
 # In environments without onnxruntime we prefer to
@@ -23,9 +22,16 @@ class TestONNXExporter:
     def setUpClass(cls):
         torch.manual_seed(123)
 
-    def run_model(self, model, inputs_list, tolerate_small_mismatch=False,
-                  do_constant_folding=True, dynamic_axes=None,
-                  output_names=None, input_names=None):
+    def run_model(
+        self,
+        model,
+        inputs_list,
+        tolerate_small_mismatch=False,
+        do_constant_folding=True,
+        dynamic_axes=None,
+        output_names=None,
+        input_names=None,
+    ):
         """
         The core part of exporting model to ONNX and inference with ONNXRuntime
         Copy-paste from <https://github.com/pytorch/vision/blob/07fb8ba/test/test_onnx.py#L34>
@@ -56,7 +62,9 @@ class TestONNXExporter:
                 test_ouputs = model(*test_inputs)
                 if isinstance(test_ouputs, Tensor):
                     test_ouputs = (test_ouputs,)
-            self.ort_validate(onnx_io, test_inputs, test_ouputs, tolerate_small_mismatch)
+            self.ort_validate(
+                onnx_io, test_inputs, test_ouputs, tolerate_small_mismatch
+            )
 
     def ort_validate(self, onnx_io, inputs, outputs, tolerate_small_mismatch=False):
 
@@ -74,12 +82,16 @@ class TestONNXExporter:
 
         ort_session = onnxruntime.InferenceSession(onnx_io.getvalue())
         # compute onnxruntime output prediction
-        ort_inputs = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))
+        ort_inputs = dict(
+            (ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs)
+        )
         ort_outs = ort_session.run(None, ort_inputs)
 
         for i in range(0, len(outputs)):
             try:
-                torch.testing.assert_close(outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05)
+                torch.testing.assert_close(
+                    outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05
+                )
             except AssertionError as error:
                 if tolerate_small_mismatch:
                     self.assertIn("(0.00%)", str(error), str(error))
@@ -94,14 +106,19 @@ class TestONNXExporter:
         return transforms.ToTensor()(image)
 
     def get_test_images(self):
-        return ([self.get_image("bus.jpg", (416, 320))],
-                [self.get_image("zidane.jpg", (352, 480))])
+        return (
+            [self.get_image("bus.jpg", (416, 320))],
+            [self.get_image("zidane.jpg", (352, 480))],
+        )
 
-    @pytest.mark.parametrize('arch, upstream_version', [
-        ('yolov5s', 'r3.1'),
-        ('yolov5m', 'r4.0'),
-        # ('yolotr', 'r4.0'),
-    ])
+    @pytest.mark.parametrize(
+        "arch, upstream_version",
+        [
+            ("yolov5s", "r3.1"),
+            ("yolov5m", "r4.0"),
+            # ('yolotr', 'r4.0'),
+        ],
+    )
     def test_yolort_export_onnx(self, arch, upstream_version):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 100, 100) * 0.3]
@@ -116,12 +133,20 @@ class TestONNXExporter:
         model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input
-        self.run_model(model, [(images_one,), (images_two,), (images_dummy,)], input_names=["images_tensors"],
-                       output_names=["outputs"],
-                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
-                       tolerate_small_mismatch=True)
+        self.run_model(
+            model,
+            [(images_one,), (images_two,), (images_dummy,)],
+            input_names=["images_tensors"],
+            output_names=["outputs"],
+            dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
+            tolerate_small_mismatch=True,
+        )
         # Test exported model for an image with no detections on other images
-        self.run_model(model, [(images_dummy,), (images_one,)], input_names=["images_tensors"],
-                       output_names=["outputs"],
-                       dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
-                       tolerate_small_mismatch=True)
+        self.run_model(
+            model,
+            [(images_dummy,), (images_one,)],
+            input_names=["images_tensors"],
+            output_names=["outputs"],
+            dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
+            tolerate_small_mismatch=True,
+        )

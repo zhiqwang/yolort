@@ -24,25 +24,36 @@ from PIL import Image, ExifTags
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from .augmentations import (Albumentations, augment_hsv, copy_paste,
-                            letterbox, mixup, random_perspective)
-
-from .general import (check_file, check_dataset, xywh2xyxy, xywhn2xyxy,
-                      xyxy2xywhn, xyn2xy, segments2boxes)
-
+from .augmentations import (
+    Albumentations,
+    augment_hsv,
+    copy_paste,
+    letterbox,
+    mixup,
+    random_perspective,
+)
+from .general import (
+    check_file,
+    check_dataset,
+    xywh2xyxy,
+    xywhn2xyxy,
+    xyxy2xywhn,
+    xyn2xy,
+    segments2boxes,
+)
 from .torch_utils import torch_distributed_zero_first
 
 # Parameters
-HELP_URL = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'
+HELP_URL = "https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data"
 # acceptable image suffixes
-IMG_FORMATS = ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff', 'dng', 'webp', 'mpo']
+IMG_FORMATS = ["bmp", "jpg", "jpeg", "png", "tif", "tiff", "dng", "webp", "mpo"]
 # acceptable video suffixes
-VID_FORMATS = ['mov', 'avi', 'mp4', 'mpg', 'mpeg', 'm4v', 'wmv', 'mkv']
+VID_FORMATS = ["mov", "avi", "mp4", "mpg", "mpeg", "m4v", "wmv", "mkv"]
 NUM_THREADS = min(8, os.cpu_count())  # number of multiprocessing threads
 
 # Get orientation exif tag
 for orientation in ExifTags.TAGS.keys():
-    if ExifTags.TAGS[orientation] == 'Orientation':
+    if ExifTags.TAGS[orientation] == "Orientation":
         break
 
 
@@ -50,7 +61,7 @@ def get_hash(paths):
     # Returns a single hash value of a list of paths (files or dirs)
     size = sum(os.path.getsize(p) for p in paths if os.path.exists(p))  # sizes
     h = hashlib.md5(str(size).encode())  # hash sizes
-    h.update(''.join(paths).encode())  # hash paths
+    h.update("".join(paths).encode())  # hash paths
     return h.hexdigest()  # return hash
 
 
@@ -63,7 +74,7 @@ def exif_size(img):
             s = (s[1], s[0])
         elif rotation == 8:  # rotation 90
             s = (s[1], s[0])
-    except:
+    except KeyError:
         pass
 
     return s
@@ -80,14 +91,15 @@ def exif_transpose(image):
     exif = image.getexif()
     orientation = exif.get(0x0112, 1)  # default 1
     if orientation > 1:
-        method = {2: Image.FLIP_LEFT_RIGHT,
-                  3: Image.ROTATE_180,
-                  4: Image.FLIP_TOP_BOTTOM,
-                  5: Image.TRANSPOSE,
-                  6: Image.ROTATE_270,
-                  7: Image.TRANSVERSE,
-                  8: Image.ROTATE_90,
-                  }.get(orientation)
+        method = {
+            2: Image.FLIP_LEFT_RIGHT,
+            3: Image.ROTATE_180,
+            4: Image.FLIP_TOP_BOTTOM,
+            5: Image.TRANSPOSE,
+            6: Image.ROTATE_270,
+            7: Image.TRANSVERSE,
+            8: Image.ROTATE_90,
+        }.get(orientation)
         if method is not None:
             image = image.transpose(method)
             del exif[0x0112]
@@ -95,10 +107,23 @@ def exif_transpose(image):
     return image
 
 
-def create_dataloader(path, imgsz, batch_size, stride, single_cls=False,
-                      hyp=None, augment=False, cache=False, pad=0.0,
-                      rect=False, rank=-1, workers=8, image_weights=False,
-                      quad=False, prefix=''):
+def create_dataloader(
+    path,
+    imgsz,
+    batch_size,
+    stride,
+    single_cls=False,
+    hyp=None,
+    augment=False,
+    cache=False,
+    pad=0.0,
+    rect=False,
+    rank=-1,
+    workers=8,
+    image_weights=False,
+    quad=False,
+    prefix="",
+):
     # Make sure only the first process in DDP process the dataset first, and
     # the following others can use the cache
     with torch_distributed_zero_first(rank):
@@ -118,8 +143,12 @@ def create_dataloader(path, imgsz, batch_size, stride, single_cls=False,
         )
 
     batch_size = min(batch_size, len(dataset))
-    nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, workers])  # number of workers
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset) if rank != -1 else None
+    nw = min(
+        [os.cpu_count(), batch_size if batch_size > 1 else 0, workers]
+    )  # number of workers
+    sampler = (
+        torch.utils.data.distributed.DistributedSampler(dataset) if rank != -1 else None
+    )
     loader = torch.utils.data.DataLoader if image_weights else InfiniteDataLoader
     # Use torch.utils.data.DataLoader() if dataset.properties will update
     # during training else InfiniteDataLoader()
@@ -129,20 +158,22 @@ def create_dataloader(path, imgsz, batch_size, stride, single_cls=False,
         num_workers=nw,
         sampler=sampler,
         pin_memory=True,
-        collate_fn=LoadImagesAndLabels.collate_fn4 if quad else LoadImagesAndLabels.collate_fn,
+        collate_fn=LoadImagesAndLabels.collate_fn4
+        if quad
+        else LoadImagesAndLabels.collate_fn,
     )
     return dataloader, dataset
 
 
 class InfiniteDataLoader(torch.utils.data.dataloader.DataLoader):
-    """ Dataloader that reuses workers
+    """Dataloader that reuses workers
 
     Uses same syntax as vanilla DataLoader
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        object.__setattr__(self, 'batch_sampler', _RepeatSampler(self.batch_sampler))
+        object.__setattr__(self, "batch_sampler", _RepeatSampler(self.batch_sampler))
         self.iterator = super().__iter__()
 
     def __len__(self):
@@ -154,7 +185,7 @@ class InfiniteDataLoader(torch.utils.data.dataloader.DataLoader):
 
 
 class _RepeatSampler(object):
-    """ Sampler that repeats forever
+    """Sampler that repeats forever
 
     Args:
         sampler (Sampler)
@@ -171,17 +202,17 @@ class _RepeatSampler(object):
 class LoadImages:  # for inference
     def __init__(self, path, img_size=640, stride=32, auto=True):
         p = str(Path(path).absolute())  # os-agnostic absolute path
-        if '*' in p:
+        if "*" in p:
             files = sorted(glob.glob(p, recursive=True))  # glob
         elif os.path.isdir(p):
-            files = sorted(glob.glob(os.path.join(p, '*.*')))  # dir
+            files = sorted(glob.glob(os.path.join(p, "*.*")))  # dir
         elif os.path.isfile(p):
             files = [p]  # files
         else:
-            raise Exception(f'ERROR: {p} does not exist')
+            raise Exception(f"ERROR: {p} does not exist")
 
-        images = [x for x in files if x.split('.')[-1].lower() in IMG_FORMATS]
-        videos = [x for x in files if x.split('.')[-1].lower() in VID_FORMATS]
+        images = [x for x in files if x.split(".")[-1].lower() in IMG_FORMATS]
+        videos = [x for x in files if x.split(".")[-1].lower() in VID_FORMATS]
         ni, nv = len(images), len(videos)
 
         self.img_size = img_size
@@ -189,14 +220,16 @@ class LoadImages:  # for inference
         self.files = images + videos
         self.nf = ni + nv  # number of files
         self.video_flag = [False] * ni + [True] * nv
-        self.mode = 'image'
+        self.mode = "image"
         self.auto = auto
         if any(videos):
             self.new_video(videos[0])  # new video
         else:
             self.cap = None
-        assert self.nf > 0, (f'No images or videos found in {p}. '
-                             f'Supported formats are:\nimages: {IMG_FORMATS}\nvideos: {VID_FORMATS}')
+        assert self.nf > 0, (
+            f"No images or videos found in {p}. "
+            f"Supported formats are:\nimages: {IMG_FORMATS}\nvideos: {VID_FORMATS}"
+        )
 
     def __iter__(self):
         self.count = 0
@@ -209,7 +242,7 @@ class LoadImages:  # for inference
 
         if self.video_flag[self.count]:
             # Read video
-            self.mode = 'video'
+            self.mode = "video"
             ret_val, img0 = self.cap.read()
             if not ret_val:
                 self.count += 1
@@ -222,14 +255,17 @@ class LoadImages:  # for inference
                     ret_val, img0 = self.cap.read()
 
             self.frame += 1
-            print(f'video {self.count + 1}/{self.nf} ({self.frame}/{self.frames}) {path}: ', end='')
+            print(
+                f"video {self.count + 1}/{self.nf} ({self.frame}/{self.frames}) {path}: ",
+                end="",
+            )
 
         else:
             # Read image
             self.count += 1
             img0 = cv2.imread(path)  # BGR
-            assert img0 is not None, 'Image Not Found ' + path
-            print(f'image {self.count}/{self.nf} {path}: ', end='')
+            assert img0 is not None, "Image Not Found " + path
+            print(f"image {self.count}/{self.nf} {path}: ", end="")
 
         # Padded resize
         img = letterbox(img0, self.img_size, stride=self.stride, auto=self.auto)[0]
@@ -251,15 +287,29 @@ class LoadImages:  # for inference
 
 def img2label_paths(img_paths):
     # Define label paths as a function of image paths
-    sa, sb = os.sep + 'images' + os.sep, os.sep + 'labels' + os.sep  # /images/, /labels/ substrings
-    return [sb.join(x.rsplit(sa, 1)).rsplit('.', 1)[0] + '.txt' for x in img_paths]
+    sa, sb = (
+        os.sep + "images" + os.sep,
+        os.sep + "labels" + os.sep,
+    )  # /images/, /labels/ substrings
+    return [sb.join(x.rsplit(sa, 1)).rsplit(".", 1)[0] + ".txt" for x in img_paths]
 
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
-    def __init__(self, path, img_size=640, batch_size=16, augment=False,
-                 hyp=None, rect=False, image_weights=False,
-                 cache_images=False, single_cls=False, stride=32,
-                 pad=0.0, prefix=''):
+    def __init__(
+        self,
+        path,
+        img_size=640,
+        batch_size=16,
+        augment=False,
+        hyp=None,
+        rect=False,
+        image_weights=False,
+        cache_images=False,
+        single_cls=False,
+        stride=32,
+        pad=0.0,
+        prefix="",
+    ):
         self.img_size = img_size
         self.augment = augment
         self.hyp = hyp
@@ -277,46 +327,69 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             for p in path if isinstance(path, list) else [path]:
                 p = Path(p)  # os-agnostic
                 if p.is_dir():  # dir
-                    f += glob.glob(str(p / '**' / '*.*'), recursive=True)
+                    f += glob.glob(str(p / "**" / "*.*"), recursive=True)
                     # f = list(p.rglob('**/*.*'))  # pathlib
                 elif p.is_file():  # file
-                    with open(p, 'r') as t:
+                    with open(p, "r") as t:
                         t = t.read().strip().splitlines()
                         parent = str(p.parent) + os.sep
                         # local to global path
-                        f += [x.replace('./', parent) if x.startswith('./') else x for x in t]
+                        f += [
+                            x.replace("./", parent) if x.startswith("./") else x
+                            for x in t
+                        ]
                         # f += [p.parent / x.lstrip(os.sep) for x in t]  # local to global path (pathlib)
                 else:
-                    raise Exception(f'{prefix}{p} does not exist')
+                    raise Exception(f"{prefix}{p} does not exist")
             self.img_files = sorted(
-                [x.replace('/', os.sep) for x in f if x.split('.')[-1].lower() in IMG_FORMATS])
+                [
+                    x.replace("/", os.sep)
+                    for x in f
+                    if x.split(".")[-1].lower() in IMG_FORMATS
+                ]
+            )
             # self.img_files = sorted([x for x in f if x.suffix[1:].lower() in img_formats])  # pathlib
-            assert self.img_files, f'{prefix}No images found'
+            assert self.img_files, f"{prefix}No images found"
         except Exception as e:
-            raise Exception(f'{prefix}Error loading data from {path}: {e}\nSee {HELP_URL}')
+            raise Exception(
+                f"{prefix}Error loading data from {path}: {e}\nSee {HELP_URL}"
+            )
 
         # Check cache
         self.label_files = img2label_paths(self.img_files)  # labels
-        cache_path = (p if p.is_file() else Path(self.label_files[0]).parent).with_suffix('.cache')
+        cache_path = (
+            p if p.is_file() else Path(self.label_files[0]).parent
+        ).with_suffix(".cache")
         try:
-            cache, exists = np.load(cache_path, allow_pickle=True).item(), True  # load dict
-            assert cache['version'] == 0.4 and cache['hash'] == get_hash(self.label_files + self.img_files)
-        except:
+            cache, exists = (
+                np.load(cache_path, allow_pickle=True).item(),
+                True,
+            )  # load dict
+            assert cache["version"] == 0.4 and cache["hash"] == get_hash(
+                self.label_files + self.img_files
+            )
+        except AssertionError:
             cache, exists = self.cache_labels(cache_path, prefix), False  # cache
 
         # Display cache
-        nf, nm, ne, nc, n = cache.pop('results')  # found, missing, empty, corrupted, total
+        nf, nm, ne, nc, n = cache.pop(
+            "results"
+        )  # found, missing, empty, corrupted, total
         if exists:
-            d = (f"Scanning '{cache_path}' images and labels... {nf} found, "
-                 f"{nm} missing, {ne} empty, {nc} corrupted")
+            d = (
+                f"Scanning '{cache_path}' images and labels... {nf} found, "
+                f"{nm} missing, {ne} empty, {nc} corrupted"
+            )
             tqdm(None, desc=prefix + d, total=n, initial=n)  # display cache results
-            if cache['msgs']:
-                logging.info('\n'.join(cache['msgs']))  # display warnings
-        assert nf > 0 or not augment, (f'{prefix}No labels in {cache_path}. '
-                                       f'Can not train without labels. See {HELP_URL}')
+            if cache["msgs"]:
+                logging.info("\n".join(cache["msgs"]))  # display warnings
+        assert nf > 0 or not augment, (
+            f"{prefix}No labels in {cache_path}. "
+            f"Can not train without labels. See {HELP_URL}"
+        )
 
         # Read cache
-        [cache.pop(k) for k in ('hash', 'version', 'msgs')]  # remove items
+        [cache.pop(k) for k in ("hash", "version", "msgs")]  # remove items
         labels, shapes, self.segments = zip(*cache.values())
         self.labels = list(labels)
         self.shapes = np.array(shapes, dtype=np.float64)
@@ -355,23 +428,32 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 elif mini > 1:
                     shapes[i] = [1, 1 / mini]
 
-            self.batch_shapes = np.ceil(np.array(shapes) * img_size / stride + pad).astype(np.int) * stride
+            self.batch_shapes = (
+                np.ceil(np.array(shapes) * img_size / stride + pad).astype(np.int)
+                * stride
+            )
 
         # Cache images into memory for faster training (WARNING: large datasets may exceed system RAM)
         self.imgs, self.img_npy = [None] * n, [None] * n
         if cache_images:
-            if cache_images == 'disk':
-                self.im_cache_dir = Path(Path(self.img_files[0]).parent.as_posix() + '_npy')
+            if cache_images == "disk":
+                self.im_cache_dir = Path(
+                    Path(self.img_files[0]).parent.as_posix() + "_npy"
+                )
                 self.img_npy = [
-                    self.im_cache_dir / Path(f).with_suffix('.npy').name for f in self.img_files]
+                    self.im_cache_dir / Path(f).with_suffix(".npy").name
+                    for f in self.img_files
+                ]
 
                 self.im_cache_dir.mkdir(parents=True, exist_ok=True)
             gb = 0  # Gigabytes of cached images
             self.img_hw0, self.img_hw = [None] * n, [None] * n
-            results = ThreadPool(NUM_THREADS).imap(lambda x: load_image(*x), zip(repeat(self), range(n)))
+            results = ThreadPool(NUM_THREADS).imap(
+                lambda x: load_image(*x), zip(repeat(self), range(n))
+            )
             pbar = tqdm(enumerate(results), total=n)
             for i, x in pbar:
-                if cache_images == 'disk':
+                if cache_images == "disk":
                     if not self.img_npy[i].exists():
                         np.save(self.img_npy[i].as_posix(), x[0])
                     gb += self.img_npy[i].stat().st_size
@@ -379,18 +461,25 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     # im, hw_orig, hw_resized = load_image(self, i)
                     self.imgs[i], self.img_hw0[i], self.img_hw[i] = x
                     gb += self.imgs[i].nbytes
-                pbar.desc = f'{prefix}Caching images ({gb / 1E9:.1f}GB {cache_images})'
+                pbar.desc = f"{prefix}Caching images ({gb / 1E9:.1f}GB {cache_images})"
             pbar.close()
 
-    def cache_labels(self, path=Path('./labels.cache'), prefix=''):
+    def cache_labels(self, path=Path("./labels.cache"), prefix=""):
         # Cache dataset labels, check images and read shapes
         x = {}  # dict
-        nm, nf, ne, nc, msgs = 0, 0, 0, 0, []  # number missing, found, empty, corrupt, messages
+        nm, nf, ne, nc, msgs = (
+            0,
+            0,
+            0,
+            0,
+            [],
+        )  # number missing, found, empty, corrupt, messages
         desc = f"{prefix}Scanning '{path.parent / path.stem}' images and labels..."
         with Pool(NUM_THREADS) as pool:
             pbar = tqdm(
                 pool.imap_unordered(
-                    verify_image_label, zip(self.img_files, self.label_files, repeat(prefix)),
+                    verify_image_label,
+                    zip(self.img_files, self.label_files, repeat(prefix)),
                 ),
                 desc=desc,
                 total=len(self.img_files),
@@ -404,28 +493,32 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     x[im_file] = [l, shape, segments]
                 if msg:
                     msgs.append(msg)
-                pbar.desc = f"{desc}{nf} found, {nm} missing, {ne} empty, {nc} corrupted"
+                pbar.desc = (
+                    f"{desc}{nf} found, {nm} missing, {ne} empty, {nc} corrupted"
+                )
 
         pbar.close()
         if msgs:
-            logging.info('\n'.join(msgs))
+            logging.info("\n".join(msgs))
         if nf == 0:
-            logging.info(f'{prefix}WARNING: No labels found in {path}. See {HELP_URL}')
-        x['hash'] = get_hash(self.label_files + self.img_files)
-        x['results'] = nf, nm, ne, nc, len(self.img_files)
+            logging.info(f"{prefix}WARNING: No labels found in {path}. See {HELP_URL}")
+        x["hash"] = get_hash(self.label_files + self.img_files)
+        x["results"] = nf, nm, ne, nc, len(self.img_files)
         # warnings
-        x['msgs'] = msgs
+        x["msgs"] = msgs
         # cache version
-        x['version'] = 0.4
+        x["version"] = 0.4
         try:
             # save cache for next time
             np.save(path, x)
             # remove .npy suffix
-            path.with_suffix('.cache.npy').rename(path)
-            logging.info(f'{prefix}New cache created: {path}')
+            path.with_suffix(".cache.npy").rename(path)
+            logging.info(f"{prefix}New cache created: {path}")
         except Exception as e:
             # path not writeable
-            logging.info(f'{prefix}WARNING: Cache directory {path.parent} is not writeable: {e}')
+            logging.info(
+                f"{prefix}WARNING: Cache directory {path.parent} is not writeable: {e}"
+            )
         return x
 
     def __len__(self):
@@ -436,15 +529,17 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         index = self.indices[index]
 
         hyp = self.hyp
-        mosaic = self.mosaic and random.random() < hyp['mosaic']
+        mosaic = self.mosaic and random.random() < hyp["mosaic"]
         if mosaic:
             # Load mosaic
             img, labels = load_mosaic(self, index)
             shapes = None
 
             # MixUp augmentation
-            if random.random() < hyp['mixup']:
-                img, labels = mixup(img, labels, *load_mosaic(self, random.randint(0, self.n - 1)))
+            if random.random() < hyp["mixup"]:
+                img, labels = mixup(
+                    img, labels, *load_mosaic(self, random.randint(0, self.n - 1))
+                )
 
         else:
             # Load image
@@ -461,24 +556,26 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             # normalized xywh to pixel xyxy format
             if labels.size:
                 labels[:, 1:] = xywhn2xyxy(
-                    labels[:, 1:], ratio[0] * w, ratio[1] * h, padw=pad[0], padh=pad[1])
+                    labels[:, 1:], ratio[0] * w, ratio[1] * h, padw=pad[0], padh=pad[1]
+                )
 
             if self.augment:
                 img, labels = random_perspective(
                     img,
                     labels,
-                    degrees=hyp['degrees'],
-                    translate=hyp['translate'],
-                    scale=hyp['scale'],
-                    shear=hyp['shear'],
-                    perspective=hyp['perspective'],
+                    degrees=hyp["degrees"],
+                    translate=hyp["translate"],
+                    scale=hyp["scale"],
+                    shear=hyp["shear"],
+                    perspective=hyp["perspective"],
                 )
 
         # number of labels
         nl = len(labels)
         if nl:
             labels[:, 1:5] = xyxy2xywhn(
-                labels[:, 1:5], w=img.shape[1], h=img.shape[0], clip=True, eps=1E-3)
+                labels[:, 1:5], w=img.shape[1], h=img.shape[0], clip=True, eps=1e-3
+            )
 
         if self.augment:
             # Albumentations
@@ -487,16 +584,16 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             nl = len(labels)
 
             # HSV color-space
-            augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
+            augment_hsv(img, hgain=hyp["hsv_h"], sgain=hyp["hsv_s"], vgain=hyp["hsv_v"])
 
             # Flip up-down
-            if random.random() < hyp['flipud']:
+            if random.random() < hyp["flipud"]:
                 img = np.flipud(img)
                 if nl:
                     labels[:, 2] = 1 - labels[:, 2]
 
             # Flip left-right
-            if random.random() < hyp['fliplr']:
+            if random.random() < hyp["fliplr"]:
                 img = np.fliplr(img)
                 if nl:
                     labels[:, 1] = 1 - labels[:, 1]
@@ -527,27 +624,40 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         n = len(shapes) // 4
         img4, label4, path4, shapes4 = [], [], path[:n], shapes[:n]
 
-        ho = torch.tensor([[0., 0, 0, 1, 0, 0]])
-        wo = torch.tensor([[0., 0, 1, 0, 0, 0]])
-        s = torch.tensor([[1, 1, .5, .5, .5, .5]])  # scale
+        ho = torch.tensor([[0.0, 0, 0, 1, 0, 0]])
+        wo = torch.tensor([[0.0, 0, 1, 0, 0, 0]])
+        s = torch.tensor([[1, 1, 0.5, 0.5, 0.5, 0.5]])  # scale
         for i in range(n):  # zidane torch.zeros(16,3,720,1280)  # BCHW
             i *= 4
             if random.random() < 0.5:
                 im = F.interpolate(
                     img[i].unsqueeze(0).float(),
-                    scale_factor=2.,
-                    mode='bilinear',
+                    scale_factor=2.0,
+                    mode="bilinear",
                     align_corners=False,
                 )[0].type(img[i].type())
 
                 l = label[i]
             else:
-                im = torch.cat((
-                    torch.cat((img[i], img[i + 1]), 1), torch.cat((img[i + 2], img[i + 3]), 1),
-                ), 2)
-                l = torch.cat((
-                    label[i], label[i + 1] + ho, label[i + 2] + wo, label[i + 3] + ho + wo,
-                ), 0) * s
+                im = torch.cat(
+                    (
+                        torch.cat((img[i], img[i + 1]), 1),
+                        torch.cat((img[i + 2], img[i + 3]), 1),
+                    ),
+                    2,
+                )
+                l = (
+                    torch.cat(
+                        (
+                            label[i],
+                            label[i + 1] + ho,
+                            label[i + 2] + wo,
+                            label[i + 3] + ho + wo,
+                        ),
+                        0,
+                    )
+                    * s
+                )
             img4.append(im)
             label4.append(l)
 
@@ -568,18 +678,24 @@ def load_image(self, i):
         else:  # read image
             path = self.img_files[i]
             im = cv2.imread(path)  # BGR
-            assert im is not None, 'Image Not Found ' + path
+            assert im is not None, "Image Not Found " + path
         h0, w0 = im.shape[:2]  # orig hw
         r = self.img_size / max(h0, w0)  # ratio
         if r != 1:  # if sizes are not equal
             im = cv2.resize(
                 im,
                 (int(w0 * r), int(h0 * r)),
-                interpolation=cv2.INTER_AREA if r < 1 and not self.augment else cv2.INTER_LINEAR,
+                interpolation=cv2.INTER_AREA
+                if r < 1 and not self.augment
+                else cv2.INTER_LINEAR,
             )
         return im, (h0, w0), im.shape[:2]  # im, hw_original, hw_resized
     else:
-        return self.imgs[i], self.img_hw0[i], self.img_hw[i]  # im, hw_original, hw_resized
+        return (
+            self.imgs[i],
+            self.img_hw0[i],
+            self.img_hw[i],
+        )  # im, hw_original, hw_resized
 
 
 def load_mosaic(self, index):
@@ -587,7 +703,9 @@ def load_mosaic(self, index):
 
     labels4, segments4 = [], []
     s = self.img_size
-    yc, xc = [int(random.uniform(-x, 2 * s + x)) for x in self.mosaic_border]  # mosaic center x, y
+    yc, xc = [
+        int(random.uniform(-x, 2 * s + x)) for x in self.mosaic_border
+    ]  # mosaic center x, y
     indices = [index] + random.choices(self.indices, k=3)  # 3 additional image indices
     for i, index in enumerate(indices):
         # Load image
@@ -595,7 +713,9 @@ def load_mosaic(self, index):
 
         # place img in img4
         if i == 0:  # top left
-            img4 = np.full((s * 2, s * 2, img.shape[2]), 114, dtype=np.uint8)  # base image with 4 tiles
+            img4 = np.full(
+                (s * 2, s * 2, img.shape[2]), 114, dtype=np.uint8
+            )  # base image with 4 tiles
             # xmin, ymin, xmax, ymax (large image)
             x1a, y1a, x2a, y2a = max(xc - w, 0), max(yc - h, 0), xc, yc
             # xmin, ymin, xmax, ymax (small image)
@@ -630,16 +750,18 @@ def load_mosaic(self, index):
     # img4, labels4 = replicate(img4, labels4)  # replicate
 
     # Augment
-    img4, labels4, segments4 = copy_paste(img4, labels4, segments4, p=self.hyp['copy_paste'])
+    img4, labels4, segments4 = copy_paste(
+        img4, labels4, segments4, p=self.hyp["copy_paste"]
+    )
     img4, labels4 = random_perspective(
         img4,
         labels4,
         segments4,
-        degrees=self.hyp['degrees'],
-        translate=self.hyp['translate'],
-        scale=self.hyp['scale'],
-        shear=self.hyp['shear'],
-        perspective=self.hyp['perspective'],
+        degrees=self.hyp["degrees"],
+        translate=self.hyp["translate"],
+        scale=self.hyp["scale"],
+        shear=self.hyp["shear"],
+        perspective=self.hyp["perspective"],
         border=self.mosaic_border,
     )  # border to remove
 
@@ -652,13 +774,17 @@ def load_mosaic9(self, index):
     labels9, segments9 = [], []
     s = self.img_size
     indices = [index] + random.choices(self.indices, k=8)  # 8 additional image indices
+    hp, wp = 0, 0  # Initialize height, width
+
     for i, index in enumerate(indices):
         # Load image
         img, _, (h, w) = load_image(self, index)
 
         # place img in img9
         if i == 0:  # center
-            img9 = np.full((s * 3, s * 3, img.shape[2]), 114, dtype=np.uint8)  # base image with 4 tiles
+            img9 = np.full(
+                (s * 3, s * 3, img.shape[2]), 114, dtype=np.uint8
+            )  # base image with 4 tiles
             h0, w0 = h, w
             c = s, s, s + w, s + h  # xmin, ymin, xmax, ymax (base) coordinates
         elif i == 1:  # top
@@ -692,12 +818,14 @@ def load_mosaic9(self, index):
 
         # Image
         # img9[ymin:ymax, xmin:xmax]
-        img9[y1:y2, x1:x2] = img[y1 - pady:, x1 - padx:]
+        img9[y1:y2, x1:x2] = img[y1 - pady :, x1 - padx :]
         hp, wp = h, w  # height, width previous
 
     # Offset
-    yc, xc = [int(random.uniform(0, s)) for _ in self.mosaic_border]  # mosaic center x, y
-    img9 = img9[yc:yc + 2 * s, xc:xc + 2 * s]
+    yc, xc = [
+        int(random.uniform(0, s)) for _ in self.mosaic_border
+    ]  # mosaic center x, y
+    img9 = img9[yc : yc + 2 * s, xc : xc + 2 * s]
 
     # Concat/clip labels
     labels9 = np.concatenate(labels9, 0)
@@ -715,37 +843,41 @@ def load_mosaic9(self, index):
         img9,
         labels9,
         segments9,
-        degrees=self.hyp['degrees'],
-        translate=self.hyp['translate'],
-        scale=self.hyp['scale'],
-        shear=self.hyp['shear'],
-        perspective=self.hyp['perspective'],
+        degrees=self.hyp["degrees"],
+        translate=self.hyp["translate"],
+        scale=self.hyp["scale"],
+        shear=self.hyp["shear"],
+        perspective=self.hyp["perspective"],
         border=self.mosaic_border,
     )  # border to remove
 
     return img9, labels9
 
 
-def create_folder(path='./new'):
+def create_folder(path="./new"):
     # Create folder
     if os.path.exists(path):
         shutil.rmtree(path)  # delete output folder
     os.makedirs(path)  # make new output folder
 
 
-def flatten_recursive(path='../datasets/coco128'):
+def flatten_recursive(path="../datasets/coco128"):
     # Flatten a recursive directory by bringing all files to top level
-    new_path = Path(path + '_flat')
+    new_path = Path(path + "_flat")
     create_folder(new_path)
-    for file in tqdm(glob.glob(str(Path(path)) + '/**/*.*', recursive=True)):
+    for file in tqdm(glob.glob(str(Path(path)) + "/**/*.*", recursive=True)):
         shutil.copyfile(file, new_path / Path(file).name)
 
 
-def extract_boxes(path='../datasets/coco128'):  # from utils.datasets import *; extract_boxes()
+def extract_boxes(
+    path="../datasets/coco128",
+):  # from utils.datasets import *; extract_boxes()
     # Convert detection dataset into classification dataset, with one directory per class
     path = Path(path)  # images dir
-    shutil.rmtree(path / 'classifier') if (path / 'classifier').is_dir() else None  # remove existing
-    files = list(path.rglob('*.*'))
+    shutil.rmtree(path / "classifier") if (
+        path / "classifier"
+    ).is_dir() else None  # remove existing
+    files = list(path.rglob("*.*"))
     n = len(files)  # number of files
     for im_file in tqdm(files, total=n):
         if im_file.suffix[1:] in IMG_FORMATS:
@@ -756,7 +888,7 @@ def extract_boxes(path='../datasets/coco128'):  # from utils.datasets import *; 
             # labels
             lb_file = Path(img2label_paths([str(im_file)])[0])
             if Path(lb_file).exists():
-                with open(lb_file, 'r') as f:
+                with open(lb_file, "r") as f:
                     lb = np.array(
                         [x.split() for x in f.read().strip().splitlines()],
                         dtype=np.float32,
@@ -765,7 +897,11 @@ def extract_boxes(path='../datasets/coco128'):  # from utils.datasets import *; 
                 for j, x in enumerate(lb):
                     c = int(x[0])  # class
                     # new filename
-                    f = (path / 'classifier') / f'{c}' / f'{path.stem}_{im_file.stem}_{j}.jpg'
+                    f = (
+                        (path / "classifier")
+                        / f"{c}"
+                        / f"{path.stem}_{im_file.stem}_{j}.jpg"
+                    )
                     if not f.parent.is_dir():
                         f.parent.mkdir(parents=True)
 
@@ -776,11 +912,15 @@ def extract_boxes(path='../datasets/coco128'):  # from utils.datasets import *; 
 
                     b[[0, 2]] = np.clip(b[[0, 2]], 0, w)  # clip boxes outside of image
                     b[[1, 3]] = np.clip(b[[1, 3]], 0, h)
-                    assert cv2.imwrite(str(f), im[b[1]:b[3], b[0]:b[2]]), f'box failure in {f}'
+                    assert cv2.imwrite(
+                        str(f), im[b[1] : b[3], b[0] : b[2]]
+                    ), f"box failure in {f}"
 
 
-def autosplit(path='../datasets/coco128/images', weights=(0.9, 0.1, 0.0), annotated_only=False):
-    """ Autosplit a dataset into train/val/test splits and save path/autosplit_*.txt files
+def autosplit(
+    path="../datasets/coco128/images", weights=(0.9, 0.1, 0.0), annotated_only=False
+):
+    """Autosplit a dataset into train/val/test splits and save path/autosplit_*.txt files
     Usage: from utils.datasets import *; autosplit()
     Arguments
         path:            Path to images directory
@@ -788,58 +928,81 @@ def autosplit(path='../datasets/coco128/images', weights=(0.9, 0.1, 0.0), annota
         annotated_only:  Only use images with an annotated txt file
     """
     path = Path(path)  # images dir
-    files = sum([list(path.rglob(f"*.{img_ext}")) for img_ext in IMG_FORMATS], [])  # image files only
+    files = sum(
+        [list(path.rglob(f"*.{img_ext}")) for img_ext in IMG_FORMATS], []
+    )  # image files only
     n = len(files)  # number of files
     random.seed(0)  # for reproducibility
-    indices = random.choices([0, 1, 2], weights=weights, k=n)  # assign each image to a split
+    indices = random.choices(
+        [0, 1, 2], weights=weights, k=n
+    )  # assign each image to a split
 
-    txt = ['autosplit_train.txt', 'autosplit_val.txt', 'autosplit_test.txt']  # 3 txt files
+    txt = [
+        "autosplit_train.txt",
+        "autosplit_val.txt",
+        "autosplit_test.txt",
+    ]  # 3 txt files
     [(path.parent / x).unlink(missing_ok=True) for x in txt]  # remove existing
 
-    print(f'Autosplitting images from {path}' + ', using *.txt labeled images only' * annotated_only)
+    print(
+        f"Autosplitting images from {path}"
+        + ", using *.txt labeled images only" * annotated_only
+    )
     for i, img in tqdm(zip(indices, files), total=n):
-        if not annotated_only or Path(img2label_paths([str(img)])[0]).exists():  # check label
-            with open(path.parent / txt[i], 'a') as f:
-                f.write('./' + img.relative_to(path.parent).as_posix() + '\n')  # add image to txt file
+        if (
+            not annotated_only or Path(img2label_paths([str(img)])[0]).exists()
+        ):  # check label
+            with open(path.parent / txt[i], "a") as f:
+                f.write(
+                    "./" + img.relative_to(path.parent).as_posix() + "\n"
+                )  # add image to txt file
 
 
 def verify_image_label(args):
     # Verify one image-label pair
     im_file, lb_file, prefix = args
     # number (missing, found, empty, corrupt), message, segments
-    nm, nf, ne, nc, msg, segments = 0, 0, 0, 0, '', []
+    nm, nf, ne, nc, msg, segments = 0, 0, 0, 0, "", []
     try:
         # verify images
         im = Image.open(im_file)
         im.verify()  # PIL verify
         shape = exif_size(im)  # image size
-        assert (shape[0] > 9) & (shape[1] > 9), f'image size {shape} <10 pixels'
-        assert im.format.lower() in IMG_FORMATS, f'invalid image format {im.format}'
-        if im.format.lower() in ('jpg', 'jpeg'):
-            with open(im_file, 'rb') as f:
+        assert (shape[0] > 9) & (shape[1] > 9), f"image size {shape} <10 pixels"
+        assert im.format.lower() in IMG_FORMATS, f"invalid image format {im.format}"
+        if im.format.lower() in ("jpg", "jpeg"):
+            with open(im_file, "rb") as f:
                 f.seek(-2, 2)
-                if f.read() != b'\xff\xd9':  # corrupt JPEG
+                if f.read() != b"\xff\xd9":  # corrupt JPEG
                     # re-save image
-                    Image.open(im_file).save(im_file, format='JPEG', subsampling=0, quality=100)
-                    msg = f'{prefix}WARNING: corrupt JPEG restored and saved {im_file}'
+                    Image.open(im_file).save(
+                        im_file, format="JPEG", subsampling=0, quality=100
+                    )
+                    msg = f"{prefix}WARNING: corrupt JPEG restored and saved {im_file}"
 
         # verify labels
         if os.path.isfile(lb_file):
             nf = 1  # label found
-            with open(lb_file, 'r') as f:
+            with open(lb_file, "r") as f:
                 l = [x.split() for x in f.read().strip().splitlines() if len(x)]
                 if any([len(x) > 8 for x in l]):  # is segment
                     classes = np.array([x[0] for x in l], dtype=np.float32)
                     # (cls, xy1...)
-                    segments = [np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in l]
+                    segments = [
+                        np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in l
+                    ]
                     # (cls, xywh)
-                    l = np.concatenate((classes.reshape(-1, 1), segments2boxes(segments)), 1)
+                    l = np.concatenate(
+                        (classes.reshape(-1, 1), segments2boxes(segments)), 1
+                    )
                 l = np.array(l, dtype=np.float32)
             if len(l):
-                assert l.shape[1] == 5, 'labels require 5 columns each'
-                assert (l >= 0).all(), 'negative labels'
-                assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
-                assert np.unique(l, axis=0).shape[0] == l.shape[0], 'duplicate labels'
+                assert l.shape[1] == 5, "labels require 5 columns each"
+                assert (l >= 0).all(), "negative labels"
+                assert (
+                    l[:, 1:] <= 1
+                ).all(), "non-normalized or out of bounds coordinate labels"
+                assert np.unique(l, axis=0).shape[0] == l.shape[0], "duplicate labels"
             else:
                 ne = 1  # label empty
                 l = np.zeros((0, 5), dtype=np.float32)
@@ -849,12 +1012,14 @@ def verify_image_label(args):
         return im_file, l, shape, segments, nm, nf, ne, nc, msg
     except Exception as e:
         nc = 1
-        msg = f'{prefix}WARNING: Ignoring corrupted image and/or label {im_file}: {e}'
+        msg = f"{prefix}WARNING: Ignoring corrupted image and/or label {im_file}: {e}"
         return [None, None, None, None, nm, nf, ne, nc, msg]
 
 
-def dataset_stats(path='coco128.yaml', autodownload=False, verbose=False, profile=False, hub=False):
-    """ Return dataset statistics dictionary with images and instances counts per split per class
+def dataset_stats(
+    path="coco128.yaml", autodownload=False, verbose=False, profile=False, hub=False
+):
+    """Return dataset statistics dictionary with images and instances counts per split per class
     To run in parent directory: export PYTHONPATH="$PWD/yolov5"
     Usage1: from utils.datasets import *; dataset_stats('coco128.yaml', autodownload=True)
     Usage2: from utils.datasets import *; dataset_stats('../datasets/coco128_with_yaml.zip')
@@ -870,11 +1035,17 @@ def dataset_stats(path='coco128.yaml', autodownload=False, verbose=False, profil
 
     def unzip(path):
         # Unzip data.zip TODO: CONSTRAINT: path/to/abc.zip MUST unzip to 'path/to/abc/'
-        if str(path).endswith('.zip'):  # path is data.zip
-            assert Path(path).is_file(), f'Error unzipping {path}, file not found'
-            assert os.system(f'unzip -q {path} -d {path.parent}') == 0, f'Error unzipping {path}'
-            dir = path.with_suffix('')  # dataset directory
-            return True, str(dir), next(dir.rglob('*.yaml'))  # zipped, data_dir, yaml_path
+        if str(path).endswith(".zip"):  # path is data.zip
+            assert Path(path).is_file(), f"Error unzipping {path}, file not found"
+            assert (
+                os.system(f"unzip -q {path} -d {path.parent}") == 0
+            ), f"Error unzipping {path}"
+            dir = path.with_suffix("")  # dataset directory
+            return (
+                True,
+                str(dir),
+                next(dir.rglob("*.yaml")),
+            )  # zipped, data_dir, yaml_path
         else:  # path is data.yaml
             return False, None, path
 
@@ -887,62 +1058,73 @@ def dataset_stats(path='coco128.yaml', autodownload=False, verbose=False, profil
         im.save(im_dir / Path(f).name, quality=75)  # save
 
     zipped, data_dir, yaml_path = unzip(Path(path))
-    with open(check_file(yaml_path), errors='ignore') as f:
+    with open(check_file(yaml_path), errors="ignore") as f:
         data = yaml.safe_load(f)  # data dict
         if zipped:
-            data['path'] = data_dir  # TODO: should this be dir.resolve()?
+            data["path"] = data_dir  # TODO: should this be dir.resolve()?
     check_dataset(data, autodownload)  # download dataset if missing
-    hub_dir = Path(data['path'] + ('-hub' if hub else ''))
-    stats = {'nc': data['nc'], 'names': data['names']}  # statistics dictionary
-    for split in 'train', 'val', 'test':
+    hub_dir = Path(data["path"] + ("-hub" if hub else ""))
+    stats = {"nc": data["nc"], "names": data["names"]}  # statistics dictionary
+    for split in "train", "val", "test":
         if data.get(split) is None:
             stats[split] = None  # i.e. no test set
             continue
         x = []
         dataset = LoadImagesAndLabels(data[split])  # load dataset
-        for label in tqdm(dataset.labels, total=dataset.n, desc='Statistics'):
-            x.append(np.bincount(label[:, 0].astype(int), minlength=data['nc']))
+        for label in tqdm(dataset.labels, total=dataset.n, desc="Statistics"):
+            x.append(np.bincount(label[:, 0].astype(int), minlength=data["nc"]))
         x = np.array(x)  # shape(128x80)
-        stats[split] = {'instance_stats': {'total': int(x.sum()), 'per_class': x.sum(0).tolist()},
-                        'image_stats': {'total': dataset.n, 'unlabelled': int(np.all(x == 0, 1).sum()),
-                                        'per_class': (x > 0).sum(0).tolist()},
-                        'labels': [{str(Path(k).name): round_labels(v.tolist())} for k, v in
-                                   zip(dataset.img_files, dataset.labels)]}
+        stats[split] = {
+            "instance_stats": {"total": int(x.sum()), "per_class": x.sum(0).tolist()},
+            "image_stats": {
+                "total": dataset.n,
+                "unlabelled": int(np.all(x == 0, 1).sum()),
+                "per_class": (x > 0).sum(0).tolist(),
+            },
+            "labels": [
+                {str(Path(k).name): round_labels(v.tolist())}
+                for k, v in zip(dataset.img_files, dataset.labels)
+            ],
+        }
 
         if hub:
-            im_dir = hub_dir / 'images'
+            im_dir = hub_dir / "images"
             im_dir.mkdir(parents=True, exist_ok=True)
             for _ in tqdm(
                 ThreadPool(NUM_THREADS).imap(hub_ops, dataset.img_files),
                 total=dataset.n,
-                desc='HUB Ops',
+                desc="HUB Ops",
             ):
                 pass
 
     # Profile
-    stats_path = hub_dir / 'stats.json'
+    stats_path = hub_dir / "stats.json"
     if profile:
         for _ in range(1):
-            file = stats_path.with_suffix('.npy')
+            file = stats_path.with_suffix(".npy")
             t1 = time.time()
             np.save(file, stats)
             t2 = time.time()
             x = np.load(file, allow_pickle=True)
-            print(f'stats.npy times: {time.time() - t2:.3f}s read, {t2 - t1:.3f}s write')
+            print(
+                f"stats.npy times: {time.time() - t2:.3f}s read, {t2 - t1:.3f}s write"
+            )
 
-            file = stats_path.with_suffix('.json')
+            file = stats_path.with_suffix(".json")
             t1 = time.time()
-            with open(file, 'w') as f:
+            with open(file, "w") as f:
                 json.dump(stats, f)  # save stats *.json
             t2 = time.time()
-            with open(file, 'r') as f:
+            with open(file, "r") as f:
                 x = json.load(f)  # load hyps dict
-            print(f'stats.json times: {time.time() - t2:.3f}s read, {t2 - t1:.3f}s write')
+            print(
+                f"stats.json times: {time.time() - t2:.3f}s read, {t2 - t1:.3f}s write"
+            )
 
     # Save, print and return
     if hub:
-        print(f'Saving {stats_path.resolve()}...')
-        with open(stats_path, 'w') as f:
+        print(f"Saving {stats_path.resolve()}...")
+        with open(stats_path, "w") as f:
             json.dump(stats, f)  # save stats.json
     if verbose:
         print(json.dumps(stats, indent=2, sort_keys=False))

@@ -1,11 +1,11 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+from typing import List, Optional
+
 from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
 from . import darknet
 from .path_aggregation_network import PathAggregationNetwork
-
-from typing import List, Optional
 
 
 class BackboneWithPAN(nn.Module):
@@ -29,7 +29,10 @@ class BackboneWithPAN(nn.Module):
     Attributes:
         out_channels (int): the number of channels in the PAN
     """
-    def __init__(self, backbone, return_layers, in_channels_list, depth_multiple, version):
+
+    def __init__(
+        self, backbone, return_layers, in_channels_list, depth_multiple, version
+    ):
         super().__init__()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
@@ -52,7 +55,7 @@ def darknet_pan_backbone(
     width_multiple: float,
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
-    version: str = 'r4.0',
+    version: str = "r4.0",
 ):
     """
     Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
@@ -91,4 +94,6 @@ def darknet_pan_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithPAN(backbone, return_layers, in_channels_list, depth_multiple, version)
+    return BackboneWithPAN(
+        backbone, return_layers, in_channels_list, depth_multiple, version
+    )

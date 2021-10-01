@@ -10,7 +10,12 @@ def dict_to_tuple(out_dict: Dict[str, Tensor]) -> Tuple:
     Convert the model output dictionary to tuple format.
     """
     if "masks" in out_dict.keys():
-        return out_dict["boxes"], out_dict["scores"], out_dict["labels"], out_dict["masks"]
+        return (
+            out_dict["boxes"],
+            out_dict["scores"],
+            out_dict["labels"],
+            out_dict["masks"],
+        )
     return out_dict["boxes"], out_dict["scores"], out_dict["labels"]
 
 
@@ -19,6 +24,7 @@ class TraceWrapper(nn.Module):
     This is a wrapper for `torch.jit.trace`, as there are some scenarios
     where `torch.jit.script` support is limited.
     """
+
     def __init__(self, model):
         super().__init__()
         self.model = model

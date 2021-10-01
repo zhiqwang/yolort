@@ -11,6 +11,7 @@ class SiLU(nn.Module):
 
     Ref: <https://arxiv.org/pdf/1606.08415.pdf>
     """
+
     @staticmethod
     def forward(x):
         return x * torch.sigmoid(x)
@@ -22,6 +23,7 @@ class Hardswish(nn.Module):
     this operator supports exporting to ONNX, and currently this module
     is only used for TVM.
     """
+
     @staticmethod
     def forward(x):
-        return x * F.hardtanh(x + 3, 0., 6.) / 6.
+        return x * F.hardtanh(x + 3, 0.0, 6.0) / 6.0

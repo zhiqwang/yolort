@@ -1,6 +1,7 @@
+from typing import Dict, Iterable, Callable
+
 import torch
 from torch import nn, Tensor
-from typing import Dict, Iterable, Callable
 
 
 class FeatureExtractor(nn.Module):
@@ -17,6 +18,7 @@ class FeatureExtractor(nn.Module):
     def save_outputs_hook(self, layer_id: str) -> Callable:
         def fn(_, __, output):
             self._features[layer_id] = output
+
         return fn
 
     def forward(self, images: Tensor, targets: Tensor) -> Dict[str, Tensor]:

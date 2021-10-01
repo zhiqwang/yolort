@@ -1,31 +1,26 @@
-from pathlib import Path
-import requests
+import logging
 from io import BytesIO
-
-import matplotlib.pyplot as plt
-from IPython.display import display
-from PIL import Image
-
-import numpy as np
-import cv2
-
-import torch
-from torch import Tensor
-
-from torchvision.ops.boxes import box_convert, box_iou
-import torchvision
-import time
-
+from pathlib import Path
 from typing import Optional
 
-import logging
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import requests
+import torch
+from IPython.display import display
+from PIL import Image
+from torch import Tensor
+from torchvision.ops.boxes import box_convert
 
 logger = logging.getLogger(__name__)
 
 
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
     # Plots one bounding box on image img
-    tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
+    tl = (
+        line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1
+    )  # line/font thickness
     COLORS = color_list()  # list of COLORS
     color = color or COLORS[np.random.randint(0, len(COLORS))]
     c1, c2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
@@ -37,8 +32,14 @@ def plot_one_box(box, img, color=None, label=None, line_thickness=None):
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
         cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
         cv2.putText(
-            img, label, (c1[0], c1[1] - 2), 0, tl / 3,
-            [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA,
+            img,
+            label,
+            (c1[0], c1[1] - 2),
+            0,
+            tl / 3,
+            [225, 255, 255],
+            thickness=tf,
+            lineType=cv2.LINE_AA,
         )
 
     return img
@@ -58,7 +59,7 @@ def cv2_imshow(
         imshow_scale (Optional[float]): zoom ratio to show the image
         convert_bgr_to_rgb (bool): switch to convert BGR to RGB channel.
     """
-    image = image.clip(0, 255).astype('uint8')
+    image = image.clip(0, 255).astype("uint8")
     # cv2 stores colors as BGR; convert to RGB
     if convert_bgr_to_rgb and image.ndim == 3:
         if image.shape[2] == 4:
@@ -76,9 +77,9 @@ def color_list():
     # Return first 10 plt colors as (r,g,b)
     # Refer to <https://stackoverflow.com/questions/51350872/python-from-color-name-to-rgb>
     def hex2rgb(h):
-        return tuple(int(h[1 + i:1 + i + 2], 16) for i in (0, 2, 4))
+        return tuple(int(h[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))
 
-    return [hex2rgb(h) for h in plt.rcParams['axes.prop_cycle'].by_key()['color']]
+    return [hex2rgb(h) for h in plt.rcParams["axes.prop_cycle"].by_key()["color"]]
 
 
 def get_image_from_url(
@@ -125,7 +126,7 @@ def read_image_to_tensor(
 
 def load_names(category_path):
     names = []
-    with open(category_path, 'r') as f:
+    with open(category_path, "r") as f:
         for line in f:
             names.append(line.strip())
     return names
@@ -137,29 +138,35 @@ def overlay_boxes(detections, path, time_consume, args):
     img = cv2.imread(path) if args.save_img else None
 
     for i, pred in enumerate(detections):  # detections per image
-        det_logs = ''
+        det_logs = ""
         save_path = Path(args.output_dir).joinpath(Path(path).name)
         txt_path = Path(args.output_dir).joinpath(Path(path).stem)
 
         if pred is not None and len(pred) > 0:
             # Rescale boxes from img_size to im0 size
-            boxes, scores, labels = pred['boxes'].round(), pred['scores'], pred['labels']
+            boxes, scores, labels = (
+                pred["boxes"].round(),
+                pred["scores"],
+                pred["labels"],
+            )
 
             # Print results
             for c in labels.unique():
                 n = (labels == c).sum()  # detections per class
-                det_logs += '%g %ss, ' % (n, args.names[int(c)])  # add to string
+                det_logs += "%g %ss, " % (n, args.names[int(c)])  # add to string
 
             # Write results
             for xyxy, conf, cls_name in zip(boxes, scores, labels):
                 if args.save_txt:  # Write to file
                     # normalized cxcywh
                     cxcywh = box_convert(xyxy, in_fmt="xyxy", out_fmt="cxcywh").tolist()
-                    with open(f'{txt_path}.txt', 'a') as f:
-                        f.write(('%g ' * 5 + '\n') % (cls_name, *cxcywh))  # label format
+                    with open(f"{txt_path}.txt", "a") as f:
+                        f.write(
+                            ("%g " * 5 + "\n") % (cls_name, *cxcywh)
+                        )  # label format
 
                 if args.save_img:  # Add bbox to image
-                    label = '%s %.2f' % (args.names[int(cls_name)], conf)
+                    label = "%s %.2f" % (args.names[int(cls_name)], conf)
                     plot_one_box(
                         xyxy,
                         img,
@@ -169,7 +176,7 @@ def overlay_boxes(detections, path, time_consume, args):
                     )
 
         # Print inference time
-        logger.info('%sDone. (%.3fs)' % (det_logs, time_consume))
+        logger.info("%sDone. (%.3fs)" % (det_logs, time_consume))
 
         # Save results (image with detections)
         if args.save_img:
@@ -193,7 +200,7 @@ def cast_image_tensor_to_numpy(images):
     """
     images = to_numpy(images).copy()
     images = images * 255
-    images = images.clip(0, 255).astype('uint8')
+    images = images.clip(0, 255).astype("uint8")
     return images
 
 
@@ -211,9 +218,9 @@ def parse_single_image(image):
 
 
 def parse_single_target(target):
-    boxes = box_convert(target['boxes'], in_fmt="cxcywh", out_fmt="xyxy")
+    boxes = box_convert(target["boxes"], in_fmt="cxcywh", out_fmt="xyxy")
     boxes = to_numpy(boxes)
-    sizes = np.tile(to_numpy(target['size'])[1::-1], 2)
+    sizes = np.tile(to_numpy(target["size"])[1::-1], 2)
     boxes = boxes * sizes
     return boxes
 
@@ -269,11 +276,18 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
             # anchor scale
             b, _, grid_x, grid_y = indices[i]
 
-            b, grid_x, grid_y, anchor, target = map(to_numpy, [b, grid_x, grid_y, anchors[i], targets[i]])
+            b, grid_x, grid_y, anchor, target = map(
+                to_numpy, [b, grid_x, grid_y, anchors[i], targets[i]]
+            )
 
             # Find out the corresponding branch of one image
             idx = b == j
-            grid_x, grid_y, anchor, target = grid_x[idx], grid_y[idx], anchor[idx], target[idx]
+            grid_x, grid_y, anchor, target = (
+                grid_x[idx],
+                grid_y[idx],
+                anchor[idx],
+                target[idx],
+            )
 
             # Restore to the original image scale for visualization
             target = restore_label(target, pred[i].shape, image_sizes)
@@ -289,7 +303,9 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
 
             # The anchors need to restore the offset.
             # In eacy layer there has at most 3x3=9 anchors for matching.
-            anchor_restored = restore_anchor(anchor, grid_x, grid_y, stride, pred[i].shape, image_sizes)
+            anchor_restored = restore_anchor(
+                anchor, grid_x, grid_y, stride, pred[i].shape, image_sizes
+            )
 
             # visualize positive anchor
             image_per_scale = overlay_bbox(image_per_scale, anchor_restored)
@@ -301,7 +317,9 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
     return images_with_anchor
 
 
-def overlay_bbox(image, bboxs_list, color=None, thickness=2, font_scale=0.3, with_mask=False):
+def overlay_bbox(
+    image, bboxs_list, color=None, thickness=2, font_scale=0.3, with_mask=False
+):
     """
     Visualize bbox in object detection by drawing rectangle.
 
@@ -318,14 +336,14 @@ def overlay_bbox(image, bboxs_list, color=None, thickness=2, font_scale=0.3, wit
     """
     assert image is not None
     font = cv2.FONT_HERSHEY_SIMPLEX
-    txt = ''
+    txt = ""
     COLORS = color_list()  # list of COLORS
 
     for bbox in bboxs_list:
         if len(bbox) == 5:
-            txt = '{:.3f}'.format(bbox[4])
+            txt = "{:.3f}".format(bbox[4])
         elif len(bbox) == 6:
-            txt = 'p={:.3f}, id={:.3f}'.format(bbox[4], bbox[5])
+            txt = "p={:.3f}, id={:.3f}".format(bbox[4], bbox[5])
         bbox_f = np.array(bbox[:4], np.int32)
 
         mask = np.zeros_like(image, np.uint8)
@@ -387,7 +405,7 @@ def merge_images(images_list, row_col_num):
     num_images = len(images_list)
     row, col = row_col_num
 
-    assert row > 0 or col > 0, 'row and col cannot be negative at same time!'
+    assert row > 0 or col > 0, "row and col cannot be negative at same time!"
 
     for image in images_list:
         cv2.rectangle(image, (0, 0), (image.shape[1], image.shape[0]), (255, 0, 255))
@@ -397,15 +415,19 @@ def merge_images(images_list, row_col_num):
     elif row_col_num[0] < 0 or num_images < col:
         images_merged = np.vstack(images_list)
     else:
-        assert row * col >= num_images, 'Images overboundary, not enough windows to display all images!'
+        assert (
+            row * col >= num_images
+        ), "Images overboundary, not enough windows to display all images!"
 
-        fill_img_list = [np.zeros(images_list[0].shape, dtype=np.uint8)] * (row * col - num_images)
+        fill_img_list = [np.zeros(images_list[0].shape, dtype=np.uint8)] * (
+            row * col - num_images
+        )
         images_list.extend(fill_img_list)
         merge_imgs_col = []
         for i in range(row):
             start = col * i
             end = col * (i + 1)
-            merge_col = np.hstack(images_list[start: end])
+            merge_col = np.hstack(images_list[start:end])
             merge_imgs_col.append(merge_col)
 
         images_merged = np.vstack(merge_imgs_col)
