@@ -6,3 +6,6 @@ from .data_module import (
     VOCDetectionDataModule,
     COCODetectionDataModule,
 )
+
+all = ["contains_any_tensor", "COCOEvaluator", "DetectionDataModule",
+       "VOCDetectionDataModule", "COCODetectionDataModule"]

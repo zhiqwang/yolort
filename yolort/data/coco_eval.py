@@ -19,7 +19,7 @@ except ImportError:
 
 from typing import List, Any, Callable, Optional, Union
 
-from ..utils.logger import create_small_table
+from ._helper import create_small_table
 from .distributed import all_gather
 
 

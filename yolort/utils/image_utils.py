@@ -1,5 +1,4 @@
 import logging
-import time
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
@@ -8,12 +7,13 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
-import torch
-import torchvision
+
 from IPython.display import display
 from PIL import Image
+
+import torch
 from torch import Tensor
-from torchvision.ops.boxes import box_convert, box_iou
+from torchvision.ops.boxes import box_convert
 
 logger = logging.getLogger(__name__)
 
