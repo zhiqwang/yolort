@@ -19,12 +19,11 @@ from yolort.v5 import letterbox, scale_coords
 def test_update_module_state_from_ultralytics():
     yolov5s_r40_path = Path("yolov5s.pt")
 
-    if not yolov5s_r40_path.is_file():
-        yolov5s_r40_url = (
-            "https://github.com/ultralytics/yolov5/releases/download/v4.0/yolov5s.pt"
-        )
+    if not yolov5s_r40_path.exists():
         torch.hub.download_url_to_file(
-            yolov5s_r40_url, yolov5s_r40_path, hash_prefix="9ca9a642"
+            "https://github.com/ultralytics/yolov5/releases/download/v4.0/yolov5s.pt",
+            yolov5s_r40_path,
+            hash_prefix="9ca9a642",
         )
 
     model = update_module_state_from_ultralytics(
