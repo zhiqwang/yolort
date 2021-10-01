@@ -8,8 +8,15 @@ from torch.hub import load_state_dict_from_url
 from yolort.v5 import Conv, SPP, Focus, BottleneckCSP, C3
 
 
-__all__ = ['DarkNet', 'darknet_s_r3_1', 'darknet_m_r3_1', 'darknet_l_r3_1',
-           'darknet_s_r4_0', 'darknet_m_r4_0', 'darknet_l_r4_0']
+__all__ = [
+    "DarkNet",
+    "darknet_s_r3_1",
+    "darknet_m_r3_1",
+    "darknet_l_r3_1",
+    "darknet_s_r4_0",
+    "darknet_m_r4_0",
+    "darknet_l_r4_0",
+]
 
 model_urls = {
     "darknet_s_r3.1": None,
@@ -138,7 +145,9 @@ _block = {
 }
 
 
-def _darknet(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNet:
+def _darknet(
+    arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any
+) -> DarkNet:
     """
     Constructs a DarkNet architecture from
     # TODO
@@ -149,7 +158,9 @@ def _darknet(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: 
     if pretrained:
         model_url = model_urls[arch]
         if model_url is None:
-            raise NotImplementedError('pretrained {} is not supported as of now'.format(arch))
+            raise NotImplementedError(
+                "pretrained {} is not supported as of now".format(arch)
+            )
         else:
             state_dict = load_state_dict_from_url(model_url, progress=progress)
             model.load_state_dict(state_dict)
@@ -157,7 +168,9 @@ def _darknet(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: 
     return model
 
 
-def darknet_s_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
+def darknet_s_r3_1(
+    pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> DarkNet:
     """
     Constructs a DarkNet with small channels, as described in release 3.1
     # TODO
@@ -169,7 +182,9 @@ def darknet_s_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: An
     return _darknet("darknet_s_r3.1", pretrained, progress, 0.33, 0.5, "r3.1", **kwargs)
 
 
-def darknet_m_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
+def darknet_m_r3_1(
+    pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> DarkNet:
     """
     Constructs a DarkNet with small channels, as described in release 3.1
     # TODO
@@ -178,10 +193,14 @@ def darknet_m_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_m_r3.1", pretrained, progress, 0.67, 0.75, "r3.1", **kwargs)
+    return _darknet(
+        "darknet_m_r3.1", pretrained, progress, 0.67, 0.75, "r3.1", **kwargs
+    )
 
 
-def darknet_l_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
+def darknet_l_r3_1(
+    pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> DarkNet:
     """
     Constructs a DarkNet with small channels, as described in release 3.1
     # TODO
@@ -193,7 +212,9 @@ def darknet_l_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: An
     return _darknet("darknet_l_r3.1", pretrained, progress, 1.0, 1.0, "r3.1", **kwargs)
 
 
-def darknet_s_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
+def darknet_s_r4_0(
+    pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> DarkNet:
     """
     Constructs a DarkNet with small channels, as described in release 3.1
     # TODO
@@ -205,7 +226,9 @@ def darknet_s_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: An
     return _darknet("darknet_s_r4.0", pretrained, progress, 0.33, 0.5, "r4.0", **kwargs)
 
 
-def darknet_m_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
+def darknet_m_r4_0(
+    pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> DarkNet:
     """
     Constructs a DarkNet with small channels, as described in release 3.1
     # TODO
@@ -214,10 +237,14 @@ def darknet_m_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_m_r4.0", pretrained, progress, 0.67, 0.75, "r4.0", **kwargs)
+    return _darknet(
+        "darknet_m_r4.0", pretrained, progress, 0.67, 0.75, "r4.0", **kwargs
+    )
 
 
-def darknet_l_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNet:
+def darknet_l_r4_0(
+    pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> DarkNet:
     """
     Constructs a DarkNet with small channels, as described in release 3.1
     # TODO

@@ -1,34 +1,33 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-import warnings
 import argparse
+import warnings
 from pathlib import PosixPath
+from typing import Any, List, Dict, Tuple, Optional, Union, Callable
 
 import torch
+from pytorch_lightning import LightningModule
 from torch import Tensor
 from torchvision.io import read_image
-
-from pytorch_lightning import LightningModule
-from typing import Any, List, Dict, Tuple, Optional, Union, Callable
 
 from yolort.data import COCOEvaluator, contains_any_tensor
 from yolort.utils.update_module_state import ModuleStateUpdate
 from yolort.v5 import load_yolov5_model, get_yolov5_size
-
 from . import yolo
-from .transform import YOLOTransform
 from ._utils import _evaluate_iou
+from .transform import YOLOTransform
 
-__all__ = ['YOLOv5']
+__all__ = ["YOLOv5"]
 
 
 class YOLOv5(LightningModule):
     """
     PyTorch Lightning wrapper of `YOLO`
     """
+
     def __init__(
         self,
         lr: float = 0.01,
-        arch: str = 'yolov5_darknet_pan_s_r40',
+        arch: str = "yolov5_darknet_pan_s_r40",
         pretrained: bool = False,
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
@@ -56,7 +55,8 @@ class YOLOv5(LightningModule):
         self.num_classes = num_classes
 
         self.model = yolo.__dict__[arch](
-            pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs)
+            pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs
+        )
 
         self.transform = YOLOTransform(min(size), max(size), fixed_size=size)
 
@@ -114,11 +114,15 @@ class YOLOv5(LightningModule):
             else:
                 result = outputs
 
-            detections = self.transform.postprocess(result, samples.image_sizes, original_image_sizes)
+            detections = self.transform.postprocess(
+                result, samples.image_sizes, original_image_sizes
+            )
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn("YOLOv5 always returns a (Losses, Detections) tuple in scripting.")
+                warnings.warn(
+                    "YOLOv5 always returns a (Losses, Detections) tuple in scripting."
+                )
                 self._has_warned = True
             return losses, detections
         else:
@@ -177,10 +181,10 @@ class YOLOv5(LightningModule):
         preds = self._forward_impl(images)
         results = self.evaluator(preds, targets)
         # log step metric
-        self.log('eval_step', results, prog_bar=True, on_step=True)
+        self.log("eval_step", results, prog_bar=True, on_step=True)
 
     def test_epoch_end(self, outputs):
-        return self.log('coco_eval', self.evaluator.compute())
+        return self.log("coco_eval", self.evaluator.compute())
 
     def configure_optimizers(self):
         return torch.optim.SGD(
@@ -220,7 +224,7 @@ class YOLOv5(LightningModule):
         Returns:
             Tensor, processed tensor for prediction.
         """
-        return read_image(img_path) / 255.
+        return read_image(img_path) / 255.0
 
     def collate_images(self, samples: Any, image_loader: Callable) -> List[Tensor]:
         """
@@ -244,7 +248,9 @@ class YOLOv5(LightningModule):
         if isinstance(samples, str):
             samples = [samples]
 
-        if isinstance(samples, (list, tuple)) and all(isinstance(p, str) for p in samples):
+        if isinstance(samples, (list, tuple)) and all(
+            isinstance(p, str) for p in samples
+        ):
             outputs = []
             for sample in samples:
                 output = image_loader(sample).to(p.device).type_as(p)
@@ -259,17 +265,31 @@ class YOLOv5(LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--arch', default='yolov5_darknet_pan_s_r40',
-                            help='model architecture')
-        parser.add_argument('--pretrained', action='store_true',
-                            help='Use pre-trained models from the modelzoo')
-        parser.add_argument('--lr', default=0.01, type=float,
-                            help='initial learning rate, 0.01 is the default value for training '
-                            'on 8 gpus and 2 images_per_gpu')
-        parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
-                            help='momentum')
-        parser.add_argument('--weight-decay', default=5e-4, type=float,
-                            metavar='W', help='weight decay (default: 5e-4)')
+        parser.add_argument(
+            "--arch", default="yolov5_darknet_pan_s_r40", help="model architecture"
+        )
+        parser.add_argument(
+            "--pretrained",
+            action="store_true",
+            help="Use pre-trained models from the modelzoo",
+        )
+        parser.add_argument(
+            "--lr",
+            default=0.01,
+            type=float,
+            help="initial learning rate, 0.01 is the default value for training "
+            "on 8 gpus and 2 images_per_gpu",
+        )
+        parser.add_argument(
+            "--momentum", default=0.9, type=float, metavar="M", help="momentum"
+        )
+        parser.add_argument(
+            "--weight-decay",
+            default=5e-4,
+            type=float,
+            metavar="W",
+            help="weight decay (default: 5e-4)",
+        )
         return parser
 
     @classmethod
@@ -280,7 +300,7 @@ class YOLOv5(LightningModule):
         size: Tuple[int, int] = (640, 640),
         score_thresh: float = 0.25,
         nms_thresh: float = 0.45,
-        version: str = 'r4.0',
+        version: str = "r4.0",
     ):
         """
         Load model state from the checkpoint trained by YOLOv5.
@@ -289,10 +309,10 @@ class YOLOv5(LightningModule):
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
         """
         checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
-        num_classes = checkpoint_yolov5.yaml['nc']
-        anchor_grids = checkpoint_yolov5.yaml['anchors']
-        depth_multiple = checkpoint_yolov5.yaml['depth_multiple']
-        width_multiple = checkpoint_yolov5.yaml['width_multiple']
+        num_classes = checkpoint_yolov5.yaml["nc"]
+        anchor_grids = checkpoint_yolov5.yaml["anchors"]
+        depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
+        width_multiple = checkpoint_yolov5.yaml["width_multiple"]
 
         module_state_updater = ModuleStateUpdate(
             arch=None,

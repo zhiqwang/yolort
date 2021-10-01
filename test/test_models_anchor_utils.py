@@ -18,9 +18,13 @@ class TestAnchorGenerator:
         model.eval()
         anchors = model(features)
 
-        expected_anchor_output = torch.tensor([[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]])
-        expected_wh_output = torch.tensor([[4.], [4.], [4.], [4.]])
-        expected_xy_output = torch.tensor([[6., 14.], [6., 14.], [6., 14.], [6., 14.]])
+        expected_anchor_output = torch.tensor(
+            [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]
+        )
+        expected_wh_output = torch.tensor([[4.0], [4.0], [4.0], [4.0]])
+        expected_xy_output = torch.tensor(
+            [[6.0, 14.0], [6.0, 14.0], [6.0, 14.0], [6.0, 14.0]]
+        )
 
         assert len(anchors) == 3
         assert tuple(anchors[0].shape) == (4, 2)

@@ -5,6 +5,7 @@ Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references
 """
 import torch
 import torchvision
+
 try:
     from pycocotools import mask as coco_mask
 except ImportError:
@@ -19,12 +20,14 @@ class COCODetection(torchvision.datasets.CocoDetection):
         json_category_id_to_contiguous_id = {
             v: i for i, v in enumerate(self.coco.getCatIds())
         }
-        self.prepare = ConvertCocoPolysToMask(json_category_id_to_contiguous_id, return_masks)
+        self.prepare = ConvertCocoPolysToMask(
+            json_category_id_to_contiguous_id, return_masks
+        )
 
     def __getitem__(self, idx):
         img, target = super().__getitem__(idx)
         image_id = self.ids[idx]
-        target = {'image_id': image_id, 'annotations': target}
+        target = {"image_id": image_id, "annotations": target}
         img, target = self.prepare(img, target)
         if self._transforms is not None:
             img, target = self._transforms(img, target)
@@ -44,7 +47,7 @@ class ConvertCocoPolysToMask:
 
         anno = target["annotations"]
 
-        anno = [obj for obj in anno if 'iscrowd' not in obj or obj['iscrowd'] == 0]
+        anno = [obj for obj in anno if "iscrowd" not in obj or obj["iscrowd"] == 0]
 
         boxes = [obj["bbox"] for obj in anno]
         # guard against no boxes via resizing
@@ -89,7 +92,9 @@ class ConvertCocoPolysToMask:
 
         # for conversion to coco api
         area = torch.tensor([obj["area"] for obj in anno])
-        iscrowd = torch.tensor([obj["iscrowd"] if "iscrowd" in obj else 0 for obj in anno])
+        iscrowd = torch.tensor(
+            [obj["iscrowd"] if "iscrowd" in obj else 0 for obj in anno]
+        )
         target["area"] = area[keep]
         target["iscrowd"] = iscrowd[keep]
 

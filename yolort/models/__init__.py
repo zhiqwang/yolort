@@ -1,16 +1,18 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from typing import Any
+
 from torch import nn
 
 from yolort.utils.activations import Hardswish, SiLU
 from yolort.v5 import Conv
-
 from .yolo_module import YOLOv5
 
-__all__ = ['YOLOv5', 'yolov5s', 'yolov5m', 'yolov5l', 'yolotr']
+__all__ = ["YOLOv5", "yolov5s", "yolov5m", "yolov5l", "yolotr"]
 
 
-def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
+def yolov5s(
+    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
+):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -18,9 +20,9 @@ def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwa
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
-    if upstream_version == 'r3.1':
+    if upstream_version == "r3.1":
         model = YOLOv5(arch="yolov5_darknet_pan_s_r31", **kwargs)
-    elif upstream_version == 'r4.0':
+    elif upstream_version == "r4.0":
         model = YOLOv5(arch="yolov5_darknet_pan_s_r40", **kwargs)
     else:
         raise NotImplementedError("Currently only supports r3.1 and r4.0 versions")
@@ -31,7 +33,9 @@ def yolov5s(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwa
     return model
 
 
-def yolov5m(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
+def yolov5m(
+    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
+):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -39,9 +43,9 @@ def yolov5m(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwa
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
-    if upstream_version == 'r3.1':
+    if upstream_version == "r3.1":
         model = YOLOv5(arch="yolov5_darknet_pan_m_r31", **kwargs)
-    elif upstream_version == 'r4.0':
+    elif upstream_version == "r4.0":
         model = YOLOv5(arch="yolov5_darknet_pan_m_r40", **kwargs)
     else:
         raise NotImplementedError("Currently only supports r3.1 and r4.0 versions")
@@ -52,7 +56,9 @@ def yolov5m(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwa
     return model
 
 
-def yolov5l(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
+def yolov5l(
+    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
+):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -60,9 +66,9 @@ def yolov5l(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwa
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
-    if upstream_version == 'r3.1':
+    if upstream_version == "r3.1":
         model = YOLOv5(arch="yolov5_darknet_pan_l_r31", **kwargs)
-    elif upstream_version == 'r4.0':
+    elif upstream_version == "r4.0":
         model = YOLOv5(arch="yolov5_darknet_pan_l_r40", **kwargs)
     else:
         raise NotImplementedError("Currently only supports r3.1 and r4.0 versions")
@@ -73,7 +79,9 @@ def yolov5l(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwa
     return model
 
 
-def yolotr(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwargs: Any):
+def yolotr(
+    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
+):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -81,7 +89,7 @@ def yolotr(upstream_version: str = 'r4.0', export_friendly: bool = False, **kwar
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
-    if upstream_version == 'r4.0':
+    if upstream_version == "r4.0":
         model = YOLOv5(arch="yolov5_darknet_tan_s_r40", **kwargs)
     else:
         raise NotImplementedError("Currently only supports r4.0 versions")

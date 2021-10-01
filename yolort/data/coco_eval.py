@@ -1,17 +1,15 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-import io
-from pathlib import PosixPath
-import copy
 import contextlib
-import logging
+import copy
+import io
 import itertools
-from tabulate import tabulate
+import logging
+from pathlib import PosixPath
 
 import numpy as np
-
-from torchvision.ops import box_convert
-
+from tabulate import tabulate
 from torchmetrics import Metric
+from torchvision.ops import box_convert
 
 try:
     from pycocotools.coco import COCO
@@ -19,10 +17,10 @@ try:
 except ImportError:
     COCO, COCOeval = None, None
 
-from .distributed import all_gather
-from ..utils.logger import create_small_table
-
 from typing import List, Any, Callable, Optional, Union
+
+from ..utils.logger import create_small_table
+from .distributed import all_gather
 
 
 class COCOEvaluator(Metric):
@@ -33,11 +31,12 @@ class COCOEvaluator(Metric):
     The metrics range from 0 to 100 (instead of 0 to 1), where a -1 or NaN means
     the metric cannot be computed (e.g. due to no predictions made).
     """
+
     def __init__(
         self,
         coco_gt: Union[str, PosixPath, COCO],
-        iou_type: str = 'bbox',
-        eval_type: str = 'yolov5',
+        iou_type: str = "bbox",
+        eval_type: str = "yolov5",
         compute_on_step: bool = True,
         dist_sync_on_step: bool = False,
         process_group: Optional[Any] = None,
@@ -66,15 +65,15 @@ class COCOEvaluator(Metric):
         elif isinstance(coco_gt, COCO):
             coco_gt = copy.deepcopy(coco_gt)
         else:
-            raise NotImplementedError(f'Currently not supports type {type(coco_gt)}')
+            raise NotImplementedError(f"Currently not supports type {type(coco_gt)}")
 
         self.coco_gt = coco_gt
-        if eval_type == 'yolov5':
+        if eval_type == "yolov5":
             self.category_id_maps = coco_gt.getCatIds()
-        elif eval_type == 'torchvision':
+        elif eval_type == "torchvision":
             self.category_id_maps = list(range(coco_gt.getCatIds()[-1] + 1))
         else:
-            raise NotImplementedError(f'Currently not supports eval type {eval_type}')
+            raise NotImplementedError(f"Currently not supports eval type {eval_type}")
 
         self.iou_type = iou_type
         self.coco_eval = COCOeval(coco_gt, iouType=iou_type)
@@ -83,7 +82,10 @@ class COCOEvaluator(Metric):
         self.eval_imgs = []
 
     def update(self, preds, targets):
-        records = {target['image_id'].item(): prediction for target, prediction in zip(targets, preds)}
+        records = {
+            target["image_id"].item(): prediction
+            for target, prediction in zip(targets, preds)
+        }
         img_ids = list(np.unique(list(records.keys())))
         self.img_ids.extend(img_ids)
 
@@ -145,10 +147,16 @@ class COCOEvaluator(Metric):
 
         # the standard metrics
         results = {
-            metric: float(self.coco_eval.stats[idx] * 100 if self.coco_eval.stats[idx] >= 0 else "nan")
+            metric: float(
+                self.coco_eval.stats[idx] * 100
+                if self.coco_eval.stats[idx] >= 0
+                else "nan"
+            )
             for idx, metric in enumerate(metrics)
         }
-        self._logger.info(f"Evaluation results for {self.iou_type}:\n" + create_small_table(results))
+        self._logger.info(
+            f"Evaluation results for {self.iou_type}:\n" + create_small_table(results)
+        )
 
         if not np.isfinite(sum(results.values())):
             self._logger.info("Some metrics cannot be computed and is shown as NaN.")
@@ -172,7 +180,9 @@ class COCOEvaluator(Metric):
         # tabulate it
         N_COLS = min(6, len(results_per_category) * 2)
         results_flatten = list(itertools.chain(*results_per_category))
-        results_2d = itertools.zip_longest(*[results_flatten[i::N_COLS] for i in range(N_COLS)])
+        results_2d = itertools.zip_longest(
+            *[results_flatten[i::N_COLS] for i in range(N_COLS)]
+        )
         table = tabulate(
             results_2d,
             tablefmt="pipe",
@@ -189,7 +199,9 @@ class COCOEvaluator(Metric):
         if iou_type == "bbox":
             return self.prepare_for_coco_detection(predictions)
         else:
-            raise ValueError(f"Unknown iou type {iou_type}, fell free to report on GitHub issues")
+            raise ValueError(
+                f"Unknown iou type {iou_type}, fell free to report on GitHub issues"
+            )
 
     def prepare_for_coco_detection(self, predictions):
         coco_results = []
@@ -198,7 +210,7 @@ class COCOEvaluator(Metric):
                 continue
 
             boxes = prediction["boxes"]
-            boxes = box_convert(boxes, in_fmt='xyxy', out_fmt='xywh').tolist()
+            boxes = box_convert(boxes, in_fmt="xyxy", out_fmt="xywh").tolist()
             scores = prediction["scores"].tolist()
             labels = prediction["labels"].tolist()
 
@@ -257,21 +269,21 @@ def create_common_coco_eval(coco_eval, img_ids, eval_imgs):
 
 
 def evaluate(self):
-    '''
+    """
     From pycocotools, just removed the prints and fixed a Python3 bug about unicode
     not defined. Mostly copy-paste from
     https://github.com/pytorch/vision/blob/edfd5a7/references/detection/coco_eval.py#L300
 
     Run per image evaluation on given images and store results (a list of dict) in self.evalImgs
     :return: None
-    '''
+    """
     # tic = time.time()
     # print('Running per image evaluation...')
     p = self.params
     # add backward compatibility if useSegm is specified in params
     if p.useSegm is not None:
-        p.iouType = 'segm' if p.useSegm == 1 else 'bbox'
-        print(f'useSegm (deprecated) is not None. Running {p.iouType} evaluation')
+        p.iouType = "segm" if p.useSegm == 1 else "bbox"
+        print(f"useSegm (deprecated) is not None. Running {p.iouType} evaluation")
     # print(f'Evaluate annotation type *{p.iouType}*')
     p.imgIds = list(np.unique(p.imgIds))
     if p.useCats:
@@ -284,13 +296,15 @@ def evaluate(self):
     # loop through images, area range, max detection number
     catIds = p.catIds if p.useCats else [-1]
 
-    if p.iouType == 'segm' or p.iouType == 'bbox':
+    if p.iouType == "segm" or p.iouType == "bbox":
         computeIoU = self.computeIoU
-    elif p.iouType == 'keypoints':
+    elif p.iouType == "keypoints":
         computeIoU = self.computeOks
 
     self.ious = {
-        (imgId, catId): computeIoU(imgId, catId) for imgId in p.imgIds for catId in catIds
+        (imgId, catId): computeIoU(imgId, catId)
+        for imgId in p.imgIds
+        for catId in catIds
     }  # bottleneck
 
     evaluateImg = self.evaluateImg

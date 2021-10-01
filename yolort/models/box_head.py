@@ -1,17 +1,23 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import math
+from typing import Tuple, List, Dict
+
 import torch
-from torch import nn, Tensor
 import torch.nn.functional as F
+from torch import nn, Tensor
 from torchvision.ops import boxes as box_ops
 
 from . import _utils as det_utils
 
-from typing import Tuple, List, Dict
-
 
 class YOLOHead(nn.Module):
-    def __init__(self, in_channels: List[int], num_anchors: int, strides: List[int], num_classes: int):
+    def __init__(
+        self,
+        in_channels: List[int],
+        num_anchors: int,
+        strides: List[int],
+        num_classes: int,
+    ):
         super().__init__()
         self.num_anchors = num_anchors  # anchors
         self.num_classes = num_classes
@@ -19,7 +25,8 @@ class YOLOHead(nn.Module):
         self.strides = strides
 
         self.head = nn.ModuleList(
-            nn.Conv2d(ch, self.num_outputs * self.num_anchors, 1) for ch in in_channels)  # output conv
+            nn.Conv2d(ch, self.num_outputs * self.num_anchors, 1) for ch in in_channels
+        )  # output conv
 
         self._initialize_biases()  # Init weights, biases
 
@@ -33,7 +40,11 @@ class YOLOHead(nn.Module):
             # obj (8 objects per 640 image)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)
             # classes
-            b.data[:, 5:] += torch.log(cf / cf.sum()) if cf else math.log(0.6 / (self.num_classes - 0.99))
+            b.data[:, 5:] += (
+                torch.log(cf / cf.sum())
+                if cf
+                else math.log(0.6 / (self.num_classes - 0.99))
+            )
             mi.bias = nn.Parameter(b.view(-1), requires_grad=True)
 
     def get_result_from_head(self, features: Tensor, idx: int) -> Tensor:
@@ -87,6 +98,7 @@ class SetCriterion:
         label_smoothing (float): Label smoothing epsilon. Default: 0.0.
         auto_balance (bool): Auto balance. Default: False.
     """
+
     def __init__(
         self,
         num_anchors: int,
@@ -148,13 +160,17 @@ class SetCriterion:
                 of the model for the format
         """
         device = targets.device
-        anchor_grids = torch.as_tensor(self.anchor_grids, dtype=torch.float32,
-                                       device=device).view(self.num_anchors, -1, 2)
-        strides = torch.as_tensor(self.strides, dtype=torch.float32,
-                                  device=device).view(-1, 1, 1)
+        anchor_grids = torch.as_tensor(
+            self.anchor_grids, dtype=torch.float32, device=device
+        ).view(self.num_anchors, -1, 2)
+        strides = torch.as_tensor(
+            self.strides, dtype=torch.float32, device=device
+        ).view(-1, 1, 1)
         anchor_grids /= strides
 
-        target_cls, target_box, indices, anchors = self.build_targets(targets, head_outputs, anchor_grids)
+        target_cls, target_box, indices, anchors = self.build_targets(
+            targets, head_outputs, anchor_grids
+        )
 
         pos_weight_cls = torch.as_tensor([self.cls_pos], device=device)
         pos_weight_obj = torch.as_tensor([self.obj_pos], device=device)
@@ -166,7 +182,9 @@ class SetCriterion:
         # Computing the losses
         for i, pred_logits in enumerate(head_outputs):  # layer index, layer predictions
             b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
-            target_obj = torch.zeros_like(pred_logits[..., 0], device=device)  # target obj
+            target_obj = torch.zeros_like(
+                pred_logits[..., 0], device=device
+            )  # target obj
 
             num_targets = b.shape[0]  # number of targets
             if num_targets > 0:
@@ -184,20 +202,28 @@ class SetCriterion:
                     sort_id = torch.argsort(score_iou)
                     b, a, gj, gi = b[sort_id], a[sort_id], gj[sort_id], gi[sort_id]
                     score_iou = score_iou[sort_id]
-                target_obj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * score_iou  # iou ratio
+                target_obj[b, a, gj, gi] = (
+                    1.0 - self.gr
+                ) + self.gr * score_iou  # iou ratio
 
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(pred_logits_subset[:, 5:], self.smooth_neg, device=device)  # targets
+                    t = torch.full_like(
+                        pred_logits_subset[:, 5:], self.smooth_neg, device=device
+                    )  # targets
                     t[torch.arange(num_targets), target_cls[i]] = self.smooth_pos
                     loss_cls += F.binary_cross_entropy_with_logits(
-                        pred_logits_subset[:, 5:], t, pos_weight=pos_weight_cls)
+                        pred_logits_subset[:, 5:], t, pos_weight=pos_weight_cls
+                    )
 
             obji = F.binary_cross_entropy_with_logits(
-                pred_logits[..., 4], target_obj, pos_weight=pos_weight_obj)
+                pred_logits[..., 4], target_obj, pos_weight=pos_weight_obj
+            )
             loss_obj += obji * self.balance[i]  # obj loss
             if self.auto_balance:
-                self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
+                self.balance[i] = (
+                    self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
+                )
 
         if self.auto_balance:
             self.balance = [x / self.balance[self.ssi] for x in self.balance]
@@ -206,9 +232,9 @@ class SetCriterion:
         loss_cls *= self.cls_gain
 
         return {
-            'cls_logits': loss_cls,
-            'bbox_regression': loss_box,
-            'objectness': loss_obj,
+            "cls_logits": loss_cls,
+            "bbox_regression": loss_box,
+            "objectness": loss_obj,
         }
 
     def build_targets(
@@ -216,7 +242,12 @@ class SetCriterion:
         targets: Tensor,
         head_outputs: List[Tensor],
         anchor_grids: Tensor,
-    ) -> Tuple[List[Tensor], List[Tensor], List[Tuple[Tensor, Tensor, Tensor, Tensor]], List[Tensor]]:
+    ) -> Tuple[
+        List[Tensor],
+        List[Tensor],
+        List[Tuple[Tensor, Tensor, Tensor, Tensor]],
+        List[Tensor],
+    ]:
         device = targets.device
         num_anchors = self.num_anchors
 
@@ -224,15 +255,30 @@ class SetCriterion:
 
         gain = torch.ones(7, device=device)  # normalized to gridspace gain
         # same as .repeat_interleave(num_targets)
-        ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
+        ai = (
+            torch.arange(num_anchors, device=device)
+            .float()
+            .view(num_anchors, 1)
+            .repeat(1, num_targets)
+        )
         # append anchor indices
         targets = torch.cat((targets.repeat(num_anchors, 1, 1), ai[:, :, None]), 2)
 
         g_bias = 0.5
-        offset = torch.tensor([[0, 0],
-                               [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
-                               # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
-                               ], device=device).float() * g_bias  # offsets
+        offset = (
+            torch.tensor(
+                [
+                    [0, 0],
+                    [1, 0],
+                    [0, 1],
+                    [-1, 0],
+                    [0, -1],  # j,k,l,m
+                    # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
+                ],
+                device=device,
+            ).float()
+            * g_bias
+        )  # offsets
 
         target_cls, target_box, anch = [], [], []
         indices: List[Tuple[Tensor, Tensor, Tensor, Tensor]] = []
@@ -246,7 +292,7 @@ class SetCriterion:
             if num_targets > 0:
                 # Matches
                 r = targets_with_gain[:, :, 4:6] / anchors[:, None]  # wh ratio
-                j = torch.max(r, 1. / r).max(2)[0] < self.anchor_thresh  # compare
+                j = torch.max(r, 1.0 / r).max(2)[0] < self.anchor_thresh  # compare
                 # j = wh_iou(anchors, targets_with_gain[:, 4:6]) > model.hyp['iou_t']
                 # iou(3, n) = wh_iou(anchors(3, 2), gwh(n, 2))
                 targets_with_gain = targets_with_gain[j]  # filter
@@ -254,9 +300,17 @@ class SetCriterion:
                 # Offsets
                 gxy = targets_with_gain[:, 2:4]  # grid xy
                 gxi = gain[[2, 3]] - gxy  # inverse
-                idx_jk = ((gxy % 1. < g_bias) & (gxy > 1.)).T
-                idx_lm = ((gxi % 1. < g_bias) & (gxi > 1.)).T
-                j = torch.stack((torch.ones_like(idx_jk[0]), idx_jk[0], idx_jk[1], idx_lm[0], idx_lm[1]))
+                idx_jk = ((gxy % 1.0 < g_bias) & (gxy > 1.0)).T
+                idx_lm = ((gxi % 1.0 < g_bias) & (gxi > 1.0)).T
+                j = torch.stack(
+                    (
+                        torch.ones_like(idx_jk[0]),
+                        idx_jk[0],
+                        idx_jk[1],
+                        idx_lm[0],
+                        idx_lm[1],
+                    )
+                )
                 targets_with_gain = targets_with_gain.repeat((5, 1, 1))[j]
                 offsets = (torch.zeros_like(gxy)[None] + offset[:, None])[j]
             else:
@@ -273,7 +327,14 @@ class SetCriterion:
             # Append
             a = targets_with_gain[:, 6].long()  # anchor indices
             # image, anchor, grid indices
-            indices.append((idx_bc[0], a, idx_gij[1].clamp_(0, gain[3] - 1), idx_gij[0].clamp_(0, gain[2] - 1)))
+            indices.append(
+                (
+                    idx_bc[0],
+                    a,
+                    idx_gij[1].clamp_(0, gain[3] - 1),
+                    idx_gij[0].clamp_(0, gain[2] - 1),
+                )
+            )
             target_box.append(torch.cat((gxy - gij, gwh), 1))  # box
             anch.append(anchors[a])  # anchors
             target_cls.append(idx_bc[1])  # class
@@ -285,6 +346,7 @@ class PostProcess(nn.Module):
     """
     Performs Non-Maximum Suppression (NMS) on inference results
     """
+
     def __init__(
         self,
         score_thresh: float,
@@ -345,9 +407,9 @@ class PostProcess(nn.Module):
             # non-maximum suppression, independently done per level
             keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)
             # keep only topk scoring head_outputs
-            keep = keep[:self.detections_per_img]
+            keep = keep[: self.detections_per_img]
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
-            detections.append({'scores': scores, 'labels': labels, 'boxes': boxes})
+            detections.append({"scores": scores, "labels": labels, "boxes": boxes})
 
         return detections

@@ -1,7 +1,7 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 
-from yolort import models
 from yolort import data
+from yolort import models
 from yolort import utils
 from yolort import v5
 

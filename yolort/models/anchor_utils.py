@@ -1,11 +1,11 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+from typing import Tuple, List
+
 import torch
 from torch import nn, Tensor
-from typing import Tuple, List
 
 
 class AnchorGenerator(nn.Module):
-
     def __init__(
         self,
         strides: List[int],
@@ -68,8 +68,12 @@ class AnchorGenerator(nn.Module):
             grid_height, grid_width = size
 
             # For output anchor, compute [x_center, y_center, x_center, y_center]
-            shifts_x = torch.arange(0, grid_width, dtype=torch.int32, device=device).to(dtype=dtype)
-            shifts_y = torch.arange(0, grid_height, dtype=torch.int32, device=device).to(dtype=dtype)
+            shifts_x = torch.arange(0, grid_width, dtype=torch.int32, device=device).to(
+                dtype=dtype
+            )
+            shifts_y = torch.arange(
+                0, grid_height, dtype=torch.int32, device=device
+            ).to(dtype=dtype)
 
             shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x)
 

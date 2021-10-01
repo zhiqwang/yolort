@@ -9,11 +9,9 @@ from typing import Callable, List, Optional
 from torch import nn
 
 from yolort.v5 import Conv, C3
-
-from .path_aggregation_network import PathAggregationNetwork
-from .backbone_utils import BackboneWithPAN
-
 from . import darknet
+from .backbone_utils import BackboneWithPAN
+from .path_aggregation_network import PathAggregationNetwork
 
 
 def darknet_tan_backbone(
@@ -22,7 +20,7 @@ def darknet_tan_backbone(
     width_multiple: float,
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
-    version: str = 'r4.0',
+    version: str = "r4.0",
 ):
     """
     Constructs a specified DarkNet backbone with TAN on top. Freezes the specified number of
@@ -61,15 +59,22 @@ def darknet_tan_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithTAN(backbone, return_layers, in_channels_list, depth_multiple, version)
+    return BackboneWithTAN(
+        backbone, return_layers, in_channels_list, depth_multiple, version
+    )
 
 
 class BackboneWithTAN(BackboneWithPAN):
     """
     Adds a TAN on top of a model.
     """
-    def __init__(self, backbone, return_layers, in_channels_list, depth_multiple, version):
-        super().__init__(backbone, return_layers, in_channels_list, depth_multiple, version)
+
+    def __init__(
+        self, backbone, return_layers, in_channels_list, depth_multiple, version
+    ):
+        super().__init__(
+            backbone, return_layers, in_channels_list, depth_multiple, version
+        )
         self.pan = TransformerAttentionNetwork(
             in_channels_list,
             depth_multiple,
@@ -94,10 +99,14 @@ class TransformerAttentionNetwork(PathAggregationNetwork):
         depth_gain = max(round(3 * depth_multiple), 1)
 
         inner_blocks = [
-            C3TR(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
+            C3TR(
+                in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
+            ),
             Conv(in_channels_list[2], in_channels_list[1], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
-            block(in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False),
+            block(
+                in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False
+            ),
             Conv(in_channels_list[1], in_channels_list[0], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
         ]
@@ -158,7 +167,9 @@ class TransformerBlock(nn.Module):
         if c1 != c2:
             self.conv = Conv(c1, c2)
         self.linear = nn.Linear(c2, c2)
-        self.tr = nn.Sequential(*[TransformerLayer(c2, num_heads) for _ in range(num_layers)])
+        self.tr = nn.Sequential(
+            *[TransformerLayer(c2, num_heads) for _ in range(num_layers)]
+        )
         self.c2 = c2
 
     def forward(self, x):

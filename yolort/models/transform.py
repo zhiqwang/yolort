@@ -1,14 +1,13 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import math
-import torch
-from torch import nn, Tensor
-import torch.nn.functional as F
-
-import torchvision
-from torchvision.ops import box_convert
-
 from typing import Dict, Optional, List, Tuple
+
+import torch
+import torch.nn.functional as F
+import torchvision
+from torch import nn, Tensor
+from torchvision.ops import box_convert
 
 
 class NestedTensor:
@@ -18,6 +17,7 @@ class NestedTensor:
     This works by padding the images to the same size,
     and storing in a field the original sizes of each image
     """
+
     def __init__(self, tensors: Tensor, image_sizes: List[Tuple[int, int]]):
         """
         Args:
@@ -50,6 +50,7 @@ class YOLOTransform(nn.Module):
 
     It returns a NestedTensor for the inputs, and a List[Dict[Tensor]] for the targets
     """
+
     def __init__(
         self,
         min_size: int,
@@ -94,8 +95,10 @@ class YOLOTransform(nn.Module):
             target_index = targets[i] if targets is not None else None
 
             if image.dim() != 3:
-                raise ValueError("images is expected to be a list of 3d tensors "
-                                 "of shape [C, H, W], got {}".format(image.shape))
+                raise ValueError(
+                    "images is expected to be a list of 3d tensors "
+                    "of shape [C, H, W], got {}".format(image.shape)
+                )
 
             image, target_index = self.resize(image, target_index)
             images[i] = image
@@ -114,11 +117,13 @@ class YOLOTransform(nn.Module):
         if targets is not None:
             targets_batched = []
             for i, target in enumerate(targets):
-                num_objects = len(target['labels'])
+                num_objects = len(target["labels"])
                 if num_objects > 0:
-                    targets_merged = torch.full((num_objects, 6), i, dtype=torch.float32, device=device)
-                    targets_merged[:, 1] = target['labels']
-                    targets_merged[:, 2:] = target['boxes']
+                    targets_merged = torch.full(
+                        (num_objects, 6), i, dtype=torch.float32, device=device
+                    )
+                    targets_merged[:, 1] = target["labels"]
+                    targets_merged[:, 2:] = target["boxes"]
                     targets_batched.append(targets_merged)
             targets_batched = torch.cat(targets_batched, dim=0)
         else:
@@ -132,7 +137,7 @@ class YOLOTransform(nn.Module):
         TorchScript. Remove if https://github.com/pytorch/pytorch/issues/25803
         is fixed.
         """
-        index = int(torch.empty(1).uniform_(0., float(len(k))).item())
+        index = int(torch.empty(1).uniform_(0.0, float(len(k))).item())
         return k[index]
 
     def resize(
@@ -148,7 +153,9 @@ class YOLOTransform(nn.Module):
             # FIXME assume for now that testing uses the largest scale
             size = float(self.min_size[-1])
 
-        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target)
+        image, target = _resize_image_and_masks(
+            image, size, float(self.max_size), self.fixed_size, target
+        )
 
         if target is None:
             return image, target
@@ -166,7 +173,9 @@ class YOLOTransform(nn.Module):
         original_image_sizes: List[Tuple[int, int]],
     ) -> List[Dict[str, Tensor]]:
 
-        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
+        for i, (pred, im_s, o_im_s) in enumerate(
+            zip(result, image_shapes, original_image_sizes)
+        ):
             boxes = pred["boxes"]
             boxes = resize_boxes(boxes, im_s, o_im_s)
             result[i]["boxes"] = boxes
@@ -193,7 +202,7 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: in
         for img, pad_img in zip(tensor_list, tensor_batched):
             pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
     else:
-        raise ValueError('not supported')
+        raise ValueError("not supported")
     return tensor_batched
 
 
@@ -208,14 +217,22 @@ def _max_by_axis(the_list: List[List[int]]) -> List[int]:
 # _onnx_nested_tensor_from_tensor_list() is an implementation of
 # nested_tensor_from_tensor_list() that is supported by ONNX tracing.
 @torch.jit.unused
-def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32) -> Tensor:
+def _onnx_nested_tensor_from_tensor_list(
+    tensor_list: List[Tensor], size_divisible: int = 32
+) -> Tensor:
     max_size = []
     for i in range(tensor_list[0].dim()):
-        max_size_i = torch.max(torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)).to(torch.int64)
+        max_size_i = torch.max(
+            torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)
+        ).to(torch.int64)
         max_size.append(max_size_i)
     stride = size_divisible
-    max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
-    max_size[2] = (torch.ceil((max_size[2].to(torch.float32)) / stride) * stride).to(torch.int64)
+    max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(
+        torch.int64
+    )
+    max_size[2] = (torch.ceil((max_size[2].to(torch.float32)) / stride) * stride).to(
+        torch.int64
+    )
     max_size = tuple(max_size)
 
     # work around for
@@ -237,6 +254,7 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
 @torch.jit.unused
 def _get_shape_onnx(image: Tensor) -> Tensor:
     from torch.onnx import operators
+
     return operators.shape_as_tensor(image)[-2:]
 
 
@@ -277,24 +295,36 @@ def _resize_image_and_masks(
             scale_factor = scale.item()
         recompute_scale_factor = True
 
-    image = F.interpolate(image[None], size=size, scale_factor=scale_factor, mode='bilinear',
-                          recompute_scale_factor=recompute_scale_factor, align_corners=False)[0]
+    image = F.interpolate(
+        image[None],
+        size=size,
+        scale_factor=scale_factor,
+        mode="bilinear",
+        recompute_scale_factor=recompute_scale_factor,
+        align_corners=False,
+    )[0]
 
     if target is None:
         return image, target
 
     if "masks" in target:
         mask = target["masks"]
-        mask = F.interpolate(mask[:, None].float(), size=size, scale_factor=scale_factor,
-                             recompute_scale_factor=recompute_scale_factor)[:, 0].byte()
+        mask = F.interpolate(
+            mask[:, None].float(),
+            size=size,
+            scale_factor=scale_factor,
+            recompute_scale_factor=recompute_scale_factor,
+        )[:, 0].byte()
         target["masks"] = mask
     return image, target
 
 
-def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -> Tensor:
+def resize_boxes(
+    boxes: Tensor, original_size: List[int], new_size: List[int]
+) -> Tensor:
     ratios = [
-        torch.tensor(s, dtype=torch.float32, device=boxes.device) /
-        torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
+        torch.tensor(s, dtype=torch.float32, device=boxes.device)
+        / torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
         for s, s_orig in zip(new_size, original_size)
     ]
     ratio_height, ratio_width = ratios
@@ -318,4 +348,4 @@ def normalize_boxes(boxes: Tensor, original_size: List[int]) -> Tensor:
     ymax = ymax / height
     boxes = torch.stack((xmin, ymin, xmax, ymax), dim=1)
     # Convert xyxy to cxcywh
-    return box_convert(boxes, in_fmt='xyxy', out_fmt='cxcywh')
+    return box_convert(boxes, in_fmt="xyxy", out_fmt="cxcywh")

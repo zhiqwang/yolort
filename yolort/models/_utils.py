@@ -1,10 +1,9 @@
 import math
+from typing import Tuple
 
 import torch
 from torch import nn, Tensor
 from torchvision.ops import box_convert, box_iou
-
-from typing import Tuple
 
 
 def _evaluate_iou(target, pred):
@@ -28,7 +27,7 @@ def encode_single(reference_boxes: Tensor, anchors: Tensor) -> Tensor:
     """
     reference_boxes = torch.sigmoid(reference_boxes)
 
-    pred_xy = reference_boxes[:, :2] * 2. - 0.5
+    pred_xy = reference_boxes[:, :2] * 2.0 - 0.5
     pred_wh = (reference_boxes[:, 2:4] * 2) ** 2 * anchors
     pred_boxes = torch.cat((pred_xy, pred_wh), 1)
 
@@ -48,7 +47,7 @@ def decode_single(
         anchors_tupe (Tensor, Tensor, Tensor): reference boxes.
     """
 
-    pred_wh = (rel_codes[..., 0:2] * 2. + anchors_tuple[0]) * anchors_tuple[1]  # wh
+    pred_wh = (rel_codes[..., 0:2] * 2.0 + anchors_tuple[0]) * anchors_tuple[1]  # wh
     pred_xy = (rel_codes[..., 2:4] * 2) ** 2 * anchors_tuple[2]  # xy
     pred_boxes = torch.cat([pred_wh, pred_xy], dim=1)
     pred_boxes = box_convert(pred_boxes, in_fmt="cxcywh", out_fmt="xyxy")
@@ -74,7 +73,8 @@ def bbox_iou(box1: Tensor, box2: Tensor, x1y1x2y2: bool = True, eps: float = 1e-
 
     # Intersection area
     inter = (torch.min(b1_x2, b2_x2) - torch.max(b1_x1, b2_x1)).clamp(0) * (
-        torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)).clamp(0)
+        torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)
+    ).clamp(0)
 
     # Union Area
     w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
@@ -83,12 +83,15 @@ def bbox_iou(box1: Tensor, box2: Tensor, x1y1x2y2: bool = True, eps: float = 1e-
 
     iou = inter / union
 
-    cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
+    cw = torch.max(b1_x2, b2_x2) - torch.min(
+        b1_x1, b2_x1
+    )  # convex (smallest enclosing box) width
     ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
     # Complete IoU https://arxiv.org/abs/1911.08287v1
     c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
-    rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
-            (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
+    rho2 = (
+        (b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2
+    ) / 4  # center distance squared
 
     # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
     v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
@@ -114,7 +117,7 @@ class FocalLoss(nn.Module):
         self.alpha = alpha
         self.reduction = loss_fcn.reduction
         # required to apply FL to each element
-        self.loss_fcn.reduction = 'none'
+        self.loss_fcn.reduction = "none"
 
     def forward(self, pred, logit):
         loss = self.loss_fcn(pred, logit)
@@ -130,9 +133,9 @@ class FocalLoss(nn.Module):
         modulating_factor = (1.0 - p_t) ** self.gamma
         loss *= alpha_factor * modulating_factor
 
-        if self.reduction == 'mean':
+        if self.reduction == "mean":
             return loss.mean()
-        elif self.reduction == 'sum':
+        elif self.reduction == "sum":
             return loss.sum()
         else:  # 'none'
             return loss

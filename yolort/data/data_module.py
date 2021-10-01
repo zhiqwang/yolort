@@ -1,22 +1,21 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 from pathlib import Path
-
-import torch.utils.data
-from torch.utils.data.dataset import Dataset
-
-from pytorch_lightning import LightningDataModule
-
 from typing import Callable, List, Any, Optional
 
+import torch.utils.data
+from pytorch_lightning import LightningDataModule
+from torch.utils.data.dataset import Dataset
+
+from .coco import COCODetection
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
 from .voc import VOCDetection
-from .coco import COCODetection
 
 
 class DetectionDataModule(LightningDataModule):
     """
     Wrapper of Datasets in LightningDataModule
     """
+
     def __init__(
         self,
         train_dataset: Optional[Dataset] = None,
@@ -99,15 +98,29 @@ class COCODetectionDataModule(DetectionDataModule):
         *args: Any,
         **kwargs: Any,
     ) -> None:
-        anno_path = Path(anno_path) if anno_path else Path(data_path) / 'annotations'
+        anno_path = Path(anno_path) if anno_path else Path(data_path) / "annotations"
         train_ann_file = anno_path / f"{data_task}_{train_set}.json"
         val_ann_file = anno_path / f"{data_task}_{val_set}.json"
 
-        train_dataset = None if skip_train_set else COCODetection(data_path, train_ann_file, train_transform())
-        val_dataset = None if skip_val_set else COCODetection(data_path, val_ann_file, val_transform())
+        train_dataset = (
+            None
+            if skip_train_set
+            else COCODetection(data_path, train_ann_file, train_transform())
+        )
+        val_dataset = (
+            None
+            if skip_val_set
+            else COCODetection(data_path, val_ann_file, val_transform())
+        )
 
-        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
-                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
+        super().__init__(
+            train_dataset=train_dataset,
+            val_dataset=val_dataset,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            *args,
+            **kwargs,
+        )
 
         self.num_classes = num_classes
 
@@ -125,12 +138,20 @@ class VOCDetectionDataModule(DetectionDataModule):
         **kwargs: Any,
     ) -> None:
         train_dataset, num_classes = self.build_datasets(
-            data_path, image_set='train', years=years, transforms=train_transform)
+            data_path, image_set="train", years=years, transforms=train_transform
+        )
         val_dataset, _ = self.build_datasets(
-            data_path, image_set='val', years=years, transforms=val_transform)
+            data_path, image_set="val", years=years, transforms=val_transform
+        )
 
-        super().__init__(train_dataset=train_dataset, val_dataset=val_dataset,
-                         batch_size=batch_size, num_workers=num_workers, *args, **kwargs)
+        super().__init__(
+            train_dataset=train_dataset,
+            val_dataset=val_dataset,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            *args,
+            **kwargs,
+        )
 
         self.num_classes = num_classes
 

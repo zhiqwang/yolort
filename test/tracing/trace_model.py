@@ -1,5 +1,4 @@
 import torch
-
 from hubconf import yolov5s
 
 

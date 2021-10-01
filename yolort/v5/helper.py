@@ -7,7 +7,7 @@ import torch
 from .models.yolo import Model
 from .utils import attempt_download, set_logging
 
-__all__ = ['add_yolov5_context', 'load_yolov5_model', 'get_yolov5_size']
+__all__ = ["add_yolov5_context", "load_yolov5_model", "get_yolov5_size"]
 
 
 @contextlib.contextmanager
@@ -29,11 +29,11 @@ def add_yolov5_context():
 
 def get_yolov5_size(depth_multiple, width_multiple):
     if depth_multiple == 0.33 and width_multiple == 0.5:
-        return 's'
+        return "s"
     elif depth_multiple == 0.67 and width_multiple == 0.75:
-        return 'm'
+        return "m"
     elif depth_multiple == 1.0 and width_multiple == 1.0:
-        return 'l'
+        return "l"
     else:
         raise NotImplementedError(
             f"Currently does't support architecture with depth: {depth_multiple} "
@@ -41,7 +41,9 @@ def get_yolov5_size(depth_multiple, width_multiple):
         )
 
 
-def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bool = True):
+def load_yolov5_model(
+    checkpoint_path: str, autoshape: bool = False, verbose: bool = True
+):
     """
     Creates a specified YOLOv5 model
 
@@ -56,7 +58,9 @@ def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bo
     set_logging(verbose=verbose)
 
     with add_yolov5_context():
-        ckpt = torch.load(attempt_download(checkpoint_path), map_location=torch.device('cpu'))
+        ckpt = torch.load(
+            attempt_download(checkpoint_path), map_location=torch.device("cpu")
+        )
 
     if isinstance(ckpt, dict):
         model_ckpt = ckpt["model"]  # load model

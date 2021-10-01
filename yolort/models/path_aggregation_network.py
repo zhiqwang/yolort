@@ -41,11 +41,12 @@ class PathAggregationNetwork(nn.Module):
         >>>    ('feat3', torch.Size([1, 512, 13, 11]))]
 
     """
+
     def __init__(
         self,
         in_channels_list: List[int],
         depth_multiple: float,
-        version: str = 'r4.0',
+        version: str = "r4.0",
         block: Optional[Callable[..., nn.Module]] = None,
     ):
         super().__init__()
@@ -57,10 +58,14 @@ class PathAggregationNetwork(nn.Module):
         depth_gain = max(round(3 * depth_multiple), 1)
 
         inner_blocks = [
-            block(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
+            block(
+                in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
+            ),
             Conv(in_channels_list[2], in_channels_list[1], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
-            block(in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False),
+            block(
+                in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False
+            ),
             Conv(in_channels_list[1], in_channels_list[0], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
         ]
@@ -68,11 +73,17 @@ class PathAggregationNetwork(nn.Module):
         self.inner_blocks = nn.ModuleList(inner_blocks)
 
         layer_blocks = [
-            block(in_channels_list[1], in_channels_list[0], n=depth_gain, shortcut=False),
+            block(
+                in_channels_list[1], in_channels_list[0], n=depth_gain, shortcut=False
+            ),
             Conv(in_channels_list[0], in_channels_list[0], 3, 2, version=version),
-            block(in_channels_list[1], in_channels_list[1], n=depth_gain, shortcut=False),
+            block(
+                in_channels_list[1], in_channels_list[1], n=depth_gain, shortcut=False
+            ),
             Conv(in_channels_list[1], in_channels_list[1], 3, 2, version=version),
-            block(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
+            block(
+                in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
+            ),
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
 
