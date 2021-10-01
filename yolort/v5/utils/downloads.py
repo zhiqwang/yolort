@@ -34,9 +34,7 @@ def safe_download(file, url, url2=None, min_bytes=1e0, error_msg=""):
         print("")
 
 
-def attempt_download(
-    file, repo="ultralytics/yolov5"
-):  # from utils.downloads import *; attempt_download()
+def attempt_download(file, repo="ultralytics/yolov5"):
     # Attempt file download if does not exist
     file = Path(str(file).strip().replace("'", ""))
 
@@ -61,7 +59,8 @@ def attempt_download(
             # release assets, i.e. ['yolov5s.pt', 'yolov5m.pt', ...]
             assets = [x["name"] for x in response["assets"]]
             tag = response["tag_name"]  # i.e. 'v1.0'
-        except:  # fallback plan
+        except requests.exceptions.RequestException as e:  # fallback plan
+            print(str(e))
             assets = [
                 "yolov5s.pt",
                 "yolov5m.pt",
@@ -80,7 +79,7 @@ def attempt_download(
                     .decode()
                     .split()[-1]
                 )
-            except:
+            except subprocess.CalledProcessError:
                 tag = "v5.0"  # current release
 
         if name in assets:
