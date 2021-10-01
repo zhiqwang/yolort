@@ -22,3 +22,13 @@ repos:
         additional_dependencies:
           - black == 21.9b0
           - usort == 0.6.4
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.9
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-black
+          - mdformat_frontmatter
+        exclude: CHANGELOG.md
