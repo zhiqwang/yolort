@@ -3,9 +3,9 @@ import logging
 from pathlib import Path, PosixPath
 from typing import Type, Any
 from zipfile import ZipFile
-from tabulate import tabulate
 
 import torch
+from tabulate import tabulate
 from torch import Tensor
 
 from .coco import COCODetection

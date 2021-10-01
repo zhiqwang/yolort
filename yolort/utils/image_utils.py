@@ -7,11 +7,9 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
-
+import torch
 from IPython.display import display
 from PIL import Image
-
-import torch
 from torch import Tensor
 from torchvision.ops.boxes import box_convert
 

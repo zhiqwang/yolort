@@ -7,5 +7,10 @@ from .data_module import (
     COCODetectionDataModule,
 )
 
-all = ["contains_any_tensor", "COCOEvaluator", "DetectionDataModule",
-       "VOCDetectionDataModule", "COCODetectionDataModule"]
+all = [
+    "contains_any_tensor",
+    "COCOEvaluator",
+    "DetectionDataModule",
+    "VOCDetectionDataModule",
+    "COCODetectionDataModule",
+]
