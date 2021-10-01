@@ -727,9 +727,7 @@ def strip_optimizer(
         p.requires_grad = False
     torch.save(x, s or f)
     mb = os.path.getsize(s or f) / 1e6  # filesize
-    print(
-        f"Optimizer stripped from {f},{' saved as {s},' if s else ''} {mb:.1f}MB"
-    )
+    print(f"Optimizer stripped from {f},{' saved as {s},' if s else ''} {mb:.1f}MB")
 
 
 def print_mutation(results, hyp, save_dir):
