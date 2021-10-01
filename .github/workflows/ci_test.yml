@@ -16,10 +16,10 @@ jobs:
       matrix:
         python-version: [3.7]
         os: [ubuntu-latest]
-        torch: [1.9.0+cpu]
+        torch: [1.9.1+cpu]
         include:
-          - torch: 1.9.0+cpu
-            pip_address: torch==1.9.0+cpu torchvision==0.10.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+          - torch: 1.9.1+cpu
+            pip_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
 
     steps:
