@@ -7,7 +7,7 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
 - Ubuntu 20.04 / Windows 10
 - ONNXRuntime 1.7 +
 - OpenCV 4.5 +
-- CUDA 11 [Optional]
+- CUDA 11 \[Optional\]
 
 *We didn't impose too strong restrictions on the versions of dependencies.*
 
@@ -15,26 +15,26 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
 
 1. First, Setup the environment variable.
 
-    ```bash
-    export ORT_DIR=YOUR_ONNXRUNTIME_DIR
-    ```
+   ```bash
+   export ORT_DIR=YOUR_ONNXRUNTIME_DIR
+   ```
 
-2. Compile the source code.
+1. Compile the source code.
 
-    ```bash
-    cd deployment/onnxruntime
-    mkdir build && cd build
-    cmake .. -DONNXRUNTIME_DIR=$ORT_DIR
-    cmake --build .
-    ```
+   ```bash
+   cd deployment/onnxruntime
+   mkdir build && cd build
+   cmake .. -DONNXRUNTIME_DIR=$ORT_DIR
+   cmake --build .
+   ```
 
-3. Update your PyTorch model weights from ultralytics to yolort and export to ONNX following the [notebooks with tutorials](https://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/).
+1. Update your PyTorch model weights from ultralytics to yolort and export to ONNX following the [notebooks with tutorials](https://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/).
 
-4. Now, you can infer your own images.
+1. Now, you can infer your own images.
 
-    ```bash
-    ./yolort_onnx [--image ../../../test/assets/zidane.jpg]
-                  [--model_path ../../../notebooks/yolov5s.onnx]
-                  [--class_names ../../../notebooks/assets/coco.names]
-                  [--gpu]  # GPU switch, which is optional, and set False as default
-    ```
+   ```bash
+   ./yolort_onnx [--image ../../../test/assets/zidane.jpg]
+                 [--model_path ../../../notebooks/yolov5s.onnx]
+                 [--class_names ../../../notebooks/assets/coco.names]
+                 [--gpu]  # GPU switch, which is optional, and set False as default
+   ```
