@@ -368,7 +368,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             assert cache["version"] == 0.4 and cache["hash"] == get_hash(
                 self.label_files + self.img_files
             )
-        except AssertionError:
+        except FileNotFoundError:
             cache, exists = self.cache_labels(cache_path, prefix), False  # cache
 
         # Display cache
