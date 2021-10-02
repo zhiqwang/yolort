@@ -30,7 +30,10 @@ def get_parser():
         help="Model architecture to export",
     )
     parser.add_argument(
-        "--num_classes", default=80, type=int, help="The number of classes.",
+        "--num_classes",
+        default=80,
+        type=int,
+        help="The number of classes.",
     )
     parser.add_argument(
         "--score_thresh",
@@ -39,7 +42,9 @@ def get_parser():
         help="Score threshold used for postprocessing the detections.",
     )
     parser.add_argument(
-        "--export_friendly", action="store_true", help="Replace torch.nn.SiLU with SiLU."
+        "--export_friendly",
+        action="store_true",
+        help="Replace torch.nn.SiLU with SiLU.",
     )
     parser.add_argument(
         "--image_size",
