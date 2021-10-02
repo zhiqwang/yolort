@@ -155,11 +155,11 @@ def profile(input, ops, n=10, device=None):
             )
             # dt forward, backward
             tf, tb, t = 0.0, 0.0, [0.0, 0.0, 0.0]
-            try:
+            if thop is None:
+                flops = 0
+            else:
                 # GFLOPs
                 flops = thop.profile(m, inputs=(x,), verbose=False)[0] / 1e9 * 2
-            except ImportError:
-                flops = 0
 
             try:
                 for _ in range(n):

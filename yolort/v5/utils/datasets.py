@@ -74,7 +74,7 @@ def exif_size(img):
             s = (s[1], s[0])
         elif rotation == 8:  # rotation 90
             s = (s[1], s[0])
-    except KeyError:
+    except AttributeError:
         pass
 
     return s
@@ -368,7 +368,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             assert cache["version"] == 0.4 and cache["hash"] == get_hash(
                 self.label_files + self.img_files
             )
-        except AssertionError:
+        except FileNotFoundError:
             cache, exists = self.cache_labels(cache_path, prefix), False  # cache
 
         # Display cache
