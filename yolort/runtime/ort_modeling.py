@@ -1,6 +1,7 @@
 import logging
-import numpy as np
+
 import cv2
+import numpy as np
 
 try:
     import onnxruntime as ort
@@ -28,6 +29,7 @@ class PredictorORT:
         >>> img_path = 'bus.jpg'
         >>> scores, class_ids, boxes = detector.run_on_image(img_path)
     """
+
     def __init__(self, checkpoint_path: str, enable_gpu: bool = False) -> None:
         self.checkpoint_path = checkpoint_path
         self.enable_gpu = enable_gpu
@@ -40,14 +42,18 @@ class PredictorORT:
         if ort is not None:
             ort_device = ort.get_device()
         else:
-            raise ImportError("ONNXRuntime is not installed, please install onnxruntime firstly.")
+            raise ImportError(
+                "ONNXRuntime is not installed, please install onnxruntime firstly."
+            )
         providers = None
 
         if ort_device == "GPU" and self.enable_gpu:
             providers = ["CUDAExecutionProvider"]
             logger.info("Set inference device to GPU")
         elif self.enable_gpu:
-            logger.info("GPU is not supported by your ONNXRuntime build. Fallback to CPU.")
+            logger.info(
+                "GPU is not supported by your ONNXRuntime build. Fallback to CPU."
+            )
         else:
             providers = ["CPUExecutionProvider"]
             logger.info("Set inference device to CPU")
