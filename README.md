@@ -29,7 +29,7 @@ ______________________________________________________________________
 
 </div>
 
-## 🤗 Introduction
+## :hugs: Introduction
 
 **What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNXRuntime`, `TVM` and so on.
 
@@ -41,7 +41,7 @@ ______________________________________________________________________
 
 <a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
-## 🆕 What's New
+## :new: What's New
 
 - *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [itsnine](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
@@ -51,7 +51,7 @@ ______________________________________________________________________
 - *Nov. 4, 2020*. Add `LibTorch` C++ inference example.
 - *Oct. 8, 2020*. Support exporting to `TorchScript` model.
 
-## 🛠️ Usage
+## :hammer_and_wrench: Usage
 
 There are no extra compiled components in `yolort` and package dependencies are minimal, so the code is very simple to use.
 
@@ -83,7 +83,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
   pip install -U 'git+https://github.com/ppwwyyxx/cocoapi.git#subdirectory=PythonAPI'
   ```
 
-- To read a source of image(s) and detect its objects 🔥
+- To read a source of image(s) and detect its objects :fire:
 
   ```python
   from yolort.models import yolov5s
@@ -122,7 +122,7 @@ img_path = "test/assets/bus.jpg"
 predictions = model.predict(img_path)
 ```
 
-## 🚀 Deployment
+## :rocket: Deployment
 
 ### Inference on `LibTorch` backend
 
@@ -132,17 +132,17 @@ We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to de
 
 TBD
 
-## 🎨 Model Graph Visualization
+## :art: Model Graph Visualization
 
 Now, `yolort` can draw the model graph directly, checkout our [model-graph-visualization](notebooks/model-graph-visualization.ipynb) notebook to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5.detail.svg"><img src="notebooks/assets/yolov5.detail.svg" alt="YOLO model visualize" width="500"/></a>
 
-## 🎓 Acknowledgement
+## :mortar_board: Acknowledgement
 
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
 
-## 🤗 Contributing
+## :thinking: Contributing
 
 We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. *BTW, leave a 🌟 if you liked it, and this is the easiest way to support us* :)
