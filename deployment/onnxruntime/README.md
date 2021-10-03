@@ -42,8 +42,8 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
    ```python
    from yolort.runtime import PredictorORT
 
-   detector = PredictorORT('best.sim.onnx')
-   img_path = 'bus.jpg'
+   detector = PredictorORT("best.sim.onnx")
+   img_path = "bus.jpg"
    scores, class_ids, boxes = detector.run_on_image(img_path)
    ```
 
