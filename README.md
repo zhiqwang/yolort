@@ -22,6 +22,7 @@ ______________________________________________________________________
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
 [![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/master.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/master)
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
 
 ______________________________________________________________________
