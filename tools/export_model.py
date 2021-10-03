@@ -22,19 +22,6 @@ def get_parser():
         required=True,
         help="The path of checkpoint weights",
     )
-    # Model architecture
-    parser.add_argument(
-        "--arch",
-        choices=["yolov5s", "yolov5m", "yolov5l"],
-        default="yolov5s",
-        help="Model architecture to export",
-    )
-    parser.add_argument(
-        "--num_classes",
-        default=80,
-        type=int,
-        help="The number of classes.",
-    )
     parser.add_argument(
         "--score_thresh",
         default=0.25,
@@ -128,7 +115,7 @@ def cli_main():
     args = parser.parse_args()
     print(f"Command Line Args: {args}")
     checkpoint_path = Path(args.checkpoint_path)
-    assert checkpoint_path.is_file(), f"Not found checkpoint: {checkpoint_path}"
+    assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
 
     # input data
     images = [torch.rand(3, args.image_size, args.image_size)]
