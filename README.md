@@ -9,7 +9,7 @@ ______________________________________________________________________
 [Documentation](#hammer_and_wrench-usage) •
 [Installation Instructions](#installation-and-inference-examples) •
 [Deployment](#rocket-deployment) •
-[Contributing](#thinking-contributing) •
+[Contributing](CONTRIBUTING.md) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
 
 ______________________________________________________________________
@@ -124,11 +124,11 @@ predictions = model.predict(img_path)
 
 ## :rocket: Deployment
 
-### Inference on `LibTorch` backend
+### Inference on LibTorch backend
 
 We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
 
-### Inference on `ONNXRuntime` backend
+### Inference on ONNXRuntime backend
 
 On the `ONNXRuntime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNXRuntime`.
 
@@ -145,4 +145,4 @@ Now, `yolort` can draw the model graph directly, checkout our [model-graph-visua
 
 ## :thinking: Contributing
 
-We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us. *BTW, leave a 🌟 if you liked it, and this is the easiest way to support us* :)
+See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)
