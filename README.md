@@ -126,11 +126,11 @@ predictions = model.predict(img_path)
 
 ### Inference on `LibTorch` backend
 
-We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](./deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
+We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
 
 ### Inference on `ONNXRuntime` backend
 
-TBD
+On the `ONNXRuntime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNXRuntime`.
 
 ## :art: Model Graph Visualization
 
