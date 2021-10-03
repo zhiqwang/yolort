@@ -28,7 +28,24 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
    cmake --build .
    ```
 
-1. Update your PyTorch model weights from ultralytics to yolort and export to ONNX following the [notebooks with tutorials](https://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/).
+1. Export your custom model to ONNX.
+
+   ```bash
+   python tools/export_model.py [--checkpoint_path path/to/custom/best.pt]
+                                [--simplify]
+   ```
+
+   Afterwards, you can see that a new pair of ONNX models ("best.onnx" and "best.sim.onnx") has been generated in the directory of "best.pt".
+
+1. \[Optional\] Quick test with the ONNXRuntime Python interface.
+
+   ```python
+   from yolort.runtime import PredictorORT
+
+   detector = PredictorORT("best.sim.onnx")
+   img_path = "bus.jpg"
+   scores, class_ids, boxes = detector.run_on_image(img_path)
+   ```
 
 1. Now, you can infer your own images.
 
