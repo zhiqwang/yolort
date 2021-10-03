@@ -61,8 +61,8 @@ class PredictorORT:
         return providers
 
     def _build_runtime(self):
-        model = ort.InferenceSession(self.checkpoint_path, providers=self._providers)
-        return model
+        runtime = ort.InferenceSession(self.checkpoint_path, providers=self._providers)
+        return runtime
 
     def _preprocessing(self, image: np.ndarray) -> np.ndarray:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
