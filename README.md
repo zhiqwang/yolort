@@ -9,7 +9,7 @@ ______________________________________________________________________
 [Documentation](#hammer_and_wrench-usage) •
 [Installation Instructions](#installation-and-inference-examples) •
 [Deployment](#rocket-deployment) •
-[Contributing](#thinking-contributing) •
+[Contributing](CONTRIBUTING.md) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
 
 ______________________________________________________________________

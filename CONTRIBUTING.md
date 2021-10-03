@@ -113,4 +113,4 @@ If all previous checks (flake8, mypy, unit tests) are passing, please send a PR.
 
 ## License
 
-By contributing to `yolort`, you agree that your contributions will be licensed under the LICENSE file in the root directory of this source tree.
+By contributing to `yolort`, you agree that your contributions will be licensed under the [LICENSE](LICENSE) file in the root directory of this source tree.
