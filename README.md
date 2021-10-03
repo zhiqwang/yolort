@@ -6,10 +6,10 @@
 
 ______________________________________________________________________
 
-[Documentation](#%EF%B8%8F-usage) •
+[Documentation](#hammer_and_wrench-usage) •
 [Installation Instructions](#installation-and-inference-examples) •
-[Deployment](#-deployment) •
-[Contributing](#-contributing) •
+[Deployment](#rocket-deployment) •
+[Contributing](#thinking-contributing) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
 
 ______________________________________________________________________
