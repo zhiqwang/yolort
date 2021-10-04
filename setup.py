@@ -1,4 +1,5 @@
-"""A setuptools based setup module.
+"""
+A setuptools based setup module.
 See:
 https://packaging.python.org/guides/distributing-packages-using-setuptools/
 https://github.com/pypa/sampleproject
@@ -12,7 +13,7 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 PATH_ROOT = Path(__file__).parent.resolve()
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 
 PACKAGE_NAME = "yolort"
 sha = "Unknown"
