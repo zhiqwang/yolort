@@ -46,8 +46,6 @@ jobs:
           pip install opencv-python
           pip install pycocotools>=2.0.2
           pip install onnxruntime
-          # requirements for ultralytics/yolov5
-          pip install seaborn thop
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
