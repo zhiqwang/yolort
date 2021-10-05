@@ -47,8 +47,10 @@ class NCNNEmitter:
             inbound_nodes = self.ncnn_graph.get_node_inbounds(layer_name)
             for in_node in inbound_nodes:
                 if len(self.ncnn_graph.get_node_outbounds(in_node)) > 1:
-                    input_blobs.append(f'{in_node}_blob_idx_'
-                                       f'{self.ncnn_graph.get_node_outbounds(in_node).index(layer_name)}')
+                    input_blobs.append(
+                        f'{in_node}_blob_idx_'
+                        f'{self.ncnn_graph.get_node_outbounds(in_node).index(layer_name)}'
+                    )
                 else:
                     input_blobs.append(f'{in_node}_blob')
 
@@ -61,10 +63,12 @@ class NCNNEmitter:
 
             blob_count += len(output_blobs)
 
-            param_contect = (f"{param_contect}{layer_type}{(max(1, 25 - len(layer_type))) * ' '}"
-                             f"{layer_name}{(max(1, 40 - len(layer_name))) * ' '}{input_count} "
-                             f"{output_count} {' '.join(input_blobs)} {' '.join(output_blobs)} "
-                             f"{self.ncnn_graph.get_node_attr(layer_name)['param']}")
+            param_contect = (
+                f"{param_contect}{layer_type}{(max(1, 25 - len(layer_type))) * ' '}"
+                f"{layer_name}{(max(1, 40 - len(layer_name))) * ' '}{input_count} "
+                f"{output_count} {' '.join(input_blobs)} {' '.join(output_blobs)} "
+                f"{self.ncnn_graph.get_node_attr(layer_name)['param']}"
+            )
 
         layer_count = len(self.ncnn_graph.get_graph())
 
@@ -74,8 +78,7 @@ class NCNNEmitter:
             ncnn_param_file.write(param_contect)
 
     def emit_binary(self, file_name, seq):
-        f = open(file_name, 'w+b')
-        for layer_name in seq:
-            for weight in self.ncnn_graph.get_node_attr(layer_name)['binary']:
-                f.write(np.asarray(weight, dtype=np.float32).tobytes())
-        f.close()
+        with open(file_name, 'w+b') as f:
+            for layer_name in seq:
+                for weight in self.ncnn_graph.get_node_attr(layer_name)['binary']:
+                    f.write(np.asarray(weight, dtype=np.float32).tobytes())
