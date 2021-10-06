@@ -1,11 +1,9 @@
 import numpy as np
 
 try:
-    from pyppl import nn as pplnn
-    from pyppl import common as pplcommon
+    from pyppl import nn as pplnn, common as pplcommon
 except ImportError:
-    pplnn = None
-    pplcommon = None
+    pplnn, pplcommon = None, None
 
 
 class PredictorPPL:
@@ -28,28 +26,31 @@ class PredictorPPL:
     """
 
     def __init__(self, checkpoint_path: str, engine_type: str = "x86"):
-        self._engines = []
+        self._engines = self._set_providers(engine_type)
+        self._build_runtime(checkpoint_path)
+
+    def _set_providers(self, engine_type):
+        engines = []
         if engine_type == "x86":
-            self._create_x86_engine()
+            engine = self._build_x86_engine()
         elif engine_type == "cuda":
-            self._create_cuda_engine()
+            engine = self._build_cuda_engine()
         else:
             raise NotImplementedError(f"Not supported this engine type: {engine_type}")
+        engines.append(engine)
 
-        self._create_runtime(checkpoint_path)
-
-    def _create_x86_engine(self):
+    def _build_x86_engine(self):
         x86_options = pplnn.X86EngineOptions()
         x86_engine = pplnn.X86EngineFactory.Create(x86_options)
-        self._engines.append(pplnn.Engine(x86_engine))
+        return pplnn.Engine(x86_engine)
 
-    def _create_cuda_engine(self):
+    def _build_cuda_engine(self):
         cuda_options = pplnn.CudaEngineOptions()
         cuda_options.device_id = 0
         cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
-        self._engines.append(pplnn.Engine(cuda_engine))
+        return pplnn.Engine(cuda_engine)
 
-    def _create_runtime(self, checkpoint_path):
+    def _build_runtime(self, checkpoint_path):
         runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(
             checkpoint_path, self._engines,
         )
