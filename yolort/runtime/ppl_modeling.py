@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 
 try:
@@ -26,8 +27,8 @@ class PredictorPPL:
     """
 
     def __init__(self, checkpoint_path: str, engine_type: str = "x86"):
-        self._providers = self._set_providers(engine_type)
-        self._build_runtime(checkpoint_path)
+        providers = self._set_providers(engine_type)
+        self._runtime = self._build_runtime(checkpoint_path, providers)
 
     def _set_providers(self, engine_type):
         providers = []
@@ -51,42 +52,58 @@ class PredictorPPL:
         cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
         return pplnn.Engine(cuda_engine)
 
-    def _build_runtime(self, checkpoint_path):
-        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(
-            checkpoint_path,
-            self._providers,
-        )
+    @staticmethod
+    def _build_runtime(checkpoint_path, providers):
+        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(checkpoint_path, providers)
         if not runtime_builder:
             raise RuntimeError("Create RuntimeBuilder failed.")
 
-        self._runtime = runtime_builder.CreateRuntime()
-        if not self._runtime:
+        runtime = runtime_builder.CreateRuntime()
+        if not runtime:
             raise RuntimeError("Create Runtime instance failed.")
 
-    def _preprocessing(self, image_path):
+        return runtime
+
+    def _preprocessing(self, image: np.ndarray) -> np.ndarray:
+        pass
+
+    def __call__(self, image: np.ndarray):
+        """
+        Args:
+            image (np.ndarray): an image of shape (H, W, C) (in BGR order).
+                This is the format used by OpenCV.
+
+        Returns:
+            predictions (Tuple[List[float], List[int], List[float, float]]):
+                stands for scores, labels and boxes respectively.
+        """
         tensor = self._runtime.GetInputTensor(0)
-        in_data = np.fromfile(image_path, dtype=np.float32).reshape((1, 3, 800, 1200))
-        status = tensor.ConvertFromHost(in_data)
+        status = tensor.ConvertFromHost(image)
         if status != pplcommon.RC_SUCCESS:
             raise RuntimeError(
                 f"Copy data to tensor[{tensor.GetName()}] failed: {pplcommon.GetRetCodeStr(status)}"
             )
 
-    def _postprocessing(self):
+        status = self._runtime.Run()
+        if status != pplcommon.RC_SUCCESS:
+            raise RuntimeError(f"Run() failed: {pplcommon.GetRetCodeStr(status)}")
+
         for i in range(self._runtime.GetOutputCount()):
             tensor = self._runtime.GetOutputTensor(i)
-            tensor_data = tensor.ConvertToHost()
-            if not tensor_data:
+            blob = tensor.ConvertToHost()
+            if not blob:
                 raise RuntimeError(f"Copy data from tensor[{tensor.GetName()}] failed.")
+
             if tensor.GetName() == "boxes":
-                dets_data = np.array(tensor_data, copy=False)
-                dets_data = dets_data.squeeze()
+                boxes = np.array(blob, copy=False)
+                boxes = boxes.squeeze()
             if tensor.GetName() == "labels":
-                labels_data = np.array(tensor_data, copy=False)
-                labels_data = labels_data.squeeze()
+                class_ids = np.array(blob, copy=False)
+                class_ids = class_ids.squeeze()
             if tensor.GetName() == "scores":
-                masks_data = np.array(tensor_data, copy=False)
-        return dets_data, labels_data, masks_data
+                scores = np.array(blob, copy=False)
+
+        return boxes, class_ids, scores
 
     def run_on_image(self, image_path):
         """
@@ -95,9 +112,5 @@ class PredictorPPL:
         Args:
             image_path: input data file (binary data)
         """
-        self._preprocessing(image_path)
-        status = self._runtime.Run()
-        if status != pplcommon.RC_SUCCESS:
-            raise RuntimeError(f"Run() failed: {pplcommon.GetRetCodeStr(status)}")
-        dets_data, labels_data, masks_data = self._postprocessing()
-        return dets_data, labels_data, masks_data
+        image = cv2.imread(image_path)
+        return self(image)
