@@ -26,18 +26,19 @@ class PredictorPPL:
     """
 
     def __init__(self, checkpoint_path: str, engine_type: str = "x86"):
-        self._engines = self._set_providers(engine_type)
+        self._providers = self._set_providers(engine_type)
         self._build_runtime(checkpoint_path)
 
     def _set_providers(self, engine_type):
-        engines = []
+        providers = []
         if engine_type == "x86":
             engine = self._build_x86_engine()
         elif engine_type == "cuda":
             engine = self._build_cuda_engine()
         else:
             raise NotImplementedError(f"Not supported this engine type: {engine_type}")
-        engines.append(engine)
+        providers.append(engine)
+        return providers
 
     def _build_x86_engine(self):
         x86_options = pplnn.X86EngineOptions()
@@ -53,7 +54,7 @@ class PredictorPPL:
     def _build_runtime(self, checkpoint_path):
         runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(
             checkpoint_path,
-            self._engines,
+            self._providers,
         )
         if not runtime_builder:
             raise RuntimeError("Create RuntimeBuilder failed.")
@@ -71,21 +72,20 @@ class PredictorPPL:
                 f"Copy data to tensor[{tensor.GetName()}] failed: {pplcommon.GetRetCodeStr(status)}"
             )
 
-    def _prepare_output(self):
+    def _postprocessing(self):
         for i in range(self._runtime.GetOutputCount()):
             tensor = self._runtime.GetOutputTensor(i)
             tensor_data = tensor.ConvertToHost()
             if not tensor_data:
                 raise RuntimeError(f"Copy data from tensor[{tensor.GetName()}] failed.")
-            if tensor.GetName() == "dets":
+            if tensor.GetName() == "boxes":
                 dets_data = np.array(tensor_data, copy=False)
                 dets_data = dets_data.squeeze()
             if tensor.GetName() == "labels":
                 labels_data = np.array(tensor_data, copy=False)
                 labels_data = labels_data.squeeze()
-            if tensor.GetName() == "masks":
+            if tensor.GetName() == "scores":
                 masks_data = np.array(tensor_data, copy=False)
-                masks_data = masks_data.squeeze()
         return dets_data, labels_data, masks_data
 
     def run_on_image(self, image_path):
@@ -99,5 +99,5 @@ class PredictorPPL:
         status = self._runtime.Run()
         if status != pplcommon.RC_SUCCESS:
             raise RuntimeError(f"Run() failed: {pplcommon.GetRetCodeStr(status)}")
-        dets_data, labels_data, masks_data = self._prepare_output()
+        dets_data, labels_data, masks_data = self._postprocessing()
         return dets_data, labels_data, masks_data
