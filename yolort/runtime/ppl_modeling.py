@@ -54,7 +54,9 @@ class PredictorPPL:
 
     @staticmethod
     def _build_runtime(checkpoint_path, providers):
-        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(checkpoint_path, providers)
+        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(
+            checkpoint_path, providers
+        )
         if not runtime_builder:
             raise RuntimeError("Create RuntimeBuilder failed.")
 
