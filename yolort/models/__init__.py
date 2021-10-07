@@ -5,9 +5,10 @@ from torch import nn
 
 from yolort.utils.activations import Hardswish, SiLU
 from yolort.v5 import Conv
+from .yolo import YOLO
 from .yolo_module import YOLOv5
 
-__all__ = ["YOLOv5", "yolov5s", "yolov5m", "yolov5l", "yolotr"]
+__all__ = ["YOLO", "YOLOv5", "yolov5s", "yolov5m", "yolov5l", "yolotr"]
 
 
 def yolov5s(

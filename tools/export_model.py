@@ -10,7 +10,7 @@ try:
 except ImportError:
     onnxsim = None
 
-from yolort.models import YOLOv5
+from yolort.models import YOLO, YOLOv5
 
 
 def get_parser():
@@ -21,6 +21,11 @@ def get_parser():
         type=str,
         required=True,
         help="The path of checkpoint weights",
+    )
+    parser.add_argument(
+        "--skip_preprocess",
+        action="store_true",
+        help="Export the vanilla YOLO model.",
     )
     parser.add_argument(
         "--score_thresh",
@@ -52,6 +57,9 @@ def export_onnx(
     model,
     inputs,
     export_onnx_path,
+    dynamic_axes,
+    input_names=["images_tensors"],
+    output_names=["scores", "labels", "boxes"],
     opset_version=11,
     enable_simplify=False,
 ):
@@ -63,6 +71,9 @@ def export_onnx(
         inputs (Tuple[torch.Tensor]): The inputs to the model.
         export_onnx_path (str): A string containg a file name. A binary Protobuf
             will be written to this file.
+        dynamic_axes (dict): A dictionary of dynamic axes.
+        input_names (str): A names list of input names.
+        output_names (str): A names list of output names.
         opset_version (int, default is 11): By default we export the model to the
             opset version of the onnx submodule.
         enable_simplify (bool, default is False): Whether to enable simplification
@@ -74,18 +85,13 @@ def export_onnx(
         export_onnx_path,
         do_constant_folding=True,
         opset_version=opset_version,
-        input_names=["images_tensors"],
-        output_names=["scores", "labels", "boxes"],
-        dynamic_axes={
-            "images_tensors": [0, 1, 2],
-            "boxes": [0, 1],
-            "labels": [0],
-            "scores": [0],
-        },
+        input_names=input_names,
+        output_names=output_names,
+        dynamic_axes=dynamic_axes,
     )
 
     if enable_simplify:
-        input_shapes = {"images_tensors": list(inputs[0][0].shape)}
+        input_shapes = {input_names[0]: list(inputs[0][0].shape)}
         simplify_onnx(export_onnx_path, input_shapes)
 
 
@@ -117,12 +123,34 @@ def cli_main():
     checkpoint_path = Path(args.checkpoint_path)
     assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
 
-    # input data
-    images = [torch.rand(3, args.image_size, args.image_size)]
-    inputs = (images,)
-
-    model = YOLOv5.load_from_yolov5(checkpoint_path, score_thresh=args.score_thresh)
-    model.eval()
+    if args.skip_preprocess:
+        # input data
+        images = torch.rand(args.batch_size, 3, args.image_size, args.image_size)
+        inputs = (images,)
+        dynamic_axes = {
+            "images_tensors": {0: "batch", 2: "height", 3: "width"},
+            "boxes": {0: "batch", 1: "num_dets"},
+            "labels": {0: "batch", 1: "num_dets"},
+            "scores": {0: "batch", 1: "num_dets"},
+        }
+        input_names = ["images_tensors"]
+        output_names = ["scores", "labels", "boxes"]
+        model = YOLO.load_from_yolov5(checkpoint_path, score_thresh=args.score_thresh)
+        model.eval()
+    else:
+        # input data
+        images = [torch.rand(3, args.image_size, args.image_size)]
+        inputs = (images,)
+        dynamic_axes = {
+            "images_tensors": [0, 1, 2],
+            "boxes": [0, 1],
+            "labels": [0],
+            "scores": [0],
+        }
+        input_names = ["images_tensors"]
+        output_names = ["scores", "labels", "boxes"]
+        model = YOLOv5.load_from_yolov5(checkpoint_path, score_thresh=args.score_thresh)
+        model.eval()
 
     # export ONNX models
     export_onnx_path = checkpoint_path.with_suffix(".onnx")
@@ -131,6 +159,9 @@ def cli_main():
         model,
         inputs,
         export_onnx_path,
+        dynamic_axes,
+        input_names=input_names,
+        output_names=output_names,
         opset_version=args.opset,
         enable_simplify=args.simplify,
     )
