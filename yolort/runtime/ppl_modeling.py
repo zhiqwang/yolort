@@ -1,9 +1,9 @@
 import numpy as np
 
 try:
-    from pyppl import nn as pplnn, common as pplcommon
+    from pyppl import common as pplcommon, nn as pplnn
 except ImportError:
-    pplnn, pplcommon = None, None
+    pplcommon, pplnn = None, None
 
 
 class PredictorPPL:
@@ -52,7 +52,8 @@ class PredictorPPL:
 
     def _build_runtime(self, checkpoint_path):
         runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(
-            checkpoint_path, self._engines,
+            checkpoint_path,
+            self._engines,
         )
         if not runtime_builder:
             raise RuntimeError("Create RuntimeBuilder failed.")
@@ -75,16 +76,14 @@ class PredictorPPL:
             tensor = self._runtime.GetOutputTensor(i)
             tensor_data = tensor.ConvertToHost()
             if not tensor_data:
-                raise RuntimeError(
-                    f"Copy data from tensor[{tensor.GetName()}] failed."
-                )
-            if tensor.GetName() == 'dets':
+                raise RuntimeError(f"Copy data from tensor[{tensor.GetName()}] failed.")
+            if tensor.GetName() == "dets":
                 dets_data = np.array(tensor_data, copy=False)
                 dets_data = dets_data.squeeze()
-            if tensor.GetName() == 'labels':
+            if tensor.GetName() == "labels":
                 labels_data = np.array(tensor_data, copy=False)
                 labels_data = labels_data.squeeze()
-            if tensor.GetName() == 'masks':
+            if tensor.GetName() == "masks":
                 masks_data = np.array(tensor_data, copy=False)
                 masks_data = masks_data.squeeze()
         return dets_data, labels_data, masks_data
