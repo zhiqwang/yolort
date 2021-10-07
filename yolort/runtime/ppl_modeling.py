@@ -6,6 +6,8 @@ try:
 except ImportError:
     pplcommon, pplnn = None, None
 
+from yolort.v5 import letterbox
+
 
 class PredictorPPL:
     """
@@ -27,8 +29,8 @@ class PredictorPPL:
     """
 
     def __init__(self, checkpoint_path: str, engine_type: str = "x86"):
-        providers = self._set_providers(engine_type)
-        self._runtime = self._build_runtime(checkpoint_path, providers)
+        _providers = self._set_providers(engine_type)
+        self._runtime = self._build_runtime(checkpoint_path, _providers)
 
     def _set_providers(self, engine_type):
         providers = []
@@ -67,9 +69,14 @@ class PredictorPPL:
         return runtime
 
     def _preprocessing(self, image: np.ndarray) -> np.ndarray:
-        pass
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = letterbox(image, new_shape=(640, 640))[0]
+        blob = image.astype(np.float32) / 255.0
+        blob = np.transpose(blob, axes=(2, 0, 1))
 
-    def __call__(self, image: np.ndarray):
+        return blob[None]
+
+    def __call__(self, blob: np.ndarray):
         """
         Args:
             image (np.ndarray): an image of shape (H, W, C) (in BGR order).
@@ -80,7 +87,7 @@ class PredictorPPL:
                 stands for scores, labels and boxes respectively.
         """
         tensor = self._runtime.GetInputTensor(0)
-        status = tensor.ConvertFromHost(image)
+        status = tensor.ConvertFromHost(blob)
         if status != pplcommon.RC_SUCCESS:
             raise RuntimeError(
                 f"Copy data to tensor[{tensor.GetName()}] failed: {pplcommon.GetRetCodeStr(status)}"
@@ -115,4 +122,5 @@ class PredictorPPL:
             image_path: input data file (binary data)
         """
         image = cv2.imread(image_path)
-        return self(image)
+        blob = self._preprocessing(image)
+        return self(blob)
