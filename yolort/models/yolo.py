@@ -7,6 +7,7 @@ import torch
 from torch import nn, Tensor
 from torchvision.models.utils import load_state_dict_from_url
 
+from ._utils import load_from_ultralytics
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead, SetCriterion, PostProcess
@@ -175,6 +176,35 @@ class YOLO(nn.Module):
             return losses, detections
         else:
             return self.eager_outputs(losses, detections)
+
+    @classmethod
+    def load_from_yolov5(
+        cls,
+        checkpoint_path: str,
+        score_thresh: float = 0.25,
+        nms_thresh: float = 0.45,
+        version: str = "r4.0",
+    ):
+        """
+        Load model state from the checkpoint trained by YOLOv5.
+        """
+        model_info = load_from_ultralytics(checkpoint_path, version=version)
+        backbone_name = f"darknet_{model_info['size']}_{version.replace('.', '_')}"
+        depth_multiple = model_info["depth_multiple"]
+        width_multiple = model_info["width_multiple"]
+        backbone = darknet_pan_backbone(
+            backbone_name, depth_multiple, width_multiple, version=version
+        )
+        model = cls(
+            backbone,
+            model_info["num_classes"],
+            anchor_grids=model_info["anchor_grids"],
+            score_thresh=score_thresh,
+            nms_thresh=nms_thresh,
+        )
+
+        model.load_state_dict(model_info["state_dict"])
+        return model
 
 
 model_urls_root = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
