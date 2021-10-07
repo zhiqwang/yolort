@@ -10,10 +10,8 @@ from torch import Tensor
 from torchvision.io import read_image
 
 from yolort.data import COCOEvaluator, contains_any_tensor
-from yolort.utils.update_module_state import ModuleStateUpdate
-from yolort.v5 import load_yolov5_model, get_yolov5_size
 from . import yolo
-from ._utils import _evaluate_iou
+from ._utils import _evaluate_iou, load_from_ultralytics
 from .transform import YOLOTransform
 
 __all__ = ["YOLOv5"]
@@ -304,36 +302,18 @@ class YOLOv5(LightningModule):
     ):
         """
         Load model state from the checkpoint trained by YOLOv5.
-
-        Args:
-            checkpoint_path (str): Path of the YOLOv5 checkpoint model.
         """
-        checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
-        num_classes = checkpoint_yolov5.yaml["nc"]
-        anchor_grids = checkpoint_yolov5.yaml["anchors"]
-        depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
-        width_multiple = checkpoint_yolov5.yaml["width_multiple"]
-
-        module_state_updater = ModuleStateUpdate(
-            arch=None,
-            depth_multiple=depth_multiple,
-            width_multiple=width_multiple,
-            version=version,
-            num_classes=num_classes,
-        )
-        module_state_updater.updating(checkpoint_yolov5)
-        state_dict = module_state_updater.model.state_dict()
-        yolov5_size = get_yolov5_size(depth_multiple, width_multiple)
-        arch = f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}"
-        yolov5_custom = cls(
+        model_info = load_from_ultralytics(checkpoint_path)
+        arch = f"yolov5_darknet_pan_{model_info['size']}_{version.replace('.', '')}"
+        yolov5 = cls(
             lr=lr,
             arch=arch,
             size=size,
-            num_classes=num_classes,
-            anchor_grids=anchor_grids,
+            num_classes=model_info["num_classes"],
+            anchor_grids=model_info["anchor_grids"],
             score_thresh=score_thresh,
             nms_thresh=nms_thresh,
         )
 
-        yolov5_custom.model.load_state_dict(state_dict)
-        return yolov5_custom
+        yolov5.model.load_state_dict(model_info["state_dict"])
+        return yolov5
