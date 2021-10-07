@@ -125,13 +125,12 @@ def cli_main():
 
     if args.skip_preprocess:
         # input data
-        images = torch.rand(args.batch_size, 3, args.image_size, args.image_size)
-        inputs = (images,)
+        inputs = torch.rand(args.batch_size, 3, args.image_size, args.image_size)
         dynamic_axes = {
             "images_tensors": {0: "batch", 2: "height", 3: "width"},
-            "boxes": {0: "batch", 1: "num_dets"},
-            "labels": {0: "batch", 1: "num_dets"},
-            "scores": {0: "batch", 1: "num_dets"},
+            "boxes": {0: "batch", 1: "num_objects"},
+            "labels": {0: "batch", 1: "num_objects"},
+            "scores": {0: "batch", 1: "num_objects"},
         }
         input_names = ["images_tensors"]
         output_names = ["scores", "labels", "boxes"]
@@ -142,10 +141,10 @@ def cli_main():
         images = [torch.rand(3, args.image_size, args.image_size)]
         inputs = (images,)
         dynamic_axes = {
-            "images_tensors": [0, 1, 2],
-            "boxes": [0, 1],
-            "labels": [0],
-            "scores": [0],
+            "images_tensors": {1: "height", 2: "width"},
+            "boxes": {0: "num_objects"},
+            "labels": {0: "num_objects"},
+            "scores": {0: "num_objects"},
         }
         input_names = ["images_tensors"]
         output_names = ["scores", "labels", "boxes"]
