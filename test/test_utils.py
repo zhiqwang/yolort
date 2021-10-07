@@ -8,11 +8,11 @@ from torch import nn, Tensor
 from yolort.models import yolov5s
 from yolort.utils import (
     FeatureExtractor,
-    update_module_state_from_ultralytics,
     read_image_to_tensor,
     get_image_from_url,
 )
 from yolort.utils.image_utils import box_cxcywh_to_xyxy
+from yolort.utils.update_module_state import update_module_state_from_ultralytics
 from yolort.v5 import letterbox, scale_coords
 
 
