@@ -17,7 +17,7 @@ def yolov5s(
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
+            are ["r3.1", "r4.0"]. Default: "r4.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -40,7 +40,7 @@ def yolov5m(
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
+            are ["r3.1", "r4.0"]. Default: "r4.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -63,7 +63,7 @@ def yolov5l(
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
+            are ["r3.1", "r4.0"]. Default: "r4.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -86,7 +86,7 @@ def yolotr(
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are 'r3.1' and 'r4.0'. Default: 'r4.0'.
+            are "r4.0". Default: "r4.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """

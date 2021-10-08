@@ -42,28 +42,30 @@ def autopad(k, p=None):  # kernel, padding
 
 
 class Conv(nn.Module):
-    # Standard convolution
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r4.0"):
-        """
-        Args:
-            c1 (int): ch_in
-            c2 (int): ch_out
-            k (int): kernel
-            s (int): stride
-            p (Optional[int]): padding
-            g (int): groups
-            act (bool): determine the activation function
-            version (str): ultralytics release version: r3.1 or r4.0
-        """
+    """
+    Standard convolution
+
+    Attributes:
+        c1 (int): ch_in
+        c2 (int): ch_out
+        k (int): kernel
+        s (int): stride
+        p (Optional[int]): padding
+        g (int): groups
+        act (bool or nn.Module): determine the activation function
+        version (str): Module version released by ultralytics. Possible values
+            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
+    """
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r6.0"):
         super().__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
-        if version == "r4.0":
-            self.act = nn.SiLU() if act else nn.Identity()
+        if version in ["r4.0", "r5.0", "r6.0"]:
+            self.act = nn.SiLU() if act else (act if isinstance(act, nn.Module) else nn.Identity())
         elif version == "r3.1":
-            self.act = nn.Hardswish() if act else nn.Identity()
+            self.act = nn.Hardswish() if act else (act if isinstance(act, nn.Module) else nn.Identity())
         else:
-            raise NotImplementedError("Currently only supports version r3.1 and r4.0")
+            raise NotImplementedError("Currently only supports version above r3.1")
 
     def forward(self, x: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(x)))
@@ -73,25 +75,36 @@ class Conv(nn.Module):
 
 
 class DWConv(Conv):
-    # Depth-wise convolution class
-    def __init__(
-        self, c1, c2, k=1, s=1, act=True
-    ):  # ch_in, ch_out, kernel, stride, padding, groups
-        super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
+    """
+    Depth-wise convolution class.
+
+    Attributes:
+        c1 (int): ch_in
+        c2 (int): ch_out
+        k (int): kernel
+        s (int): stride
+        act (bool or nn.Module): determine the activation function
+        version (str): Module version released by ultralytics. Possible values
+            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
+    """
+    def __init__(self, c1, c2, k=1, s=1, act=True, version="r6.0"):
+        super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), act=act, version=version)
 
 
 class Bottleneck(nn.Module):
-    # Standard bottleneck
-    def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version="r4.0"):
-        """
-        Args:
-            c1 (int): ch_in
-            c2 (int): ch_out
-            shortcut (bool): shortcut
-            g (int): groups
-            e (float): expansion
-            version (str): ultralytics release version: r3.1 or r4.0
-        """
+    """
+    Standard bottleneck
+
+    Attributes:
+        c1 (int): ch_in
+        c2 (int): ch_out
+        shortcut (bool): shortcut
+        g (int): groups
+        e (float): expansion
+        version (str): Module version released by ultralytics. Possible values
+            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
+    """
+    def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version="r6.0"):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
@@ -103,17 +116,18 @@ class Bottleneck(nn.Module):
 
 
 class BottleneckCSP(nn.Module):
-    # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+    """
+    CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+
+    Attributes:
+        c1 (int): ch_in
+        c2 (int): ch_out
+        n (int): number
+        shortcut (bool): shortcut
+        g (int): groups
+        e (float): expansion
+    """
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
-        """
-        Args:
-            c1 (int): ch_in
-            c2 (int): ch_out
-            n (int): number
-            shortcut (bool): shortcut
-            g (int): groups
-            e (float): expansion
-        """
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version="r3.1")
@@ -133,17 +147,18 @@ class BottleneckCSP(nn.Module):
 
 
 class C3(nn.Module):
-    # CSP Bottleneck with 3 convolutions
+    """
+    CSP Bottleneck with 3 convolutions
+
+    Attributes:
+        c1 (int): ch_in
+        c2 (int): ch_out
+        n (int): number
+        shortcut (bool): shortcut
+        g (int): groups
+        e (float): expansion
+    """
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
-        """
-        Args:
-            c1 (int): ch_in
-            c2 (int): ch_out
-            n (int): number
-            shortcut (bool): shortcut
-            g (int): groups
-            e (float): expansion
-        """
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1)
@@ -159,7 +174,7 @@ class C3(nn.Module):
 
 class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13), version="r4.0"):
+    def __init__(self, c1, c2, k=(5, 9, 13), version="r6.0"):
         super().__init__()
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
@@ -176,11 +191,10 @@ class SPP(nn.Module):
 class SPPF(nn.Module):
     """
     Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
-
-    equivalent to SPP(k=(5, 9, 13))
     """
 
-    def __init__(self, c1, c2, k=5, version="r4.0"):
+    def __init__(self, c1, c2, k=5, version="r6.0"):
+        # Equivalent to SPP(k=(5, 9, 13))
         super().__init__()
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
@@ -195,19 +209,21 @@ class SPPF(nn.Module):
 
 
 class Focus(nn.Module):
-    # Focus wh information into c-space
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r4.0"):
-        """
-        Args:
-            c1 (int): ch_in
-            c2 (int): ch_out
-            k (int): kernel
-            s (int): stride
-            p (Optional[int]): padding
-            g (int): groups
-            act (bool): determine the activation function
-            version (str): ultralytics release version: r3.1 or r4.0
-        """
+    """
+    Focus wh information into c-space
+
+    Attributes:
+        c1 (int): ch_in
+        c2 (int): ch_out
+        k (int): kernel
+        s (int): stride
+        p (Optional[int]): padding
+        g (int): groups
+        act (bool or nn.Module): determine the activation function
+        version (str): Module version released by ultralytics. Possible values
+            are ["r3.1", "r4.0", "r5.0"]. Default: "r5.0".
+    """
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r5.0"):
         super().__init__()
         self.conv = Conv(c1 * 4, c2, k, s, p, g, act, version=version)
 
@@ -327,9 +343,7 @@ class C3Ghost(C3):
 
 class GhostConv(nn.Module):
     # Ghost Convolution https://github.com/huawei-noah/ghostnet
-    def __init__(
-        self, c1, c2, k=1, s=1, g=1, act=True
-    ):  # ch_in, ch_out, kernel, stride, groups
+    def __init__(self, c1, c2, k=1, s=1, g=1, act=True):
         super().__init__()
         c_ = c2 // 2  # hidden channels
         self.cv1 = Conv(c1, c_, k, s, None, g, act)
@@ -342,7 +356,7 @@ class GhostConv(nn.Module):
 
 class GhostBottleneck(nn.Module):
     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=3, s=1):  # ch_in, ch_out, kernel, stride
+    def __init__(self, c1, c2, k=3, s=1):
         super().__init__()
         c_ = c2 // 2
         self.conv = nn.Sequential(
@@ -369,12 +383,8 @@ class Contract(nn.Module):
         self.gain = gain
 
     def forward(self, x):
-        (
-            b,
-            c,
-            h,
-            w,
-        ) = x.size()  # assert (h / s == 0) and (W / s == 0), 'Indivisible gain'
+        b, c, h, w = x.size()
+        # assert (h / s == 0) and (W / s == 0), 'Indivisible gain'
         s = self.gain
         x = x.view(b, c, h // s, s, w // s, s)  # x(1,64,40,2,40,2)
         x = x.permute(0, 3, 5, 1, 2, 4).contiguous()  # x(1,2,2,64,40,40)
