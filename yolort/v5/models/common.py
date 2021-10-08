@@ -56,14 +56,23 @@ class Conv(nn.Module):
         version (str): Module version released by ultralytics. Possible values
             are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
     """
+
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r6.0"):
         super().__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
         if version in ["r4.0", "r5.0", "r6.0"]:
-            self.act = nn.SiLU() if act else (act if isinstance(act, nn.Module) else nn.Identity())
+            self.act = (
+                nn.SiLU()
+                if act
+                else (act if isinstance(act, nn.Module) else nn.Identity())
+            )
         elif version == "r3.1":
-            self.act = nn.Hardswish() if act else (act if isinstance(act, nn.Module) else nn.Identity())
+            self.act = (
+                nn.Hardswish()
+                if act
+                else (act if isinstance(act, nn.Module) else nn.Identity())
+            )
         else:
             raise NotImplementedError("Currently only supports version above r3.1")
 
@@ -87,6 +96,7 @@ class DWConv(Conv):
         version (str): Module version released by ultralytics. Possible values
             are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
     """
+
     def __init__(self, c1, c2, k=1, s=1, act=True, version="r6.0"):
         super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), act=act, version=version)
 
@@ -104,6 +114,7 @@ class Bottleneck(nn.Module):
         version (str): Module version released by ultralytics. Possible values
             are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
     """
+
     def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version="r6.0"):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -127,6 +138,7 @@ class BottleneckCSP(nn.Module):
         g (int): groups
         e (float): expansion
     """
+
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -158,6 +170,7 @@ class C3(nn.Module):
         g (int): groups
         e (float): expansion
     """
+
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -223,6 +236,7 @@ class Focus(nn.Module):
         version (str): Module version released by ultralytics. Possible values
             are ["r3.1", "r4.0", "r5.0"]. Default: "r5.0".
     """
+
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r5.0"):
         super().__init__()
         self.conv = Conv(c1 * 4, c2, k, s, p, g, act, version=version)
