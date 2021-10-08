@@ -207,7 +207,7 @@ class SPPF(nn.Module):
     """
 
     def __init__(self, c1, c2, k=5, version="r6.0"):
-        # Equivalent to SPP(k=(5, 9, 13))
+        # Equivalent to SPP(k=(5, 9, 13)) when k=5
         super().__init__()
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)

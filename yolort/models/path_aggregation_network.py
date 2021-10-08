@@ -22,9 +22,9 @@ class PathAggregationNetwork(nn.Module):
         in_channels_list (list[int]): number of channels for each feature map that
             is passed to the module
         out_channels (int): number of channels of the PAN representation
-        version (str): ultralytics release version: r3.1 or r4.0
+        version (str): ultralytics release version: ["r3.1", "r4.0", "r6.0"]
 
-    Examples::
+    Examples:
 
         >>> m = PathAggregationNetwork()
         >>> # get some dummy data
@@ -35,11 +35,9 @@ class PathAggregationNetwork(nn.Module):
         >>> # compute the PAN on top of x
         >>> output = m(x)
         >>> print([(k, v.shape) for k, v in output.items()])
-        >>> # returns
-        >>>   [('feat0', torch.Size([1, 128, 52, 44])),
-        >>>    ('feat2', torch.Size([1, 256, 26, 22])),
-        >>>    ('feat3', torch.Size([1, 512, 13, 11]))]
-
+        [('feat0', torch.Size([1, 128, 52, 44])),
+         ('feat2', torch.Size([1, 256, 26, 22])),
+         ('feat3', torch.Size([1, 512, 13, 11]))]
     """
 
     def __init__(
@@ -173,4 +171,5 @@ class PathAggregationNetwork(nn.Module):
 _block = {
     "r3.1": BottleneckCSP,
     "r4.0": C3,
+    "r6.0": C3,
 }
