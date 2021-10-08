@@ -43,6 +43,7 @@ class DarkNet(nn.Module):
             a multiple of this number. Set to 1 to turn off rounding
         num_classes (int): Number of classes
     """
+
     def __init__(
         self,
         depth_multiple: float,
