@@ -10,7 +10,7 @@ from ._utils import _make_divisible
 
 
 __all__ = [
-    "DarkNet",
+    "DarkNetV5",
     "darknet_s_r3_1",
     "darknet_m_r3_1",
     "darknet_l_r3_1",
@@ -29,9 +29,9 @@ model_urls = {
 }  # TODO: add checkpoint weights
 
 
-class DarkNet(nn.Module):
+class DarkNetV5(nn.Module):
     """
-    DarkNet main class
+    DarkNetV5 main class
 
     Args:
         depth_multiple (float): Depth multiplier
@@ -130,13 +130,13 @@ _block = {
 
 def _darknet(
     arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any
-) -> DarkNet:
+) -> DarkNetV5:
     """
-    Constructs a DarkNet architecture from
+    Constructs a DarkNetV5 architecture from
     # TODO
 
     """
-    model = DarkNet(*args, **kwargs)
+    model = DarkNetV5(*args, **kwargs)
 
     if pretrained:
         model_url = model_urls[arch]
@@ -153,9 +153,9 @@ def _darknet(
 
 def darknet_s_r3_1(
     pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNet:
+) -> DarkNetV5:
     """
-    Constructs a DarkNet with small channels, as described in release 3.1
+    Constructs a DarkNetV5 with small channels, as described in release 3.1
     # TODO
 
     Args:
@@ -167,9 +167,9 @@ def darknet_s_r3_1(
 
 def darknet_m_r3_1(
     pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNet:
+) -> DarkNetV5:
     """
-    Constructs a DarkNet with small channels, as described in release 3.1
+    Constructs a DarkNetV5 with small channels, as described in release 3.1
     # TODO
 
     Args:
@@ -183,9 +183,9 @@ def darknet_m_r3_1(
 
 def darknet_l_r3_1(
     pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNet:
+) -> DarkNetV5:
     """
-    Constructs a DarkNet with small channels, as described in release 3.1
+    Constructs a DarkNetV5 with small channels, as described in release 3.1
     # TODO
 
     Args:
@@ -197,9 +197,9 @@ def darknet_l_r3_1(
 
 def darknet_s_r4_0(
     pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNet:
+) -> DarkNetV5:
     """
-    Constructs a DarkNet with small channels, as described in release 3.1
+    Constructs a DarkNetV5 with small channels, as described in release 3.1
     # TODO
 
     Args:
@@ -211,9 +211,9 @@ def darknet_s_r4_0(
 
 def darknet_m_r4_0(
     pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNet:
+) -> DarkNetV5:
     """
-    Constructs a DarkNet with small channels, as described in release 3.1
+    Constructs a DarkNetV5 with small channels, as described in release 3.1
     # TODO
 
     Args:
@@ -227,9 +227,9 @@ def darknet_m_r4_0(
 
 def darknet_l_r4_0(
     pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNet:
+) -> DarkNetV5:
     """
-    Constructs a DarkNet with small channels, as described in release 3.1
+    Constructs a DarkNetV5 with small channels, as described in release 3.1
     # TODO
 
     Args:
