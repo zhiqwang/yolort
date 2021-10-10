@@ -54,14 +54,14 @@ class Conv(nn.Module):
         g (int): groups
         act (bool or nn.Module): determine the activation function
         version (str): Module version released by ultralytics. Possible values
-            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
+            are ["r3.1", "r4.0"]. Default: "r4.0".
     """
 
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r6.0"):
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r4.0"):
         super().__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
-        if version in ["r4.0", "r5.0", "r6.0"]:
+        if version == "r4.0":
             self.act = (
                 nn.SiLU()
                 if act
@@ -74,7 +74,7 @@ class Conv(nn.Module):
                 else (act if isinstance(act, nn.Module) else nn.Identity())
             )
         else:
-            raise NotImplementedError("Currently only supports version above r3.1")
+            raise NotImplementedError(f"Currently only supports version: {version}")
 
     def forward(self, x: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(x)))
@@ -94,10 +94,10 @@ class DWConv(Conv):
         s (int): stride
         act (bool or nn.Module): determine the activation function
         version (str): Module version released by ultralytics. Possible values
-            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
+            are ["r3.1", "r4.0"]. Default: "r4.0".
     """
 
-    def __init__(self, c1, c2, k=1, s=1, act=True, version="r6.0"):
+    def __init__(self, c1, c2, k=1, s=1, act=True, version="r4.0"):
         super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), act=act, version=version)
 
 
@@ -112,10 +112,10 @@ class Bottleneck(nn.Module):
         g (int): groups
         e (float): expansion
         version (str): Module version released by ultralytics. Possible values
-            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
+            are ["r3.1", "r4.0"]. Default: "r4.0".
     """
 
-    def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version="r6.0"):
+    def __init__(self, c1, c2, shortcut=True, g=1, e=0.5, version="r4.0"):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
@@ -169,16 +169,18 @@ class C3(nn.Module):
         shortcut (bool): shortcut
         g (int): groups
         e (float): expansion
+        version (str): Module version released by ultralytics. Possible values
+            are ["r4.0"]. Default: "r4.0".
     """
 
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, version="r4.0"):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
-        self.cv2 = Conv(c1, c_, 1, 1)
-        self.cv3 = Conv(2 * c_, c2, 1)  # act=FReLU(c2)
+        self.cv1 = Conv(c1, c_, 1, 1, version=version)
+        self.cv2 = Conv(c1, c_, 1, 1, version=version)
+        self.cv3 = Conv(2 * c_, c2, 1, version=version)  # act=FReLU(c2)
         self.m = nn.Sequential(
-            *[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
+            *[Bottleneck(c_, c_, shortcut, g, e=1.0, version=version) for _ in range(n)]
         )
 
     def forward(self, x):
@@ -187,7 +189,7 @@ class C3(nn.Module):
 
 class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13), version="r6.0"):
+    def __init__(self, c1, c2, k=(5, 9, 13), version="r4.0"):
         super().__init__()
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
@@ -206,7 +208,7 @@ class SPPF(nn.Module):
     Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
     """
 
-    def __init__(self, c1, c2, k=5, version="r6.0"):
+    def __init__(self, c1, c2, k=5, version="r4.0"):
         # Equivalent to SPP(k=(5, 9, 13)) when k=5
         super().__init__()
         c_ = c1 // 2  # hidden channels
@@ -289,12 +291,21 @@ class Flatten(nn.Module):
 
 
 class TransformerLayer(nn.Module):
-    # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)
+    """
+    Transformer layer <https://arxiv.org/abs/2010.11929>.
+    Remove the LayerNorm layers for better performance
+
+    Args:
+        c (int): number of channels
+        num_heads: number of heads
+    """
+
     def __init__(self, c, num_heads):
         super().__init__()
         self.q = nn.Linear(c, c, bias=False)
         self.k = nn.Linear(c, c, bias=False)
         self.v = nn.Linear(c, c, bias=False)
+
         self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
         self.fc1 = nn.Linear(c, c, bias=False)
         self.fc2 = nn.Linear(c, c, bias=False)
@@ -306,12 +317,21 @@ class TransformerLayer(nn.Module):
 
 
 class TransformerBlock(nn.Module):
-    # Vision Transformer https://arxiv.org/abs/2010.11929
+    """
+    Vision Transformer <https://arxiv.org/abs/2010.11929>.
+
+    Args:
+        c1 (int): number of input channels
+        c2 (int): number of output channels
+        num_heads: number of heads
+        num_layers: number of layers
+    """
+
     def __init__(self, c1, c2, num_heads, num_layers):
         super().__init__()
         self.conv = None
         if c1 != c2:
-            self.conv = Conv(c1, c2)
+            self.conv = Conv(c1, c2, version="r4.0")
         self.linear = nn.Linear(c2, c2)  # learnable position embedding
         self.tr = nn.Sequential(
             *[TransformerLayer(c2, num_heads) for _ in range(num_layers)]
@@ -334,7 +354,7 @@ class TransformerBlock(nn.Module):
 class C3TR(C3):
     # C3 module with TransformerBlock()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
-        super().__init__(c1, c2, n, shortcut, g, e)
+        super().__init__(c1, c2, n, shortcut, g, e, version="r4.0")
         c_ = int(c2 * e)
         self.m = TransformerBlock(c_, c_, 4, n)
 

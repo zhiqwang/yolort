@@ -24,7 +24,7 @@ class BackboneWithPAN(nn.Module):
         in_channels_list (List[int]): number of channels for each feature map
             that is returned, in the order they are present in the OrderedDict
         depth_multiple (float): depth multiplier
-        version (str): ultralytics release version: ["r3.1", "r4.0", "r6.0"]
+        version (str): Module version released by ultralytics: ["r3.1", "r4.0", "r6.0"].
 
     Attributes:
         out_channels (int): the number of channels in the PAN

@@ -31,7 +31,7 @@ class DarkNetV6(nn.Module):
         depth_multiple (float): Depth multiplier
         width_multiple (float): Width multiplier - adjusts number of channels
             in each layer by this amount
-        version (str): ultralytics release version: r3.1 or r4.0
+        version (str): Module version released by ultralytics, set to r4.0.
         block: Module specifying inverted residual building block for darknet
         round_nearest (int): Round the number of channels in each layer to be
             a multiple of this number. Set to 1 to turn off rounding
@@ -42,7 +42,7 @@ class DarkNetV6(nn.Module):
         self,
         depth_multiple: float,
         width_multiple: float,
-        version: str,
+        version: str = "r4.0",
         block: Optional[Callable[..., nn.Module]] = None,
         stages_repeats: Optional[List[int]] = None,
         stages_out_channels: Optional[List[int]] = None,
@@ -117,7 +117,7 @@ class DarkNetV6(nn.Module):
         return self._forward_impl(x)
 
 
-def _darknet(
+def _darknetv6(
     arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any
 ) -> DarkNetV6:
     """
@@ -151,7 +151,7 @@ def darknet_s_r6_0(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, "r6.0", **kwargs)
+    return _darknetv6("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, **kwargs)
 
 
 def darknet_m_r6_0(
@@ -165,8 +165,8 @@ def darknet_m_r6_0(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet(
-        "darknet_m_r6.0", pretrained, progress, 0.67, 0.75, "r6.0", **kwargs
+    return _darknetv6(
+        "darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs
     )
 
 
@@ -181,4 +181,4 @@ def darknet_l_r6_0(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, "r6.0", **kwargs)
+    return _darknetv6("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, **kwargs)
