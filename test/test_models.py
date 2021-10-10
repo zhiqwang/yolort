@@ -303,21 +303,21 @@ def test_torchscript(arch):
 
 
 @pytest.mark.parametrize(
-    "arch, version, hash_prefix", [("yolov5s", "v4.0", "9ca9a642")]
+    "arch, up_version, hash_prefix", [("yolov5s", "v4.0", "9ca9a642")]
 )
-def test_load_from_yolov5(arch, version, hash_prefix):
+def test_load_from_yolov5(arch, up_version, hash_prefix):
     img_path = "test/assets/bus.jpg"
     yolov5s_r40_path = Path(f"{arch}.pt")
 
     if not yolov5s_r40_path.exists():
         torch.hub.download_url_to_file(
-            f"https://github.com/ultralytics/yolov5/releases/download/{version}/{arch}.pt",
+            f"https://github.com/ultralytics/yolov5/releases/download/{up_version}/{arch}.pt",
             yolov5s_r40_path,
             hash_prefix=hash_prefix,
         )
 
-    up_version = version.replace("v", "r")
-    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, version=up_version)
+    version = up_version.replace("v", "r")
+    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, version=version)
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)
