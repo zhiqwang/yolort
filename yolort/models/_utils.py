@@ -9,15 +9,19 @@ from yolort.utils.update_module_state import ModuleStateUpdate
 from yolort.v5 import load_yolov5_model, get_yolov5_size
 
 
-def load_from_ultralytics(checkpoint_path: str, version: str = "r4.0"):
+def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     """
     Load YOLOv5 state from the checkpoint trained from the ultralytics.
 
     Args:
         checkpoint_path (str): Path of the YOLOv5 checkpoint model.
-        version (str): upstream version released by the ultralytics/yolov5,
-            versions r3.1 and r4.0 are currently supported.
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
+
+    assert version in ["r3.1", "r4.0", "r6.0"], (
+        "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
+    )
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
     anchor_grids = checkpoint_yolov5.yaml["anchors"]

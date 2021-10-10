@@ -26,7 +26,7 @@ def darknet_tan_backbone(
     Constructs a specified DarkNet backbone with TAN on top. Freezes the specified number of
     layers in the backbone.
 
-    Examples::
+    Examples:
 
         >>> from models.backbone_utils import darknet_tan_backbone
         >>> backbone = darknet_tan_backbone("darknet_s_r4_0")
@@ -47,6 +47,8 @@ def darknet_tan_backbone(
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
         version (str): Module version released by ultralytics, set to "r4.0".
     """
+    assert version == "r4.0", "Currently only supports version r4.0."
+
     backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
 
     if returned_layers is None:
@@ -89,6 +91,7 @@ class TransformerAttentionNetwork(PathAggregationNetwork):
     ):
         super().__init__(in_channels_list, depth_multiple, version=version, block=block)
         assert len(in_channels_list) == 3, "Currently only supports length 3."
+        assert version == "r4.0", "Currently only supports version r4.0."
 
         if block is None:
             block = C3

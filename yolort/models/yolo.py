@@ -183,10 +183,17 @@ class YOLO(nn.Module):
         checkpoint_path: str,
         score_thresh: float = 0.25,
         nms_thresh: float = 0.45,
-        version: str = "r4.0",
+        version: str = "r6.0",
     ):
         """
         Load model state from the checkpoint trained by YOLOv5.
+
+        Args:
+            checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+            score_thresh (float): Score threshold used for postprocessing the detections.
+            nms_thresh (float): NMS threshold used for postprocessing the detections.
+            version (str): upstream version released by the ultralytics/yolov5, Possible
+                values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         """
         model_info = load_from_ultralytics(checkpoint_path, version=version)
         backbone_name = f"darknet_{model_info['size']}_{version.replace('.', '_')}"
@@ -243,9 +250,11 @@ def _yolov5_darknet_pan(
         >>> x = torch.rand(4, 3, 416, 320)
         >>> predictions = model(x)
 
-    Arguments:
+    Args:
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
+        version (str): Module version released by ultralytics. Possible values
+            are ["r3.1", "r4.0", "r6.0"].
     """
     backbone = darknet_pan_backbone(
         backbone_name, depth_multiple, width_multiple, version=version

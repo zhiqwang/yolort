@@ -51,6 +51,10 @@ class DarkNetV6(nn.Module):
     ) -> None:
         super().__init__()
 
+        assert version == "r4.0", (
+            "Currently the module version used in DarkNetV6 is r4.0",
+        )
+
         if block is None:
             block = C3
 
