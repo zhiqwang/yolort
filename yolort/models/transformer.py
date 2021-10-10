@@ -58,9 +58,7 @@ def darknet_tan_backbone(
 
     in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
 
-    return BackboneWithTAN(
-        backbone, return_layers, in_channels_list, depth_multiple
-    )
+    return BackboneWithTAN(backbone, return_layers, in_channels_list, depth_multiple)
 
 
 class BackboneWithTAN(BackboneWithPAN):
