@@ -313,7 +313,7 @@ class YOLOv5(LightningModule):
             version (str): upstream version released by the ultralytics/yolov5, Possible
                 values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         """
-        model_info = load_from_ultralytics(checkpoint_path)
+        model_info = load_from_ultralytics(checkpoint_path, version=version)
         arch = f"yolov5_darknet_pan_{model_info['size']}_{version.replace('.', '')}"
         yolov5 = cls(
             lr=lr,
