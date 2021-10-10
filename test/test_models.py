@@ -316,7 +316,7 @@ def test_load_from_yolov5(arch, version, hash_prefix):
             hash_prefix=hash_prefix,
         )
 
-    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, score_thresh=0.25)
+    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, version=version)
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)
