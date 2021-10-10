@@ -68,7 +68,7 @@ class DarkNetV6(nn.Module):
 
         # building first layer
         out_channel = _make_divisible(input_channel * width_multiple, round_nearest)
-        layers.append(Conv(3, out_channel, k=3, version=version))
+        layers.append(Conv(3, out_channel, k=6, s=2, p=2, version=version))
         input_channel = out_channel
 
         # building CSP blocks

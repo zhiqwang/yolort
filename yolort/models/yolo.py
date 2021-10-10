@@ -455,8 +455,8 @@ def yolov5_darknet_pan_s_r60(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = "darknet_s_r4_0"
-    weights_name = "yolov5_darknet_pan_s_r40_coco"
+    backbone_name = "darknet_s_r6_0"
+    weights_name = "yolov5_darknet_pan_s_r60_coco"
     depth_multiple = 0.33
     width_multiple = 0.5
     version = "r6.0"
@@ -485,8 +485,8 @@ def yolov5_darknet_pan_m_r60(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = "darknet_m_r4_0"
-    weights_name = "yolov5_darknet_pan_m_r40_coco"
+    backbone_name = "darknet_m_r6_0"
+    weights_name = "yolov5_darknet_pan_m_r60_coco"
     depth_multiple = 0.67
     width_multiple = 0.75
     version = "r6.0"
@@ -515,8 +515,8 @@ def yolov5_darknet_pan_l_r60(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    backbone_name = "darknet_l_r4_0"
-    weights_name = "yolov5_darknet_pan_l_r40_coco"
+    backbone_name = "darknet_l_r6_0"
+    weights_name = "yolov5_darknet_pan_l_r60_coco"
     depth_multiple = 1.0
     width_multiple = 1.0
     version = "r6.0"
