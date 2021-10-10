@@ -68,12 +68,16 @@ class PathAggregationNetwork(nn.Module):
 
         inner_blocks = [
             init_block,
-            Conv(in_channels_list[2], in_channels_list[1], 1, 1, version=module_version),
+            Conv(
+                in_channels_list[2], in_channels_list[1], 1, 1, version=module_version
+            ),
             nn.Upsample(scale_factor=2),
             block(
                 in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False
             ),
-            Conv(in_channels_list[1], in_channels_list[0], 1, 1, version=module_version),
+            Conv(
+                in_channels_list[1], in_channels_list[0], 1, 1, version=module_version
+            ),
             nn.Upsample(scale_factor=2),
         ]
 
@@ -83,11 +87,15 @@ class PathAggregationNetwork(nn.Module):
             block(
                 in_channels_list[1], in_channels_list[0], n=depth_gain, shortcut=False
             ),
-            Conv(in_channels_list[0], in_channels_list[0], 3, 2, version=module_version),
+            Conv(
+                in_channels_list[0], in_channels_list[0], 3, 2, version=module_version
+            ),
             block(
                 in_channels_list[1], in_channels_list[1], n=depth_gain, shortcut=False
             ),
-            Conv(in_channels_list[1], in_channels_list[1], 3, 2, version=module_version),
+            Conv(
+                in_channels_list[1], in_channels_list[1], 3, 2, version=module_version
+            ),
             block(
                 in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
             ),

@@ -68,16 +68,14 @@ class BackboneWithTAN(BackboneWithPAN):
     Adds a TAN on top of a model.
     """
 
-    def __init__(
-        self, backbone, return_layers, in_channels_list, depth_multiple
-    ):
+    def __init__(self, backbone, return_layers, in_channels_list, depth_multiple):
         super().__init__(
             backbone, return_layers, in_channels_list, depth_multiple, "r4.0"
         )
         self.pan = TransformerAttentionNetwork(
             in_channels_list,
             depth_multiple,
-            version = "r4.0",
+            version="r4.0",
         )
 
 

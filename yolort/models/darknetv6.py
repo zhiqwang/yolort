@@ -169,9 +169,7 @@ def darknet_m_r6_0(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6(
-        "darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs
-    )
+    return _darknetv6("darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs)
 
 
 def darknet_l_r6_0(

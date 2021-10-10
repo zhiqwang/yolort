@@ -19,9 +19,11 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
 
-    assert version in ["r3.1", "r4.0", "r6.0"], (
-        "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
-    )
+    assert version in [
+        "r3.1",
+        "r4.0",
+        "r6.0",
+    ], "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
     anchor_grids = checkpoint_yolov5.yaml["anchors"]

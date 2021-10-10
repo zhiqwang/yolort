@@ -82,9 +82,11 @@ def darknet_pan_backbone(
         version (str): Module version released by ultralytics. Possible values
             are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
-    assert version in ["r3.1", "r4.0", "r6.0"], (
-        "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
-    )
+    assert version in [
+        "r3.1",
+        "r4.0",
+        "r6.0",
+    ], "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
 
     backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
 
