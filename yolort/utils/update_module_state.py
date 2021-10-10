@@ -1,6 +1,6 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 from functools import reduce
-from typing import Optional
+from typing import Dict, Optional
 
 from torch import nn
 
@@ -67,7 +67,7 @@ def update_module_state_from_ultralytics(
 
 class ModuleStateUpdate:
     """
-    Update checkpoint from ultralytics yolov5
+    Update checkpoint from ultralytics yolov5.
     """
 
     def __init__(
@@ -77,19 +77,28 @@ class ModuleStateUpdate:
         width_multiple: Optional[float] = None,
         version: str = "r4.0",
         num_classes: int = 80,
-        inner_block_maps: dict = {"0": "9", "1": "10", "3": "13", "4": "14"},
-        layer_block_maps: dict = {
-            "0": "17",
-            "1": "18",
-            "2": "20",
-            "3": "21",
-            "4": "23",
-        },
+        inner_block_maps: Optional[Dict[str, str]] = None,
+        layer_block_maps: Optional[Dict[str, str]] = None,
         head_ind: int = 24,
         head_name: str = "m",
     ) -> None:
         # Configuration for making the keys consistent
+        if inner_block_maps is None:
+            inner_block_maps = {
+                "0": "9",
+                "1": "10",
+                "3": "13",
+                "4": "14",
+            }
         self.inner_block_maps = inner_block_maps
+        if layer_block_maps is None:
+            layer_block_maps = {
+                "0": "17",
+                "1": "18",
+                "2": "20",
+                "3": "21",
+                "4": "23",
+            }
         self.layer_block_maps = layer_block_maps
         self.head_ind = head_ind
         self.head_name = head_name
