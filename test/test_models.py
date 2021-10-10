@@ -131,10 +131,10 @@ class TestModel:
         backbone_name = "darknet_s_r3_1"
         depth_multiple = 0.33
         width_multiple = 0.5
-        backbone_with_fpn = darknet_pan_backbone(
+        backbone_with_pan = darknet_pan_backbone(
             backbone_name, depth_multiple, width_multiple
         )
-        return backbone_with_fpn
+        return backbone_with_pan
 
     def test_backbone_with_pan_r3_1(self):
         N, H, W = 4, 416, 352
@@ -154,10 +154,10 @@ class TestModel:
         backbone_name = "darknet_s_r4_0"
         depth_multiple = 0.33
         width_multiple = 0.5
-        backbone_with_fpn = darknet_pan_backbone(
+        backbone_with_pan = darknet_pan_backbone(
             backbone_name, depth_multiple, width_multiple
         )
-        return backbone_with_fpn
+        return backbone_with_pan
 
     def test_backbone_with_pan_r4_0(self):
         N, H, W = 4, 416, 352
@@ -173,21 +173,21 @@ class TestModel:
         assert tuple(out[2].shape) == (N, *out_shape[2])
         _check_jit_scriptable(model, (x,))
 
-    def _init_test_backbone_with_pan_tr(self):
+    def _init_test_backbone_with_tan_r4_0(self):
         backbone_name = "darknet_s_r4_0"
         depth_multiple = 0.33
         width_multiple = 0.5
-        backbone_with_fpn_tr = darknet_tan_backbone(
+        backbone_with_tan = darknet_tan_backbone(
             backbone_name, depth_multiple, width_multiple
         )
-        return backbone_with_fpn_tr
+        return backbone_with_tan
 
-    def test_backbone_with_pan_tr(self):
+    def test_backbone_with_tan_r4_0(self):
         N, H, W = 4, 416, 352
         out_shape = self._get_feature_shapes(H, W)
 
         x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_pan_tr()
+        model = self._init_test_backbone_with_tan_r4_0()
         out = model(x)
 
         assert len(out) == 3
