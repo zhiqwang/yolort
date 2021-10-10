@@ -4,7 +4,7 @@ from typing import Callable, List, Dict, Optional
 import torch
 from torch import nn, Tensor
 
-from yolort.v5 import Conv, BottleneckCSP, C3
+from yolort.v5 import Conv, BottleneckCSP, C3, SPPF
 
 
 class PathAggregationNetwork(nn.Module):
@@ -55,10 +55,17 @@ class PathAggregationNetwork(nn.Module):
 
         depth_gain = max(round(3 * depth_multiple), 1)
 
-        inner_blocks = [
-            block(
+        if version == "r6.0":
+            init_block = SPPF(in_channels_list[2], in_channels_list[2], k=5)
+        elif version in ["r3.1", "r4.0"]:
+            init_block = block(
                 in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
-            ),
+            )
+        else:
+            raise NotImplementedError(f"Version {version} is not implemented yet.")
+
+        inner_blocks = [
+            init_block,
             Conv(in_channels_list[2], in_channels_list[1], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
             block(
