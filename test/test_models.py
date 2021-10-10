@@ -278,7 +278,7 @@ class TestModel:
         assert isinstance(losses["objectness"], Tensor)
 
 
-@pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolov5t"])
+@pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolov5ts"])
 def test_torchscript(arch):
     model = models.__dict__[arch](pretrained=True, size=(320, 320), score_thresh=0.45)
     model.eval()
