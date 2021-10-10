@@ -278,7 +278,7 @@ class TestModel:
         assert isinstance(losses["objectness"], Tensor)
 
 
-@pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolotr"])
+@pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolov5t"])
 def test_torchscript(arch):
     model = models.__dict__[arch](pretrained=True, size=(320, 320), score_thresh=0.45)
     model.eval()
@@ -316,8 +316,7 @@ def test_load_from_yolov5(arch, version, hash_prefix):
             hash_prefix=hash_prefix,
         )
 
-    yolov5 = YOLOv5()
-    model_yolov5 = yolov5.load_from_yolov5(yolov5s_r40_path, score_thresh=0.25)
+    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, score_thresh=0.25)
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)
