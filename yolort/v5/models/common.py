@@ -45,7 +45,7 @@ class Conv(nn.Module):
     """
     Standard convolution
 
-    Attributes:
+    Args:
         c1 (int): ch_in
         c2 (int): ch_out
         k (int): kernel
@@ -87,7 +87,7 @@ class DWConv(Conv):
     """
     Depth-wise convolution class.
 
-    Attributes:
+    Args:
         c1 (int): ch_in
         c2 (int): ch_out
         k (int): kernel
@@ -105,7 +105,7 @@ class Bottleneck(nn.Module):
     """
     Standard bottleneck
 
-    Attributes:
+    Args:
         c1 (int): ch_in
         c2 (int): ch_out
         shortcut (bool): shortcut
@@ -130,7 +130,7 @@ class BottleneckCSP(nn.Module):
     """
     CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
 
-    Attributes:
+    Args:
         c1 (int): ch_in
         c2 (int): ch_out
         n (int): number
@@ -162,7 +162,7 @@ class C3(nn.Module):
     """
     CSP Bottleneck with 3 convolutions
 
-    Attributes:
+    Args:
         c1 (int): ch_in
         c2 (int): ch_out
         n (int): number
@@ -225,7 +225,7 @@ class Focus(nn.Module):
     """
     Focus wh information into c-space
 
-    Attributes:
+    Args:
         c1 (int): ch_in
         c2 (int): ch_out
         k (int): kernel
