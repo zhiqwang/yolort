@@ -74,7 +74,7 @@ class Conv(nn.Module):
                 else (act if isinstance(act, nn.Module) else nn.Identity())
             )
         else:
-            raise NotImplementedError(f"Currently only supports version: {version}")
+            raise NotImplementedError(f"Currently doesn't support version {version}.")
 
     def forward(self, x: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(x)))
@@ -236,10 +236,10 @@ class Focus(nn.Module):
         g (int): groups
         act (bool or nn.Module): determine the activation function
         version (str): Module version released by ultralytics. Possible values
-            are ["r3.1", "r4.0", "r5.0"]. Default: "r5.0".
+            are ["r3.1", "r4.0"]. Default: "r4.0".
     """
 
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r5.0"):
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r4.0"):
         super().__init__()
         self.conv = Conv(c1 * 4, c2, k, s, p, g, act, version=version)
 
