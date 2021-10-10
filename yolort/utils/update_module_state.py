@@ -75,7 +75,7 @@ class ModuleStateUpdate:
         arch: Optional[str] = "yolov5_darknet_pan_s_r31",
         depth_multiple: Optional[float] = None,
         width_multiple: Optional[float] = None,
-        version: str = "r4.0",
+        version: str = "r6.0",
         num_classes: int = 80,
         inner_block_maps: Optional[Dict[str, str]] = None,
         layer_block_maps: Optional[Dict[str, str]] = None,

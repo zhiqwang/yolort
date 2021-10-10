@@ -131,10 +131,10 @@ class TestModel:
         backbone_name = "darknet_s_r3_1"
         depth_multiple = 0.33
         width_multiple = 0.5
-        backbone_with_fpn = darknet_pan_backbone(
+        backbone_with_pan = darknet_pan_backbone(
             backbone_name, depth_multiple, width_multiple
         )
-        return backbone_with_fpn
+        return backbone_with_pan
 
     def test_backbone_with_pan_r3_1(self):
         N, H, W = 4, 416, 352
@@ -154,10 +154,10 @@ class TestModel:
         backbone_name = "darknet_s_r4_0"
         depth_multiple = 0.33
         width_multiple = 0.5
-        backbone_with_fpn = darknet_pan_backbone(
+        backbone_with_pan = darknet_pan_backbone(
             backbone_name, depth_multiple, width_multiple
         )
-        return backbone_with_fpn
+        return backbone_with_pan
 
     def test_backbone_with_pan_r4_0(self):
         N, H, W = 4, 416, 352
@@ -173,21 +173,21 @@ class TestModel:
         assert tuple(out[2].shape) == (N, *out_shape[2])
         _check_jit_scriptable(model, (x,))
 
-    def _init_test_backbone_with_pan_tr(self):
+    def _init_test_backbone_with_tan_r4_0(self):
         backbone_name = "darknet_s_r4_0"
         depth_multiple = 0.33
         width_multiple = 0.5
-        backbone_with_fpn_tr = darknet_tan_backbone(
+        backbone_with_tan = darknet_tan_backbone(
             backbone_name, depth_multiple, width_multiple
         )
-        return backbone_with_fpn_tr
+        return backbone_with_tan
 
-    def test_backbone_with_pan_tr(self):
+    def test_backbone_with_tan_r4_0(self):
         N, H, W = 4, 416, 352
         out_shape = self._get_feature_shapes(H, W)
 
         x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_pan_tr()
+        model = self._init_test_backbone_with_tan_r4_0()
         out = model(x)
 
         assert len(out) == 3
@@ -278,7 +278,7 @@ class TestModel:
         assert isinstance(losses["objectness"], Tensor)
 
 
-@pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolotr"])
+@pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolov5ts"])
 def test_torchscript(arch):
     model = models.__dict__[arch](pretrained=True, size=(320, 320), score_thresh=0.45)
     model.eval()
@@ -303,21 +303,21 @@ def test_torchscript(arch):
 
 
 @pytest.mark.parametrize(
-    "arch, version, hash_prefix", [("yolov5s", "v4.0", "9ca9a642")]
+    "arch, up_version, hash_prefix", [("yolov5s", "v4.0", "9ca9a642")]
 )
-def test_load_from_yolov5(arch, version, hash_prefix):
+def test_load_from_yolov5(arch, up_version, hash_prefix):
     img_path = "test/assets/bus.jpg"
     yolov5s_r40_path = Path(f"{arch}.pt")
 
     if not yolov5s_r40_path.exists():
         torch.hub.download_url_to_file(
-            f"https://github.com/ultralytics/yolov5/releases/download/{version}/{arch}.pt",
+            f"https://github.com/ultralytics/yolov5/releases/download/{up_version}/{arch}.pt",
             yolov5s_r40_path,
             hash_prefix=hash_prefix,
         )
 
-    yolov5 = YOLOv5()
-    model_yolov5 = yolov5.load_from_yolov5(yolov5s_r40_path, score_thresh=0.25)
+    version = up_version.replace("v", "r")
+    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, version=version)
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)

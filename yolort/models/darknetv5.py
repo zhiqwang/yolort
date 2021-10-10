@@ -57,6 +57,10 @@ class DarkNetV5(nn.Module):
     ) -> None:
         super().__init__()
 
+        assert version in ["r3.1", "r4.0"], (
+            "Currently the module version used in DarkNetV5 is r3.1 or r4.0",
+        )
+
         if block is None:
             block = _block[version]
 
@@ -128,7 +132,7 @@ _block = {
 }
 
 
-def _darknet(
+def _darknetv5(
     arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any
 ) -> DarkNetV5:
     """
@@ -162,7 +166,9 @@ def darknet_s_r3_1(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_s_r3.1", pretrained, progress, 0.33, 0.5, "r3.1", **kwargs)
+    return _darknetv5(
+        "darknet_s_r3.1", pretrained, progress, 0.33, 0.5, "r3.1", **kwargs
+    )
 
 
 def darknet_m_r3_1(
@@ -176,7 +182,7 @@ def darknet_m_r3_1(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet(
+    return _darknetv5(
         "darknet_m_r3.1", pretrained, progress, 0.67, 0.75, "r3.1", **kwargs
     )
 
@@ -192,7 +198,9 @@ def darknet_l_r3_1(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_l_r3.1", pretrained, progress, 1.0, 1.0, "r3.1", **kwargs)
+    return _darknetv5(
+        "darknet_l_r3.1", pretrained, progress, 1.0, 1.0, "r3.1", **kwargs
+    )
 
 
 def darknet_s_r4_0(
@@ -206,7 +214,9 @@ def darknet_s_r4_0(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_s_r4.0", pretrained, progress, 0.33, 0.5, "r4.0", **kwargs)
+    return _darknetv5(
+        "darknet_s_r4.0", pretrained, progress, 0.33, 0.5, "r4.0", **kwargs
+    )
 
 
 def darknet_m_r4_0(
@@ -220,7 +230,7 @@ def darknet_m_r4_0(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet(
+    return _darknetv5(
         "darknet_m_r4.0", pretrained, progress, 0.67, 0.75, "r4.0", **kwargs
     )
 
@@ -236,4 +246,6 @@ def darknet_l_r4_0(
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet("darknet_l_r4.0", pretrained, progress, 1.0, 1.0, "r4.0", **kwargs)
+    return _darknetv5(
+        "darknet_l_r4.0", pretrained, progress, 1.0, 1.0, "r4.0", **kwargs
+    )

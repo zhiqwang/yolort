@@ -8,7 +8,7 @@ from yolort.v5 import Conv
 from .yolo import YOLO
 from .yolo_module import YOLOv5
 
-__all__ = ["YOLO", "YOLOv5", "yolov5s", "yolov5m", "yolov5l", "yolotr"]
+__all__ = ["YOLO", "YOLOv5", "yolov5s", "yolov5m", "yolov5l", "yolov5ts"]
 
 
 def yolov5s(
@@ -80,7 +80,7 @@ def yolov5l(
     return model
 
 
-def yolotr(
+def yolov5ts(
     upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
 ):
     """

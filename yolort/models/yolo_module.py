@@ -298,12 +298,22 @@ class YOLOv5(LightningModule):
         size: Tuple[int, int] = (640, 640),
         score_thresh: float = 0.25,
         nms_thresh: float = 0.45,
-        version: str = "r4.0",
+        version: str = "r6.0",
     ):
         """
         Load model state from the checkpoint trained by YOLOv5.
+
+        Args:
+            checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+            lr (float): The initial learning rate
+            size: (Tuple[int, int]): the width and height to which images will be rescaled
+                before feeding them to the backbone. Default: (640, 640).
+            score_thresh (float): Score threshold used for postprocessing the detections.
+            nms_thresh (float): NMS threshold used for postprocessing the detections.
+            version (str): upstream version released by the ultralytics/yolov5, Possible
+                values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         """
-        model_info = load_from_ultralytics(checkpoint_path)
+        model_info = load_from_ultralytics(checkpoint_path, version=version)
         arch = f"yolov5_darknet_pan_{model_info['size']}_{version.replace('.', '')}"
         yolov5 = cls(
             lr=lr,
