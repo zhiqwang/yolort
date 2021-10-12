@@ -111,7 +111,7 @@ class ModuleStateUpdate:
             weights_name = (
                 f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}_coco"
             )
-            model = yolo._yolov5_darknet_pan(
+            model = yolo.build_model(
                 backbone_name,
                 depth_multiple,
                 width_multiple,
