@@ -44,7 +44,7 @@ class PathAggregationNetwork(nn.Module):
     the feature maps on top of which the PAN will be added.
 
     Args:
-        in_channels_list (list[int]): number of channels for each feature map that
+        in_channels (list[int]): number of channels for each feature map that
             is passed to the module
         out_channels (int): number of channels of the PAN representation
         version (str): ultralytics release version: ["r3.1", "r4.0", "r6.0"]
@@ -67,7 +67,7 @@ class PathAggregationNetwork(nn.Module):
 
     def __init__(
         self,
-        in_channels_list: List[int],
+        in_channels: List[int],
         depth_multiple: float,
         version: str = "r4.0",
         block: Optional[Callable[..., nn.Module]] = None,
@@ -76,17 +76,17 @@ class PathAggregationNetwork(nn.Module):
         super().__init__()
 
         if use_p6:
-            assert len(in_channels_list) == 4, "Length of in channels should be 4."
+            assert len(in_channels) == 4, "Length of in channels should be 4."
             intermediate_blocks = IntermediateLevelP6(
                 depth_multiple,
-                in_channels_list[2],
-                in_channels_list[3],
+                in_channels[2],
+                in_channels[3],
             )
         else:
-            assert len(in_channels_list) == 3, "Length of in channels should be 3."
+            assert len(in_channels) == 3, "Length of in channels should be 3."
             intermediate_blocks = None
 
-        intermediate_channel = in_channels_list[1] + in_channels_list[-1]
+        intermediate_channel = in_channels[1] + in_channels[-1]
 
         self.intermediate_blocks = intermediate_blocks
 
@@ -96,11 +96,11 @@ class PathAggregationNetwork(nn.Module):
         depth_gain = max(round(3 * depth_multiple), 1)
 
         if version == "r6.0":
-            init_block = SPPF(in_channels_list[-1], in_channels_list[-1], k=5)
+            init_block = SPPF(in_channels[-1], in_channels[-1], k=5)
             module_version = "r4.0"
         elif version in ["r3.1", "r4.0"]:
             init_block = block(
-                in_channels_list[-1], in_channels_list[-1], n=depth_gain, shortcut=False
+                in_channels[-1], in_channels[-1], n=depth_gain, shortcut=False
             )
             module_version = version
         else:
@@ -109,90 +109,39 @@ class PathAggregationNetwork(nn.Module):
         inner_blocks = [init_block]
 
         if use_p6:
-            inner_blocks.extend(
-                [
-                    Conv(
-                        in_channels_list[3],
-                        in_channels_list[2],
-                        1,
-                        1,
-                        version=module_version,
-                    ),
-                    nn.Upsample(scale_factor=2),
-                    block(
-                        intermediate_channel,
-                        in_channels_list[2],
-                        n=depth_gain,
-                        shortcut=False,
-                    ),
-                ]
-            )
-
-        inner_blocks.extend(
-            [
-                Conv(
-                    in_channels_list[2],
-                    in_channels_list[1],
-                    1,
-                    1,
-                    version=module_version,
-                ),
+            inner_blocks_p6 = [
+                Conv(in_channels[3], in_channels[2], 1, 1, version=module_version),
                 nn.Upsample(scale_factor=2),
-                block(
-                    in_channels_list[-1],
-                    in_channels_list[1],
-                    n=depth_gain,
-                    shortcut=False,
-                ),
-                Conv(
-                    in_channels_list[1],
-                    in_channels_list[0],
-                    1,
-                    1,
-                    version=module_version,
-                ),
-                nn.Upsample(scale_factor=2),
+                block(intermediate_channel, in_channels[2], n=depth_gain, shortcut=False),
             ]
-        )
+            inner_blocks.extend(inner_blocks_p6)
+
+        inner_blocks_main = [
+            Conv(in_channels[2], in_channels[1], 1, 1, version=module_version),
+            nn.Upsample(scale_factor=2),
+            block(in_channels[-1], in_channels[1], n=depth_gain, shortcut=False),
+            Conv(in_channels[1], in_channels[0], 1, 1, version=module_version),
+            nn.Upsample(scale_factor=2),
+        ]
+        inner_blocks.extend(inner_blocks_main)
 
         self.inner_blocks = nn.ModuleList(inner_blocks)
 
         layer_blocks = [
-            block(
-                in_channels_list[1], in_channels_list[0], n=depth_gain, shortcut=False
-            ),
-            Conv(
-                in_channels_list[0], in_channels_list[0], 3, 2, version=module_version
-            ),
-            block(
-                in_channels_list[1], in_channels_list[1], n=depth_gain, shortcut=False
-            ),
-            Conv(
-                in_channels_list[1], in_channels_list[1], 3, 2, version=module_version
-            ),
-            block(
-                in_channels_list[-1], in_channels_list[2], n=depth_gain, shortcut=False
-            ),
+            block(in_channels[1], in_channels[0], n=depth_gain, shortcut=False),
+            Conv(in_channels[0], in_channels[0], 3, 2, version=module_version),
+            block(in_channels[1], in_channels[1], n=depth_gain, shortcut=False),
+            Conv(in_channels[1], in_channels[1], 3, 2, version=module_version),
+            block(in_channels[-1], in_channels[2], n=depth_gain, shortcut=False),
         ]
 
         if use_p6:
-            layer_blocks.extend(
-                [
-                    Conv(
-                        in_channels_list[2],
-                        in_channels_list[2],
-                        3,
-                        2,
-                        version=module_version,
-                    ),
-                    block(
-                        intermediate_channel,
-                        in_channels_list[3],
-                        n=depth_gain,
-                        shortcut=False,
-                    ),
-                ]
-            )
+            layer_blocks_p6 = [
+                Conv(in_channels[2], in_channels[2], 3, 2, version=module_version),
+                block(intermediate_channel, in_channels[3], n=depth_gain, shortcut=False),
+            ]
+            layer_blocks.extend(layer_blocks_p6)
+
         self.layer_blocks = nn.ModuleList(layer_blocks)
 
         for m in self.modules():
