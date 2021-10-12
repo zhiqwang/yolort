@@ -78,11 +78,15 @@ class PathAggregationNetwork(nn.Module):
         if use_p6:
             assert len(in_channels_list) == 4, "Length of in channels should be 4."
 
-            intermediate_blocks = IntermediateLevelP6(
-                depth_multiple,
-                in_channels_list[-2],
-                in_channels_list[-1],
-            ) if use_p6 else None
+            intermediate_blocks = (
+                IntermediateLevelP6(
+                    depth_multiple,
+                    in_channels_list[-2],
+                    in_channels_list[-1],
+                )
+                if use_p6
+                else None
+            )
         else:
             assert len(in_channels_list) == 3, "Length of in channels should be 3."
 
