@@ -238,6 +238,7 @@ def build_model(
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,
+    use_p6: bool = False,
     **kwargs: Any,
 ) -> YOLO:
     """
@@ -257,7 +258,7 @@ def build_model(
             are ["r3.1", "r4.0", "r6.0"].
     """
     backbone = darknet_pan_backbone(
-        backbone_name, depth_multiple, width_multiple, version=version
+        backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
     )
 
     model = YOLO(backbone, num_classes, **kwargs)
@@ -568,6 +569,39 @@ def yolov5_darknet_pan_l_r60(
         pretrained=pretrained,
         progress=progress,
         num_classes=num_classes,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_s6_r60(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 small release v6.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_s_r6_0"
+    weights_name = "yolov5_darknet_pan_s6_r60_coco"
+    depth_multiple = 0.33
+    width_multiple = 0.5
+    version = "r6.0"
+    use_p6 = True
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
         **kwargs,
     )
 

@@ -5,7 +5,7 @@ from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
 from . import darknet
-from .path_aggregation_network import PathAggregationNetwork, LastLevelP6
+from .path_aggregation_network import PathAggregationNetwork, IntermediateLevelP6
 
 
 class BackboneWithPAN(nn.Module):
@@ -47,7 +47,7 @@ class BackboneWithPAN(nn.Module):
             in_channels_list,
             depth_multiple,
             version=version,
-            extra_blocks=LastLevelP6() if use_p6 else None,
+            use_p6=use_p6,
         )
         self.out_channels = in_channels_list
 
@@ -64,7 +64,7 @@ def darknet_pan_backbone(
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
     version: str = "r6.0",
-    use_p6=False,
+    use_p6: bool = False,
 ):
     """
     Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
@@ -109,7 +109,8 @@ def darknet_pan_backbone(
 
     return_layers = {str(k): str(i) for i, k in enumerate(returned_layers)}
 
-    in_channels_list = [int(gw * width_multiple) for gw in [256, 512, last_channel]]
+    grow_widths = [256, 512, 768, 1024] if use_p6 else [256, 512, 1024]
+    in_channels_list = [int(gw * width_multiple) for gw in grow_widths]
 
     return BackboneWithPAN(
         backbone,

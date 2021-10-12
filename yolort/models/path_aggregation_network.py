@@ -7,9 +7,9 @@ from torch import nn, Tensor
 from yolort.v5 import Conv, BottleneckCSP, C3, SPPF
 
 
-class ExtraPANBlock(nn.Module):
+class IntermediatePANBlock(nn.Module):
     """
-    Base class for the extra block in the PAN.
+    Base class for the intermediate block in the PAN.
 
     Args:
         results (List[Tensor]): the result of the PAN
@@ -71,10 +71,22 @@ class PathAggregationNetwork(nn.Module):
         depth_multiple: float,
         version: str = "r4.0",
         block: Optional[Callable[..., nn.Module]] = None,
-        extra_blocks: Optional[ExtraPANBlock] = None,
+        use_p6: bool = False,
     ):
         super().__init__()
-        assert len(in_channels_list) == 3, "Currently only supports length 3."
+
+        if use_p6:
+            assert len(in_channels_list) == 4, "Length of in channels should be 4."
+
+            intermediate_blocks = IntermediateLevelP6(
+                depth_multiple,
+                in_channels_list[-2],
+                in_channels_list[-1],
+            ) if use_p6 else None
+        else:
+            assert len(in_channels_list) == 3, "Length of in channels should be 3."
+
+        self.intermediate_blocks = intermediate_blocks
 
         if block is None:
             block = _block[version]
@@ -82,11 +94,11 @@ class PathAggregationNetwork(nn.Module):
         depth_gain = max(round(3 * depth_multiple), 1)
 
         if version == "r6.0":
-            init_block = SPPF(in_channels_list[2], in_channels_list[2], k=5)
+            init_block = SPPF(in_channels_list[-1], in_channels_list[-1], k=5)
             module_version = "r4.0"
         elif version in ["r3.1", "r4.0"]:
             init_block = block(
-                in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
+                in_channels_list[-1], in_channels_list[-1], n=depth_gain, shortcut=False
             )
             module_version = version
         else:
@@ -95,7 +107,7 @@ class PathAggregationNetwork(nn.Module):
         inner_blocks = [
             init_block,
             Conv(
-                in_channels_list[2], in_channels_list[1], 1, 1, version=module_version
+                in_channels_list[-1], in_channels_list[-2], 1, 1, version=module_version
             ),
             nn.Upsample(scale_factor=2),
             block(
@@ -127,10 +139,6 @@ class PathAggregationNetwork(nn.Module):
             ),
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
-
-        if extra_blocks is not None:
-            assert isinstance(extra_blocks, ExtraPANBlock)
-        self.extra_blocks = extra_blocks
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -222,15 +230,27 @@ _block = {
 }
 
 
-class LastLevelP6(ExtraPANBlock):
+class IntermediateLevelP6(IntermediatePANBlock):
     """
-    This module is used in YOLOv5 to generate extra P6 layers.
+    This module is used in YOLOv5 to generate intermediate P6 layers.
     """
 
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(
+        self,
+        depth_multiple: float,
+        in_channel: int,
+        out_channel: int,
+        version: str = "r4.0",
+    ):
         super().__init__()
-        self.p6 = C3(in_channels, out_channels, 3, 2, 1)
-        self.use_P5 = in_channels == out_channels
+
+        block = _block[version]
+        depth_gain = max(round(3 * depth_multiple), 1)
+
+        layers: List[nn.Module] = []
+        layers.append(Conv(in_channel, out_channel, k=3, s=2, version=version))
+        layers.append(block(out_channel, out_channel, n=depth_gain))
+        self.p6 = nn.Sequential(*layers)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -240,16 +260,3 @@ class LastLevelP6(ExtraPANBlock):
                 m.momentum = 0.03
             elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
                 m.inplace = True
-
-    def forward(
-        self,
-        p: List[Tensor],
-        c: List[Tensor],
-        names: List[str],
-    ) -> Tuple[List[Tensor], List[str]]:
-        p5, c5 = p[-1], c[-1]
-        x = p5 if self.use_P5 else c5
-        p6 = self.p6(x)
-        p.extend([p6])
-        names.extend(["p6"])
-        return p, names
