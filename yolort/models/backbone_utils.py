@@ -42,15 +42,12 @@ class BackboneWithPAN(nn.Module):
     ):
         super().__init__()
 
-        if use_p6:
-            extra_blocks = LastLevelP6()
-
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
         self.pan = PathAggregationNetwork(
             in_channels_list,
             depth_multiple,
             version=version,
-            extra_blocks=extra_blocks,
+            extra_blocks=LastLevelP6() if use_p6 else None,
         )
         self.out_channels = in_channels_list
 
