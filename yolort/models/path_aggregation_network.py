@@ -1,10 +1,35 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import Callable, List, Dict, Optional
+from typing import Callable, List, Dict, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
 
 from yolort.v5 import Conv, BottleneckCSP, C3, SPPF
+
+
+class ExtraPANBlock(nn.Module):
+    """
+    Base class for the extra block in the PAN.
+
+    Args:
+        results (List[Tensor]): the result of the PAN
+        x (List[Tensor]): the original feature maps
+        names (List[str]): the names for each one of the
+            original feature maps
+
+    Returns:
+        results (List[Tensor]): the extended set of results
+            of the PAN
+        names (List[str]): the extended set of names for the results
+    """
+
+    def forward(
+        self,
+        results: List[Tensor],
+        x: List[Tensor],
+        names: List[str],
+    ) -> Tuple[List[Tensor], List[str]]:
+        pass
 
 
 class PathAggregationNetwork(nn.Module):
@@ -46,6 +71,7 @@ class PathAggregationNetwork(nn.Module):
         depth_multiple: float,
         version: str = "r4.0",
         block: Optional[Callable[..., nn.Module]] = None,
+        extra_blocks: Optional[ExtraPANBlock] = None,
     ):
         super().__init__()
         assert len(in_channels_list) == 3, "Currently only supports length 3."
@@ -101,6 +127,10 @@ class PathAggregationNetwork(nn.Module):
             ),
         ]
         self.layer_blocks = nn.ModuleList(layer_blocks)
+
+        if extra_blocks is not None:
+            assert isinstance(extra_blocks, ExtraPANBlock)
+        self.extra_blocks = extra_blocks
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -190,3 +220,36 @@ _block = {
     "r4.0": C3,
     "r6.0": C3,
 }
+
+
+class LastLevelP6(ExtraPANBlock):
+    """
+    This module is used in YOLOv5 to generate extra P6 layers.
+    """
+
+    def __init__(self, in_channels: int, out_channels: int):
+        super().__init__()
+        self.p6 = C3(in_channels, out_channels, 3, 2, 1)
+        self.use_P5 = in_channels == out_channels
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                m.eps = 1e-3
+                m.momentum = 0.03
+            elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
+                m.inplace = True
+
+    def forward(
+        self,
+        p: List[Tensor],
+        c: List[Tensor],
+        names: List[str],
+    ) -> Tuple[List[Tensor], List[str]]:
+        p5, c5 = p[-1], c[-1]
+        x = p5 if self.use_P5 else c5
+        p6 = self.p6(x)
+        p.extend([p6])
+        names.extend(["p6"])
+        return p, names

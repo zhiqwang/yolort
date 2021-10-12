@@ -35,9 +35,12 @@ class DarkNetV6(nn.Module):
             in each layer by this amount
         version (str): Module version released by ultralytics, set to r4.0.
         block: Module specifying inverted residual building block for darknet
+        stages_repeats (Optional[List[int]]): List of repeats number in the stages.
+        stages_out_channels (Optional[List[int]]): List of channels number in the stages.
+        num_classes (int): Number of classes
         round_nearest (int): Round the number of channels in each layer to be
             a multiple of this number. Set to 1 to turn off rounding
-        num_classes (int): Number of classes
+        last_channel (int): Number of the last channel
     """
 
     def __init__(
@@ -50,6 +53,7 @@ class DarkNetV6(nn.Module):
         stages_out_channels: Optional[List[int]] = None,
         num_classes: int = 1000,
         round_nearest: int = 8,
+        last_channel: int = 1024,
     ) -> None:
         super().__init__()
 
@@ -61,7 +65,6 @@ class DarkNetV6(nn.Module):
             block = C3
 
         input_channel = 64
-        last_channel = 1024
 
         if stages_repeats is None:
             stages_repeats = [3, 6, 9]

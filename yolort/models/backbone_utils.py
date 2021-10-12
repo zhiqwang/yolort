@@ -5,7 +5,7 @@ from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
 from . import darknet
-from .path_aggregation_network import PathAggregationNetwork
+from .path_aggregation_network import PathAggregationNetwork, LastLevelP6
 
 
 class BackboneWithPAN(nn.Module):
@@ -25,21 +25,32 @@ class BackboneWithPAN(nn.Module):
             that is returned, in the order they are present in the OrderedDict
         depth_multiple (float): depth multiplier
         version (str): Module version released by ultralytics: ["r3.1", "r4.0", "r6.0"].
+        use_p6 (bool): Whether to use P6 layers.
 
     Attributes:
         out_channels (int): the number of channels in the PAN
     """
 
     def __init__(
-        self, backbone, return_layers, in_channels_list, depth_multiple, version
+        self,
+        backbone,
+        return_layers,
+        in_channels_list,
+        depth_multiple,
+        version,
+        use_p6=False,
     ):
         super().__init__()
+
+        if use_p6:
+            extra_blocks = LastLevelP6()
 
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
         self.pan = PathAggregationNetwork(
             in_channels_list,
             depth_multiple,
             version=version,
+            extra_blocks=extra_blocks,
         )
         self.out_channels = in_channels_list
 
@@ -56,6 +67,7 @@ def darknet_pan_backbone(
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
     version: str = "r6.0",
+    use_p6=False,
 ):
     """
     Constructs a specified DarkNet backbone with PAN on top. Freezes the specified number of
@@ -81,6 +93,7 @@ def darknet_pan_backbone(
         pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
         version (str): Module version released by ultralytics. Possible values
             are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+        use_p6 (bool): Whether to use P6 layers.
     """
     assert version in [
         "r3.1",
@@ -88,15 +101,19 @@ def darknet_pan_backbone(
         "r6.0",
     ], "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
 
-    backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
+    last_channel = 768 if use_p6 else 1024
+    backbone = darknet.__dict__[backbone_name](
+        pretrained=pretrained,
+        last_channel=last_channel,
+    ).features
 
     if returned_layers is None:
         returned_layers = [4, 6, 8]
 
     return_layers = {str(k): str(i) for i, k in enumerate(returned_layers)}
 
-    in_channels_list = [int(gw * width_multiple) for gw in [256, 512, 1024]]
+    in_channels_list = [int(gw * width_multiple) for gw in [256, 512, last_channel]]
 
     return BackboneWithPAN(
-        backbone, return_layers, in_channels_list, depth_multiple, version
+        backbone, return_layers, in_channels_list, depth_multiple, version, use_p6=use_p6
     )
