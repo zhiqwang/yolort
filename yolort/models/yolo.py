@@ -22,7 +22,7 @@ __all__ = [
     "yolov5_darknet_pan_m_r40",
     "yolov5_darknet_pan_l_r40",
     "yolov5_darknet_tan_s_r40",
-    "_yolov5_darknet_pan",
+    "build_model",
 ]
 
 
@@ -229,7 +229,7 @@ model_urls = {
 }
 
 
-def _yolov5_darknet_pan(
+def build_model(
     backbone_name: str,
     depth_multiple: float,
     width_multiple: float,
@@ -289,7 +289,7 @@ def yolov5_darknet_pan_s_r31(
     depth_multiple = 0.33
     width_multiple = 0.5
     version = "r3.1"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -319,7 +319,7 @@ def yolov5_darknet_pan_m_r31(
     depth_multiple = 0.67
     width_multiple = 0.75
     version = "r3.1"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -349,7 +349,7 @@ def yolov5_darknet_pan_l_r31(
     depth_multiple = 1.0
     width_multiple = 1.0
     version = "r3.1"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -379,7 +379,7 @@ def yolov5_darknet_pan_s_r40(
     depth_multiple = 0.33
     width_multiple = 0.5
     version = "r4.0"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -409,7 +409,7 @@ def yolov5_darknet_pan_m_r40(
     depth_multiple = 0.67
     width_multiple = 0.75
     version = "r4.0"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -439,7 +439,7 @@ def yolov5_darknet_pan_l_r40(
     depth_multiple = 1.0
     width_multiple = 1.0
     version = "r4.0"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -469,7 +469,7 @@ def yolov5_darknet_pan_s_r60(
     depth_multiple = 0.33
     width_multiple = 0.5
     version = "r6.0"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -499,7 +499,7 @@ def yolov5_darknet_pan_m_r60(
     depth_multiple = 0.67
     width_multiple = 0.75
     version = "r6.0"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
@@ -529,7 +529,7 @@ def yolov5_darknet_pan_l_r60(
     depth_multiple = 1.0
     width_multiple = 1.0
     version = "r6.0"
-    return _yolov5_darknet_pan(
+    return build_model(
         backbone_name,
         depth_multiple,
         width_multiple,
