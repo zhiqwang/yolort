@@ -109,29 +109,51 @@ class PathAggregationNetwork(nn.Module):
         inner_blocks = [init_block]
 
         if use_p6:
-            inner_blocks.extend([
+            inner_blocks.extend(
+                [
+                    Conv(
+                        in_channels_list[3],
+                        in_channels_list[2],
+                        1,
+                        1,
+                        version=module_version,
+                    ),
+                    nn.Upsample(scale_factor=2),
+                    block(
+                        intermediate_channel,
+                        in_channels_list[2],
+                        n=depth_gain,
+                        shortcut=False,
+                    ),
+                ]
+            )
+
+        inner_blocks.extend(
+            [
                 Conv(
-                    in_channels_list[3], in_channels_list[2], 1, 1, version=module_version
+                    in_channels_list[2],
+                    in_channels_list[1],
+                    1,
+                    1,
+                    version=module_version,
                 ),
                 nn.Upsample(scale_factor=2),
                 block(
-                    intermediate_channel, in_channels_list[2], n=depth_gain, shortcut=False
+                    in_channels_list[-1],
+                    in_channels_list[1],
+                    n=depth_gain,
+                    shortcut=False,
                 ),
-            ])
-
-        inner_blocks.extend([
-            Conv(
-                in_channels_list[2], in_channels_list[1], 1, 1, version=module_version
-            ),
-            nn.Upsample(scale_factor=2),
-            block(
-                in_channels_list[-1], in_channels_list[1], n=depth_gain, shortcut=False
-            ),
-            Conv(
-                in_channels_list[1], in_channels_list[0], 1, 1, version=module_version
-            ),
-            nn.Upsample(scale_factor=2),
-        ])
+                Conv(
+                    in_channels_list[1],
+                    in_channels_list[0],
+                    1,
+                    1,
+                    version=module_version,
+                ),
+                nn.Upsample(scale_factor=2),
+            ]
+        )
 
         self.inner_blocks = nn.ModuleList(inner_blocks)
 
@@ -154,14 +176,23 @@ class PathAggregationNetwork(nn.Module):
         ]
 
         if use_p6:
-            layer_blocks.extend([
-                Conv(
-                    in_channels_list[2], in_channels_list[2], 3, 2, version=module_version
-                ),
-                block(
-                    intermediate_channel, in_channels_list[3], n=depth_gain, shortcut=False
-                ),
-            ])
+            layer_blocks.extend(
+                [
+                    Conv(
+                        in_channels_list[2],
+                        in_channels_list[2],
+                        3,
+                        2,
+                        version=module_version,
+                    ),
+                    block(
+                        intermediate_channel,
+                        in_channels_list[3],
+                        n=depth_gain,
+                        shortcut=False,
+                    ),
+                ]
+            )
         self.layer_blocks = nn.ModuleList(layer_blocks)
 
         for m in self.modules():
