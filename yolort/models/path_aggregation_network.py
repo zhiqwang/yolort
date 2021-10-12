@@ -55,8 +55,6 @@ class PathAggregationNetwork(nn.Module):
         else:
             assert len(in_channels) == 3, "Length of in channels should be 3."
 
-        intermediate_channel = in_channels[1] + in_channels[-1]
-
         if block is None:
             block = _block[version]
 
@@ -73,29 +71,30 @@ class PathAggregationNetwork(nn.Module):
         else:
             raise NotImplementedError(f"Version {version} is not implemented yet.")
 
+        # Define the inner blocks
         inner_blocks = [init_block]
 
         if use_p6:
+            in_channel = in_channels[1] + in_channels[-1]
             inner_blocks_p6 = [
-                Conv(in_channels[3], in_channels[2], 1, 1, version=module_version),
+                Conv(in_channels[-1], in_channels[2], 1, 1, version=module_version),
                 nn.Upsample(scale_factor=2),
-                block(
-                    intermediate_channel, in_channels[2], n=depth_gain, shortcut=False
-                ),
+                block(in_channel, in_channels[2], n=depth_gain, shortcut=False),
             ]
             inner_blocks.extend(inner_blocks_p6)
 
-        inner_blocks_main = [
-            Conv(in_channels[2], in_channels[1], 1, 1, version=module_version),
-            nn.Upsample(scale_factor=2),
-            block(in_channels[-1], in_channels[1], n=depth_gain, shortcut=False),
-            Conv(in_channels[1], in_channels[0], 1, 1, version=module_version),
-            nn.Upsample(scale_factor=2),
-        ]
-        inner_blocks.extend(inner_blocks_main)
-
+        inner_blocks.extend(
+            [
+                Conv(in_channels[2], in_channels[1], 1, 1, version=module_version),
+                nn.Upsample(scale_factor=2),
+                block(in_channels[-1], in_channels[1], n=depth_gain, shortcut=False),
+                Conv(in_channels[1], in_channels[0], 1, 1, version=module_version),
+                nn.Upsample(scale_factor=2),
+            ]
+        )
         self.inner_blocks = nn.ModuleList(inner_blocks)
 
+        # Define the layer blocks
         layer_blocks = [
             block(in_channels[1], in_channels[0], n=depth_gain, shortcut=False),
             Conv(in_channels[0], in_channels[0], 3, 2, version=module_version),
@@ -105,11 +104,10 @@ class PathAggregationNetwork(nn.Module):
         ]
 
         if use_p6:
+            in_channel = in_channels[1] + in_channels[-1]
             layer_blocks_p6 = [
                 Conv(in_channels[2], in_channels[2], 3, 2, version=module_version),
-                block(
-                    intermediate_channel, in_channels[3], n=depth_gain, shortcut=False
-                ),
+                block(in_channel, in_channels[-1], n=depth_gain, shortcut=False),
             ]
             layer_blocks.extend(layer_blocks_p6)
 
