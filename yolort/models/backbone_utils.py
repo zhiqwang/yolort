@@ -5,7 +5,7 @@ from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
 from . import darknet
-from .path_aggregation_network import PathAggregationNetwork, IntermediateLevelP6
+from .path_aggregation_network import PathAggregationNetwork
 
 
 class BackboneWithPAN(nn.Module):
