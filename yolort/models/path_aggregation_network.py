@@ -7,29 +7,38 @@ from torch import nn, Tensor
 from yolort.v5 import Conv, BottleneckCSP, C3, SPPF
 
 
-class IntermediatePANBlock(nn.Module):
+class IntermediateLevelP6(nn.Module):
     """
-    Base class for the intermediate block in the PAN.
+    This module is used to generate intermediate P6 block to the PAN.
 
     Args:
-        results (List[Tensor]): the result of the PAN
         x (List[Tensor]): the original feature maps
-        names (List[str]): the names for each one of the
-            original feature maps
 
     Returns:
         results (List[Tensor]): the extended set of results
             of the PAN
-        names (List[str]): the extended set of names for the results
     """
 
-    def forward(
+    def __init__(
         self,
-        results: List[Tensor],
-        x: List[Tensor],
-        names: List[str],
-    ) -> Tuple[List[Tensor], List[str]]:
-        pass
+        depth_multiple: float,
+        in_channel: int,
+        out_channel: int,
+        version: str = "r4.0",
+    ):
+        super().__init__()
+
+        block = _block[version]
+        depth_gain = max(round(3 * depth_multiple), 1)
+
+        self.p6 = nn.Sequential(
+            Conv(in_channel, out_channel, k=3, s=2, version=version),
+            block(out_channel, out_channel, n=depth_gain),
+        )
+
+    def forward(self, x: List[Tensor]) -> Tensor:
+        x.append(self.p6(x[-1]))
+        return x
 
 
 class PathAggregationNetwork(nn.Module):
@@ -202,19 +211,20 @@ class PathAggregationNetwork(nn.Module):
         """
         # unpack OrderedDict into two lists for easier handling
         x = list(x.values())
+        if self.intermediate_blocks is not None:
+            x = self.intermediate_blocks(x)
 
         # Descending the feature pyramid
+        num_features = len(x)
         inners = []
-        last_inner = self.get_result_from_inner_blocks(x[2], 0)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 1)
-        inners.append(last_inner)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 2)
-        last_inner = torch.cat([last_inner, x[1]], dim=1)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 3)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 4)
-        inners.insert(0, last_inner)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 5)
-        last_inner = torch.cat([last_inner, x[0]], dim=1)
+        last_inner = x[-1]
+        for idx in range(num_features - 1):
+            last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx)
+            last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx + 1)
+            inners.insert(0, last_inner)
+            last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx + 2)
+            last_inner = torch.cat([last_inner, x[num_features - idx - 2]], dim=1)
+
         inners.insert(0, last_inner)
 
         # Ascending the feature pyramid
@@ -235,35 +245,3 @@ _block = {
     "r3.1": BottleneckCSP,
     "r4.0": C3,
 }
-
-
-class IntermediateLevelP6(IntermediatePANBlock):
-    """
-    This module is used in YOLOv5 to generate intermediate P6 layers.
-    """
-
-    def __init__(
-        self,
-        depth_multiple: float,
-        in_channel: int,
-        out_channel: int,
-        version: str = "r4.0",
-    ):
-        super().__init__()
-
-        block = _block[version]
-        depth_gain = max(round(3 * depth_multiple), 1)
-
-        self.p6 = nn.Sequential(
-            Conv(in_channel, out_channel, k=3, s=2, version=version),
-            block(out_channel, out_channel, n=depth_gain),
-        )
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, nn.BatchNorm2d):
-                m.eps = 1e-3
-                m.momentum = 0.03
-            elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
-                m.inplace = True
