@@ -94,7 +94,7 @@ def _check_jit_scriptable(nn_module, args, unwrapper=None, skip=False):
 
 class TestModel:
     strides = [8, 16, 32]
-    in_channels = [128, 256, 512]
+
     anchor_grids = [
         [10, 13, 16, 30, 33, 23],
         [30, 61, 62, 45, 59, 119],
@@ -104,14 +104,20 @@ class TestModel:
     num_outputs = num_classes + 5
     num_anchors = len(anchor_grids)
 
-    def _get_feature_shapes(self, h, w):
+    @staticmethod
+    def _get_in_channels(width_multiple, use_p6):
+        grow_widths = [256, 512, 768, 1024] if use_p6 else [256, 512, 1024]
+        in_channels = [int(gw * width_multiple) for gw in grow_widths]
+        return in_channels
+
+    def _get_feature_shapes(self, h, w, width_multiple=0.5, use_p6=False):
+        in_channels = self._get_in_channels(width_multiple, use_p6)
         strides = self.strides
-        in_channels = self.in_channels
 
         return [(c, h // s, w // s) for (c, s) in zip(in_channels, strides)]
 
-    def _get_feature_maps(self, batch_size, h, w):
-        feature_shapes = self._get_feature_shapes(h, w)
+    def _get_feature_maps(self, batch_size, h, w, width_multiple=0.5):
+        feature_shapes = self._get_feature_shapes(h, w, width_multiple=width_multiple)
         feature_maps = [torch.rand(batch_size, *f_shape) for f_shape in feature_shapes]
         return feature_maps
 
@@ -175,7 +181,9 @@ class TestModel:
         use_tan,
     ):
         N, H, W = 4, 416, 352
-        out_shape = self._get_feature_shapes(H, W)
+        out_shape = self._get_feature_shapes(
+            H, W, width_multiple=width_multiple, use_p6=use_p6
+        )
 
         x = torch.rand(N, 3, H, W)
         model = self._init_test_backbone_with_pan(
@@ -205,9 +213,11 @@ class TestModel:
         assert tuple(anchors[2].shape) == (9009, 2)
         _check_jit_scriptable(model, (feature_maps,))
 
-    def _init_test_yolo_head(self):
+    def _init_test_yolo_head(self, width_multiple=0.5, use_p6=False):
+        in_channels = self._get_in_channels(width_multiple, use_p6)
+
         box_head = YOLOHead(
-            self.in_channels, self.num_anchors, self.strides, self.num_classes
+            in_channels, self.num_anchors, self.strides, self.num_classes
         )
         return box_head
 
