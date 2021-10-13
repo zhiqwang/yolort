@@ -1,10 +1,35 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import Callable, List, Dict, Optional
+from typing import List, Dict, Callable, Tuple, Optional
 
 import torch
 from torch import nn, Tensor
 
 from yolort.v5 import Conv, BottleneckCSP, C3, SPPF
+
+
+class IntermediatePANBlock(nn.Module):
+    """
+    Base class for the intermediate block in the PAN.
+
+    Args:
+        results (List[Tensor]): the result of the PAN
+        x (List[Tensor]): the original feature maps
+        names (List[str]): the names for each one of the
+            original feature maps
+
+    Returns:
+        results (List[Tensor]): the extended set of results
+            of the PAN
+        names (List[str]): the extended set of names for the results
+    """
+
+    def forward(
+        self,
+        results: List[Tensor],
+        x: List[Tensor],
+        names: List[str],
+    ) -> Tuple[List[Tensor], List[str]]:
+        pass
 
 
 class PathAggregationNetwork(nn.Module):
@@ -50,24 +75,34 @@ class PathAggregationNetwork(nn.Module):
     ):
         super().__init__()
 
+        module_version = "r4.0" if version == "r6.0" else version
+
+        # Define the Intermediate Block if necessary
         if use_p6:
             assert len(in_channels) == 4, "Length of in channels should be 4."
+            intermediate_blocks = IntermediateLevelP6(
+                depth_multiple,
+                in_channels[2],
+                in_channels[3],
+                version=module_version,
+            )
         else:
             assert len(in_channels) == 3, "Length of in channels should be 3."
+            intermediate_blocks = None
+
+        self.intermediate_blocks = intermediate_blocks
 
         if block is None:
-            block = _block[version]
+            block = _block[module_version]
 
         depth_gain = max(round(3 * depth_multiple), 1)
 
         if version == "r6.0":
             init_block = SPPF(in_channels[-1], in_channels[-1], k=5)
-            module_version = "r4.0"
         elif version in ["r3.1", "r4.0"]:
             init_block = block(
                 in_channels[-1], in_channels[-1], n=depth_gain, shortcut=False
             )
-            module_version = version
         else:
             raise NotImplementedError(f"Version {version} is not implemented yet.")
 
@@ -199,5 +234,36 @@ class PathAggregationNetwork(nn.Module):
 _block = {
     "r3.1": BottleneckCSP,
     "r4.0": C3,
-    "r6.0": C3,
 }
+
+
+class IntermediateLevelP6(IntermediatePANBlock):
+    """
+    This module is used in YOLOv5 to generate intermediate P6 layers.
+    """
+
+    def __init__(
+        self,
+        depth_multiple: float,
+        in_channel: int,
+        out_channel: int,
+        version: str = "r4.0",
+    ):
+        super().__init__()
+
+        block = _block[version]
+        depth_gain = max(round(3 * depth_multiple), 1)
+
+        self.p6 = nn.Sequential(
+            Conv(in_channel, out_channel, k=3, s=2, version=version),
+            block(out_channel, out_channel, n=depth_gain),
+        )
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                m.eps = 1e-3
+                m.momentum = 0.03
+            elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
+                m.inplace = True
