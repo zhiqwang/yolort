@@ -1,5 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import List, Dict, Callable, Tuple, Optional
+from typing import List, Dict, Callable, Optional
 
 import torch
 from torch import nn, Tensor
@@ -232,7 +232,7 @@ class PathAggregationNetwork(nn.Module):
         last_inner = self.get_result_from_layer_blocks(inners[0], 0)
         results.append(last_inner)
 
-        for idx in range(len(inners) - 1):
+        for idx in range(num_features - 1):
             last_inner = self.get_result_from_layer_blocks(last_inner, 2 * idx + 1)
             last_inner = torch.cat([last_inner, inners[idx + 1]], dim=1)
             last_inner = self.get_result_from_layer_blocks(last_inner, 2 * idx + 2)
