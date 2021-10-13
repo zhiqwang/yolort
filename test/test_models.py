@@ -157,13 +157,14 @@ class TestModel:
         return model
 
     @pytest.mark.parametrize(
-        "depth_multiple, width_multiple, version, use_p6, use_tan", [
+        "depth_multiple, width_multiple, version, use_p6, use_tan",
+        [
             (0.33, 0.5, "r4.0", False, True),
             (0.33, 0.5, "r3.1", False, False),
             (0.33, 0.5, "r4.0", False, False),
             (0.33, 0.5, "r6.0", False, False),
             (0.67, 0.75, "r6.0", False, False),
-        ]
+        ],
     )
     def test_backbone_with_pan(
         self,
