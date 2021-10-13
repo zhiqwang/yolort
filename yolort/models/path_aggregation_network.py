@@ -36,7 +36,7 @@ class IntermediateLevelP6(nn.Module):
             block(out_channel, out_channel, n=depth_gain),
         )
 
-    def forward(self, x: List[Tensor]) -> Tensor:
+    def forward(self, x: List[Tensor]) -> List[Tensor]:
         x.append(self.p6(x[-1]))
         return x
 
