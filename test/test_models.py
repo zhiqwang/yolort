@@ -13,6 +13,7 @@ from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
 from yolort.models.transformer import darknet_tan_backbone
+from yolort.v5 import get_yolov5_size
 
 
 @contextlib.contextmanager
@@ -127,67 +128,58 @@ class TestModel:
 
         return head_outputs
 
-    def _init_test_backbone_with_pan_r3_1(self):
-        backbone_name = "darknet_s_r3_1"
-        depth_multiple = 0.33
-        width_multiple = 0.5
-        backbone_with_pan = darknet_pan_backbone(
-            backbone_name, depth_multiple, width_multiple
-        )
-        return backbone_with_pan
+    def _init_test_backbone_with_pan(
+        self,
+        depth_multiple,
+        width_multiple,
+        version,
+        use_p6,
+        use_tan,
+    ):
+        model_size = get_yolov5_size(depth_multiple, width_multiple)
+        backbone_name = f"darknet_{model_size}_{version.replace('.', '_')}"
+        if use_tan:
+            model = darknet_tan_backbone(
+                backbone_name,
+                depth_multiple,
+                width_multiple,
+                version=version,
+                use_p6=use_p6,
+            )
+        else:
+            model = darknet_pan_backbone(
+                backbone_name,
+                depth_multiple,
+                width_multiple,
+                version=version,
+                use_p6=use_p6,
+            )
+        return model
 
-    def test_backbone_with_pan_r3_1(self):
+    @pytest.mark.parametrize(
+        "depth_multiple, width_multiple, version, use_p6, use_tan", [
+            (0.33, 0.5, "r4.0", False, True),
+            (0.33, 0.5, "r3.1", False, False),
+            (0.33, 0.5, "r4.0", False, False),
+            (0.33, 0.5, "r6.0", False, False),
+            (0.67, 0.75, "r6.0", False, False),
+        ]
+    )
+    def test_backbone_with_pan(
+        self,
+        depth_multiple,
+        width_multiple,
+        version,
+        use_p6,
+        use_tan,
+    ):
         N, H, W = 4, 416, 352
         out_shape = self._get_feature_shapes(H, W)
 
         x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_pan_r3_1()
-        out = model(x)
-
-        assert len(out) == 3
-        assert tuple(out[0].shape) == (N, *out_shape[0])
-        assert tuple(out[1].shape) == (N, *out_shape[1])
-        assert tuple(out[2].shape) == (N, *out_shape[2])
-        _check_jit_scriptable(model, (x,))
-
-    def _init_test_backbone_with_pan_r4_0(self):
-        backbone_name = "darknet_s_r4_0"
-        depth_multiple = 0.33
-        width_multiple = 0.5
-        backbone_with_pan = darknet_pan_backbone(
-            backbone_name, depth_multiple, width_multiple
+        model = self._init_test_backbone_with_pan(
+            depth_multiple, width_multiple, version, use_p6, use_tan=use_tan
         )
-        return backbone_with_pan
-
-    def test_backbone_with_pan_r4_0(self):
-        N, H, W = 4, 416, 352
-        out_shape = self._get_feature_shapes(H, W)
-
-        x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_pan_r4_0()
-        out = model(x)
-
-        assert len(out) == 3
-        assert tuple(out[0].shape) == (N, *out_shape[0])
-        assert tuple(out[1].shape) == (N, *out_shape[1])
-        assert tuple(out[2].shape) == (N, *out_shape[2])
-        _check_jit_scriptable(model, (x,))
-
-    def _init_test_backbone_with_tan_r4_0(self):
-        backbone_name = "darknet_s_r4_0"
-        depth_multiple = 0.33
-        width_multiple = 0.5
-        backbone_with_tan = darknet_tan_backbone(
-            backbone_name, depth_multiple, width_multiple
-        )
-        return backbone_with_tan
-
-    def test_backbone_with_tan_r4_0(self):
-        N, H, W = 4, 416, 352
-        out_shape = self._get_feature_shapes(H, W)
-
-        x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_tan_r4_0()
         out = model(x)
 
         assert len(out) == 3

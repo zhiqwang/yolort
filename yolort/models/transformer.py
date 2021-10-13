@@ -21,6 +21,7 @@ def darknet_tan_backbone(
     pretrained: Optional[bool] = False,
     returned_layers: Optional[List[int]] = None,
     version: str = "r4.0",
+    use_p6: bool = False,
 ):
     """
     Constructs a specified DarkNet backbone with TAN on top. Freezes the specified number of
@@ -48,6 +49,7 @@ def darknet_tan_backbone(
         version (str): Module version released by ultralytics, set to "r4.0".
     """
     assert version == "r4.0", "Currently only supports version r4.0."
+    assert not use_p6, "Currently doesn't support the P6 structure."
 
     backbone = darknet.__dict__[backbone_name](pretrained=pretrained).features
 
