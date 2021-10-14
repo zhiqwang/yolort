@@ -93,16 +93,9 @@ def _check_jit_scriptable(nn_module, args, unwrapper=None, skip=False):
 
 
 class TestModel:
-    strides = [8, 16, 32]
 
-    anchor_grids = [
-        [10, 13, 16, 30, 33, 23],
-        [30, 61, 62, 45, 59, 119],
-        [116, 90, 156, 198, 373, 326],
-    ]
     num_classes = 80
     num_outputs = num_classes + 5
-    num_anchors = len(anchor_grids)
 
     @staticmethod
     def _get_in_channels(width_multiple, use_p6):
@@ -110,9 +103,32 @@ class TestModel:
         in_channels = [int(gw * width_multiple) for gw in grow_widths]
         return in_channels
 
+    @staticmethod
+    def _get_strides(use_p6: bool):
+        if use_p6:
+            return [8, 16, 32, 64]
+
+        return [8, 16, 32]
+
+    @staticmethod
+    def _get_anchor_grids(use_p6: bool):
+        if use_p6:
+            return [
+                [19, 27, 44, 40, 38, 94],
+                [96, 68, 86, 152, 180, 137],
+                [140, 301, 303, 264, 238, 542],
+                [436, 615, 739, 380, 925, 792],
+            ]
+
+        return [
+            [10, 13, 16, 30, 33, 23],
+            [30, 61, 62, 45, 59, 119],
+            [116, 90, 156, 198, 373, 326],
+        ]
+
     def _get_feature_shapes(self, height, width, width_multiple=0.5, use_p6=False):
         in_channels = self._get_in_channels(width_multiple, use_p6)
-        strides = self.strides
+        strides = self._get_strides(use_p6)
 
         return [(c, height // s, width // s) for (c, s) in zip(in_channels, strides)]
 
@@ -138,10 +154,9 @@ class TestModel:
             use_p6=use_p6,
         )
 
-        num_anchors = self.num_anchors
         num_outputs = self.num_outputs
         head_shapes = [
-            (batch_size, num_anchors, *f_shape[1:], num_outputs)
+            (batch_size, 3, *f_shape[1:], num_outputs)
             for f_shape in feature_shapes
         ]
         head_outputs = [torch.rand(*h_shape) for h_shape in head_shapes]
@@ -204,8 +219,10 @@ class TestModel:
         assert tuple(out[2].shape) == (N, *out_shape[2])
         _check_jit_scriptable(model, (x,))
 
-    def _init_test_anchor_generator(self):
-        anchor_generator = AnchorGenerator(self.strides, self.anchor_grids)
+    def _init_test_anchor_generator(self, use_p6=False):
+        strides = self._get_strides(use_p6)
+        anchor_grids = self._get_anchor_grids(use_p6)
+        anchor_generator = AnchorGenerator(strides, anchor_grids)
         return anchor_generator
 
     def test_anchor_generator(self):
@@ -222,10 +239,11 @@ class TestModel:
 
     def _init_test_yolo_head(self, width_multiple=0.5, use_p6=False):
         in_channels = self._get_in_channels(width_multiple, use_p6)
+        strides = self._get_strides(use_p6)
+        num_anchors = len(strides)
+        num_classes = self.num_classes
 
-        box_head = YOLOHead(
-            in_channels, self.num_anchors, self.strides, self.num_classes
-        )
+        box_head = YOLOHead(in_channels, num_anchors, strides, num_classes)
         return box_head
 
     def test_yolo_head(self):
@@ -266,9 +284,13 @@ class TestModel:
         assert isinstance(out[0]["scores"], Tensor)
         _check_jit_scriptable(model, (head_outputs, anchors_tuple))
 
-    def test_criterion(self):
+    def test_criterion(self, use_p6=False):
         N, H, W = 4, 640, 640
         head_outputs = self._get_head_outputs(N, H, W)
+        strides = self._get_strides(use_p6)
+        anchor_grids = self._get_anchor_grids(use_p6)
+        num_anchors = len(anchor_grids)
+        num_classes = self.num_classes
 
         targets = torch.tensor(
             [
@@ -278,9 +300,7 @@ class TestModel:
                 [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
             ]
         )
-        criterion = SetCriterion(
-            self.num_anchors, self.strides, self.anchor_grids, self.num_classes
-        )
+        criterion = SetCriterion(num_anchors, strides, anchor_grids, num_classes)
         losses = criterion(targets, head_outputs)
         assert isinstance(losses, dict)
         assert isinstance(losses["cls_logits"], Tensor)
