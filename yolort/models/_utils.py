@@ -26,6 +26,7 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     ], "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
+    strides = checkpoint_yolov5.stride
     anchor_grids = checkpoint_yolov5.yaml["anchors"]
     depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
     width_multiple = checkpoint_yolov5.yaml["width_multiple"]
@@ -46,6 +47,7 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
         "num_classes": num_classes,
         "depth_multiple": depth_multiple,
         "width_multiple": width_multiple,
+        "strides": strides,
         "anchor_grids": anchor_grids,
         "size": size,
         "state_dict": state_dict,

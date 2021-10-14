@@ -62,6 +62,7 @@ class YOLO(nn.Module):
         backbone: nn.Module,
         num_classes: int,
         # Anchor parameters
+        strides: Optional[List[int]] = None,
         anchor_grids: Optional[List[List[float]]] = None,
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
@@ -82,7 +83,8 @@ class YOLO(nn.Module):
             )
         self.backbone = backbone
 
-        strides: List[int] = [8, 16, 32]
+        if strides is None:
+            strides: List[int] = [8, 16, 32]
 
         if anchor_grids is None:
             anchor_grids: List[List[float]] = [
@@ -205,6 +207,7 @@ class YOLO(nn.Module):
         model = cls(
             backbone,
             model_info["num_classes"],
+            strides=model_info["strides"],
             anchor_grids=model_info["anchor_grids"],
             score_thresh=score_thresh,
             nms_thresh=nms_thresh,
