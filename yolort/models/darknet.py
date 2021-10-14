@@ -12,6 +12,7 @@ from .darknetv6 import (
     darknet_s_r6_0,
     darknet_m_r6_0,
     darknet_l_r6_0,
+    darknet_n_r6_0,
 )
 
 __all__ = (
@@ -26,4 +27,5 @@ __all__ = (
     "darknet_s_r6_0",
     "darknet_m_r6_0",
     "darknet_l_r6_0",
+    "darknet_n_r6_0",
 )

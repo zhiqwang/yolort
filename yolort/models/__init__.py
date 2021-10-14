@@ -8,7 +8,28 @@ from yolort.v5 import Conv
 from .yolo import YOLO
 from .yolo_module import YOLOv5
 
-__all__ = ["YOLO", "YOLOv5", "yolov5s", "yolov5m", "yolov5l", "yolov5ts"]
+__all__ = ["YOLO", "YOLOv5", "yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5ts"]
+
+
+def yolov5n(
+    upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any
+):
+    """
+    Args:
+        upstream_version (str): model released by the upstream YOLOv5. Possible values
+            are ["r6.0"]. Default: "r6.0".
+        export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
+            Default: False.
+    """
+    if upstream_version == "r6.0":
+        model = YOLOv5(arch="yolov5_darknet_pan_n_r60", **kwargs)
+    else:
+        raise NotImplementedError("Currently only supports r6.0 version")
+
+    if export_friendly:
+        _export_module_friendly(model)
+
+    return model
 
 
 def yolov5s(
