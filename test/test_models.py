@@ -234,14 +234,13 @@ class TestModel:
         return anchor_generator
 
     @pytest.mark.parametrize(
-        "width_multiple, use_p6", [(0.5, False)],
+        "width_multiple, use_p6",
+        [(0.5, False)],
     )
     @pytest.mark.parametrize(
         "batch_size, height, width", [(4, 416, 352), (2, 640, 640)]
     )
-    def test_anchor_generator(
-        self, width_multiple, use_p6, batch_size, height, width
-    ):
+    def test_anchor_generator(self, width_multiple, use_p6, batch_size, height, width):
         feature_maps = self._get_feature_maps(
             batch_size, height, width, width_multiple=width_multiple, use_p6=use_p6
         )
