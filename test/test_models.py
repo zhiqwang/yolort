@@ -110,19 +110,29 @@ class TestModel:
         in_channels = [int(gw * width_multiple) for gw in grow_widths]
         return in_channels
 
-    def _get_feature_shapes(self, h, w, width_multiple=0.5, use_p6=False):
+    def _get_feature_shapes(self, height, width, width_multiple=0.5, use_p6=False):
         in_channels = self._get_in_channels(width_multiple, use_p6)
         strides = self.strides
 
-        return [(c, h // s, w // s) for (c, s) in zip(in_channels, strides)]
+        return [(c, height // s, width // s) for (c, s) in zip(in_channels, strides)]
 
-    def _get_feature_maps(self, batch_size, h, w, width_multiple=0.5):
-        feature_shapes = self._get_feature_shapes(h, w, width_multiple=width_multiple)
+    def _get_feature_maps(self, batch_size, height, width, width_multiple=0.5, use_p6=False):
+        feature_shapes = self._get_feature_shapes(
+            height,
+            width,
+            width_multiple=width_multiple,
+            use_p6=use_p6,
+        )
         feature_maps = [torch.rand(batch_size, *f_shape) for f_shape in feature_shapes]
         return feature_maps
 
-    def _get_head_outputs(self, batch_size, h, w):
-        feature_shapes = self._get_feature_shapes(h, w)
+    def _get_head_outputs(self, batch_size, height, width, width_multiple=0.5, use_p6=False):
+        feature_shapes = self._get_feature_shapes(
+            height,
+            width,
+            width_multiple=width_multiple,
+            use_p6=use_p6,
+        )
 
         num_anchors = self.num_anchors
         num_outputs = self.num_outputs
