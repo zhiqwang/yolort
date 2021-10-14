@@ -235,7 +235,7 @@ class TestModel:
 
     @pytest.mark.parametrize(
         "width_multiple, use_p6",
-        [(0.5, False)],
+        [(0.5, False), (0.5, True)],
     )
     @pytest.mark.parametrize(
         "batch_size, height, width", [(4, 448, 320), (2, 384, 640)]

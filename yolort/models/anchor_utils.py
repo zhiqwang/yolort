@@ -13,7 +13,7 @@ class AnchorGenerator(nn.Module):
     ):
         super().__init__()
         assert len(strides) == len(anchor_grids)
-        self.num_anchors = len(anchor_grids)
+        self.num_anchors = len(anchor_grids[0]) // 2
         self.strides = strides
         self.anchor_grids = anchor_grids
 
