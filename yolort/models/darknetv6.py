@@ -14,9 +14,11 @@ __all__ = [
     "darknet_s_r6_0",
     "darknet_m_r6_0",
     "darknet_l_r6_0",
+    "darknet_n_r6_0",
 ]
 
 model_urls = {
+    "darknet_n_r6.0": None,
     "darknet_s_r6.0": None,
     "darknet_m_r6.0": None,
     "darknet_l_r6.0": None,
@@ -142,6 +144,20 @@ def _darknetv6(
             model.load_state_dict(state_dict)
 
     return model
+
+
+def darknet_n_r6_0(
+    pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> DarkNetV6:
+    """
+    Constructs a DarkNetV6 with nano channels, as described in release 6.0
+    # TODO
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _darknetv6("darknet_n_r6.0", pretrained, progress, 0.33, 0.25, **kwargs)
 
 
 def darknet_s_r6_0(
