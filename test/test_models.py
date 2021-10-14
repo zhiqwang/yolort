@@ -116,7 +116,9 @@ class TestModel:
 
         return [(c, height // s, width // s) for (c, s) in zip(in_channels, strides)]
 
-    def _get_feature_maps(self, batch_size, height, width, width_multiple=0.5, use_p6=False):
+    def _get_feature_maps(
+        self, batch_size, height, width, width_multiple=0.5, use_p6=False
+    ):
         feature_shapes = self._get_feature_shapes(
             height,
             width,
@@ -126,7 +128,9 @@ class TestModel:
         feature_maps = [torch.rand(batch_size, *f_shape) for f_shape in feature_shapes]
         return feature_maps
 
-    def _get_head_outputs(self, batch_size, height, width, width_multiple=0.5, use_p6=False):
+    def _get_head_outputs(
+        self, batch_size, height, width, width_multiple=0.5, use_p6=False
+    ):
         feature_shapes = self._get_feature_shapes(
             height,
             width,
