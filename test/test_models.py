@@ -106,25 +106,27 @@ class TestModel:
     @staticmethod
     def _get_strides(use_p6: bool):
         if use_p6:
-            return [8, 16, 32, 64]
-
-        return [8, 16, 32]
+            strides = [8, 16, 32, 64]
+        else:
+            strides = [8, 16, 32]
+        return strides
 
     @staticmethod
     def _get_anchor_grids(use_p6: bool):
         if use_p6:
-            return [
+            anchor_grids = [
                 [19, 27, 44, 40, 38, 94],
                 [96, 68, 86, 152, 180, 137],
                 [140, 301, 303, 264, 238, 542],
                 [436, 615, 739, 380, 925, 792],
             ]
-
-        return [
-            [10, 13, 16, 30, 33, 23],
-            [30, 61, 62, 45, 59, 119],
-            [116, 90, 156, 198, 373, 326],
-        ]
+        else:
+            anchor_grids = [
+                [10, 13, 16, 30, 33, 23],
+                [30, 61, 62, 45, 59, 119],
+                [116, 90, 156, 198, 373, 326],
+            ]
+        return anchor_grids
 
     def _get_feature_shapes(self, height, width, width_multiple=0.5, use_p6=False):
         in_channels = self._get_in_channels(width_multiple, use_p6)

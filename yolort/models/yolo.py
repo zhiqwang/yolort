@@ -595,6 +595,14 @@ def yolov5_darknet_pan_s6_r60(
     width_multiple = 0.5
     version = "r6.0"
     use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
     return build_model(
         backbone_name,
         depth_multiple,
@@ -605,6 +613,8 @@ def yolov5_darknet_pan_s6_r60(
         progress=progress,
         num_classes=num_classes,
         use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
         **kwargs,
     )
 
