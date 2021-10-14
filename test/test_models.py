@@ -156,8 +156,7 @@ class TestModel:
 
         num_outputs = self.num_outputs
         head_shapes = [
-            (batch_size, 3, *f_shape[1:], num_outputs)
-            for f_shape in feature_shapes
+            (batch_size, 3, *f_shape[1:], num_outputs) for f_shape in feature_shapes
         ]
         head_outputs = [torch.rand(*h_shape) for h_shape in head_shapes]
 
