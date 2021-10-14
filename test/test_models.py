@@ -144,22 +144,15 @@ class TestModel:
     ):
         model_size = get_yolov5_size(depth_multiple, width_multiple)
         backbone_name = f"darknet_{model_size}_{version.replace('.', '_')}"
-        if use_tan:
-            model = darknet_tan_backbone(
-                backbone_name,
-                depth_multiple,
-                width_multiple,
-                version=version,
-                use_p6=use_p6,
-            )
-        else:
-            model = darknet_pan_backbone(
-                backbone_name,
-                depth_multiple,
-                width_multiple,
-                version=version,
-                use_p6=use_p6,
-            )
+        backbone_arch = eval(f"darknet_{'tan' if use_tan else 'pan'}_backbone")
+        assert backbone_arch in [darknet_pan_backbone, darknet_tan_backbone]
+        model = backbone_arch(
+            backbone_name,
+            depth_multiple,
+            width_multiple,
+            version=version,
+            use_p6=use_p6,
+        )
         return model
 
     @pytest.mark.parametrize(
