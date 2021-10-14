@@ -128,6 +128,13 @@ class TestModel:
             ]
         return anchor_grids
 
+    def _compute_num_anchors(self, height, width, use_p6: bool):
+        strides = self._get_strides(use_p6)
+        num_anchors = 0
+        for stride in strides:
+            num_anchors += (height / stride) * (width / stride)
+        return num_anchors * 3
+
     def _get_feature_shapes(self, height, width, width_multiple=0.5, use_p6=False):
         in_channels = self._get_in_channels(width_multiple, use_p6)
         strides = self._get_strides(use_p6)
@@ -226,16 +233,26 @@ class TestModel:
         anchor_generator = AnchorGenerator(strides, anchor_grids)
         return anchor_generator
 
-    def test_anchor_generator(self):
-        N, H, W = 4, 416, 352
-        feature_maps = self._get_feature_maps(N, H, W)
-        model = self._init_test_anchor_generator()
+    @pytest.mark.parametrize(
+        "width_multiple, use_p6", [(0.5, False)],
+    )
+    @pytest.mark.parametrize(
+        "batch_size, height, width", [(4, 416, 352), (2, 640, 640)]
+    )
+    def test_anchor_generator(
+        self, width_multiple, use_p6, batch_size, height, width
+    ):
+        feature_maps = self._get_feature_maps(
+            batch_size, height, width, width_multiple=width_multiple, use_p6=use_p6
+        )
+        model = self._init_test_anchor_generator(use_p6)
         anchors = model(feature_maps)
+        expected_num_anchors = self._compute_num_anchors(height, width, use_p6)
 
         assert len(anchors) == 3
-        assert tuple(anchors[0].shape) == (9009, 2)
-        assert tuple(anchors[1].shape) == (9009, 1)
-        assert tuple(anchors[2].shape) == (9009, 2)
+        assert tuple(anchors[0].shape) == (expected_num_anchors, 2)
+        assert tuple(anchors[1].shape) == (expected_num_anchors, 1)
+        assert tuple(anchors[2].shape) == (expected_num_anchors, 2)
         _check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_yolo_head(self, width_multiple=0.5, use_p6=False):
@@ -336,7 +353,7 @@ def test_torchscript(arch):
 @pytest.mark.parametrize(
     "arch, up_version, hash_prefix", [("yolov5s", "v4.0", "9ca9a642")]
 )
-def test_load_from_yolov5(arch, up_version, hash_prefix):
+def test_load_from_yolov5(arch: str, up_version: str, hash_prefix: str):
     img_path = "test/assets/bus.jpg"
     yolov5s_r40_path = Path(f"{arch}.pt")
 
