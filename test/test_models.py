@@ -131,8 +131,8 @@ class TestModel:
     def _compute_num_anchors(self, height, width, use_p6: bool):
         strides = self._get_strides(use_p6)
         num_anchors = 0
-        for stride in strides:
-            num_anchors += (height / stride) * (width / stride)
+        for s in strides:
+            num_anchors += (height // s) * (width // s)
         return num_anchors * 3
 
     def _get_feature_shapes(self, height, width, width_multiple=0.5, use_p6=False):
@@ -238,7 +238,7 @@ class TestModel:
         [(0.5, False)],
     )
     @pytest.mark.parametrize(
-        "batch_size, height, width", [(4, 416, 352), (2, 640, 640)]
+        "batch_size, height, width", [(4, 448, 320), (2, 384, 640)]
     )
     def test_anchor_generator(self, width_multiple, use_p6, batch_size, height, width):
         feature_maps = self._get_feature_maps(
