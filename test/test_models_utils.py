@@ -2,7 +2,6 @@
 import pytest
 import torch
 from torch import Tensor
-
 from yolort import models
 from yolort.models import YOLOv5
 from yolort.models._utils import load_from_ultralytics
