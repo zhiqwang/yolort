@@ -3,8 +3,8 @@ from typing import Any
 
 from torch import nn
 
-from yolort.utils.activations import Hardswish, SiLU
 from yolort.v5 import Conv
+from yolort.v5.utils.activations import Hardswish, SiLU
 from .yolo import YOLO
 from .yolo_module import YOLOv5
 

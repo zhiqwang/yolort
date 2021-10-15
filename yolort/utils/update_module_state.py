@@ -4,8 +4,69 @@ from typing import Dict, Optional
 
 from torch import nn
 
+from yolort.v5 import load_yolov5_model, get_yolov5_size
 from yolort.models import yolo
-from yolort.v5 import get_yolov5_size
+
+
+def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
+    """
+    Allows the user to load model state file from the checkpoint trained from
+    the ultralytics/yolov5.
+
+    Args:
+        checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+    """
+
+    assert version in [
+        "r3.1",
+        "r4.0",
+        "r6.0",
+    ], "Currently does not support this version."
+
+    checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
+    num_classes = checkpoint_yolov5.yaml["nc"]
+    strides = checkpoint_yolov5.stride
+    anchor_grids = checkpoint_yolov5.yaml["anchors"]
+    depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
+    width_multiple = checkpoint_yolov5.yaml["width_multiple"]
+
+    use_p6 = False
+    if len(strides) == 4:
+        use_p6 = True
+
+    if use_p6:
+        inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
+        layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
+    else:
+        inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
+        layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
+
+    module_state_updater = ModuleStateUpdate(
+        depth_multiple=depth_multiple,
+        width_multiple=width_multiple,
+        version=version,
+        num_classes=num_classes,
+        inner_block_maps=inner_block_maps,
+        layer_block_maps=layer_block_maps,
+        use_p6=use_p6,
+    )
+    module_state_updater.updating(checkpoint_yolov5)
+    state_dict = module_state_updater.model.state_dict()
+
+    size = get_yolov5_size(depth_multiple, width_multiple)
+
+    return {
+        "num_classes": num_classes,
+        "depth_multiple": depth_multiple,
+        "width_multiple": width_multiple,
+        "strides": strides,
+        "anchor_grids": anchor_grids,
+        "use_p6": use_p6,
+        "size": size,
+        "state_dict": state_dict,
+    }
 
 
 class ModuleStateUpdate:
@@ -56,7 +117,7 @@ class ModuleStateUpdate:
         weights_name = (
             f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}_coco"
         )
-        model = yolo.build_model(
+        self.model = yolo.build_model(
             backbone_name,
             depth_multiple,
             width_multiple,
@@ -65,7 +126,6 @@ class ModuleStateUpdate:
             num_classes=num_classes,
             use_p6=use_p6,
         )
-        self.model = model
 
     def updating(self, state_dict):
         # Obtain module state
