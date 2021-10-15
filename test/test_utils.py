@@ -7,42 +7,10 @@ from yolort.models import yolov5s
 from yolort.utils import (
     FeatureExtractor,
     get_image_from_url,
-    load_from_ultralytics,
     read_image_to_tensor,
 )
 from yolort.utils.image_utils import box_cxcywh_to_xyxy
 from yolort.v5 import letterbox, scale_coords
-
-
-@pytest.mark.parametrize(
-    "arch, version, upstream_version, hash_prefix, use_p6",
-    [
-        ("yolov5s", "r4.0", "v4.0", "9ca9a642", False),
-        ("yolov5s", "r4.0", "v6.0", "c3b140f3", False),
-    ],
-)
-def test_load_from_ultralytics(
-    arch: str,
-    version: str,
-    upstream_version: str,
-    hash_prefix: str,
-    use_p6: bool,
-):
-    checkpoint_path = f"{arch}_{version}_{hash_prefix}"
-    base_url = "https://github.com/ultralytics/yolov5/releases/download/"
-    model_url = f"{base_url}/{upstream_version}/{arch}.pt"
-
-    torch.hub.download_url_to_file(
-        model_url,
-        checkpoint_path,
-        hash_prefix=hash_prefix,
-    )
-    model_info = load_from_ultralytics(checkpoint_path, version=version)
-    assert isinstance(model_info, dict)
-    assert model_info["num_classes"] == 80
-    assert model_info["size"] == arch.replace("yolov5", "")
-    assert model_info["use_p6"] == use_p6
-    assert len(model_info["strides"]) == 4 if use_p6 else 3
 
 
 def test_read_image_to_tensor():
