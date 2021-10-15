@@ -2,7 +2,6 @@ import contextlib
 import io
 import os
 import warnings
-from pathlib import Path
 
 import pytest
 import torch
@@ -357,21 +356,30 @@ def test_torchscript(arch):
 
 
 @pytest.mark.parametrize(
-    "arch, up_version, hash_prefix", [("yolov5s", "v4.0", "9ca9a642")]
+    "arch, version, upstream_version, hash_prefix",
+    [
+        ("yolov5s", "r4.0", "v4.0", "9ca9a642")
+    ]
 )
-def test_load_from_yolov5(arch: str, up_version: str, hash_prefix: str):
+def test_load_from_yolov5(
+    arch: str,
+    version: str,
+    upstream_version: str,
+    hash_prefix: str,
+):
     img_path = "test/assets/bus.jpg"
-    yolov5s_r40_path = Path(f"{arch}.pt")
+    checkpoint_path = f"{arch}_{version}_{hash_prefix}"
 
-    if not yolov5s_r40_path.exists():
-        torch.hub.download_url_to_file(
-            f"https://github.com/ultralytics/yolov5/releases/download/{up_version}/{arch}.pt",
-            yolov5s_r40_path,
-            hash_prefix=hash_prefix,
-        )
+    base_url = "https://github.com/ultralytics/yolov5/releases/download/"
+    model_url = f"{base_url}/{upstream_version}/{arch}.pt"
 
-    version = up_version.replace("v", "r")
-    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, version=version)
+    torch.hub.download_url_to_file(
+        model_url,
+        checkpoint_path,
+        hash_prefix=hash_prefix,
+    )
+
+    model_yolov5 = YOLOv5.load_from_yolov5(checkpoint_path, version=version)
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)

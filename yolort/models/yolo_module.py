@@ -10,8 +10,9 @@ from torch import Tensor
 from torchvision.io import read_image
 
 from yolort.data import COCOEvaluator, contains_any_tensor
+from yolort.utils import load_from_ultralytics
 from . import yolo
-from ._utils import _evaluate_iou, load_from_ultralytics
+from ._utils import _evaluate_iou
 from .transform import YOLOTransform
 
 __all__ = ["YOLOv5"]

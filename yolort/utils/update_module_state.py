@@ -8,61 +8,62 @@ from yolort.models import yolo
 from yolort.v5 import load_yolov5_model, get_yolov5_size
 
 
-ARCHITECTURE_MAPS = {
-    "yolov5s_pan_v4.0": "yolov5_darknet_pan_s_r40",
-    "yolov5m_pan_v4.0": "yolov5_darknet_pan_m_r40",
-    "yolov5l_pan_v4.0": "yolov5_darknet_pan_l_r40",
-    "yolov5s_tan_v4.0": "yolov5_darknet_tan_s_r40",
-}
-
-
-def update_module_state_from_ultralytics(
-    checkpoint_path: str,
-    arch: str = "yolov5s",
-    feature_fusion_type: str = "PAN",
-    num_classes: int = 80,
-    set_fp16: bool = True,
-    verbose: bool = False,
-    **kwargs,
-):
+def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     """
-    Allows the user to specify a file to use when loading an ultralytics model for conversion.
-    This is valuable for users who have already trained their models using ultralytics and don't
-    wish to re-train.
+    Allows the user to load model state file from the checkpoint trained from
+    the ultralytics/yolov5.
 
     Args:
-        checkpoint_path (str): Path to your custom model.
-        arch (str): yolo architecture. Possible values are 'yolov5s', 'yolov5m' and 'yolov5l'.
-            Default: 'yolov5s'.
-        feature_fusion_type (str): the type of fature fusion. Possible values are PAN and TAN.
-            Default: 'PAN'.
-        num_classes (int): number of detection classes (doesn't including background).
-            Default: 80.
-        set_fp16 (bool): allow selective conversion to fp16 or not.
-            Default: True.
-        verbose (bool): print all information to screen. Default: True.
+        checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
-    model = load_yolov5_model(checkpoint_path, autoshape=False, verbose=verbose)
 
-    key_arch = f"{arch}_{feature_fusion_type.lower()}_v4.0"
-    if key_arch not in ARCHITECTURE_MAPS:
-        raise NotImplementedError(
-            "Currently does't support this architecture, "
-            "fell free to file an issue labeled enhancement to us"
-        )
+    assert version in ["r3.1", "r4.0", "r6.0"], "Currently does not support this version."
+
+    checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
+    num_classes = checkpoint_yolov5.yaml["nc"]
+    strides = checkpoint_yolov5.stride
+    anchor_grids = checkpoint_yolov5.yaml["anchors"]
+    depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
+    width_multiple = checkpoint_yolov5.yaml["width_multiple"]
+
+    use_p6 = False
+    if len(strides) == 4:
+        use_p6 = True
+
+    if use_p6:
+        inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
+        layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
+    else:
+        inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
+        layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
 
     module_state_updater = ModuleStateUpdate(
-        arch=ARCHITECTURE_MAPS[key_arch],
+        arch=None,
+        depth_multiple=depth_multiple,
+        width_multiple=width_multiple,
+        version=version,
         num_classes=num_classes,
-        **kwargs,
+        inner_block_maps=inner_block_maps,
+        layer_block_maps=layer_block_maps,
+        use_p6=use_p6,
     )
+    module_state_updater.updating(checkpoint_yolov5)
+    state_dict = module_state_updater.model.state_dict()
 
-    module_state_updater.updating(model)
+    size = get_yolov5_size(depth_multiple, width_multiple)
 
-    if set_fp16:
-        module_state_updater.model.half()
-
-    return module_state_updater.model
+    return {
+        "num_classes": num_classes,
+        "depth_multiple": depth_multiple,
+        "width_multiple": width_multiple,
+        "strides": strides,
+        "anchor_grids": anchor_grids,
+        "use_p6": use_p6,
+        "size": size,
+        "state_dict": state_dict,
+    }
 
 
 class ModuleStateUpdate:
@@ -72,7 +73,6 @@ class ModuleStateUpdate:
 
     def __init__(
         self,
-        arch: Optional[str] = "yolov5_darknet_pan_s_r31",
         depth_multiple: Optional[float] = None,
         width_multiple: Optional[float] = None,
         version: str = "r6.0",
@@ -83,46 +83,39 @@ class ModuleStateUpdate:
         head_name: str = "m",
         use_p6: bool = False,
     ) -> None:
+
+        assert depth_multiple is not None, "depth_multiple must be set."
+        assert width_multiple is not None, "width_multiple must be set."
+
         # Configuration for making the keys consistent
         if inner_block_maps is None:
             inner_block_maps = {
-                "0": "9",
-                "1": "10",
-                "3": "13",
-                "4": "14",
+                "0": "9", "1": "10", "3": "13", "4": "14",
             }
         self.inner_block_maps = inner_block_maps
         if layer_block_maps is None:
             layer_block_maps = {
-                "0": "17",
-                "1": "18",
-                "2": "20",
-                "3": "21",
-                "4": "23",
+                "0": "17", "1": "18", "2": "20", "3": "21", "4": "23",
             }
         self.layer_block_maps = layer_block_maps
         self.head_ind = head_ind
         self.head_name = head_name
+
         # Set model
-        if arch is not None:
-            model = yolo.__dict__[arch](num_classes=num_classes)
-        elif depth_multiple is not None and width_multiple is not None:
-            yolov5_size = get_yolov5_size(depth_multiple, width_multiple)
-            backbone_name = f"darknet_{yolov5_size}_{version.replace('.', '_')}"
-            weights_name = (
-                f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}_coco"
-            )
-            model = yolo.build_model(
-                backbone_name,
-                depth_multiple,
-                width_multiple,
-                version,
-                weights_name,
-                num_classes=num_classes,
-                use_p6=use_p6,
-            )
-        else:
-            raise NotImplementedError("Currently either arch or multiples must be set.")
+        yolov5_size = get_yolov5_size(depth_multiple, width_multiple)
+        backbone_name = f"darknet_{yolov5_size}_{version.replace('.', '_')}"
+        weights_name = (
+            f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}_coco"
+        )
+        model = yolo.build_model(
+            backbone_name,
+            depth_multiple,
+            width_multiple,
+            version,
+            weights_name,
+            num_classes=num_classes,
+            use_p6=use_p6,
+        )
         self.model = model
 
     def updating(self, state_dict):

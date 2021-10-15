@@ -2,13 +2,15 @@ from typing import Callable, Dict, Mapping, Sequence, Union
 
 from .hooks import FeatureExtractor
 from .image_utils import cv2_imshow, get_image_from_url, read_image_to_tensor
+from .update_module_state import load_from_ultralytics
 
 __all__ = [
     "cv2_imshow",
-    "get_image_from_url",
-    "read_image_to_tensor",
     "FeatureExtractor",
+    "get_image_from_url",
     "get_callable_dict",
+    "load_from_ultralytics",
+    "read_image_to_tensor",
 ]
 
 
