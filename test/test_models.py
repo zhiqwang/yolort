@@ -199,8 +199,12 @@ class TestModel:
             (0.33, 0.5, "r3.1", False, False),
             (0.33, 0.5, "r4.0", False, False),
             (0.33, 0.5, "r6.0", False, False),
+            (0.33, 0.5, "r6.0", True, False),
             (0.67, 0.75, "r6.0", False, False),
         ],
+    )
+    @pytest.mark.parametrize(
+        "batch_size, height, width", [(4, 448, 320), (2, 384, 640)]
     )
     def test_backbone_with_pan(
         self,
@@ -209,22 +213,25 @@ class TestModel:
         version,
         use_p6,
         use_tan,
+        batch_size,
+        height,
+        width,
     ):
-        N, H, W = 4, 416, 352
         out_shape = self._get_feature_shapes(
-            H, W, width_multiple=width_multiple, use_p6=use_p6
+            height, width, width_multiple=width_multiple, use_p6=use_p6
         )
 
-        x = torch.rand(N, 3, H, W)
+        x = torch.rand(batch_size, 3, height, width)
         model = self._init_test_backbone_with_pan(
             depth_multiple, width_multiple, version, use_p6, use_tan=use_tan
         )
         out = model(x)
 
-        assert len(out) == 3
-        assert tuple(out[0].shape) == (N, *out_shape[0])
-        assert tuple(out[1].shape) == (N, *out_shape[1])
-        assert tuple(out[2].shape) == (N, *out_shape[2])
+        expected_num_output = 4 if use_p6 else 3
+        assert len(out) == expected_num_output
+        for i in range(expected_num_output):
+            assert tuple(out[i].shape) == (batch_size, *out_shape[i])
+
         _check_jit_scriptable(model, (x,))
 
     def _init_test_anchor_generator(self, use_p6=False):

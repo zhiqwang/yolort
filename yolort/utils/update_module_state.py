@@ -81,6 +81,7 @@ class ModuleStateUpdate:
         layer_block_maps: Optional[Dict[str, str]] = None,
         head_ind: int = 24,
         head_name: str = "m",
+        use_p6: bool = False,
     ) -> None:
         # Configuration for making the keys consistent
         if inner_block_maps is None:
@@ -118,6 +119,7 @@ class ModuleStateUpdate:
                 version,
                 weights_name,
                 num_classes=num_classes,
+                use_p6=use_p6,
             )
         else:
             raise NotImplementedError("Currently either arch or multiples must be set.")

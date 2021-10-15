@@ -24,6 +24,7 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
         "r4.0",
         "r6.0",
     ], "Currently only supports version 'r3.1', 'r4.0' and 'r6.0'."
+
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
     strides = checkpoint_yolov5.stride
@@ -31,12 +32,26 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
     width_multiple = checkpoint_yolov5.yaml["width_multiple"]
 
+    use_p6 = False
+    if len(strides) == 4:
+        use_p6 = True
+
+    if use_p6:
+        inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
+        layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
+    else:
+        inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
+        layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
+
     module_state_updater = ModuleStateUpdate(
         arch=None,
         depth_multiple=depth_multiple,
         width_multiple=width_multiple,
         version=version,
         num_classes=num_classes,
+        inner_block_maps=inner_block_maps,
+        layer_block_maps=layer_block_maps,
+        use_p6=use_p6,
     )
     module_state_updater.updating(checkpoint_yolov5)
     state_dict = module_state_updater.model.state_dict()
@@ -49,6 +64,7 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
         "width_multiple": width_multiple,
         "strides": strides,
         "anchor_grids": anchor_grids,
+        "use_p6": use_p6,
         "size": size,
         "state_dict": state_dict,
     }
