@@ -357,9 +357,7 @@ def test_torchscript(arch):
 
 @pytest.mark.parametrize(
     "arch, version, upstream_version, hash_prefix",
-    [
-        ("yolov5s", "r4.0", "v4.0", "9ca9a642")
-    ]
+    [("yolov5s", "r4.0", "v4.0", "9ca9a642")],
 )
 def test_load_from_yolov5(
     arch: str,

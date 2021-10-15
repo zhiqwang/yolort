@@ -19,7 +19,11 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
 
-    assert version in ["r3.1", "r4.0", "r6.0"], "Currently does not support this version."
+    assert version in [
+        "r3.1",
+        "r4.0",
+        "r6.0",
+    ], "Currently does not support this version."
 
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
@@ -90,12 +94,19 @@ class ModuleStateUpdate:
         # Configuration for making the keys consistent
         if inner_block_maps is None:
             inner_block_maps = {
-                "0": "9", "1": "10", "3": "13", "4": "14",
+                "0": "9",
+                "1": "10",
+                "3": "13",
+                "4": "14",
             }
         self.inner_block_maps = inner_block_maps
         if layer_block_maps is None:
             layer_block_maps = {
-                "0": "17", "1": "18", "2": "20", "3": "21", "4": "23",
+                "0": "17",
+                "1": "18",
+                "2": "20",
+                "3": "21",
+                "4": "23",
             }
         self.layer_block_maps = layer_block_maps
         self.head_ind = head_ind

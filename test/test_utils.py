@@ -19,7 +19,7 @@ from yolort.v5 import letterbox, scale_coords
     [
         ("yolov5s", "r4.0", "v4.0", "9ca9a642", False),
         ("yolov5s", "r4.0", "v6.0", "c3b140f3", False),
-    ]
+    ],
 )
 def test_load_from_ultralytics(
     arch: str,
