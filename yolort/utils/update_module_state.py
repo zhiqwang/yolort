@@ -38,10 +38,21 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
 
     if use_p6:
         inner_block_maps = {
-            "0": "11", "1": "12", "3": "15", "4": "16", "6": "19", "7": "20"
+            "0": "11",
+            "1": "12",
+            "3": "15",
+            "4": "16",
+            "6": "19",
+            "7": "20",
         }
         layer_block_maps = {
-            "0": "23", "1": "24", "2": "26", "3": "27", "4": "29", "5": "30", "6": "32"
+            "0": "23",
+            "1": "24",
+            "2": "26",
+            "3": "27",
+            "4": "29",
+            "5": "30",
+            "6": "32",
         }
         p6_block_maps = {"0": "9", "1": "10"}
         head_ind = 33
@@ -149,12 +160,18 @@ class ModuleStateUpdate:
         # PAN
         # Update P6 weights
         if self.p6_block_maps is not None:
-            for name, params in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
+            for (
+                name,
+                params,
+            ) in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
                 params.data.copy_(
                     self.attach_parameters_block(state_dict, name, self.p6_block_maps)
                 )
 
-            for name, buffers in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
+            for (
+                name,
+                buffers,
+            ) in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
                 buffers.copy_(
                     self.attach_parameters_block(state_dict, name, self.p6_block_maps)
                 )
