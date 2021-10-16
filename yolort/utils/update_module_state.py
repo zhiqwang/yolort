@@ -4,8 +4,8 @@ from typing import Dict, Optional
 
 from torch import nn
 
-from yolort.v5 import load_yolov5_model, get_yolov5_size
 from yolort.models import yolo
+from yolort.v5 import load_yolov5_model, get_yolov5_size
 
 
 def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):

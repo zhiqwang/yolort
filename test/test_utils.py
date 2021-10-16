@@ -160,7 +160,7 @@ def test_scale_coords():
         (8, 640, 640),
         (4, 416, 320),
         (8, 320, 416),
-    ]
+    ],
 )
 @pytest.mark.parametrize("arch", ["yolov5n", "yolov5s"])
 def test_feature_extractor(batch_size, height, width, arch):
@@ -169,7 +169,8 @@ def test_feature_extractor(batch_size, height, width, arch):
     strides = [8, 16, 32]
     num_outputs = 85
     expected_features = [
-        (batch_size, inc, height // s, width // s) for inc, s in zip(in_channels, strides)
+        (batch_size, inc, height // s, width // s)
+        for inc, s in zip(in_channels, strides)
     ]
     expected_head_outputs = [
         (batch_size, c, height // s, width // s, num_outputs) for s in strides
