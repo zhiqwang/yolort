@@ -4,16 +4,16 @@ import warnings
 from pathlib import PosixPath
 from typing import Any, List, Dict, Tuple, Optional, Union, Callable
 
-from pytorch_lightning import LightningModule
 import torch
+from pytorch_lightning import LightningModule
 from torch import nn, Tensor
 from torchvision.io import read_image
 
 from yolort.data import COCOEvaluator, contains_any_tensor
 from . import yolo
 from ._utils import _evaluate_iou
-from .yolo import YOLO
 from .transform import YOLOTransform
+from .yolo import YOLO
 
 __all__ = ["YOLOv5"]
 
@@ -57,7 +57,10 @@ class YOLOv5(LightningModule):
 
         if model is None:
             model = yolo.__dict__[arch](
-                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs
+                pretrained=pretrained,
+                progress=progress,
+                num_classes=num_classes,
+                **kwargs,
             )
         self.model = model
 
