@@ -2,7 +2,6 @@ import contextlib
 import io
 import os
 import warnings
-from pathlib import Path
 
 import pytest
 import torch
@@ -13,6 +12,7 @@ from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
 from yolort.models.transformer import darknet_tan_backbone
+from yolort.v5 import get_yolov5_size
 
 
 @contextlib.contextmanager
@@ -92,130 +92,181 @@ def _check_jit_scriptable(nn_module, args, unwrapper=None, skip=False):
 
 
 class TestModel:
-    strides = [8, 16, 32]
-    in_channels = [128, 256, 512]
-    anchor_grids = [
-        [10, 13, 16, 30, 33, 23],
-        [30, 61, 62, 45, 59, 119],
-        [116, 90, 156, 198, 373, 326],
-    ]
+
     num_classes = 80
     num_outputs = num_classes + 5
-    num_anchors = len(anchor_grids)
 
-    def _get_feature_shapes(self, h, w):
-        strides = self.strides
-        in_channels = self.in_channels
+    @staticmethod
+    def _get_in_channels(width_multiple, use_p6):
+        grow_widths = [256, 512, 768, 1024] if use_p6 else [256, 512, 1024]
+        in_channels = [int(gw * width_multiple) for gw in grow_widths]
+        return in_channels
 
-        return [(c, h // s, w // s) for (c, s) in zip(in_channels, strides)]
+    @staticmethod
+    def _get_strides(use_p6: bool):
+        if use_p6:
+            strides = [8, 16, 32, 64]
+        else:
+            strides = [8, 16, 32]
+        return strides
 
-    def _get_feature_maps(self, batch_size, h, w):
-        feature_shapes = self._get_feature_shapes(h, w)
+    @staticmethod
+    def _get_anchor_grids(use_p6: bool):
+        if use_p6:
+            anchor_grids = [
+                [19, 27, 44, 40, 38, 94],
+                [96, 68, 86, 152, 180, 137],
+                [140, 301, 303, 264, 238, 542],
+                [436, 615, 739, 380, 925, 792],
+            ]
+        else:
+            anchor_grids = [
+                [10, 13, 16, 30, 33, 23],
+                [30, 61, 62, 45, 59, 119],
+                [116, 90, 156, 198, 373, 326],
+            ]
+        return anchor_grids
+
+    def _compute_num_anchors(self, height, width, use_p6: bool):
+        strides = self._get_strides(use_p6)
+        num_anchors = 0
+        for s in strides:
+            num_anchors += (height // s) * (width // s)
+        return num_anchors * 3
+
+    def _get_feature_shapes(self, height, width, width_multiple=0.5, use_p6=False):
+        in_channels = self._get_in_channels(width_multiple, use_p6)
+        strides = self._get_strides(use_p6)
+
+        return [(c, height // s, width // s) for (c, s) in zip(in_channels, strides)]
+
+    def _get_feature_maps(
+        self, batch_size, height, width, width_multiple=0.5, use_p6=False
+    ):
+        feature_shapes = self._get_feature_shapes(
+            height,
+            width,
+            width_multiple=width_multiple,
+            use_p6=use_p6,
+        )
         feature_maps = [torch.rand(batch_size, *f_shape) for f_shape in feature_shapes]
         return feature_maps
 
-    def _get_head_outputs(self, batch_size, h, w):
-        feature_shapes = self._get_feature_shapes(h, w)
+    def _get_head_outputs(
+        self, batch_size, height, width, width_multiple=0.5, use_p6=False
+    ):
+        feature_shapes = self._get_feature_shapes(
+            height,
+            width,
+            width_multiple=width_multiple,
+            use_p6=use_p6,
+        )
 
-        num_anchors = self.num_anchors
         num_outputs = self.num_outputs
         head_shapes = [
-            (batch_size, num_anchors, *f_shape[1:], num_outputs)
-            for f_shape in feature_shapes
+            (batch_size, 3, *f_shape[1:], num_outputs) for f_shape in feature_shapes
         ]
         head_outputs = [torch.rand(*h_shape) for h_shape in head_shapes]
 
         return head_outputs
 
-    def _init_test_backbone_with_pan_r3_1(self):
-        backbone_name = "darknet_s_r3_1"
-        depth_multiple = 0.33
-        width_multiple = 0.5
-        backbone_with_pan = darknet_pan_backbone(
-            backbone_name, depth_multiple, width_multiple
+    def _init_test_backbone_with_pan(
+        self,
+        depth_multiple,
+        width_multiple,
+        version,
+        use_p6,
+        use_tan,
+    ):
+        model_size = get_yolov5_size(depth_multiple, width_multiple)
+        backbone_name = f"darknet_{model_size}_{version.replace('.', '_')}"
+        backbone_arch = eval(f"darknet_{'tan' if use_tan else 'pan'}_backbone")
+        assert backbone_arch in [darknet_pan_backbone, darknet_tan_backbone]
+        model = backbone_arch(
+            backbone_name,
+            depth_multiple,
+            width_multiple,
+            version=version,
+            use_p6=use_p6,
         )
-        return backbone_with_pan
+        return model
 
-    def test_backbone_with_pan_r3_1(self):
-        N, H, W = 4, 416, 352
-        out_shape = self._get_feature_shapes(H, W)
+    @pytest.mark.parametrize(
+        "depth_multiple, width_multiple, version, use_p6, use_tan",
+        [
+            (0.33, 0.5, "r4.0", False, True),
+            (0.33, 0.5, "r3.1", False, False),
+            (0.33, 0.5, "r4.0", False, False),
+            (0.33, 0.5, "r6.0", False, False),
+            (0.33, 0.5, "r6.0", True, False),
+            (0.67, 0.75, "r6.0", False, False),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "batch_size, height, width", [(4, 448, 320), (2, 384, 640)]
+    )
+    def test_backbone_with_pan(
+        self,
+        depth_multiple,
+        width_multiple,
+        version,
+        use_p6,
+        use_tan,
+        batch_size,
+        height,
+        width,
+    ):
+        out_shape = self._get_feature_shapes(
+            height, width, width_multiple=width_multiple, use_p6=use_p6
+        )
 
-        x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_pan_r3_1()
+        x = torch.rand(batch_size, 3, height, width)
+        model = self._init_test_backbone_with_pan(
+            depth_multiple, width_multiple, version, use_p6, use_tan=use_tan
+        )
         out = model(x)
 
-        assert len(out) == 3
-        assert tuple(out[0].shape) == (N, *out_shape[0])
-        assert tuple(out[1].shape) == (N, *out_shape[1])
-        assert tuple(out[2].shape) == (N, *out_shape[2])
+        expected_num_output = 4 if use_p6 else 3
+        assert len(out) == expected_num_output
+        for i in range(expected_num_output):
+            assert tuple(out[i].shape) == (batch_size, *out_shape[i])
+
         _check_jit_scriptable(model, (x,))
 
-    def _init_test_backbone_with_pan_r4_0(self):
-        backbone_name = "darknet_s_r4_0"
-        depth_multiple = 0.33
-        width_multiple = 0.5
-        backbone_with_pan = darknet_pan_backbone(
-            backbone_name, depth_multiple, width_multiple
-        )
-        return backbone_with_pan
-
-    def test_backbone_with_pan_r4_0(self):
-        N, H, W = 4, 416, 352
-        out_shape = self._get_feature_shapes(H, W)
-
-        x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_pan_r4_0()
-        out = model(x)
-
-        assert len(out) == 3
-        assert tuple(out[0].shape) == (N, *out_shape[0])
-        assert tuple(out[1].shape) == (N, *out_shape[1])
-        assert tuple(out[2].shape) == (N, *out_shape[2])
-        _check_jit_scriptable(model, (x,))
-
-    def _init_test_backbone_with_tan_r4_0(self):
-        backbone_name = "darknet_s_r4_0"
-        depth_multiple = 0.33
-        width_multiple = 0.5
-        backbone_with_tan = darknet_tan_backbone(
-            backbone_name, depth_multiple, width_multiple
-        )
-        return backbone_with_tan
-
-    def test_backbone_with_tan_r4_0(self):
-        N, H, W = 4, 416, 352
-        out_shape = self._get_feature_shapes(H, W)
-
-        x = torch.rand(N, 3, H, W)
-        model = self._init_test_backbone_with_tan_r4_0()
-        out = model(x)
-
-        assert len(out) == 3
-        assert tuple(out[0].shape) == (N, *out_shape[0])
-        assert tuple(out[1].shape) == (N, *out_shape[1])
-        assert tuple(out[2].shape) == (N, *out_shape[2])
-        _check_jit_scriptable(model, (x,))
-
-    def _init_test_anchor_generator(self):
-        anchor_generator = AnchorGenerator(self.strides, self.anchor_grids)
+    def _init_test_anchor_generator(self, use_p6=False):
+        strides = self._get_strides(use_p6)
+        anchor_grids = self._get_anchor_grids(use_p6)
+        anchor_generator = AnchorGenerator(strides, anchor_grids)
         return anchor_generator
 
-    def test_anchor_generator(self):
-        N, H, W = 4, 416, 352
-        feature_maps = self._get_feature_maps(N, H, W)
-        model = self._init_test_anchor_generator()
+    @pytest.mark.parametrize(
+        "width_multiple, use_p6",
+        [(0.5, False), (0.5, True)],
+    )
+    @pytest.mark.parametrize(
+        "batch_size, height, width", [(4, 448, 320), (2, 384, 640)]
+    )
+    def test_anchor_generator(self, width_multiple, use_p6, batch_size, height, width):
+        feature_maps = self._get_feature_maps(
+            batch_size, height, width, width_multiple=width_multiple, use_p6=use_p6
+        )
+        model = self._init_test_anchor_generator(use_p6)
         anchors = model(feature_maps)
+        expected_num_anchors = self._compute_num_anchors(height, width, use_p6)
 
         assert len(anchors) == 3
-        assert tuple(anchors[0].shape) == (9009, 2)
-        assert tuple(anchors[1].shape) == (9009, 1)
-        assert tuple(anchors[2].shape) == (9009, 2)
+        assert tuple(anchors[0].shape) == (expected_num_anchors, 2)
+        assert tuple(anchors[1].shape) == (expected_num_anchors, 1)
+        assert tuple(anchors[2].shape) == (expected_num_anchors, 2)
         _check_jit_scriptable(model, (feature_maps,))
 
-    def _init_test_yolo_head(self):
-        box_head = YOLOHead(
-            self.in_channels, self.num_anchors, self.strides, self.num_classes
-        )
+    def _init_test_yolo_head(self, width_multiple=0.5, use_p6=False):
+        in_channels = self._get_in_channels(width_multiple, use_p6)
+        strides = self._get_strides(use_p6)
+        num_anchors = len(strides)
+        num_classes = self.num_classes
+
+        box_head = YOLOHead(in_channels, num_anchors, strides, num_classes)
         return box_head
 
     def test_yolo_head(self):
@@ -256,9 +307,13 @@ class TestModel:
         assert isinstance(out[0]["scores"], Tensor)
         _check_jit_scriptable(model, (head_outputs, anchors_tuple))
 
-    def test_criterion(self):
+    def test_criterion(self, use_p6=False):
         N, H, W = 4, 640, 640
         head_outputs = self._get_head_outputs(N, H, W)
+        strides = self._get_strides(use_p6)
+        anchor_grids = self._get_anchor_grids(use_p6)
+        num_anchors = len(anchor_grids)
+        num_classes = self.num_classes
 
         targets = torch.tensor(
             [
@@ -268,9 +323,7 @@ class TestModel:
                 [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
             ]
         )
-        criterion = SetCriterion(
-            self.num_anchors, self.strides, self.anchor_grids, self.num_classes
-        )
+        criterion = SetCriterion(num_anchors, strides, anchor_grids, num_classes)
         losses = criterion(targets, head_outputs)
         assert isinstance(losses, dict)
         assert isinstance(losses["cls_logits"], Tensor)
@@ -303,21 +356,28 @@ def test_torchscript(arch):
 
 
 @pytest.mark.parametrize(
-    "arch, up_version, hash_prefix", [("yolov5s", "v4.0", "9ca9a642")]
+    "arch, version, upstream_version, hash_prefix",
+    [("yolov5s", "r4.0", "v4.0", "9ca9a642")],
 )
-def test_load_from_yolov5(arch, up_version, hash_prefix):
+def test_load_from_yolov5(
+    arch: str,
+    version: str,
+    upstream_version: str,
+    hash_prefix: str,
+):
     img_path = "test/assets/bus.jpg"
-    yolov5s_r40_path = Path(f"{arch}.pt")
+    checkpoint_path = f"{arch}_{upstream_version}_{hash_prefix}"
 
-    if not yolov5s_r40_path.exists():
-        torch.hub.download_url_to_file(
-            f"https://github.com/ultralytics/yolov5/releases/download/{up_version}/{arch}.pt",
-            yolov5s_r40_path,
-            hash_prefix=hash_prefix,
-        )
+    base_url = "https://github.com/ultralytics/yolov5/releases/download/"
+    model_url = f"{base_url}/{upstream_version}/{arch}.pt"
 
-    version = up_version.replace("v", "r")
-    model_yolov5 = YOLOv5.load_from_yolov5(yolov5s_r40_path, version=version)
+    torch.hub.download_url_to_file(
+        model_url,
+        checkpoint_path,
+        hash_prefix=hash_prefix,
+    )
+
+    model_yolov5 = YOLOv5.load_from_yolov5(checkpoint_path, version=version)
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)

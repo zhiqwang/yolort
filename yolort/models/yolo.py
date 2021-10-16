@@ -1,13 +1,13 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 
 import warnings
-from typing import Callable, Tuple, Any, List, Dict, Optional
+from typing import Any, List, Dict, Callable, Tuple, Optional
 
 import torch
 from torch import nn, Tensor
 from torchvision.models.utils import load_state_dict_from_url
 
-from ._utils import load_from_ultralytics
+from yolort.utils import load_from_ultralytics
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead, SetCriterion, PostProcess
@@ -62,6 +62,7 @@ class YOLO(nn.Module):
         backbone: nn.Module,
         num_classes: int,
         # Anchor parameters
+        strides: Optional[List[int]] = None,
         anchor_grids: Optional[List[List[float]]] = None,
         anchor_generator: Optional[nn.Module] = None,
         head: Optional[nn.Module] = None,
@@ -82,7 +83,8 @@ class YOLO(nn.Module):
             )
         self.backbone = backbone
 
-        strides: List[int] = [8, 16, 32]
+        if strides is None:
+            strides: List[int] = [8, 16, 32]
 
         if anchor_grids is None:
             anchor_grids: List[List[float]] = [
@@ -199,12 +201,18 @@ class YOLO(nn.Module):
         backbone_name = f"darknet_{model_info['size']}_{version.replace('.', '_')}"
         depth_multiple = model_info["depth_multiple"]
         width_multiple = model_info["width_multiple"]
+        use_p6 = model_info["use_p6"]
         backbone = darknet_pan_backbone(
-            backbone_name, depth_multiple, width_multiple, version=version
+            backbone_name,
+            depth_multiple,
+            width_multiple,
+            version=version,
+            use_p6=use_p6,
         )
         model = cls(
             backbone,
             model_info["num_classes"],
+            strides=model_info["strides"],
             anchor_grids=model_info["anchor_grids"],
             score_thresh=score_thresh,
             nms_thresh=nms_thresh,
@@ -234,10 +242,11 @@ def build_model(
     depth_multiple: float,
     width_multiple: float,
     version: str,
-    weights_name: str,
+    weights_name: Optional[str] = None,
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,
+    use_p6: bool = False,
     **kwargs: Any,
 ) -> YOLO:
     """
@@ -257,7 +266,7 @@ def build_model(
             are ["r3.1", "r4.0", "r6.0"].
     """
     backbone = darknet_pan_backbone(
-        backbone_name, depth_multiple, width_multiple, version=version
+        backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
     )
 
     model = YOLO(backbone, num_classes, **kwargs)
@@ -452,6 +461,92 @@ def yolov5_darknet_pan_l_r40(
     )
 
 
+def yolov5_darknet_pan_s6_r50(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 small release v5.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_s_r4_0"
+    weights_name = "yolov5_darknet_pan_s6_r50_coco"
+    depth_multiple = 0.33
+    width_multiple = 0.5
+    version = "r4.0"
+    use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_m6_r50(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 medium release v5.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_m_r4_0"
+    weights_name = "yolov5_darknet_pan_m6_r50_coco"
+    depth_multiple = 0.67
+    width_multiple = 0.75
+    version = "r4.0"
+    use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
+        **kwargs,
+    )
+
+
 def yolov5_darknet_pan_n_r60(
     pretrained: bool = False,
     progress: bool = True,
@@ -568,6 +663,135 @@ def yolov5_darknet_pan_l_r60(
         pretrained=pretrained,
         progress=progress,
         num_classes=num_classes,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_n6_r60(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 nano release v6.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_n_r6_0"
+    weights_name = "yolov5_darknet_pan_n6_r60_coco"
+    depth_multiple = 0.33
+    width_multiple = 0.25
+    version = "r6.0"
+    use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_s6_r60(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 small release v6.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_s_r6_0"
+    weights_name = "yolov5_darknet_pan_s6_r60_coco"
+    depth_multiple = 0.33
+    width_multiple = 0.5
+    version = "r6.0"
+    use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_m6_r60(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 medium release v6.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_m_r6_0"
+    weights_name = "yolov5_darknet_pan_m6_r60_coco"
+    depth_multiple = 0.67
+    width_multiple = 0.75
+    version = "r6.0"
+    use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
         **kwargs,
     )
 

@@ -1,10 +1,44 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import Callable, List, Dict, Optional
+from typing import List, Dict, Callable, Optional
 
 import torch
 from torch import nn, Tensor
 
 from yolort.v5 import Conv, BottleneckCSP, C3, SPPF
+
+
+class IntermediateLevelP6(nn.Module):
+    """
+    This module is used to generate intermediate P6 block to the PAN.
+
+    Args:
+        x (List[Tensor]): the original feature maps
+
+    Returns:
+        results (List[Tensor]): the extended set of results
+            of the PAN
+    """
+
+    def __init__(
+        self,
+        depth_multiple: float,
+        in_channel: int,
+        out_channel: int,
+        version: str = "r4.0",
+    ):
+        super().__init__()
+
+        block = _block[version]
+        depth_gain = max(round(3 * depth_multiple), 1)
+
+        self.p6 = nn.Sequential(
+            Conv(in_channel, out_channel, k=3, s=2, version=version),
+            block(out_channel, out_channel, n=depth_gain),
+        )
+
+    def forward(self, x: List[Tensor]) -> List[Tensor]:
+        x.append(self.p6(x[-1]))
+        return x
 
 
 class PathAggregationNetwork(nn.Module):
@@ -19,7 +53,7 @@ class PathAggregationNetwork(nn.Module):
     the feature maps on top of which the PAN will be added.
 
     Args:
-        in_channels_list (list[int]): number of channels for each feature map that
+        in_channels (list[int]): number of channels for each feature map that
             is passed to the module
         out_channels (int): number of channels of the PAN representation
         version (str): ultralytics release version: ["r3.1", "r4.0", "r6.0"]
@@ -42,64 +76,85 @@ class PathAggregationNetwork(nn.Module):
 
     def __init__(
         self,
-        in_channels_list: List[int],
+        in_channels: List[int],
         depth_multiple: float,
         version: str = "r4.0",
         block: Optional[Callable[..., nn.Module]] = None,
+        use_p6: bool = False,
     ):
         super().__init__()
-        assert len(in_channels_list) == 3, "Currently only supports length 3."
+
+        module_version = "r4.0" if version == "r6.0" else version
+
+        # Define the Intermediate Block if necessary
+        if use_p6:
+            assert len(in_channels) == 4, "Length of in channels should be 4."
+            intermediate_blocks = IntermediateLevelP6(
+                depth_multiple,
+                in_channels[2],
+                in_channels[3],
+                version=module_version,
+            )
+        else:
+            assert len(in_channels) == 3, "Length of in channels should be 3."
+            intermediate_blocks = None
+
+        self.intermediate_blocks = intermediate_blocks
 
         if block is None:
-            block = _block[version]
+            block = _block[module_version]
 
         depth_gain = max(round(3 * depth_multiple), 1)
 
         if version == "r6.0":
-            init_block = SPPF(in_channels_list[2], in_channels_list[2], k=5)
-            module_version = "r4.0"
+            init_block = SPPF(in_channels[-1], in_channels[-1], k=5)
         elif version in ["r3.1", "r4.0"]:
             init_block = block(
-                in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
+                in_channels[-1], in_channels[-1], n=depth_gain, shortcut=False
             )
-            module_version = version
         else:
             raise NotImplementedError(f"Version {version} is not implemented yet.")
 
-        inner_blocks = [
-            init_block,
-            Conv(
-                in_channels_list[2], in_channels_list[1], 1, 1, version=module_version
-            ),
-            nn.Upsample(scale_factor=2),
-            block(
-                in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False
-            ),
-            Conv(
-                in_channels_list[1], in_channels_list[0], 1, 1, version=module_version
-            ),
-            nn.Upsample(scale_factor=2),
-        ]
+        # Define the inner blocks
+        inner_blocks = [init_block]
 
+        if use_p6:
+            in_channel = in_channels[1] + in_channels[-1]
+            inner_blocks_p6 = [
+                Conv(in_channels[-1], in_channels[2], 1, 1, version=module_version),
+                nn.Upsample(scale_factor=2),
+                block(in_channel, in_channels[2], n=depth_gain, shortcut=False),
+            ]
+            inner_blocks.extend(inner_blocks_p6)
+
+        inner_blocks.extend(
+            [
+                Conv(in_channels[2], in_channels[1], 1, 1, version=module_version),
+                nn.Upsample(scale_factor=2),
+                block(in_channels[-1], in_channels[1], n=depth_gain, shortcut=False),
+                Conv(in_channels[1], in_channels[0], 1, 1, version=module_version),
+                nn.Upsample(scale_factor=2),
+            ]
+        )
         self.inner_blocks = nn.ModuleList(inner_blocks)
 
+        # Define the layer blocks
         layer_blocks = [
-            block(
-                in_channels_list[1], in_channels_list[0], n=depth_gain, shortcut=False
-            ),
-            Conv(
-                in_channels_list[0], in_channels_list[0], 3, 2, version=module_version
-            ),
-            block(
-                in_channels_list[1], in_channels_list[1], n=depth_gain, shortcut=False
-            ),
-            Conv(
-                in_channels_list[1], in_channels_list[1], 3, 2, version=module_version
-            ),
-            block(
-                in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
-            ),
+            block(in_channels[1], in_channels[0], n=depth_gain, shortcut=False),
+            Conv(in_channels[0], in_channels[0], 3, 2, version=module_version),
+            block(in_channels[1], in_channels[1], n=depth_gain, shortcut=False),
+            Conv(in_channels[1], in_channels[1], 3, 2, version=module_version),
+            block(in_channels[-1], in_channels[2], n=depth_gain, shortcut=False),
         ]
+
+        if use_p6:
+            in_channel = in_channels[1] + in_channels[-1]
+            layer_blocks_p6 = [
+                Conv(in_channels[2], in_channels[2], 3, 2, version=module_version),
+                block(in_channel, in_channels[-1], n=depth_gain, shortcut=False),
+            ]
+            layer_blocks.extend(layer_blocks_p6)
+
         self.layer_blocks = nn.ModuleList(layer_blocks)
 
         for m in self.modules():
@@ -156,19 +211,20 @@ class PathAggregationNetwork(nn.Module):
         """
         # unpack OrderedDict into two lists for easier handling
         x = list(x.values())
+        if self.intermediate_blocks is not None:
+            x = self.intermediate_blocks(x)
 
         # Descending the feature pyramid
+        num_features = len(x)
         inners = []
-        last_inner = self.get_result_from_inner_blocks(x[2], 0)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 1)
-        inners.append(last_inner)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 2)
-        last_inner = torch.cat([last_inner, x[1]], dim=1)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 3)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 4)
-        inners.insert(0, last_inner)
-        last_inner = self.get_result_from_inner_blocks(last_inner, 5)
-        last_inner = torch.cat([last_inner, x[0]], dim=1)
+        last_inner = x[-1]
+        for idx in range(num_features - 1):
+            last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx)
+            last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx + 1)
+            inners.insert(0, last_inner)
+            last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx + 2)
+            last_inner = torch.cat([last_inner, x[num_features - idx - 2]], dim=1)
+
         inners.insert(0, last_inner)
 
         # Ascending the feature pyramid
@@ -176,7 +232,7 @@ class PathAggregationNetwork(nn.Module):
         last_inner = self.get_result_from_layer_blocks(inners[0], 0)
         results.append(last_inner)
 
-        for idx in range(len(inners) - 1):
+        for idx in range(num_features - 1):
             last_inner = self.get_result_from_layer_blocks(last_inner, 2 * idx + 1)
             last_inner = torch.cat([last_inner, inners[idx + 1]], dim=1)
             last_inner = self.get_result_from_layer_blocks(last_inner, 2 * idx + 2)
@@ -188,5 +244,4 @@ class PathAggregationNetwork(nn.Module):
 _block = {
     "r3.1": BottleneckCSP,
     "r4.0": C3,
-    "r6.0": C3,
 }
