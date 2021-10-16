@@ -4,15 +4,15 @@ import warnings
 from pathlib import PosixPath
 from typing import Any, List, Dict, Tuple, Optional, Union, Callable
 
-import torch
 from pytorch_lightning import LightningModule
-from torch import Tensor
+import torch
+from torch import nn, Tensor
 from torchvision.io import read_image
 
 from yolort.data import COCOEvaluator, contains_any_tensor
-from yolort.utils import load_from_ultralytics
 from . import yolo
 from ._utils import _evaluate_iou
+from .yolo import YOLO
 from .transform import YOLOTransform
 
 __all__ = ["YOLOv5"]
@@ -26,7 +26,8 @@ class YOLOv5(LightningModule):
     def __init__(
         self,
         lr: float = 0.01,
-        arch: str = "yolov5_darknet_pan_s_r40",
+        arch: Optional[str] = None,
+        model: Optional[nn.Module] = None,
         pretrained: bool = False,
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
@@ -37,7 +38,8 @@ class YOLOv5(LightningModule):
         """
         Args:
             lr (float): The initial learning rate
-            arch (str): YOLOv5 model architecture
+            arch (str): YOLO model architecture. Default: None
+            model (nn.Module): YOLO model. Default: None
             pretrained (bool): If true, returns a model pre-trained on COCO train2017
             progress (bool): If True, displays a progress bar of the download to stderr
             size: (Tuple[int, int]): the width and height to which images will be rescaled
@@ -53,9 +55,11 @@ class YOLOv5(LightningModule):
         self.arch = arch
         self.num_classes = num_classes
 
-        self.model = yolo.__dict__[arch](
-            pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs
-        )
+        if model is None:
+            model = yolo.__dict__[arch](
+                pretrained=pretrained, progress=progress, num_classes=num_classes, **kwargs
+            )
+        self.model = model
 
         self.transform = YOLOTransform(min(size), max(size), fixed_size=size)
 
@@ -297,9 +301,7 @@ class YOLOv5(LightningModule):
         checkpoint_path: str,
         lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
-        score_thresh: float = 0.25,
-        nms_thresh: float = 0.45,
-        version: str = "r6.0",
+        **kwargs: Any,
     ):
         """
         Load model state from the checkpoint trained by YOLOv5.
@@ -309,22 +311,7 @@ class YOLOv5(LightningModule):
             lr (float): The initial learning rate
             size: (Tuple[int, int]): the width and height to which images will be rescaled
                 before feeding them to the backbone. Default: (640, 640).
-            score_thresh (float): Score threshold used for postprocessing the detections.
-            nms_thresh (float): NMS threshold used for postprocessing the detections.
-            version (str): upstream version released by the ultralytics/yolov5, Possible
-                values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         """
-        model_info = load_from_ultralytics(checkpoint_path, version=version)
-        p6 = "6" if model_info["use_p6"] else ""
-        arch = f"yolov5_darknet_pan_{model_info['size']}{p6}_{version.replace('.', '')}"
-        yolov5 = cls(
-            lr=lr,
-            arch=arch,
-            size=size,
-            num_classes=model_info["num_classes"],
-            score_thresh=score_thresh,
-            nms_thresh=nms_thresh,
-        )
-
-        yolov5.model.load_state_dict(model_info["state_dict"])
+        model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
+        yolov5 = cls(lr=lr, model=model, size=size)
         return yolov5
