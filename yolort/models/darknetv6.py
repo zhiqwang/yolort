@@ -11,10 +11,10 @@ from ._utils import _make_divisible
 
 __all__ = [
     "DarkNetV6",
+    "darknet_n_r6_0",
     "darknet_s_r6_0",
     "darknet_m_r6_0",
     "darknet_l_r6_0",
-    "darknet_n_r6_0",
 ]
 
 model_urls = {
