@@ -322,8 +322,6 @@ class YOLOv5(LightningModule):
             arch=arch,
             size=size,
             num_classes=model_info["num_classes"],
-            strides=model_info["strides"],
-            anchor_grids=model_info["anchor_grids"],
             score_thresh=score_thresh,
             nms_thresh=nms_thresh,
         )
