@@ -122,7 +122,7 @@ def test_scale_coords():
     [
         ("yolov5n", 0.25),
         ("yolov5s", 0.5),
-    ]
+    ],
 )
 def test_feature_extractor(batch_size, height, width, arch, width_multiple):
     c = 3
