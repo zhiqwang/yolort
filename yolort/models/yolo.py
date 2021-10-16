@@ -1,7 +1,7 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 
 import warnings
-from typing import Callable, Tuple, Any, List, Dict, Optional
+from typing import Any, List, Dict, Callable, Tuple, Optional
 
 import torch
 from torch import nn, Tensor
@@ -242,7 +242,7 @@ def build_model(
     depth_multiple: float,
     width_multiple: float,
     version: str,
-    weights_name: str,
+    weights_name: Optional[str] = None,
     pretrained: bool = False,
     progress: bool = True,
     num_classes: int = 80,

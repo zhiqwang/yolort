@@ -37,19 +37,32 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
         use_p6 = True
 
     if use_p6:
-        inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
-        layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
+        inner_block_maps = {
+            "0": "11", "1": "12", "3": "15", "4": "16", "6": "19", "7": "20"
+        }
+        layer_block_maps = {
+            "0": "23", "1": "24", "2": "26", "3": "27", "4": "29", "5": "30", "6": "32"
+        }
+        p6_block_maps = {"0": "9", "1": "10"}
+        head_ind = 33
+        head_name = "m"
     else:
         inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
         layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
+        p6_block_maps = None
+        head_ind = 24
+        head_name = "m"
 
     module_state_updater = ModuleStateUpdate(
-        depth_multiple=depth_multiple,
-        width_multiple=width_multiple,
-        version=version,
-        num_classes=num_classes,
+        depth_multiple,
+        width_multiple,
         inner_block_maps=inner_block_maps,
         layer_block_maps=layer_block_maps,
+        p6_block_maps=p6_block_maps,
+        head_ind=head_ind,
+        head_name=head_name,
+        num_classes=num_classes,
+        version=version,
         use_p6=use_p6,
     )
     module_state_updater.updating(checkpoint_yolov5)
@@ -76,19 +89,17 @@ class ModuleStateUpdate:
 
     def __init__(
         self,
-        depth_multiple: Optional[float] = None,
-        width_multiple: Optional[float] = None,
-        version: str = "r6.0",
-        num_classes: int = 80,
+        depth_multiple: float,
+        width_multiple: float,
         inner_block_maps: Optional[Dict[str, str]] = None,
         layer_block_maps: Optional[Dict[str, str]] = None,
+        p6_block_maps: Optional[Dict[str, str]] = None,
         head_ind: int = 24,
         head_name: str = "m",
+        num_classes: int = 80,
+        version: str = "r6.0",
         use_p6: bool = False,
     ) -> None:
-
-        assert depth_multiple is not None, "depth_multiple must be set."
-        assert width_multiple is not None, "width_multiple must be set."
 
         # Configuration for making the keys consistent
         if inner_block_maps is None:
@@ -108,21 +119,18 @@ class ModuleStateUpdate:
                 "4": "23",
             }
         self.layer_block_maps = layer_block_maps
+        self.p6_block_maps = p6_block_maps
         self.head_ind = head_ind
         self.head_name = head_name
 
         # Set model
         yolov5_size = get_yolov5_size(depth_multiple, width_multiple)
         backbone_name = f"darknet_{yolov5_size}_{version.replace('.', '_')}"
-        weights_name = (
-            f"yolov5_darknet_pan_{yolov5_size}_{version.replace('.', '')}_coco"
-        )
         self.model = yolo.build_model(
             backbone_name,
             depth_multiple,
             width_multiple,
             version,
-            weights_name,
             num_classes=num_classes,
             use_p6=use_p6,
         )
@@ -131,14 +139,27 @@ class ModuleStateUpdate:
         # Obtain module state
         state_dict = obtain_module_sequential(state_dict)
 
-        # Update backbone features
+        # Update backbone weights
         for name, params in self.model.backbone.body.named_parameters():
             params.data.copy_(self.attach_parameters_block(state_dict, name, None))
 
         for name, buffers in self.model.backbone.body.named_buffers():
             buffers.copy_(self.attach_parameters_block(state_dict, name, None))
 
-        # Update PAN features
+        # PAN
+        # Update P6 weights
+        if self.p6_block_maps is not None:
+            for name, params in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
+                params.data.copy_(
+                    self.attach_parameters_block(state_dict, name, self.p6_block_maps)
+                )
+
+            for name, buffers in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
+                buffers.copy_(
+                    self.attach_parameters_block(state_dict, name, self.p6_block_maps)
+                )
+
+        # Update inner_block weights
         for name, params in self.model.backbone.pan.inner_blocks.named_parameters():
             params.data.copy_(
                 self.attach_parameters_block(state_dict, name, self.inner_block_maps)
@@ -149,6 +170,7 @@ class ModuleStateUpdate:
                 self.attach_parameters_block(state_dict, name, self.inner_block_maps)
             )
 
+        # Update layer_block weights
         for name, params in self.model.backbone.pan.layer_blocks.named_parameters():
             params.data.copy_(
                 self.attach_parameters_block(state_dict, name, self.layer_block_maps)
@@ -159,7 +181,7 @@ class ModuleStateUpdate:
                 self.attach_parameters_block(state_dict, name, self.layer_block_maps)
             )
 
-        # Update box heads
+        # Update YOLOHead weights
         for name, params in self.model.head.named_parameters():
             params.data.copy_(self.attach_parameters_heads(state_dict, name))
 
