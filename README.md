@@ -21,8 +21,8 @@ ______________________________________________________________________
 [![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/master.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/master)
-[![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/master/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/main.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/main)
+[![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/main/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
 
 ______________________________________________________________________
@@ -108,7 +108,7 @@ model = torch.hub.load("zhiqwang/yolov5-rt-stack", "yolov5s", pretrained=True)
 
 ### Loading checkpoint from official yolov5
 
-The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. See our [how-to-align-with-ultralytics-yolov5](http://github.com/zhiqwang/yolov5-rt-stack/blob/master/notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
+The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. See our [how-to-align-with-ultralytics-yolov5](notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
 
 ```python
 from yolort.models import YOLOv5
