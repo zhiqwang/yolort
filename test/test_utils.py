@@ -5,7 +5,7 @@ import pytest
 import torch
 from torch import Tensor
 from yolort import models
-from yolort.models import YOLOv5
+from yolort.models import YOLO
 from yolort.utils import (
     FeatureExtractor,
     get_image_from_url,
@@ -94,7 +94,7 @@ def test_load_from_ultralytics_voc(
         out_from_yolov5 = outs[0]
 
     # Define yolort model
-    model_yolort = YOLOv5.load_from_yolov5(
+    model_yolort = YOLO.load_from_yolov5(
         checkpoint_path,
         score_thresh=conf,
         version=version,
@@ -103,14 +103,10 @@ def test_load_from_ultralytics_voc(
     with torch.no_grad():
         out_from_yolort = model_yolort(img[None])
 
+    torch.testing.assert_allclose(out_from_yolort[0]["boxes"], out_from_yolov5[:, :4])
+    torch.testing.assert_allclose(out_from_yolort[0]["scores"], out_from_yolov5[:, 4])
     torch.testing.assert_allclose(
-        out_from_yolort[0]['boxes'], out_from_yolov5[:, :4]
-    )
-    torch.testing.assert_allclose(
-        out_from_yolort[0]['scores'], out_from_yolov5[:, 4]
-    )
-    torch.testing.assert_allclose(
-        out_from_yolort[0]['labels'], out_from_yolov5[:, 5].to(dtype=torch.int64)
+        out_from_yolort[0]["labels"], out_from_yolov5[:, 5].to(dtype=torch.int64)
     )
 
 
