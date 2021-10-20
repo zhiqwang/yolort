@@ -28,6 +28,8 @@ def add_yolov5_context():
 
 
 def get_yolov5_size(depth_multiple, width_multiple):
+    if depth_multiple == 0.33 and width_multiple == 0.25:
+        return "n"
     if depth_multiple == 0.33 and width_multiple == 0.5:
         return "s"
     if depth_multiple == 0.67 and width_multiple == 0.75:
