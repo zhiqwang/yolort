@@ -272,8 +272,12 @@ def build_model(
     return model
 
 
-model_urls_root_r30 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
-model_urls_root_r52 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2-alpha"
+model_urls_root_r30 = (
+    "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
+)
+model_urls_root_r52 = (
+    "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2-alpha"
+)
 
 model_urls = {
     # Path Aggregation Network 3.1 and 4.0
