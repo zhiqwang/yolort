@@ -26,9 +26,7 @@ int main() {
   // TorchScript models require a List[IValue] as input
   std::vector<torch::jit::IValue> inputs;
 
-  // YOLO accepts a List[Tensor] as main input
-  std::vector<torch::Tensor> images;
-
+  // YOLO accepts Tensor as main input
   inputs.push_back(torch::rand({1, 3, 416, 352}));
   auto detections = module.forward(inputs);
 
@@ -39,7 +37,6 @@ int main() {
     module.to(torch::kCUDA);
 
     // Add GPU inputs
-    images.clear();
     inputs.clear();
 
     torch::TensorOptions options = torch::TensorOptions{torch::kCUDA};
