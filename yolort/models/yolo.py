@@ -20,6 +20,13 @@ __all__ = [
     "yolov5_darknet_pan_s_r40",
     "yolov5_darknet_pan_m_r40",
     "yolov5_darknet_pan_l_r40",
+    "yolov5_darknet_pan_n_r60",
+    "yolov5_darknet_pan_n6_r60",
+    "yolov5_darknet_pan_s_r60",
+    "yolov5_darknet_pan_s6_r60",
+    "yolov5_darknet_pan_m_r60",
+    "yolov5_darknet_pan_m6_r60",
+    "yolov5_darknet_pan_l_r60",
     "yolov5_darknet_tan_s_r40",
     "build_model",
 ]
@@ -221,21 +228,6 @@ class YOLO(nn.Module):
         return model
 
 
-model_urls_root = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
-
-model_urls = {
-    # Path Aggregation Network
-    "yolov5_darknet_pan_s_r31_coco": f"{model_urls_root}/yolov5_darknet_pan_s_r31_coco-eb728698.pt",
-    "yolov5_darknet_pan_m_r31_coco": f"{model_urls_root}/yolov5_darknet_pan_m_r31_coco-670dc553.pt",
-    "yolov5_darknet_pan_l_r31_coco": f"{model_urls_root}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt",
-    "yolov5_darknet_pan_s_r40_coco": f"{model_urls_root}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt",
-    "yolov5_darknet_pan_m_r40_coco": f"{model_urls_root}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt",
-    "yolov5_darknet_pan_l_r40_coco": f"{model_urls_root}/yolov5_darknet_pan_l_r40_coco-4416841f.pt",
-    # Tranformer Attention Network
-    "yolov5_darknet_tan_s_r40_coco": f"{model_urls_root}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt",
-}
-
-
 def build_model(
     backbone_name: str,
     depth_multiple: float,
@@ -278,6 +270,30 @@ def build_model(
         model.load_state_dict(state_dict)
 
     return model
+
+
+model_urls_root_r30 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
+model_urls_root_r52 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2-alpha"
+
+model_urls = {
+    # Path Aggregation Network 3.1 and 4.0
+    "yolov5_darknet_pan_s_r31_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_s_r31_coco-eb728698.pt",
+    "yolov5_darknet_pan_m_r31_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_m_r31_coco-670dc553.pt",
+    "yolov5_darknet_pan_l_r31_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt",
+    "yolov5_darknet_pan_s_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt",
+    "yolov5_darknet_pan_m_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt",
+    "yolov5_darknet_pan_l_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_l_r40_coco-4416841f.pt",
+    # Path Aggregation Network 6.0
+    "yolov5_darknet_pan_n_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_n_r60_coco.pt",
+    "yolov5_darknet_pan_n6_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_n6_r60_coco.pt",
+    "yolov5_darknet_pan_s_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_s_r60_coco.pt",
+    "yolov5_darknet_pan_s6_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_s6_r60_coco.pt",
+    "yolov5_darknet_pan_m_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_m_r60_coco.pt",
+    "yolov5_darknet_pan_m6_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_m6_r60_coco.pt",
+    "yolov5_darknet_pan_l_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_l_r60_coco.pt",
+    # Tranformer Attention Network
+    "yolov5_darknet_tan_s_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt",
+}
 
 
 def yolov5_darknet_pan_s_r31(
