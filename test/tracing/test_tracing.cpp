@@ -28,9 +28,8 @@ int main() {
 
   // YOLO accepts a List[Tensor] as main input
   std::vector<torch::Tensor> images;
-  images.push_back(torch::rand({3, 416, 352}));
 
-  inputs.push_back(images);
+  inputs.push_back(torch::rand({1, 3, 416, 352}));
   auto detections = module.forward(inputs);
 
   std::cout << ">> OKey, detections: " << detections << std::endl;
@@ -44,9 +43,8 @@ int main() {
     inputs.clear();
 
     torch::TensorOptions options = torch::TensorOptions{torch::kCUDA};
-    images.push_back(torch::rand({3, 416, 352}, options));
 
-    inputs.push_back(images);
+    inputs.push_back(torch::rand({1, 3, 416, 352}, options));
     auto detections = module.forward(inputs);
 
     std::cout << ">> OKey, detections: " << detections << std::endl;
