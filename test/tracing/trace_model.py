@@ -1,11 +1,10 @@
-import torch
-from hubconf import yolov5s
+from yolort.models import yolov5s
+from yolort.relaying.trace_wrapper import get_trace_module
 
 
 if __name__ == "__main__":
 
     model = yolov5s(pretrained=True)
-    model.eval()
+    traced_model = get_trace_module(model, input_shape=(416, 352))
 
-    traced_model = torch.jit.script(model)
     traced_model.save("./test/tracing/yolov5s.torchscript.pt")
