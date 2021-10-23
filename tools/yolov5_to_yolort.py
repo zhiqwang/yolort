@@ -1,19 +1,20 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import argparse
+from pathlib import Path
 
-from yolort.utils import load_from_ultralytics
+from yolort.utils import convert_yolov5_to_yolort
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        "Convert checkpoint weights trained by yolov5 to yolort", add_help=True
+        "Convert checkpoints from yolov5 to yolort", add_help=True
     )
 
     parser.add_argument(
         "--checkpoint_path",
         type=str,
         required=True,
-        help="The path of checkpoint weights",
+        help="Path of the checkpoint weights",
     )
     parser.add_argument(
         "--version",
@@ -25,24 +26,28 @@ def get_parser():
     # Dataset Configuration
     parser.add_argument(
         "--image_path",
-        default="./data-bin/coco128/images/train2017",
-        help="Root path of the dataset containing images",
+        type=str,
+        default="./test/assets/zidane.jpg",
+        help="Path of the test image",
     )
 
-    parser.add_argument("--output_dir", default=".", help="Path where to save")
+    parser.add_argument("--output_path", type=str, default=None, help="Path where to save")
     return parser
-
-
-def convert_yolov5_to_yolort(checkpoint_path, version):
-    model_info = load_from_ultralytics(checkpoint_path, version=version)
-    return model_info
 
 
 def cli_main():
     parser = get_parser()
     args = parser.parse_args()
     print(f"Command Line Args: {args}")
-    convert_yolov5_to_yolort(args)
+    checkpoint_path = Path(args.checkpoint_path)
+    assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
+
+    if args.output_path is None:
+        args.output_path = checkpoint_path.parent
+    output_path = Path(args.output_path)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    convert_yolov5_to_yolort(checkpoint_path, output_path, version=args.version)
 
 
 if __name__ == "__main__":
