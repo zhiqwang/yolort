@@ -39,7 +39,6 @@ def convert_yolov5_to_yolort(
 def load_from_ultralytics(
     checkpoint_path: str,
     version: str = "r6.0",
-    set_fp16: bool = True,
 ):
     """
     Allows the user to load model state file from the checkpoint trained from
@@ -49,7 +48,6 @@ def load_from_ultralytics(
         checkpoint_path (str): Path of the YOLOv5 checkpoint model.
         version (str): upstream version released by the ultralytics/yolov5, Possible
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
-        set_fp16 (bool): Whether to cast this storage to half type. Default: True.
     """
 
     assert version in [
@@ -117,7 +115,7 @@ def load_from_ultralytics(
         use_p6=use_p6,
     )
     module_state_updater.updating(checkpoint_yolov5)
-    state_dict = module_state_updater.model.state_dict()
+    state_dict = module_state_updater.model.half().state_dict()
 
     size = get_yolov5_size(depth_multiple, width_multiple)
 
