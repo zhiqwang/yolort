@@ -11,9 +11,7 @@ from torchvision.transforms import functional as F
 from torchvision.transforms import transforms as T
 
 try:
-    from torchvision.transforms.functional import (
-        get_image_size, get_image_num_channels
-    )
+    from torchvision.transforms.functional import get_image_size, get_image_num_channels
 except ImportError:
     from torchvision.transforms.functional import (
         _get_image_size as get_image_size,
