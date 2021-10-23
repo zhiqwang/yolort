@@ -3,8 +3,8 @@ from typing import Callable, List, Optional, Any
 
 import torch
 from torch import nn, Tensor
-from torch.hub import load_state_dict_from_url
 
+from yolort.utils import load_state_dict_from_url
 from yolort.v5 import Conv, C3
 from ._utils import _make_divisible
 

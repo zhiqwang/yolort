@@ -11,16 +11,21 @@ on:
 
 jobs:
   UnitTest:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.image }}
     strategy:
       matrix:
-        python-version: [3.7]
-        os: [ubuntu-latest]
-        torch: [1.9.1+cpu]
+        python-version: [ 3.7 ]
+        image: [ 'ubuntu-latest' ]
+        torch: [ '1.9.1+cpu', '1.10.0+cpu' ]
         include:
-          - torch: 1.9.1+cpu
-            pip_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+          - torch: '1.9.1+cpu'
+            torch_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
+            torchvision: release/0.10
+          - torch: '1.10.0+cpu'
+            torch_address: install torch==1.10.0+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+            unittest_type: --cov=test --cov-report=xml
+            torchvision: release/0.11
 
     steps:
       - name: Clone repository
@@ -35,7 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           # requirements for PyTorch and torchvision
           pip install numpy pillow scipy
-          pip install ${{ matrix.pip_address }}
+          pip install ${{ matrix.torch_address }}
       - name: Install dependencies
         run: |
           # requirements for unittest
@@ -71,7 +76,7 @@ jobs:
           cd ..
           git clone https://github.com/pytorch/vision.git vision
           cd vision
-          git checkout release/0.10
+          git checkout ${{ matrix.torchvision }}
           mkdir build && cd build
           cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
           make -j4
