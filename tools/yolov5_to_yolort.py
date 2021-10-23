@@ -31,7 +31,9 @@ def get_parser():
         help="Path of the test image",
     )
 
-    parser.add_argument("--output_path", type=str, default=None, help="Path where to save")
+    parser.add_argument(
+        "--output_path", type=str, default=None, help="Path where to save"
+    )
     return parser
 
 
