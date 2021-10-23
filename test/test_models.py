@@ -357,7 +357,10 @@ def test_torchscript(arch):
 
 @pytest.mark.parametrize(
     "arch, version, upstream_version, hash_prefix",
-    [("yolov5s", "r4.0", "v4.0", "9ca9a642")],
+    [
+        ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
+        ("yolov5n", "r6.0", "v6.0", "649e089f"),
+    ],
 )
 def test_load_from_yolov5(
     arch: str,
@@ -376,8 +379,13 @@ def test_load_from_yolov5(
         checkpoint_path,
         hash_prefix=hash_prefix,
     )
+    score_thresh = 0.25
 
-    model_yolov5 = YOLOv5.load_from_yolov5(checkpoint_path, version=version)
+    model_yolov5 = YOLOv5.load_from_yolov5(
+        checkpoint_path,
+        score_thresh=score_thresh,
+        version=version,
+    )
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
     assert isinstance(out_from_yolov5[0], dict)
@@ -385,7 +393,11 @@ def test_load_from_yolov5(
     assert isinstance(out_from_yolov5[0]["labels"], Tensor)
     assert isinstance(out_from_yolov5[0]["scores"], Tensor)
 
-    model = models.__dict__[arch](pretrained=True, score_thresh=0.25)
+    model = models.__dict__[arch](
+        upstream_version=version,
+        pretrained=True,
+        score_thresh=score_thresh,
+    )
     model.eval()
     out = model.predict(img_path)
 
