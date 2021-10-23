@@ -1,5 +1,6 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import argparse
+
 from yolort.utils import load_from_ultralytics
 
 
@@ -19,7 +20,8 @@ def get_parser():
         type=str,
         default="r6.0",
         help="Upstream version released by the ultralytics/yolov5, Possible "
-        "values are ['r3.1', 'r4.0', 'r6.0']. Default: 'r6.0'.")
+        "values are ['r3.1', 'r4.0', 'r6.0']. Default: 'r6.0'.",
+    )
     # Dataset Configuration
     parser.add_argument(
         "--image_path",
