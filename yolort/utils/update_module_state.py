@@ -32,8 +32,9 @@ def convert_yolov5_to_yolort(
     model_state_dict = model_info["state_dict"]
 
     size = model_info["size"]
-    output_path = output_path / f"{prefix}_{size}_{version.replace('.', '')}_{postfix}"
-    torch.save(model_state_dict, output_path)
+    use_p6 = "6" if model_info["use_p6"] else ""
+    output_postfix = f"{prefix}_{size}{use_p6}_{version.replace('.', '')}_{postfix}"
+    torch.save(model_state_dict, output_path / output_postfix)
 
 
 def load_from_ultralytics(
