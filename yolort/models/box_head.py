@@ -226,7 +226,7 @@ class SetCriterion:
         targets: Tensor,
         head_outputs: List[Tensor],
         anchor_grids: Tensor,
-    ) -> Tuple[List[Tensor], List[Tensor], List[Tuple[Tensor, Tensor, Tensor, Tensor]], List[Tensor],]:
+    ) -> Tuple[List[Tensor], List[Tensor], List[Tuple[Tensor, Tensor, Tensor, Tensor]], List[Tensor]]:
         device = targets.device
         num_anchors = self.num_anchors
 
