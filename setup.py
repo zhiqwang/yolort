@@ -79,7 +79,7 @@ if __name__ == "__main__":
         packages=find_packages(exclude=["test", "deployment", "notebooks"]),
         zip_safe=False,
         options={
-            'bdist_wheel': {'python_tag': 'py36.py37.py38.py39'},
+            "bdist_wheel": {"python_tag": "py36.py37.py38.py39"},
         },
         classifiers=[
             # Operation system
