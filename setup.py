@@ -7,6 +7,7 @@ https://github.com/pypa/sampleproject
 Adopted from TorchVision, see:
 https://github.com/pytorch/vision/blob/master/setup.py
 """
+import io
 import subprocess
 from pathlib import Path
 
@@ -38,6 +39,12 @@ def write_version_file():
         f.write("    cuda = _check_cuda_version()\n")
 
 
+def get_long_description():
+    # Get the long description from the README file
+    with io.open(str(PATH_ROOT / "README.md"), encoding="utf-8") as f:
+        return f.read()
+
+
 def load_requirements(
     path_dir=PATH_ROOT, file_name="requirements.txt", comment_char="#"
 ):
@@ -59,21 +66,21 @@ if __name__ == "__main__":
 
     write_version_file()
 
-    # Get the long description from the README file
-    long_description = (PATH_ROOT / "README.md").read_text(encoding="utf-8")
-
     setup(
         name=PACKAGE_NAME,
         version=VERSION,
-        description="Yet Another YOLOv5 and its Additional Runtime Stack",
+        description="Yet another yolov5 and its runtime stack for specialized accelerators.",
         author="Zhiqiang Wang",
         author_email="me@zhiqwang.com",
-        long_description=long_description,
+        long_description=get_long_description(),
         long_description_content_type="text/markdown",
         url="https://github.com/zhiqwang/yolov5-rt-stack",
         license="GPL-3.0",
         packages=find_packages(exclude=["test", "deployment", "notebooks"]),
         zip_safe=False,
+        options={
+            'bdist_wheel': {'python_tag': 'py36.py37.py38.py39'},
+        },
         classifiers=[
             # Operation system
             "Operating System :: OS Independent",
