@@ -14,7 +14,7 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 PATH_ROOT = Path(__file__).parent.resolve()
-VERSION = "0.5.2a0"
+VERSION = "0.5.2rc1"
 
 PACKAGE_NAME = "yolort"
 sha = "Unknown"
