@@ -6,9 +6,7 @@ from yolort.utils import convert_yolov5_to_yolort
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(
-        "Convert checkpoints from yolov5 to yolort", add_help=True
-    )
+    parser = argparse.ArgumentParser("Convert checkpoints from yolov5 to yolort", add_help=True)
 
     parser.add_argument(
         "--checkpoint_path",
@@ -31,9 +29,7 @@ def get_parser():
         help="Path of the test image",
     )
 
-    parser.add_argument(
-        "--output_path", type=str, default=None, help="Path where to save"
-    )
+    parser.add_argument("--output_path", type=str, default=None, help="Path where to save")
     return parser
 
 

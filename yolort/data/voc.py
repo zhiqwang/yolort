@@ -62,9 +62,7 @@ class ConvertVOCtoCOCO:
         target["orig_size"] = torch.as_tensor([int(height), int(width)])
         target["size"] = torch.as_tensor([int(height), int(width)])
         # convert filename in int8
-        target["filename"] = torch.tensor(
-            [ord(i) for i in list(filename)], dtype=torch.int8
-        )
+        target["filename"] = torch.tensor([ord(i) for i in list(filename)], dtype=torch.int8)
 
         return image, target
 

@@ -62,9 +62,7 @@ class TestONNXExporter:
                 test_ouputs = model(*test_inputs)
                 if isinstance(test_ouputs, Tensor):
                     test_ouputs = (test_ouputs,)
-            self.ort_validate(
-                onnx_io, test_inputs, test_ouputs, tolerate_small_mismatch
-            )
+            self.ort_validate(onnx_io, test_inputs, test_ouputs, tolerate_small_mismatch)
 
     def ort_validate(self, onnx_io, inputs, outputs, tolerate_small_mismatch=False):
 
@@ -82,16 +80,12 @@ class TestONNXExporter:
 
         ort_session = onnxruntime.InferenceSession(onnx_io.getvalue())
         # compute onnxruntime output prediction
-        ort_inputs = dict(
-            (ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs)
-        )
+        ort_inputs = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))
         ort_outs = ort_session.run(None, ort_inputs)
 
         for i in range(0, len(outputs)):
             try:
-                torch.testing.assert_close(
-                    outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05
-                )
+                torch.testing.assert_close(outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05)
             except AssertionError as error:
                 if tolerate_small_mismatch:
                     self.assertIn("(0.00%)", str(error), str(error))

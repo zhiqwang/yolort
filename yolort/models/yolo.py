@@ -5,8 +5,8 @@ from typing import Any, List, Dict, Callable, Tuple, Optional
 
 import torch
 from torch import nn, Tensor
-
 from yolort.utils import load_from_ultralytics, load_state_dict_from_url
+
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead, SetCriterion, PostProcess
@@ -177,9 +177,7 @@ class YOLO(nn.Module):
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn(
-                    "YOLO always returns a (Losses, Detections) tuple in scripting."
-                )
+                warnings.warn("YOLO always returns a (Losses, Detections) tuple in scripting.")
                 self._has_warned = True
             return losses, detections
         else:
@@ -264,20 +262,14 @@ def build_model(
     if pretrained:
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
-        state_dict = load_state_dict_from_url(
-            model_urls[weights_name], progress=progress
-        )
+        state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
         model.load_state_dict(state_dict)
 
     return model
 
 
-model_urls_root_r30 = (
-    "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
-)
-model_urls_root_r52 = (
-    "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2-alpha"
-)
+model_urls_root_r30 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
+model_urls_root_r52 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2-alpha"
 
 model_urls = {
     # Path Aggregation Network 3.1 and 4.0
@@ -833,17 +825,13 @@ def yolov5_darknet_tan_s_r40(
     width_multiple = 0.5
     version = "r4.0"
 
-    backbone = darknet_tan_backbone(
-        backbone_name, depth_multiple, width_multiple, version=version
-    )
+    backbone = darknet_tan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
 
     model = YOLO(backbone, num_classes, **kwargs)
     if pretrained:
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
-        state_dict = load_state_dict_from_url(
-            model_urls[weights_name], progress=progress
-        )
+        state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
         model.load_state_dict(state_dict)
 
     return model

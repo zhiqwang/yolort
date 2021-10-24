@@ -42,9 +42,7 @@ def get_yolov5_size(depth_multiple, width_multiple):
     )
 
 
-def load_yolov5_model(
-    checkpoint_path: str, autoshape: bool = False, verbose: bool = True
-):
+def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bool = True):
     """
     Creates a specified YOLOv5 model
 
@@ -59,9 +57,7 @@ def load_yolov5_model(
     set_logging(verbose=verbose)
 
     with add_yolov5_context():
-        ckpt = torch.load(
-            attempt_download(checkpoint_path), map_location=torch.device("cpu")
-        )
+        ckpt = torch.load(attempt_download(checkpoint_path), map_location=torch.device("cpu"))
 
     if isinstance(ckpt, dict):
         model_ckpt = ckpt["model"]  # load model

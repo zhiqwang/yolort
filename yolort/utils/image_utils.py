@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
     # Plots one bounding box on image img
-    tl = (
-        line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1
-    )  # line/font thickness
+    tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
     COLORS = color_list()  # list of COLORS
     color = color or COLORS[np.random.randint(0, len(COLORS))]
     c1, c2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
@@ -161,9 +159,7 @@ def overlay_boxes(detections, path, time_consume, args):
                     # normalized cxcywh
                     cxcywh = box_convert(xyxy, in_fmt="xyxy", out_fmt="cxcywh").tolist()
                     with open(f"{txt_path}.txt", "a") as f:
-                        f.write(
-                            ("%g " * 5 + "\n") % (cls_name, *cxcywh)
-                        )  # label format
+                        f.write(("%g " * 5 + "\n") % (cls_name, *cxcywh))  # label format
 
                 if args.save_img:  # Add bbox to image
                     label = "%s %.2f" % (args.names[int(cls_name)], conf)
@@ -276,9 +272,7 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
             # anchor scale
             b, _, grid_x, grid_y = indices[i]
 
-            b, grid_x, grid_y, anchor, target = map(
-                to_numpy, [b, grid_x, grid_y, anchors[i], targets[i]]
-            )
+            b, grid_x, grid_y, anchor, target = map(to_numpy, [b, grid_x, grid_y, anchors[i], targets[i]])
 
             # Find out the corresponding branch of one image
             idx = b == j
@@ -303,9 +297,7 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
 
             # The anchors need to restore the offset.
             # In eacy layer there has at most 3x3=9 anchors for matching.
-            anchor_restored = restore_anchor(
-                anchor, grid_x, grid_y, stride, pred[i].shape, image_sizes
-            )
+            anchor_restored = restore_anchor(anchor, grid_x, grid_y, stride, pred[i].shape, image_sizes)
 
             # visualize positive anchor
             image_per_scale = overlay_bbox(image_per_scale, anchor_restored)
@@ -317,9 +309,7 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
     return images_with_anchor
 
 
-def overlay_bbox(
-    image, bboxs_list, color=None, thickness=2, font_scale=0.3, with_mask=False
-):
+def overlay_bbox(image, bboxs_list, color=None, thickness=2, font_scale=0.3, with_mask=False):
     """
     Visualize bbox in object detection by drawing rectangle.
 
@@ -415,13 +405,9 @@ def merge_images(images_list, row_col_num):
     elif row_col_num[0] < 0 or num_images < col:
         images_merged = np.vstack(images_list)
     else:
-        assert (
-            row * col >= num_images
-        ), "Images overboundary, not enough windows to display all images!"
+        assert row * col >= num_images, "Images overboundary, not enough windows to display all images!"
 
-        fill_img_list = [np.zeros(images_list[0].shape, dtype=np.uint8)] * (
-            row * col - num_images
-        )
+        fill_img_list = [np.zeros(images_list[0].shape, dtype=np.uint8)] * (row * col - num_images)
         images_list.extend(fill_img_list)
         merge_imgs_col = []
         for i in range(row):

@@ -61,17 +61,13 @@ def yolov5s_r40_deploy_ncnn(
     width_multiple = 0.5
     version = "r4.0"
 
-    backbone = darknet_pan_backbone(
-        backbone_name, depth_multiple, width_multiple, version=version
-    )
+    backbone = darknet_pan_backbone(backbone_name, depth_multiple, width_multiple, version=version)
 
     model = YOLODeployFriendly(backbone, num_classes, **kwargs)
     if pretrained:
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
-        state_dict = load_state_dict_from_url(
-            model_urls[weights_name], progress=progress
-        )
+        state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
         model.load_state_dict(state_dict)
 
     del model.anchor_generator

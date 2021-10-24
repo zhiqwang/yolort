@@ -54,9 +54,7 @@ def _check_jit_scriptable(nn_module, args, unwrapper=None, skip=False):
             results_from_imported = m_import(*args)
         tol = 3e-4
         try:
-            torch.testing.assert_close(
-                results, results_from_imported, atol=tol, rtol=tol
-            )
+            torch.testing.assert_close(results, results_from_imported, atol=tol, rtol=tol)
         except ValueError:
             # custom check for the models that return named tuples:
             # we compare field by field while ignoring None as assert_close can't handle None
@@ -140,9 +138,7 @@ class TestModel:
 
         return [(c, height // s, width // s) for (c, s) in zip(in_channels, strides)]
 
-    def _get_feature_maps(
-        self, batch_size, height, width, width_multiple=0.5, use_p6=False
-    ):
+    def _get_feature_maps(self, batch_size, height, width, width_multiple=0.5, use_p6=False):
         feature_shapes = self._get_feature_shapes(
             height,
             width,
@@ -152,9 +148,7 @@ class TestModel:
         feature_maps = [torch.rand(batch_size, *f_shape) for f_shape in feature_shapes]
         return feature_maps
 
-    def _get_head_outputs(
-        self, batch_size, height, width, width_multiple=0.5, use_p6=False
-    ):
+    def _get_head_outputs(self, batch_size, height, width, width_multiple=0.5, use_p6=False):
         feature_shapes = self._get_feature_shapes(
             height,
             width,
@@ -163,9 +157,7 @@ class TestModel:
         )
 
         num_outputs = self.num_outputs
-        head_shapes = [
-            (batch_size, 3, *f_shape[1:], num_outputs) for f_shape in feature_shapes
-        ]
+        head_shapes = [(batch_size, 3, *f_shape[1:], num_outputs) for f_shape in feature_shapes]
         head_outputs = [torch.rand(*h_shape) for h_shape in head_shapes]
 
         return head_outputs
@@ -202,9 +194,7 @@ class TestModel:
             (0.67, 0.75, "r6.0", False, False),
         ],
     )
-    @pytest.mark.parametrize(
-        "batch_size, height, width", [(4, 448, 320), (2, 384, 640)]
-    )
+    @pytest.mark.parametrize("batch_size, height, width", [(4, 448, 320), (2, 384, 640)])
     def test_backbone_with_pan(
         self,
         depth_multiple,
@@ -216,9 +206,7 @@ class TestModel:
         height,
         width,
     ):
-        out_shape = self._get_feature_shapes(
-            height, width, width_multiple=width_multiple, use_p6=use_p6
-        )
+        out_shape = self._get_feature_shapes(height, width, width_multiple=width_multiple, use_p6=use_p6)
 
         x = torch.rand(batch_size, 3, height, width)
         model = self._init_test_backbone_with_pan(
@@ -243,9 +231,7 @@ class TestModel:
         "width_multiple, use_p6",
         [(0.5, False), (0.5, True)],
     )
-    @pytest.mark.parametrize(
-        "batch_size, height, width", [(4, 448, 320), (2, 384, 640)]
-    )
+    @pytest.mark.parametrize("batch_size, height, width", [(4, 448, 320), (2, 384, 640)])
     def test_anchor_generator(self, width_multiple, use_p6, batch_size, height, width):
         feature_maps = self._get_feature_maps(
             batch_size, height, width, width_multiple=width_multiple, use_p6=use_p6
@@ -344,15 +330,9 @@ def test_torchscript(arch):
     out = model(x)
     out_script = scripted_model(x)
 
-    torch.testing.assert_close(
-        out[0]["scores"], out_script[1][0]["scores"], rtol=0, atol=0
-    )
-    torch.testing.assert_close(
-        out[0]["labels"], out_script[1][0]["labels"], rtol=0, atol=0
-    )
-    torch.testing.assert_close(
-        out[0]["boxes"], out_script[1][0]["boxes"], rtol=0, atol=0
-    )
+    torch.testing.assert_close(out[0]["scores"], out_script[1][0]["scores"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["labels"], out_script[1][0]["labels"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0, atol=0)
 
 
 @pytest.mark.parametrize(
@@ -403,12 +383,6 @@ def test_load_from_yolov5(
     model.eval()
     out = model.predict(img_path)
 
-    torch.testing.assert_close(
-        out_from_yolov5[0]["scores"], out[0]["scores"], rtol=0, atol=0
-    )
-    torch.testing.assert_close(
-        out_from_yolov5[0]["labels"], out[0]["labels"], rtol=0, atol=0
-    )
-    torch.testing.assert_close(
-        out_from_yolov5[0]["boxes"], out[0]["boxes"], rtol=0, atol=0
-    )
+    torch.testing.assert_close(out_from_yolov5[0]["scores"], out[0]["scores"], rtol=0, atol=0)
+    torch.testing.assert_close(out_from_yolov5[0]["labels"], out[0]["labels"], rtol=0, atol=0)
+    torch.testing.assert_close(out_from_yolov5[0]["boxes"], out[0]["boxes"], rtol=0, atol=0)

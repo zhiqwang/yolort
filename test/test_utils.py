@@ -105,9 +105,7 @@ def test_load_from_ultralytics_voc(
 
     torch.testing.assert_allclose(out_from_yolort[0]["boxes"], out_from_yolov5[:, :4])
     torch.testing.assert_allclose(out_from_yolort[0]["scores"], out_from_yolov5[:, 4])
-    torch.testing.assert_allclose(
-        out_from_yolort[0]["labels"], out_from_yolov5[:, 5].to(dtype=torch.int64)
-    )
+    torch.testing.assert_allclose(out_from_yolort[0]["labels"], out_from_yolov5[:, 5].to(dtype=torch.int64))
 
 
 def test_read_image_to_tensor():
@@ -194,13 +192,8 @@ def test_feature_extractor(batch_size, height, width, arch, width_multiple):
     in_channels = [int(gw * width_multiple) for gw in grow_widths]
     strides = [8, 16, 32]
     num_outputs = 85
-    expected_features = [
-        (batch_size, inc, height // s, width // s)
-        for inc, s in zip(in_channels, strides)
-    ]
-    expected_head_outputs = [
-        (batch_size, c, height // s, width // s, num_outputs) for s in strides
-    ]
+    expected_features = [(batch_size, inc, height // s, width // s) for inc, s in zip(in_channels, strides)]
+    expected_head_outputs = [(batch_size, c, height // s, width // s, num_outputs) for s in strides]
 
     model = models.__dict__[arch]()
     model = model.train()

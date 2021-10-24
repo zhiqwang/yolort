@@ -27,9 +27,7 @@ def test_get_dataset():
 
 def test_get_dataloader():
     batch_size = 8
-    data_loader = data_helper.get_dataloader(
-        data_root="data-bin", mode="train", batch_size=batch_size
-    )
+    data_loader = data_helper.get_dataloader(data_root="data-bin", mode="train", batch_size=batch_size)
     # Test the dataloader
     images, targets = next(iter(data_loader))
 
@@ -67,7 +65,5 @@ def test_prepare_coco128():
     data_path = Path("data-bin")
     coco128_dirname = "coco128"
     data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
-    annotation_file = (
-        data_path / coco128_dirname / "annotations" / "instances_train2017.json"
-    )
+    annotation_file = data_path / coco128_dirname / "annotations" / "instances_train2017.json"
     assert annotation_file.is_file()

@@ -8,8 +8,8 @@ import torch
 from pytorch_lightning import LightningModule
 from torch import nn, Tensor
 from torchvision.io import read_image
-
 from yolort.data import COCOEvaluator, contains_any_tensor
+
 from . import yolo
 from ._utils import _evaluate_iou
 from .transform import YOLOTransform
@@ -120,15 +120,11 @@ class YOLOv5(LightningModule):
             else:
                 result = outputs
 
-            detections = self.transform.postprocess(
-                result, samples.image_sizes, original_image_sizes
-            )
+            detections = self.transform.postprocess(result, samples.image_sizes, original_image_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
-                warnings.warn(
-                    "YOLOv5 always returns a (Losses, Detections) tuple in scripting."
-                )
+                warnings.warn("YOLOv5 always returns a (Losses, Detections) tuple in scripting.")
                 self._has_warned = True
             return losses, detections
         else:
@@ -254,9 +250,7 @@ class YOLOv5(LightningModule):
         if isinstance(samples, str):
             samples = [samples]
 
-        if isinstance(samples, (list, tuple)) and all(
-            isinstance(p, str) for p in samples
-        ):
+        if isinstance(samples, (list, tuple)) and all(isinstance(p, str) for p in samples):
             outputs = []
             for sample in samples:
                 output = image_loader(sample).to(p.device).type_as(p)
@@ -271,9 +265,7 @@ class YOLOv5(LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument(
-            "--arch", default="yolov5_darknet_pan_s_r40", help="model architecture"
-        )
+        parser.add_argument("--arch", default="yolov5_darknet_pan_s_r40", help="model architecture")
         parser.add_argument(
             "--pretrained",
             action="store_true",
@@ -286,9 +278,7 @@ class YOLOv5(LightningModule):
             help="initial learning rate, 0.01 is the default value for training "
             "on 8 gpus and 2 images_per_gpu",
         )
-        parser.add_argument(
-            "--momentum", default=0.9, type=float, metavar="M", help="momentum"
-        )
+        parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
         parser.add_argument(
             "--weight-decay",
             default=5e-4,

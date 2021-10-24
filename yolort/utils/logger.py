@@ -86,9 +86,7 @@ class MetricLogger:
             return self.meters[attr]
         if attr in self.__dict__:
             return self.__dict__[attr]
-        raise AttributeError(
-            f"'{type(self).__name__}' object has no attribute '{attr}'"
-        )
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
 
     def __str__(self):
         loss_str = []
@@ -170,9 +168,7 @@ class MetricLogger:
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print(
-            f"{header} Total time: {total_time_str} ({total_time / len(iterable):.4f} s / it)"
-        )
+        print(f"{header} Total time: {total_time_str} ({total_time / len(iterable):.4f} s / it)")
 
 
 def is_dist_avail_and_initialized():

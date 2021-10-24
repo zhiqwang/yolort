@@ -110,9 +110,7 @@ def test_test_epoch_end():
     data_path = Path("data-bin")
     coco128_dirname = "coco128"
     data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
-    annotation_file = (
-        data_path / coco128_dirname / "annotations" / "instances_train2017.json"
-    )
+    annotation_file = data_path / coco128_dirname / "annotations" / "instances_train2017.json"
 
     # Get dataloader to test
     val_dataloader = data_helper.get_dataloader(data_root=data_path, mode="val")

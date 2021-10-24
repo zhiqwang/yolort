@@ -103,15 +103,9 @@ class COCODetectionDataModule(DetectionDataModule):
         val_ann_file = anno_path / f"{data_task}_{val_set}.json"
 
         train_dataset = (
-            None
-            if skip_train_set
-            else COCODetection(data_path, train_ann_file, train_transform())
+            None if skip_train_set else COCODetection(data_path, train_ann_file, train_transform())
         )
-        val_dataset = (
-            None
-            if skip_val_set
-            else COCODetection(data_path, val_ann_file, val_transform())
-        )
+        val_dataset = None if skip_val_set else COCODetection(data_path, val_ann_file, val_transform())
 
         super().__init__(
             train_dataset=train_dataset,

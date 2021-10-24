@@ -34,9 +34,7 @@ torch.set_printoptions(linewidth=320, precision=5, profile="long")
 # format short g, %precision=5
 np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})
 pd.options.display.max_columns = 10
-cv2.setNumThreads(
-    0
-)  # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
+cv2.setNumThreads(0)  # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
 os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # NumExpr max threads
 
 
@@ -82,11 +80,7 @@ def try_except(func):
 
 def methods(instance):
     # Get class/instance methods
-    return [
-        f
-        for f in dir(instance)
-        if callable(getattr(instance, f)) and not f.startswith("__")
-    ]
+    return [f for f in dir(instance) if callable(getattr(instance, f)) and not f.startswith("__")]
 
 
 def set_logging(rank=-1, verbose=True):
@@ -158,11 +152,7 @@ def is_ascii(s=""):
 
 def emojis(str=""):
     # Return platform-dependent emoji-safe version of string
-    return (
-        str.encode().decode("ascii", "ignore")
-        if platform.system() == "Windows"
-        else str
-    )
+    return str.encode().decode("ascii", "ignore") if platform.system() == "Windows" else str
 
 
 def file_size(file):
@@ -190,9 +180,7 @@ def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=Fals
     # Check version vs. required version
     current, minimum = (pkg.parse_version(x) for x in (current, minimum))
     result = (current == minimum) if pinned else (current >= minimum)
-    assert (
-        result
-    ), f"{name}{minimum} required by YOLOv5, but {name}{current} is currently installed"
+    assert result, f"{name}{minimum} required by YOLOv5, but {name}{current} is currently installed"
 
 
 def check_img_size(imgsz, s=32, floor=0):
@@ -202,10 +190,7 @@ def check_img_size(imgsz, s=32, floor=0):
     else:  # list i.e. img_size=[640, 480]
         new_size = [max(make_divisible(x, int(s)), floor) for x in imgsz]
     if new_size != imgsz:
-        print(
-            f"WARNING: --img-size {imgsz} must be multiple of "
-            f"max stride {s}, updating to {new_size}"
-        )
+        print(f"WARNING: --img-size {imgsz} must be multiple of max stride {s}, updating to {new_size}")
     return new_size
 
 
@@ -220,17 +205,13 @@ def check_file(file):
         file = Path(urllib.parse.unquote(file)).name.split("?")[0]
         print(f"Downloading {url} to {file}...")
         torch.hub.download_url_to_file(url, file)
-        assert (
-            Path(file).exists() and Path(file).stat().st_size > 0
-        ), f"File download failed: {url}"
+        assert Path(file).exists() and Path(file).stat().st_size > 0, f"File download failed: {url}"
         return file
     else:  # search
         files = glob.glob("./**/" + file, recursive=True)  # find file
         assert len(files), f"File not found: {file}"  # assert file was found
         # assert unique
-        assert (
-            len(files) == 1
-        ), f"Multiple files match '{file}', specify exact path: {files}"
+        assert len(files) == 1, f"Multiple files match '{file}', specify exact path: {files}"
         return files[0]  # return file
 
 
@@ -242,9 +223,7 @@ def check_dataset(data, autodownload=True):
     extract_dir = ""
     # i.e. gs://bucket/dir/coco128.zip
     if isinstance(data, (str, Path)) and str(data).endswith(".zip"):
-        download(
-            data, dir="../datasets", unzip=True, delete=False, curl=False, threads=1
-        )
+        download(data, dir="../datasets", unzip=True, delete=False, curl=False, threads=1)
         data = next((Path("../datasets") / Path(data).stem).rglob("*.yaml"))
         extract_dir, autodownload = data.parent, False
 
@@ -257,22 +236,14 @@ def check_dataset(data, autodownload=True):
     path = extract_dir or Path(data.get("path") or "")  # optional 'path' default to '.'
     for k in "train", "val", "test":
         if data.get(k):  # prepend path
-            data[k] = (
-                str(path / data[k])
-                if isinstance(data[k], str)
-                else [str(path / x) for x in data[k]]
-            )
+            data[k] = str(path / data[k]) if isinstance(data[k], str) else [str(path / x) for x in data[k]]
 
     assert "nc" in data, "Dataset 'nc' key missing."
     if "names" not in data:
-        data["names"] = [
-            f"class{i}" for i in range(data["nc"])
-        ]  # assign class names if missing
+        data["names"] = [f"class{i}" for i in range(data["nc"])]  # assign class names if missing
     train, val, test, s = [data.get(x) for x in ("train", "val", "test", "download")]
     if val:
-        val = [
-            Path(x).resolve() for x in (val if isinstance(val, list) else [val])
-        ]  # val path
+        val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
         if not all(x.exists() for x in val):
             print(
                 "\nWARNING: Dataset not found, "
@@ -283,9 +254,7 @@ def check_dataset(data, autodownload=True):
                     f = Path(s).name  # filename
                     print(f"Downloading {s} ...")
                     torch.hub.download_url_to_file(s, f)
-                    root = (
-                        path.parent if "path" in data else ".."
-                    )  # unzip directory i.e. '../'
+                    root = path.parent if "path" in data else ".."  # unzip directory i.e. '../'
                     Path(root).mkdir(parents=True, exist_ok=True)  # create root
                     r = os.system(f"unzip -q {f} -d {root} && rm {f}")  # unzip
                 elif s.startswith("bash "):  # bash script
@@ -294,10 +263,7 @@ def check_dataset(data, autodownload=True):
                 else:  # python script
                     r = exec(s, {"yaml": data})  # return None
                 # print result
-                print(
-                    "Dataset autodownload %s\n"
-                    % ("success" if r in (0, None) else "failure")
-                )
+                print("Dataset autodownload %s\n" % ("success" if r in (0, None) else "failure"))
             else:
                 raise Exception("Dataset not found.")
 
@@ -406,9 +372,7 @@ def labels_to_class_weights(labels, nc=80):
 
 def labels_to_image_weights(labels, nc=80, class_weights=np.ones(80)):
     # Produces image weights based on class_weights and image contents
-    class_counts = np.array(
-        [np.bincount(x[:, 0].astype(np.int), minlength=nc) for x in labels]
-    )
+    class_counts = np.array([np.bincount(x[:, 0].astype(np.int), minlength=nc) for x in labels])
     image_weights = (class_weights.reshape(1, nc) * class_counts).sum(1)
     # index = random.choices(range(n), weights=image_weights, k=1)  # weight image sample
     return image_weights
@@ -478,9 +442,7 @@ def segment2box(segment, width=640, height=640):
         y[inside],
     )
     # xyxy
-    return (
-        np.array([x.min(), y.min(), x.max(), y.max()]) if any(x) else np.zeros((1, 4))
-    )
+    return np.array([x.min(), y.min(), x.max(), y.max()]) if any(x) else np.zeros((1, 4))
 
 
 def segments2boxes(segments):
@@ -498,11 +460,7 @@ def resample_segments(segments, n=1000):
         x = np.linspace(0, len(s) - 1, n)
         xp = np.arange(len(s))
         # segment xy
-        segments[i] = (
-            np.concatenate([np.interp(x, xp, s[:, i]) for i in range(2)])
-            .reshape(2, -1)
-            .T
-        )
+        segments[i] = np.concatenate([np.interp(x, xp, s[:, i]) for i in range(2)]).reshape(2, -1).T
     return segments
 
 
@@ -512,9 +470,7 @@ def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
         # gain  = old / new
         gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])
         # wh padding
-        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (
-            img1_shape[0] - img0_shape[0] * gain
-        ) / 2
+        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2
     else:
         gain = ratio_pad[0][0]
         pad = ratio_pad[1]
@@ -559,13 +515,10 @@ def non_max_suppression(
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Checks
-    assert 0 <= conf_thres <= 1, (
-        f"Invalid Confidence threshold {conf_thres}, "
-        "valid values are between 0.0 and 1.0"
-    )
     assert (
-        0 <= iou_thres <= 1
-    ), f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
+        0 <= conf_thres <= 1
+    ), f"Invalid Confidence threshold {conf_thres}, valid values are between 0.0 and 1.0"
+    assert 0 <= iou_thres <= 1, f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     # Settings
     _, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
@@ -635,9 +588,7 @@ def non_max_suppression(
             iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
             weights = iou * scores[None]  # box weights
             # merged boxes
-            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(
-                1, keepdim=True
-            )
+            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)
             if redundant:
                 i = i[iou.sum(1) > 1]  # require redundancy
 
@@ -649,9 +600,7 @@ def non_max_suppression(
     return output
 
 
-def strip_optimizer(
-    f="best.pt", s=""
-):  # from utils.general import *; strip_optimizer()
+def strip_optimizer(f="best.pt", s=""):  # from utils.general import *; strip_optimizer()
     # Strip optimizer from 'f' to finalize training, optionally save as 's'
     x = torch.load(f, map_location=torch.device("cpu"))
     if x.get("ema"):
@@ -685,9 +634,7 @@ def print_mutation(results, hyp, save_dir):
     n = len(keys)
 
     # Log to evolve.csv
-    s = (
-        "" if evolve_csv.exists() else (("%20s," * n % keys).rstrip(",") + "\n")
-    )  # add header
+    s = "" if evolve_csv.exists() else (("%20s," * n % keys).rstrip(",") + "\n")  # add header
     with open(evolve_csv, "a") as f:
         f.write(s + ("%20.5g," * n % vals).rstrip(",") + "\n")
 
@@ -743,17 +690,13 @@ def apply_classifier(x, model, img, im0):
                 im /= 255.0  # 0 - 255 to 0.0 - 1.0
                 ims.append(im)
 
-            pred_cls2 = model(torch.Tensor(ims).to(d.device)).argmax(
-                1
-            )  # classifier prediction
+            pred_cls2 = model(torch.Tensor(ims).to(d.device)).argmax(1)  # classifier prediction
             x[i] = x[i][pred_cls1 == pred_cls2]  # retain matching class detections
 
     return x
 
 
-def save_one_box(
-    xyxy, im, file="image.jpg", gain=1.02, pad=10, square=False, BGR=False, save=True
-):
+def save_one_box(xyxy, im, file="image.jpg", gain=1.02, pad=10, square=False, BGR=False, save=True):
     # Save image crop as {file} with crop size multiple {gain}
     # and {pad} pixels. Save and/or return crop
     xyxy = torch.tensor(xyxy).view(-1, 4)

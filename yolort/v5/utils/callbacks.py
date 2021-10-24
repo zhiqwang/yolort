@@ -42,9 +42,7 @@ class Callbacks:
             name        The name of the action
             callback    The callback to fire
         """
-        assert (
-            hook in self._callbacks
-        ), f"hook '{hook}' not found in callbacks {self._callbacks}"
+        assert hook in self._callbacks, f"hook '{hook}' not found in callbacks {self._callbacks}"
         assert callable(callback), f"callback '{callback}' is not callable"
         self._callbacks[hook].append({"name": name, "callback": callback})
 

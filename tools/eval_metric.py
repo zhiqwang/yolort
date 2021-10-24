@@ -38,9 +38,7 @@ def get_parser():
         default="./data-bin/coco128/images/train2017",
         help="Root path of the dataset containing images",
     )
-    parser.add_argument(
-        "--annotation_path", default=None, help="Path of the annotation file"
-    )
+    parser.add_argument("--annotation_path", default=None, help="Path of the annotation file")
     parser.add_argument(
         "--eval_type",
         default="yolov5",

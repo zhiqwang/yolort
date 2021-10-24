@@ -109,12 +109,8 @@ class ComputeLoss:
             h = model.hyp
 
         # Define criteria
-        BCEcls = nn.BCEWithLogitsLoss(
-            pos_weight=torch.tensor([h["cls_pw"]], device=device)
-        )
-        BCEobj = nn.BCEWithLogitsLoss(
-            pos_weight=torch.tensor([h["obj_pw"]], device=device)
-        )
+        BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h["cls_pw"]], device=device))
+        BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h["obj_pw"]], device=device))
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
         # positive, negative BCE targets
@@ -195,9 +191,7 @@ class ComputeLoss:
             obji = self.BCEobj(pi[..., 4], tobj)
             lobj += obji * self.balance[i]  # obj loss
             if self.autobalance:
-                self.balance[i] = (
-                    self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
-                )
+                self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
 
         if self.autobalance:
             self.balance = [x / self.balance[self.ssi] for x in self.balance]

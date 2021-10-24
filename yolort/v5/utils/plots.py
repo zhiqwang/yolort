@@ -92,33 +92,23 @@ class Annotator:
         if self.pil:  # use PIL
             self.im = im if isinstance(im, Image.Image) else Image.fromarray(im)
             self.draw = ImageDraw.Draw(self.im)
-            self.font = check_font(
-                font, size=font_size or max(round(sum(self.im.size) / 2 * 0.035), 12)
-            )
+            self.font = check_font(font, size=font_size or max(round(sum(self.im.size) / 2 * 0.035), 12))
             self.fh = self.font.getsize("a")[1] - 3  # font height
         else:  # use cv2
             self.im = im
         self.lw = line_width or max(round(sum(im.shape) / 2 * 0.003), 2)  # line width
 
-    def box_label(
-        self, box, label="", color=(128, 128, 128), txt_color=(255, 255, 255)
-    ):
+    def box_label(self, box, label="", color=(128, 128, 128), txt_color=(255, 255, 255)):
         # Add one xyxy box to image with label
         if self.pil or not is_ascii(label):
             self.draw.rectangle(box, width=self.lw, outline=color)  # box
             if label:
                 w = self.font.getsize(label)[0]  # text width
-                self.draw.rectangle(
-                    [box[0], box[1] - self.fh, box[0] + w + 1, box[1] + 1], fill=color
-                )
-                self.draw.text(
-                    (box[0], box[1]), label, fill=txt_color, font=self.font, anchor="ls"
-                )
+                self.draw.rectangle([box[0], box[1] - self.fh, box[0] + w + 1, box[1] + 1], fill=color)
+                self.draw.text((box[0], box[1]), label, fill=txt_color, font=self.font, anchor="ls")
         else:  # cv2
             c1, c2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
-            cv2.rectangle(
-                self.im, c1, c2, color, thickness=self.lw, lineType=cv2.LINE_AA
-            )
+            cv2.rectangle(self.im, c1, c2, color, thickness=self.lw, lineType=cv2.LINE_AA)
             if label:
                 tf = max(self.lw - 1, 1)  # font thickness
                 w, h = cv2.getTextSize(label, 0, fontScale=self.lw / 3, thickness=tf)[0]
@@ -221,9 +211,7 @@ def plot_images(
     annotator = Annotator(mosaic, line_width=round(fs / 10), font_size=fs)
     for i in range(i + 1):
         x, y = int(w * (i // ns)), int(h * (i % ns))  # block origin
-        annotator.rectangle(
-            [x, y, x + w, y + h], None, (255, 255, 255), width=2
-        )  # borders
+        annotator.rectangle([x, y, x + w, y + h], None, (255, 255, 255), width=2)  # borders
         if paths:
             # filenames
             annotator.text(
@@ -236,9 +224,7 @@ def plot_images(
             boxes = xywh2xyxy(ti[:, 2:6]).T
             classes = ti[:, 1].astype("int")
             labels = ti.shape[1] == 6  # labels if no conf column
-            conf = (
-                None if labels else ti[:, 6]
-            )  # check for confidence presence (label vs pred)
+            conf = None if labels else ti[:, 6]  # check for confidence presence (label vs pred)
 
             if boxes.shape[1]:
                 if boxes.max() <= 1.01:  # if normalized with tolerance 0.01
@@ -473,9 +459,7 @@ def plot_evolve(evolve_csv="path/to/evolve.csv"):
         v = x[:, 7 + i]
         mu = v[j]  # best single result
         plt.subplot(6, 5, i + 1)
-        plt.scatter(
-            v, f, c=hist2d(v, f, 20), cmap="viridis", alpha=0.8, edgecolors="none"
-        )
+        plt.scatter(v, f, c=hist2d(v, f, 20), cmap="viridis", alpha=0.8, edgecolors="none")
         plt.plot(mu, f.max(), "k+", markersize=15)
         plt.title("%s = %.3g" % (k, mu), fontdict={"size": 9})  # limit to 40 characters
         if i % 5 != 0:
@@ -493,9 +477,7 @@ def plot_results(file="path/to/results.csv", dir=""):
     fig, ax = plt.subplots(2, 5, figsize=(12, 6), tight_layout=True)
     ax = ax.ravel()
     files = list(save_dir.glob("results*.csv"))
-    assert len(
-        files
-    ), f"No results.csv files found in {save_dir.resolve()}, nothing to plot."
+    assert len(files), f"No results.csv files found in {save_dir.resolve()}, nothing to plot."
     for fi, f in enumerate(files):
         try:
             data = pd.read_csv(f)
@@ -515,9 +497,7 @@ def plot_results(file="path/to/results.csv", dir=""):
     plt.close()
 
 
-def feature_visualization(
-    x, module_type, stage, n=32, save_dir=Path("runs/detect/exp")
-):
+def feature_visualization(x, module_type, stage, n=32, save_dir=Path("runs/detect/exp")):
     """
     x:              Features to be visualized
     module_type:    Module type
@@ -530,13 +510,9 @@ def feature_visualization(
         if height > 1 and width > 1:
             f = f"stage{stage}_{module_type.split('.')[-1]}_features.png"  # filename
 
-            blocks = torch.chunk(
-                x[0].cpu(), channels, dim=0
-            )  # select batch index 0, block by channels
+            blocks = torch.chunk(x[0].cpu(), channels, dim=0)  # select batch index 0, block by channels
             n = min(n, channels)  # number of plots
-            fig, ax = plt.subplots(
-                math.ceil(n / 8), 8, tight_layout=True
-            )  # 8 rows x n/8 cols
+            fig, ax = plt.subplots(math.ceil(n / 8), 8, tight_layout=True)  # 8 rows x n/8 cols
             ax = ax.ravel()
             plt.subplots_adjust(wspace=0.05, hspace=0.05)
             for i in range(n):

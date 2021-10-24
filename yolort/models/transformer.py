@@ -7,8 +7,8 @@ Mostly copy-paste from <https://github.com/dingyiwei/yolov5/tree/Transformer>.
 from typing import Callable, List, Optional
 
 from torch import nn
-
 from yolort.v5 import Conv, C3, C3TR
+
 from . import darknet
 from .backbone_utils import BackboneWithPAN
 from .path_aggregation_network import PathAggregationNetwork
@@ -69,9 +69,7 @@ class BackboneWithTAN(BackboneWithPAN):
     """
 
     def __init__(self, backbone, return_layers, in_channels_list, depth_multiple):
-        super().__init__(
-            backbone, return_layers, in_channels_list, depth_multiple, "r4.0"
-        )
+        super().__init__(backbone, return_layers, in_channels_list, depth_multiple, "r4.0")
         self.pan = TransformerAttentionNetwork(
             in_channels_list,
             depth_multiple,
@@ -97,14 +95,10 @@ class TransformerAttentionNetwork(PathAggregationNetwork):
         depth_gain = max(round(3 * depth_multiple), 1)
 
         inner_blocks = [
-            C3TR(
-                in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False
-            ),
+            C3TR(in_channels_list[2], in_channels_list[2], n=depth_gain, shortcut=False),
             Conv(in_channels_list[2], in_channels_list[1], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
-            block(
-                in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False
-            ),
+            block(in_channels_list[2], in_channels_list[1], n=depth_gain, shortcut=False),
             Conv(in_channels_list[1], in_channels_list[0], 1, 1, version=version),
             nn.Upsample(scale_factor=2),
         ]

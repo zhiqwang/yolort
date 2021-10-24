@@ -17,12 +17,8 @@ class COCODetection(torchvision.datasets.CocoDetection):
         super().__init__(img_folder, ann_file)
         self._transforms = transforms
 
-        json_category_id_to_contiguous_id = {
-            v: i for i, v in enumerate(self.coco.getCatIds())
-        }
-        self.prepare = ConvertCocoPolysToMask(
-            json_category_id_to_contiguous_id, return_masks
-        )
+        json_category_id_to_contiguous_id = {v: i for i, v in enumerate(self.coco.getCatIds())}
+        self.prepare = ConvertCocoPolysToMask(json_category_id_to_contiguous_id, return_masks)
 
     def __getitem__(self, idx):
         img, target = super().__getitem__(idx)
@@ -92,9 +88,7 @@ class ConvertCocoPolysToMask:
 
         # for conversion to coco api
         area = torch.tensor([obj["area"] for obj in anno])
-        iscrowd = torch.tensor(
-            [obj["iscrowd"] if "iscrowd" in obj else 0 for obj in anno]
-        )
+        iscrowd = torch.tensor([obj["iscrowd"] if "iscrowd" in obj else 0 for obj in anno])
         target["area"] = area[keep]
         target["iscrowd"] = iscrowd[keep]
 
