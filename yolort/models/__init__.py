@@ -9,8 +9,16 @@ from .yolo import YOLO
 from .yolo_module import YOLOv5
 
 __all__ = [
-    "YOLO", "YOLOv5", "yolov5n", "yolov5n6", "yolov5s", "yolov5s6",
-    "yolov5m", "yolov5m6", "yolov5l", "yolov5ts"
+    "YOLO",
+    "YOLOv5",
+    "yolov5n",
+    "yolov5n6",
+    "yolov5s",
+    "yolov5s6",
+    "yolov5m",
+    "yolov5m6",
+    "yolov5l",
+    "yolov5ts",
 ]
 
 
