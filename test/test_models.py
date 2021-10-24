@@ -361,11 +361,7 @@ def test_torchscript(arch):
         ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
         ("yolov5n", "r6.0", "v6.0", "649e089f"),
         ("yolov5s", "r6.0", "v6.0", "c3b140f3"),
-        ("yolov5m", "r6.0", "v6.0", "4947bf56"),
-        ("yolov5l", "r6.0", "v6.0", "84f0a2d6"),
         ("yolov5n6", "r6.0", "v6.0", "beecbbae"),
-        ("yolov5s6", "r6.0", "v6.0", "4fe88758"),
-        ("yolov5m6", "r6.0", "v6.0", "ae177092"),
     ],
 )
 def test_load_from_yolov5(
