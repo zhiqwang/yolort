@@ -7,7 +7,7 @@ except ImportError:
 
 from .hooks import FeatureExtractor
 from .image_utils import cv2_imshow, get_image_from_url, read_image_to_tensor
-from .update_module_state import load_from_ultralytics
+from .update_module_state import convert_yolov5_to_yolort, load_from_ultralytics
 
 
 __all__ = [
@@ -15,6 +15,7 @@ __all__ = [
     "cv2_imshow",
     "get_image_from_url",
     "get_callable_dict",
+    "convert_yolov5_to_yolort",
     "load_from_ultralytics",
     "load_state_dict_from_url",
     "read_image_to_tensor",

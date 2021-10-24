@@ -8,7 +8,18 @@ from yolort.v5.utils.activations import Hardswish, SiLU
 from .yolo import YOLO
 from .yolo_module import YOLOv5
 
-__all__ = ["YOLO", "YOLOv5", "yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5ts"]
+__all__ = [
+    "YOLO",
+    "YOLOv5",
+    "yolov5n",
+    "yolov5n6",
+    "yolov5s",
+    "yolov5s6",
+    "yolov5m",
+    "yolov5m6",
+    "yolov5l",
+    "yolov5ts",
+]
 
 
 def yolov5n(
