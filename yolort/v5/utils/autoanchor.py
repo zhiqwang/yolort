@@ -64,7 +64,7 @@ def check_anchors(dataset, model, thr=4.0, imgsz=640):
                 "to use these anchors in the future."
             )
         else:
-            print(f"{prefix}Original anchors better than new anchors. " "Proceeding with original anchors.")
+            print(f"{prefix}Original anchors better than new anchors. Proceeding with original anchors.")
     print("")  # newline
 
 
@@ -148,7 +148,7 @@ def kmean_anchors(dataset="./data/coco128.yaml", n=9, img_size=640, thr=4.0, gen
     s = wh.std(0)  # sigmas for whitening
     k, dist = kmeans(wh / s, n, iter=30)  # points, mean distance
     assert len(k) == n, (
-        f"{prefix}ERROR: scipy.cluster.vq.kmeans requested {n} points " f"but returned only {len(k)}"
+        f"{prefix}ERROR: scipy.cluster.vq.kmeans requested {n} points but returned only {len(k)}"
     )
     k *= s
     wh = torch.tensor(wh, dtype=torch.float32)  # filtered

@@ -363,7 +363,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             if cache["msgs"]:
                 logging.info("\n".join(cache["msgs"]))  # display warnings
         assert nf > 0 or not augment, (
-            f"{prefix}No labels in {cache_path}. " f"Can not train without labels. See {HELP_URL}"
+            f"{prefix}No labels in {cache_path}. Can not train without labels. See {HELP_URL}"
         )
 
         # Read cache

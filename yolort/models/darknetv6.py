@@ -57,7 +57,7 @@ class DarkNetV6(nn.Module):
     ) -> None:
         super().__init__()
 
-        assert version == "r4.0", ("Currently the module version used in DarkNetV6 is r4.0",)
+        assert version == "r4.0", "Currently the module version used in DarkNetV6 is r4.0."
 
         if block is None:
             block = C3
@@ -135,7 +135,7 @@ def _darknetv6(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs
     if pretrained:
         model_url = model_urls[arch]
         if model_url is None:
-            raise NotImplementedError("pretrained {} is not supported as of now".format(arch))
+            raise NotImplementedError(f"pretrained {arch} is not supported as of now")
         else:
             state_dict = load_state_dict_from_url(model_url, progress=progress)
             model.load_state_dict(state_dict)

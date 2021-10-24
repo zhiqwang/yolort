@@ -190,7 +190,7 @@ def check_img_size(imgsz, s=32, floor=0):
     else:  # list i.e. img_size=[640, 480]
         new_size = [max(make_divisible(x, int(s)), floor) for x in imgsz]
     if new_size != imgsz:
-        print(f"WARNING: --img-size {imgsz} must be multiple of " f"max stride {s}, updating to {new_size}")
+        print(f"WARNING: --img-size {imgsz} must be multiple of max stride {s}, updating to {new_size}")
     return new_size
 
 
@@ -516,7 +516,7 @@ def non_max_suppression(
 
     # Checks
     assert 0 <= conf_thres <= 1, (
-        f"Invalid Confidence threshold {conf_thres}, " "valid values are between 0.0 and 1.0"
+        f"Invalid Confidence threshold {conf_thres}, valid values are between 0.0 and 1.0"
     )
     assert 0 <= iou_thres <= 1, f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 

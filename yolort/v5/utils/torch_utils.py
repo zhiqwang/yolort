@@ -94,7 +94,7 @@ def select_device(device="", batch_size=None):
         for i, d in enumerate(devices):
             p = torch.cuda.get_device_properties(i)
             # bytes to MB
-            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, " f"{p.total_memory / 1024 ** 2}MB)\n"
+            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / 1024 ** 2}MB)\n"
     else:
         s += "CPU\n"
 
@@ -309,7 +309,7 @@ def model_info(model, verbose=False, img_size=640):
         fs = ""
 
     LOGGER.info(
-        f"Model Summary: {len(list(model.modules()))} " f"layers, {n_p} parameters, {n_g} gradients{fs}"
+        f"Model Summary: {len(list(model.modules()))} layers, {n_p} parameters, {n_g} gradients{fs}"
     )
 
 

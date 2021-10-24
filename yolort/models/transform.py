@@ -96,8 +96,8 @@ class YOLOTransform(nn.Module):
 
             if image.dim() != 3:
                 raise ValueError(
-                    "images is expected to be a list of 3d tensors "
-                    "of shape [C, H, W], got {}".format(image.shape)
+                    "images is expected to be a list of 3d tensors of "
+                    f"shape [C, H, W], but got '{image.shape}'."
                 )
 
             image, target_index = self.resize(image, target_index)
