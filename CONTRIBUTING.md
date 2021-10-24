@@ -50,19 +50,19 @@ pip install -e .
 
 If you plan to modify the code or documentation, please follow the steps below:
 
-1. Fork the repository and create your branch from `master`.
+1. Fork the repository and create your branch from `main`.
 1. If you have modified the code (new feature or bug-fix), please add unit tests.
 1. If you have changed APIs, update the documentation. Make sure the documentation builds.
 1. Ensure the test suite passes.
 1. Make sure your code passes the formatting checks (see below).
 
-Verify your PR is **up-to-date with origin/master**. If your PR is behind origin/master an automatic [GitHub actions](.github/workflows/rebase.yml) rebase may be attempted by including the `/rebase` command in a comment body, or by running the following code, replacing 'feature' with the name of your local branch:
+Verify your PR is **up-to-date with origin/main**. If your PR is behind origin/main an automatic [GitHub actions](.github/workflows/rebase.yml) rebase may be attempted by including the `/rebase` command in a comment body, or by running the following code, replacing 'feature' with the name of your local branch:
 
 ```bash
 git remote add upstream https://github.com/zhiqwang/yolov5-rt-stack.git
 git fetch upstream
 git checkout -b feature  # <----- replace 'feature' with local branch name
-git rebase upstream/master
+git merge upstream/main
 git push -u origin -f
 ```
 
