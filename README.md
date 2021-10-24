@@ -103,7 +103,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
 
 ```python
-model = torch.hub.load("zhiqwang/yolov5-rt-stack", "yolov5s", pretrained=True)
+model = torch.hub.load("zhiqwang/yolov5-rt-stack:main", "yolov5s", pretrained=True)
 ```
 
 ### Loading checkpoint from official yolov5
