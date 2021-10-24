@@ -4,9 +4,9 @@ from typing import List, Dict, Optional
 
 import torch
 from torch import nn
-
 from yolort.models import yolo
 from yolort.v5 import load_yolov5_model, get_yolov5_size
+
 from .image_utils import to_numpy
 
 
@@ -62,9 +62,7 @@ def load_from_ultralytics(
     strides = checkpoint_yolov5.stride
     anchor_grids = checkpoint_yolov5.yaml["anchors"]
     if isinstance(anchor_grids, int):
-        anchor_grids = (
-            to_numpy(checkpoint_yolov5.model[-1].anchor_grid).reshape(3, -1).tolist()
-        )
+        anchor_grids = to_numpy(checkpoint_yolov5.model[-1].anchor_grid).reshape(3, -1).tolist()
 
     depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
     width_multiple = checkpoint_yolov5.yaml["width_multiple"]
@@ -207,39 +205,27 @@ class ModuleStateUpdate:
                 name,
                 params,
             ) in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
-                params.data.copy_(
-                    self.attach_parameters_block(state_dict, name, self.p6_block_maps)
-                )
+                params.data.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
 
             for (
                 name,
                 buffers,
             ) in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
-                buffers.copy_(
-                    self.attach_parameters_block(state_dict, name, self.p6_block_maps)
-                )
+                buffers.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
 
         # Update inner_block weights
         for name, params in self.model.backbone.pan.inner_blocks.named_parameters():
-            params.data.copy_(
-                self.attach_parameters_block(state_dict, name, self.inner_block_maps)
-            )
+            params.data.copy_(self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
         for name, buffers in self.model.backbone.pan.inner_blocks.named_buffers():
-            buffers.copy_(
-                self.attach_parameters_block(state_dict, name, self.inner_block_maps)
-            )
+            buffers.copy_(self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
         # Update layer_block weights
         for name, params in self.model.backbone.pan.layer_blocks.named_parameters():
-            params.data.copy_(
-                self.attach_parameters_block(state_dict, name, self.layer_block_maps)
-            )
+            params.data.copy_(self.attach_parameters_block(state_dict, name, self.layer_block_maps))
 
         for name, buffers in self.model.backbone.pan.layer_blocks.named_buffers():
-            buffers.copy_(
-                self.attach_parameters_block(state_dict, name, self.layer_block_maps)
-            )
+            buffers.copy_(self.attach_parameters_block(state_dict, name, self.layer_block_maps))
 
         # Update YOLOHead weights
         for name, params in self.model.head.named_parameters():
@@ -257,9 +243,7 @@ class ModuleStateUpdate:
     def attach_parameters_heads(self, state_dict, name):
         keys = name.split(".")
         ind = int(keys[1])
-        return rgetattr(
-            getattr(state_dict[self.head_ind], self.head_name)[ind], keys[2:]
-        )
+        return rgetattr(getattr(state_dict[self.head_ind], self.head_name)[ind], keys[2:])
 
 
 def rgetattr(obj, attr, *args):

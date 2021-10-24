@@ -2,9 +2,9 @@
 from typing import Any
 
 from torch import nn
-
 from yolort.v5 import Conv
 from yolort.v5.utils.activations import Hardswish, SiLU
+
 from .yolo import YOLO
 from .yolo_module import YOLOv5
 
@@ -22,9 +22,7 @@ __all__ = [
 ]
 
 
-def yolov5n(
-    upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5n(upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -43,9 +41,7 @@ def yolov5n(
     return model
 
 
-def yolov5s(
-    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5s(upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -68,9 +64,7 @@ def yolov5s(
     return model
 
 
-def yolov5m(
-    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5m(upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -93,9 +87,7 @@ def yolov5m(
     return model
 
 
-def yolov5l(
-    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5l(upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -118,9 +110,7 @@ def yolov5l(
     return model
 
 
-def yolov5n6(
-    upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5n6(upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -139,9 +129,7 @@ def yolov5n6(
     return model
 
 
-def yolov5s6(
-    upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5s6(upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -162,9 +150,7 @@ def yolov5s6(
     return model
 
 
-def yolov5m6(
-    upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5m6(upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
@@ -185,9 +171,7 @@ def yolov5m6(
     return model
 
 
-def yolov5ts(
-    upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any
-):
+def yolov5ts(upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values

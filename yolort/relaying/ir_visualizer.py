@@ -108,16 +108,12 @@ class TorchScriptVisualizer:
             only_first_ops = {"aten::expand_as"}
             rel_inp_end = 1 if node.kind() in only_first_ops else None
 
-            relevant_inputs = [
-                i for i in node_inputs[:rel_inp_end] if is_relevant_type(i.type())
-            ]
+            relevant_inputs = [i for i in node_inputs[:rel_inp_end] if is_relevant_type(i.type())]
             relevant_outputs = [o for o in node.outputs() if is_relevant_type(o.type())]
 
             if node.kind() == "prim::CallMethod":
                 node_names = self.get_node_names(node_inputs[0])
-                fq_submodule_name = ".".join(
-                    [nc for nc in node_names if not nc.startswith("__")]
-                )
+                fq_submodule_name = ".".join([nc for nc in node_names if not nc.startswith("__")])
                 submodule_type = node_names[-1]
                 submodule_name = find_name(node_inputs[0], self_input)
                 name = f"{prefix}.{node.output().debugName()}"
@@ -134,10 +130,7 @@ class TorchScriptVisualizer:
                     )
                 ) or (
                     classes_to_visit is not None
-                    and (
-                        submodule_type in classes_to_visit
-                        or fq_submodule_name in classes_to_visit
-                    )
+                    and (submodule_type in classes_to_visit or fq_submodule_name in classes_to_visit)
                 ):
 
                     # go into subgraph

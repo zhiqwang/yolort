@@ -20,11 +20,7 @@ PACKAGE_NAME = "yolort"
 sha = "Unknown"
 
 try:
-    sha = (
-        subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PATH_ROOT)
-        .decode("ascii")
-        .strip()
-    )
+    sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PATH_ROOT).decode("ascii").strip()
 except Exception:
     pass
 
@@ -45,9 +41,7 @@ def get_long_description():
         return f.read()
 
 
-def load_requirements(
-    path_dir=PATH_ROOT, file_name="requirements.txt", comment_char="#"
-):
+def load_requirements(path_dir=PATH_ROOT, file_name="requirements.txt", comment_char="#"):
     with open(path_dir / file_name, "r", encoding="utf-8", errors="ignore") as file:
         lines = [ln.rstrip() for ln in file.readlines() if not ln.startswith("#")]
     reqs = []

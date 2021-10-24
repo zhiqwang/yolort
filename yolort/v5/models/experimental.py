@@ -31,9 +31,7 @@ class Sum(nn.Module):
         self.weight = weight  # apply weights boolean
         self.iter = range(n - 1)  # iter object
         if weight:
-            self.w = nn.Parameter(
-                -torch.arange(1.0, n) / 2, requires_grad=True
-            )  # layer weights
+            self.w = nn.Parameter(-torch.arange(1.0, n) / 2, requires_grad=True)  # layer weights
 
     def forward(self, x):
         y = x[0]  # no weight
@@ -61,15 +59,10 @@ class MixConv2d(nn.Module):
             a -= np.roll(a, 1, axis=1)
             a *= np.array(k) ** 2
             a[0] = 1
-            c_ = np.linalg.lstsq(a, b, rcond=None)[
-                0
-            ].round()  # solve for equal weight indices, ax = b
+            c_ = np.linalg.lstsq(a, b, rcond=None)[0].round()  # solve for equal weight indices, ax = b
 
         self.m = nn.ModuleList(
-            [
-                nn.Conv2d(c1, int(c_[g]), k[g], s, k[g] // 2, bias=False)
-                for g in range(groups)
-            ]
+            [nn.Conv2d(c1, int(c_[g]), k[g], s, k[g] // 2, bias=False) for g in range(groups)]
         )
         self.bn = nn.BatchNorm2d(c2)
         self.act = nn.LeakyReLU(0.1, inplace=True)

@@ -64,9 +64,7 @@ def git_describe(path=Path(__file__).parent):
     # i.e. v5.0-5-g3e25f1e https://git-scm.com/docs/git-describe
     s = f"git -C {path} describe --tags --long --always"
     try:
-        return subprocess.check_output(
-            s, shell=True, stderr=subprocess.STDOUT
-        ).decode()[:-1]
+        return subprocess.check_output(s, shell=True, stderr=subprocess.STDOUT).decode()[:-1]
     except subprocess.CalledProcessError:
         return ""  # not a git repository
 
@@ -74,9 +72,7 @@ def git_describe(path=Path(__file__).parent):
 def select_device(device="", batch_size=None):
     # device = 'cpu' or '0' or '0,1,2,3'
     s = f"YOLOv5 {git_describe() or date_modified()} torch {torch.__version__} "  # string
-    device = (
-        str(device).strip().lower().replace("cuda:", "")
-    )  # to string, 'cuda:0' to '0'
+    device = str(device).strip().lower().replace("cuda:", "")  # to string, 'cuda:0' to '0'
     cpu = device == "cpu"
     if cpu:
         # force torch.cuda.is_available() = False
@@ -85,9 +81,7 @@ def select_device(device="", batch_size=None):
         # set environment variable
         os.environ["CUDA_VISIBLE_DEVICES"] = device
         # check availability
-        assert (
-            torch.cuda.is_available()
-        ), f"CUDA unavailable, invalid device {device} requested"
+        assert torch.cuda.is_available(), f"CUDA unavailable, invalid device {device} requested"
 
     cuda = not cpu and torch.cuda.is_available()
     if cuda:
@@ -95,24 +89,17 @@ def select_device(device="", batch_size=None):
         devices = device.split(",") if device else "0"
         n = len(devices)  # device count
         if n > 1 and batch_size:  # check batch_size is divisible by device_count
-            assert (
-                batch_size % n == 0
-            ), f"batch-size {batch_size} not multiple of GPU count {n}"
+            assert batch_size % n == 0, f"batch-size {batch_size} not multiple of GPU count {n}"
         space = " " * (len(s) + 1)
         for i, d in enumerate(devices):
             p = torch.cuda.get_device_properties(i)
             # bytes to MB
-            s += (
-                f"{'' if i == 0 else space}CUDA:{d} ({p.name}, "
-                f"{p.total_memory / 1024 ** 2}MB)\n"
-            )
+            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, " f"{p.total_memory / 1024 ** 2}MB)\n"
     else:
         s += "CPU\n"
 
     # emoji-safe
-    LOGGER.info(
-        s.encode().decode("ascii", "ignore") if platform.system() == "Windows" else s
-    )
+    LOGGER.info(s.encode().decode("ascii", "ignore") if platform.system() == "Windows" else s)
     return torch.device("cuda:0" if cuda else "cpu")
 
 
@@ -148,9 +135,7 @@ def profile(input, ops, n=10, device=None):
             m = m.to(device) if hasattr(m, "to") else m  # device
             m = (
                 m.half()
-                if hasattr(m, "half")
-                and isinstance(x, torch.Tensor)
-                and x.dtype is torch.float16
+                if hasattr(m, "half") and isinstance(x, torch.Tensor) and x.dtype is torch.float16
                 else m
             )
             # dt forward, backward
@@ -167,11 +152,7 @@ def profile(input, ops, n=10, device=None):
                     y = m(x)
                     t[1] = time_sync()
                     try:
-                        _ = (
-                            (sum([yi.sum() for yi in y]) if isinstance(y, list) else y)
-                            .sum()
-                            .backward()
-                        )
+                        _ = (sum([yi.sum() for yi in y]) if isinstance(y, list) else y).sum().backward()
                         t[2] = time_sync()
                     # no backward method
                     except Exception as e:
@@ -181,19 +162,11 @@ def profile(input, ops, n=10, device=None):
                     tf += (t[1] - t[0]) * 1000 / n
                     # ms per op backward
                     tb += (t[2] - t[1]) * 1000 / n
-                mem = (
-                    torch.cuda.memory_reserved() / 1e9
-                    if torch.cuda.is_available()
-                    else 0
-                )  # (GB)
+                mem = torch.cuda.memory_reserved() / 1e9 if torch.cuda.is_available() else 0  # (GB)
                 s_in = tuple(x.shape) if isinstance(x, torch.Tensor) else "list"
                 s_out = tuple(y.shape) if isinstance(y, torch.Tensor) else "list"
                 # parameters
-                p = (
-                    sum(list(x.numel() for x in m.parameters()))
-                    if isinstance(m, nn.Module)
-                    else 0
-                )
+                p = sum(list(x.numel() for x in m.parameters())) if isinstance(m, nn.Module) else 0
                 print(
                     f"{p:12}{flops:12.4g}{mem:>14.3f}{tf:14.4g}{tb:14.4g}"
                     f"{str(s_in):>24s}{str(s_out):>24s}"
@@ -224,9 +197,7 @@ def intersect_dicts(da, db, exclude=()):
     # Dictionary intersection of matching keys and shapes,
     # omitting 'exclude' keys, using da values
     return {
-        k: v
-        for k, v in da.items()
-        if k in db and not any(x in k for x in exclude) and v.shape == db[k].shape
+        k: v for k, v in da.items() if k in db and not any(x in k for x in exclude) and v.shape == db[k].shape
     }
 
 
@@ -292,14 +263,8 @@ def fuse_conv_and_bn(conv, bn):
     fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.shape))
 
     # prepare spatial bias
-    b_conv = (
-        torch.zeros(conv.weight.size(0), device=conv.weight.device)
-        if conv.bias is None
-        else conv.bias
-    )
-    b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(
-        torch.sqrt(bn.running_var + bn.eps)
-    )
+    b_conv = torch.zeros(conv.weight.size(0), device=conv.weight.device) if conv.bias is None else conv.bias
+    b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(torch.sqrt(bn.running_var + bn.eps))
     fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
 
     return fusedconv
@@ -344,8 +309,7 @@ def model_info(model, verbose=False, img_size=640):
         fs = ""
 
     LOGGER.info(
-        f"Model Summary: {len(list(model.modules()))} "
-        f"layers, {n_p} parameters, {n_g} gradients{fs}"
+        f"Model Summary: {len(list(model.modules()))} " f"layers, {n_p} parameters, {n_g} gradients{fs}"
     )
 
 
@@ -412,9 +376,7 @@ class EarlyStopping:
         # stop training if patience exceeded
         stop = (epoch - self.best_epoch) >= self.patience
         if stop:
-            LOGGER.info(
-                f"EarlyStopping patience {self.patience} exceeded, stopping training."
-            )
+            LOGGER.info(f"EarlyStopping patience {self.patience} exceeded, stopping training.")
         return stop
 
 
@@ -450,9 +412,7 @@ class ModelEMA:
             self.updates += 1
             d = self.decay(self.updates)
             # model state_dict
-            msd = (
-                model.module.state_dict() if is_parallel(model) else model.state_dict()
-            )
+            msd = model.module.state_dict() if is_parallel(model) else model.state_dict()
             for k, v in self.ema.state_dict().items():
                 if v.dtype.is_floating_point:
                     v *= d

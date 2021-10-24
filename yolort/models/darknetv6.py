@@ -3,9 +3,9 @@ from typing import Callable, List, Optional, Any
 
 import torch
 from torch import nn, Tensor
-
 from yolort.utils import load_state_dict_from_url
 from yolort.v5 import Conv, C3
+
 from ._utils import _make_divisible
 
 
@@ -57,9 +57,7 @@ class DarkNetV6(nn.Module):
     ) -> None:
         super().__init__()
 
-        assert version == "r4.0", (
-            "Currently the module version used in DarkNetV6 is r4.0",
-        )
+        assert version == "r4.0", ("Currently the module version used in DarkNetV6 is r4.0",)
 
         if block is None:
             block = C3
@@ -126,9 +124,7 @@ class DarkNetV6(nn.Module):
         return self._forward_impl(x)
 
 
-def _darknetv6(
-    arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any
-) -> DarkNetV6:
+def _darknetv6(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV6:
     """
     Constructs a DarkNetV6 architecture from
     # TODO
@@ -139,9 +135,7 @@ def _darknetv6(
     if pretrained:
         model_url = model_urls[arch]
         if model_url is None:
-            raise NotImplementedError(
-                "pretrained {} is not supported as of now".format(arch)
-            )
+            raise NotImplementedError("pretrained {} is not supported as of now".format(arch))
         else:
             state_dict = load_state_dict_from_url(model_url, progress=progress)
             model.load_state_dict(state_dict)
@@ -149,9 +143,7 @@ def _darknetv6(
     return model
 
 
-def darknet_n_r6_0(
-    pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNetV6:
+def darknet_n_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
     Constructs a DarkNetV6 with nano channels, as described in release 6.0
     # TODO
@@ -163,9 +155,7 @@ def darknet_n_r6_0(
     return _darknetv6("darknet_n_r6.0", pretrained, progress, 0.33, 0.25, **kwargs)
 
 
-def darknet_s_r6_0(
-    pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNetV6:
+def darknet_s_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
     Constructs a DarkNetV6 with small channels, as described in release 6.0
     # TODO
@@ -177,9 +167,7 @@ def darknet_s_r6_0(
     return _darknetv6("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, **kwargs)
 
 
-def darknet_m_r6_0(
-    pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNetV6:
+def darknet_m_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
     Constructs a DarkNetV6 with small channels, as described in release 6.0
     # TODO
@@ -191,9 +179,7 @@ def darknet_m_r6_0(
     return _darknetv6("darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs)
 
 
-def darknet_l_r6_0(
-    pretrained: bool = False, progress: bool = True, **kwargs: Any
-) -> DarkNetV6:
+def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
     Constructs a DarkNetV6 with small channels, as described in release 6.0
     # TODO

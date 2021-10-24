@@ -99,9 +99,7 @@ def bbox_iou(box1: Tensor, box2: Tensor, x1y1x2y2: bool = True, eps: float = 1e-
 
     iou = inter / union
 
-    cw = torch.max(b1_x2, b2_x2) - torch.min(
-        b1_x1, b2_x1
-    )  # convex (smallest enclosing box) width
+    cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
     ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
     # Complete IoU https://arxiv.org/abs/1911.08287v1
     c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared

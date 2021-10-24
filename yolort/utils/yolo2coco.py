@@ -87,9 +87,7 @@ class YOLO2COCO:
                     category_id, vertex_info = label_info[0], label_info[1:]
                     category_id = self.categories[int(category_id)]["id"]
                     if annotation_format == "bbox":
-                        segmentation, bbox, area = self._get_annotation(
-                            vertex_info, height, width
-                        )
+                        segmentation, bbox, area = self._get_annotation(vertex_info, height, width)
                     else:
                         raise NotImplementedError
 
@@ -126,9 +124,7 @@ class YOLO2COCO:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        "Datasets converter from yolo to coco", add_help=False
-    )
+    parser = argparse.ArgumentParser("Datasets converter from yolo to coco", add_help=False)
 
     parser.add_argument("--data_path", default="../coco128", help="Dataset root path")
     parser.add_argument(

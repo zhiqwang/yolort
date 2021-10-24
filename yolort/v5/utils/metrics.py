@@ -144,11 +144,7 @@ class ConfusionMatrix:
 
         x = torch.where(iou > self.iou_thres)
         if x[0].shape[0]:
-            matches = (
-                torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]), 1)
-                .cpu()
-                .numpy()
-            )
+            matches = torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]), 1).cpu().numpy()
             if x[0].shape[0] > 1:
                 matches = matches[matches[:, 2].argsort()[::-1]]
                 matches = matches[np.unique(matches[:, 1], return_index=True)[1]]
@@ -179,9 +175,7 @@ class ConfusionMatrix:
             import seaborn as sn
 
             # normalize columns
-            array = self.matrix / (
-                (self.matrix.sum(0).reshape(1, -1) + 1e-6) if normalize else 1
-            )
+            array = self.matrix / ((self.matrix.sum(0).reshape(1, -1) + 1e-6) if normalize else 1)
             # don't annotate (would appear as 0.00)
             array[array < 0.005] = np.nan
 
@@ -261,9 +255,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
                 return iou - rho2 / c2
                 # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
             elif CIoU:
-                v = (4 / math.pi ** 2) * torch.pow(
-                    torch.atan(w2 / h2) - torch.atan(w1 / h1), 2
-                )
+                v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
                 with torch.no_grad():
                     alpha = v / (v - iou + (1 + eps))
                 return iou - (rho2 / c2 + v * alpha)  # CIoU
@@ -299,16 +291,11 @@ def box_iou(box1, box2):
 
     # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
     inter = (
-        (
-            torch.min(box1[:, None, 2:], box2[:, 2:])
-            - torch.max(box1[:, None, :2], box2[:, :2])
-        )
+        (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2]))
         .clamp(0)
         .prod(2)
     )
-    return inter / (
-        area1[:, None] + area2 - inter
-    )  # iou = inter / (area1 + area2 - inter)
+    return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 
 def bbox_ioa(box1, box2, eps=1e-7):
@@ -381,9 +368,7 @@ def plot_pr_curve(px, py, ap, save_dir="pr_curve.png", names=()):
     plt.close()
 
 
-def plot_mc_curve(
-    px, py, save_dir="mc_curve.png", names=(), xlabel="Confidence", ylabel="Metric"
-):
+def plot_mc_curve(px, py, save_dir="mc_curve.png", names=(), xlabel="Confidence", ylabel="Metric"):
     # Metric-confidence curve
     fig, ax = plt.subplots(1, 1, figsize=(9, 6), tight_layout=True)
     # display per-class legend if < 21 classes

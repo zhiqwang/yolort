@@ -82,10 +82,7 @@ class COCOEvaluator(Metric):
         self.eval_imgs = []
 
     def update(self, preds, targets):
-        records = {
-            target["image_id"].item(): prediction
-            for target, prediction in zip(targets, preds)
-        }
+        records = {target["image_id"].item(): prediction for target, prediction in zip(targets, preds)}
         img_ids = list(np.unique(list(records.keys())))
         self.img_ids.extend(img_ids)
 
@@ -147,16 +144,10 @@ class COCOEvaluator(Metric):
 
         # the standard metrics
         results = {
-            metric: float(
-                self.coco_eval.stats[idx] * 100
-                if self.coco_eval.stats[idx] >= 0
-                else "nan"
-            )
+            metric: float(self.coco_eval.stats[idx] * 100 if self.coco_eval.stats[idx] >= 0 else "nan")
             for idx, metric in enumerate(metrics)
         }
-        self._logger.info(
-            f"Evaluation results for {self.iou_type}:\n" + create_small_table(results)
-        )
+        self._logger.info(f"Evaluation results for {self.iou_type}:\n" + create_small_table(results))
 
         if not np.isfinite(sum(results.values())):
             self._logger.info("Some metrics cannot be computed and is shown as NaN.")
@@ -180,9 +171,7 @@ class COCOEvaluator(Metric):
         # tabulate it
         N_COLS = min(6, len(results_per_category) * 2)
         results_flatten = list(itertools.chain(*results_per_category))
-        results_2d = itertools.zip_longest(
-            *[results_flatten[i::N_COLS] for i in range(N_COLS)]
-        )
+        results_2d = itertools.zip_longest(*[results_flatten[i::N_COLS] for i in range(N_COLS)])
         table = tabulate(
             results_2d,
             tablefmt="pipe",
@@ -199,9 +188,7 @@ class COCOEvaluator(Metric):
         if iou_type == "bbox":
             return self.prepare_for_coco_detection(predictions)
         else:
-            raise ValueError(
-                f"Unknown iou type {iou_type}, fell free to report on GitHub issues"
-            )
+            raise ValueError(f"Unknown iou type {iou_type}, fell free to report on GitHub issues")
 
     def prepare_for_coco_detection(self, predictions):
         coco_results = []
@@ -302,9 +289,7 @@ def evaluate(self):
         computeIoU = self.computeOks
 
     self.ious = {
-        (imgId, catId): computeIoU(imgId, catId)
-        for imgId in p.imgIds
-        for catId in catIds
+        (imgId, catId): computeIoU(imgId, catId) for imgId in p.imgIds for catId in catIds
     }  # bottleneck
 
     evaluateImg = self.evaluateImg

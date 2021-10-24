@@ -40,11 +40,7 @@ class YOLOHead(nn.Module):
             # obj (8 objects per 640 image)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)
             # classes
-            b.data[:, 5:] += (
-                torch.log(cf / cf.sum())
-                if cf
-                else math.log(0.6 / (self.num_classes - 0.99))
-            )
+            b.data[:, 5:] += torch.log(cf / cf.sum()) if cf else math.log(0.6 / (self.num_classes - 0.99))
             mi.bias = nn.Parameter(b.view(-1), requires_grad=True)
 
     def get_result_from_head(self, features: Tensor, idx: int) -> Tensor:
@@ -160,17 +156,13 @@ class SetCriterion:
                 of the model for the format
         """
         device = targets.device
-        anchor_grids = torch.as_tensor(
-            self.anchor_grids, dtype=torch.float32, device=device
-        ).view(self.num_anchors, -1, 2)
-        strides = torch.as_tensor(
-            self.strides, dtype=torch.float32, device=device
-        ).view(-1, 1, 1)
+        anchor_grids = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).view(
+            self.num_anchors, -1, 2
+        )
+        strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).view(-1, 1, 1)
         anchor_grids /= strides
 
-        target_cls, target_box, indices, anchors = self.build_targets(
-            targets, head_outputs, anchor_grids
-        )
+        target_cls, target_box, indices, anchors = self.build_targets(targets, head_outputs, anchor_grids)
 
         pos_weight_cls = torch.as_tensor([self.cls_pos], device=device)
         pos_weight_obj = torch.as_tensor([self.obj_pos], device=device)
@@ -182,9 +174,7 @@ class SetCriterion:
         # Computing the losses
         for i, pred_logits in enumerate(head_outputs):  # layer index, layer predictions
             b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
-            target_obj = torch.zeros_like(
-                pred_logits[..., 0], device=device
-            )  # target obj
+            target_obj = torch.zeros_like(pred_logits[..., 0], device=device)  # target obj
 
             num_targets = b.shape[0]  # number of targets
             if num_targets > 0:
@@ -202,15 +192,11 @@ class SetCriterion:
                     sort_id = torch.argsort(score_iou)
                     b, a, gj, gi = b[sort_id], a[sort_id], gj[sort_id], gi[sort_id]
                     score_iou = score_iou[sort_id]
-                target_obj[b, a, gj, gi] = (
-                    1.0 - self.gr
-                ) + self.gr * score_iou  # iou ratio
+                target_obj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * score_iou  # iou ratio
 
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(
-                        pred_logits_subset[:, 5:], self.smooth_neg, device=device
-                    )  # targets
+                    t = torch.full_like(pred_logits_subset[:, 5:], self.smooth_neg, device=device)  # targets
                     t[torch.arange(num_targets), target_cls[i]] = self.smooth_pos
                     loss_cls += F.binary_cross_entropy_with_logits(
                         pred_logits_subset[:, 5:], t, pos_weight=pos_weight_cls
@@ -221,9 +207,7 @@ class SetCriterion:
             )
             loss_obj += obji * self.balance[i]  # obj loss
             if self.auto_balance:
-                self.balance[i] = (
-                    self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
-                )
+                self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
 
         if self.auto_balance:
             self.balance = [x / self.balance[self.ssi] for x in self.balance]
@@ -242,12 +226,7 @@ class SetCriterion:
         targets: Tensor,
         head_outputs: List[Tensor],
         anchor_grids: Tensor,
-    ) -> Tuple[
-        List[Tensor],
-        List[Tensor],
-        List[Tuple[Tensor, Tensor, Tensor, Tensor]],
-        List[Tensor],
-    ]:
+    ) -> Tuple[List[Tensor], List[Tensor], List[Tuple[Tensor, Tensor, Tensor, Tensor]], List[Tensor],]:
         device = targets.device
         num_anchors = self.num_anchors
 
@@ -255,12 +234,7 @@ class SetCriterion:
 
         gain = torch.ones(7, device=device)  # normalized to gridspace gain
         # same as .repeat_interleave(num_targets)
-        ai = (
-            torch.arange(num_anchors, device=device)
-            .float()
-            .view(num_anchors, 1)
-            .repeat(1, num_targets)
-        )
+        ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
         # append anchor indices
         targets = torch.cat((targets.repeat(num_anchors, 1, 1), ai[:, :, None]), 2)
 

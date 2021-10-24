@@ -15,9 +15,7 @@ import torch
 def safe_download(file, url, url2=None, min_bytes=1e0, error_msg=""):
     # Attempts to download file from url or url2, checks and removes incomplete downloads < min_bytes
     file = Path(file)
-    assert_msg = (
-        f"Downloaded file '{file}' does not exist or size is < min_bytes={min_bytes}"
-    )
+    assert_msg = f"Downloaded file '{file}' does not exist or size is < min_bytes={min_bytes}"
     try:  # url1
         print(f"Downloading {url} to {file}...")
         torch.hub.download_url_to_file(url, str(file))
@@ -43,9 +41,7 @@ def attempt_download(file, repo="ultralytics/yolov5"):
         name = Path(urllib.parse.unquote(str(file))).name  # decode '%2F' to '/' etc.
         if str(file).startswith(("http:/", "https:/")):  # download
             url = str(file).replace(":/", "://")  # Pathlib turns :// -> :/
-            name = name.split("?")[
-                0
-            ]  # parse authentication https://url.com/file.txt?auth...
+            name = name.split("?")[0]  # parse authentication https://url.com/file.txt?auth...
             safe_download(file=name, url=url, min_bytes=1e5)
             return name
 
@@ -53,9 +49,7 @@ def attempt_download(file, repo="ultralytics/yolov5"):
         file.parent.mkdir(parents=True, exist_ok=True)  # make parent dir (if required)
         try:
             # github api
-            response = requests.get(
-                f"https://api.github.com/repos/{repo}/releases/latest"
-            ).json()
+            response = requests.get(f"https://api.github.com/repos/{repo}/releases/latest").json()
             # release assets, i.e. ['yolov5s.pt', 'yolov5m.pt', ...]
             assets = [x["name"] for x in response["assets"]]
             tag = response["tag_name"]  # i.e. 'v1.0'
@@ -73,9 +67,7 @@ def attempt_download(file, repo="ultralytics/yolov5"):
             ]
             try:
                 tag = (
-                    subprocess.check_output(
-                        "git tag", shell=True, stderr=subprocess.STDOUT
-                    )
+                    subprocess.check_output("git tag", shell=True, stderr=subprocess.STDOUT)
                     .decode()
                     .split()[-1]
                 )

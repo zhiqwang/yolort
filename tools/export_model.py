@@ -45,9 +45,7 @@ def get_parser():
         help="Image size for evaluation (default: 640).",
     )
     parser.add_argument("--batch_size", default=1, type=int, help="Batch size.")
-    parser.add_argument(
-        "--opset", default=DEFAULT_OPSET, type=int, help="opset_version"
-    )
+    parser.add_argument("--opset", default=DEFAULT_OPSET, type=int, help="opset_version")
     parser.add_argument("--simplify", action="store_true", help="ONNX: simplify model.")
 
     return parser

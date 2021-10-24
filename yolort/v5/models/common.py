@@ -16,7 +16,6 @@ import torch
 from PIL import Image
 from torch import nn, Tensor
 from torch.cuda import amp
-
 from yolort.v5.utils.datasets import exif_transpose, letterbox
 from yolort.v5.utils.general import (
     colorstr,
@@ -62,17 +61,9 @@ class Conv(nn.Module):
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
         if version == "r4.0":
-            self.act = (
-                nn.SiLU()
-                if act
-                else (act if isinstance(act, nn.Module) else nn.Identity())
-            )
+            self.act = nn.SiLU() if act else (act if isinstance(act, nn.Module) else nn.Identity())
         elif version == "r3.1":
-            self.act = (
-                nn.Hardswish()
-                if act
-                else (act if isinstance(act, nn.Module) else nn.Identity())
-            )
+            self.act = nn.Hardswish() if act else (act if isinstance(act, nn.Module) else nn.Identity())
         else:
             raise NotImplementedError(f"Currently doesn't support version {version}.")
 
@@ -148,9 +139,7 @@ class BottleneckCSP(nn.Module):
         self.cv4 = Conv(2 * c_, c2, 1, 1, version="r3.1")
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
         self.act = nn.LeakyReLU(0.1, inplace=True)
-        self.m = nn.Sequential(
-            *[Bottleneck(c_, c_, shortcut, g, e=1.0, version="r3.1") for _ in range(n)]
-        )
+        self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0, version="r3.1") for _ in range(n)])
 
     def forward(self, x):
         y1 = self.cv3(self.m(self.cv1(x)))
@@ -179,9 +168,7 @@ class C3(nn.Module):
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
         self.cv2 = Conv(c1, c_, 1, 1, version=version)
         self.cv3 = Conv(2 * c_, c2, 1, version=version)  # act=FReLU(c2)
-        self.m = nn.Sequential(
-            *[Bottleneck(c_, c_, shortcut, g, e=1.0, version=version) for _ in range(n)]
-        )
+        self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0, version=version) for _ in range(n)])
 
     def forward(self, x):
         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
@@ -194,9 +181,7 @@ class SPP(nn.Module):
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1, version=version)
         self.cv2 = Conv(c_ * (len(k) + 1), c2, 1, 1, version=version)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
+        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
 
     def forward(self, x):
         x = self.cv1(x)
@@ -252,9 +237,7 @@ class Focus(nn.Module):
 
 def focus_transform(x: Tensor) -> Tensor:
     """x(b,c,w,h) -> y(b,4c,w/2,h/2)"""
-    y = torch.cat(
-        [x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1
-    )
+    y = torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
     return y
 
 
@@ -333,9 +316,7 @@ class TransformerBlock(nn.Module):
         if c1 != c2:
             self.conv = Conv(c1, c2, version="r4.0")
         self.linear = nn.Linear(c2, c2)  # learnable position embedding
-        self.tr = nn.Sequential(
-            *[TransformerLayer(c2, num_heads) for _ in range(num_layers)]
-        )
+        self.tr = nn.Sequential(*[TransformerLayer(c2, num_heads) for _ in range(num_layers)])
         self.c2 = c2
 
     def forward(self, x):
@@ -343,12 +324,7 @@ class TransformerBlock(nn.Module):
             x = self.conv(x)
         b, _, w, h = x.shape
         p = x.flatten(2).unsqueeze(0).transpose(0, 3).squeeze(3)
-        return (
-            self.tr(p + self.linear(p))
-            .unsqueeze(3)
-            .transpose(0, 3)
-            .reshape(b, self.c2, w, h)
-        )
+        return self.tr(p + self.linear(p)).unsqueeze(3).transpose(0, 3).reshape(b, self.c2, w, h)
 
 
 class C3TR(C3):
@@ -399,9 +375,7 @@ class GhostBottleneck(nn.Module):
             GhostConv(c_, c2, 1, 1, act=False),
         )  # pw-linear
         self.shortcut = (
-            nn.Sequential(
-                DWConv(c1, c1, k, s, act=False), Conv(c1, c2, 1, 1, act=False)
-            )
+            nn.Sequential(DWConv(c1, c1, k, s, act=False), Conv(c1, c2, 1, 1, act=False))
             if s == 2
             else nn.Identity()
         )
@@ -453,9 +427,7 @@ class AutoShape(nn.Module):
         self.model = model.eval()
 
     def autoshape(self):
-        LOGGER.info(
-            "AutoShape already enabled, skipping... "
-        )  # model already converted to model.autoshape()
+        LOGGER.info("AutoShape already enabled, skipping... ")  # model already converted to model.autoshape()
         return self
 
     @torch.no_grad()
@@ -473,9 +445,7 @@ class AutoShape(nn.Module):
         p = next(self.model.parameters())  # for device and type
         if isinstance(imgs, torch.Tensor):  # torch
             with amp.autocast(enabled=p.device.type != "cpu"):
-                return self.model(
-                    imgs.to(p.device).type_as(p), augment, profile
-                )  # inference
+                return self.model(imgs.to(p.device).type_as(p), augment, profile)  # inference
 
         # Pre-process
         n, imgs = (
@@ -486,11 +456,7 @@ class AutoShape(nn.Module):
             f = f"image{i}"  # filename
             if isinstance(im, (str, Path)):  # filename or uri
                 im, f = (
-                    Image.open(
-                        requests.get(im, stream=True).raw
-                        if str(im).startswith("http")
-                        else im
-                    ),
+                    Image.open(requests.get(im, stream=True).raw if str(im).startswith("http") else im),
                     im,
                 )
                 im = np.asarray(exif_transpose(im))
@@ -499,19 +465,14 @@ class AutoShape(nn.Module):
             files.append(Path(f).with_suffix(".jpg").name)
             if im.shape[0] < 5:  # image in CHW
                 im = im.transpose((1, 2, 0))  # reverse dataloader .transpose(2, 0, 1)
-            im = (
-                im[..., :3] if im.ndim == 3 else np.tile(im[..., None], 3)
-            )  # enforce 3ch input
+            im = im[..., :3] if im.ndim == 3 else np.tile(im[..., None], 3)  # enforce 3ch input
             s = im.shape[:2]  # HWC
             shape0.append(s)  # image shape
             g = size / max(s)  # gain
             shape1.append([y * g for y in s])
             imgs[i] = im if im.data.contiguous else np.ascontiguousarray(im)  # update
         # inference shape
-        shape1 = [
-            make_divisible(x, int(self.stride.max()))
-            for x in np.stack(shape1, 0).max(0)
-        ]
+        shape1 = [make_divisible(x, int(self.stride.max())) for x in np.stack(shape1, 0).max(0)]
         x = [letterbox(im, new_shape=shape1, auto=False)[0] for im in imgs]  # pad
         x = np.stack(x, 0) if n > 1 else x[0][None]  # stack
         x = np.ascontiguousarray(x.transpose((0, 3, 1, 2)))  # BHWC to BCHW
@@ -545,10 +506,7 @@ class Detections:
         super().__init__()
         d = pred[0].device  # device
         # normalizations
-        gn = [
-            torch.tensor([*[im.shape[i] for i in [1, 0, 1, 0]], 1.0, 1.0], device=d)
-            for im in imgs
-        ]
+        gn = [torch.tensor([*[im.shape[i] for i in [1, 0, 1, 0]], 1.0, 1.0], device=d) for im in imgs]
         self.imgs = imgs  # list of images as numpy arrays
         self.pred = pred  # list of tensors pred[0] = (xyxy, conf, cls)
         self.names = names  # class names
@@ -559,9 +517,7 @@ class Detections:
         self.xyxyn = [x / g for x, g in zip(self.xyxy, gn)]  # xyxy normalized
         self.xywhn = [x / g for x, g in zip(self.xywh, gn)]  # xywh normalized
         self.n = len(self.pred)  # number of images (batch size)
-        self.t = tuple(
-            (times[i + 1] - times[i]) * 1000 / self.n for i in range(3)
-        )  # timestamps (ms)
+        self.t = tuple((times[i + 1] - times[i]) * 1000 / self.n for i in range(3))  # timestamps (ms)
         self.s = shape  # inference BCHW shape
 
     def display(
@@ -585,14 +541,7 @@ class Detections:
                     for *box, conf, cls in reversed(pred):  # xyxy, confidence, class
                         label = f"{self.names[int(cls)]} {conf:.2f}"
                         if crop:
-                            file = (
-                                save_dir
-                                / "crops"
-                                / self.names[int(cls)]
-                                / self.files[i]
-                                if save
-                                else None
-                            )
+                            file = save_dir / "crops" / self.names[int(cls)] / self.files[i] if save else None
                             crops.append(
                                 {
                                     "box": box,
@@ -608,11 +557,7 @@ class Detections:
             else:
                 str += "(no detections)"
 
-            im = (
-                Image.fromarray(im.astype(np.uint8))
-                if isinstance(im, np.ndarray)
-                else im
-            )  # from np
+            im = Image.fromarray(im.astype(np.uint8)) if isinstance(im, np.ndarray) else im  # from np
             if pprint:
                 LOGGER.info(str.rstrip(", "))
             if show:
@@ -621,9 +566,7 @@ class Detections:
                 f = self.files[i]
                 im.save(save_dir / f)  # save
                 if i == self.n - 1:
-                    LOGGER.info(
-                        f"Saved {self.n} image{'s' * (self.n > 1)} to {colorstr('bold', save_dir)}"
-                    )
+                    LOGGER.info(f"Saved {self.n} image{'s' * (self.n > 1)} to {colorstr('bold', save_dir)}")
             if render:
                 self.imgs[i] = np.asarray(im)
         if crop:
@@ -643,16 +586,12 @@ class Detections:
 
     def save(self, save_dir="runs/detect/exp"):
         # increment save_dir
-        save_dir = increment_path(
-            save_dir, exist_ok=save_dir != "runs/detect/exp", mkdir=True
-        )
+        save_dir = increment_path(save_dir, exist_ok=save_dir != "runs/detect/exp", mkdir=True)
         self.display(save=True, save_dir=save_dir)  # save results
 
     def crop(self, save=True, save_dir="runs/detect/exp"):
         save_dir = (
-            increment_path(save_dir, exist_ok=save_dir != "runs/detect/exp", mkdir=True)
-            if save
-            else None
+            increment_path(save_dir, exist_ok=save_dir != "runs/detect/exp", mkdir=True) if save else None
         )
         return self.display(crop=True, save=save, save_dir=save_dir)  # crop results
 
@@ -683,19 +622,13 @@ class Detections:
         )  # xywh columns
         for k, c in zip(["xyxy", "xyxyn", "xywh", "xywhn"], [ca, ca, cb, cb]):
             # update
-            a = [
-                [x[:5] + [int(x[5]), self.names[int(x[5])]] for x in x.tolist()]
-                for x in getattr(self, k)
-            ]
+            a = [[x[:5] + [int(x[5]), self.names[int(x[5])]] for x in x.tolist()] for x in getattr(self, k)]
             setattr(new, k, [pd.DataFrame(x, columns=c) for x in a])
         return new
 
     def tolist(self):
         # return a list of Detections objects, i.e. 'for result in results.tolist():'
-        x = [
-            Detections([self.imgs[i]], [self.pred[i]], self.names, self.s)
-            for i in range(self.n)
-        ]
+        x = [Detections([self.imgs[i]], [self.pred[i]], self.names, self.s) for i in range(self.n)]
         for d in x:
             for k in ["imgs", "pred", "xyxy", "xyxyn", "xywh", "xywhn"]:
                 setattr(d, k, getattr(d, k)[0])  # pop out of list
@@ -707,16 +640,12 @@ class Detections:
 
 class Classify(nn.Module):
     # Classification head, i.e. x(b,c1,20,20) to x(b,c2)
-    def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1
-    ):  # ch_in, ch_out, kernel, stride, padding, groups
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1):  # ch_in, ch_out, kernel, stride, padding, groups
         super().__init__()
         self.aap = nn.AdaptiveAvgPool2d(1)  # to x(b,c1,1,1)
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g)  # to x(b,c2,1,1)
         self.flat = nn.Flatten()
 
     def forward(self, x):
-        z = torch.cat(
-            [self.aap(y) for y in (x if isinstance(x, list) else [x])], 1
-        )  # cat if list
+        z = torch.cat([self.aap(y) for y in (x if isinstance(x, list) else [x])], 1)  # cat if list
         return self.flat(self.conv(z))  # flatten to x(b,c2)

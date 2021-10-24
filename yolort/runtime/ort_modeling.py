@@ -42,18 +42,14 @@ class PredictorORT:
         if ort is not None:
             ort_device = ort.get_device()
         else:
-            raise ImportError(
-                "ONNXRuntime is not installed, please install onnxruntime firstly."
-            )
+            raise ImportError("ONNXRuntime is not installed, please install onnxruntime firstly.")
         providers = None
 
         if ort_device == "GPU" and self.enable_gpu:
             providers = ["CUDAExecutionProvider"]
             logger.info("Set inference device to GPU")
         elif self.enable_gpu:
-            logger.info(
-                "GPU is not supported by your ONNXRuntime build. Fallback to CPU."
-            )
+            logger.info("GPU is not supported by your ONNXRuntime build. Fallback to CPU.")
         else:
             providers = ["CPUExecutionProvider"]
             logger.info("Set inference device to CPU")
