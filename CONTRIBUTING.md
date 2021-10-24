@@ -104,13 +104,13 @@ If all previous checks (flake8, mypy, unit tests) are passing, please send a PR.
   ```bash
   git remote add upstream https://github.com/zhiqwang/yolov5-rt-stack.git
   git fetch upstream
-  git checkout -b feature  # <----- replace 'feature' with local branch name
+  git checkout feature  # <----- replace 'feature' with local branch name
   git merge upstream/main
-  git push -u origin -f
+  git push origin feature
   ```
 
 - :white_check_mark: Verify all Continuous Integration (CI) **checks are passing**.
-- :white_check_mark: Reduce changes to the absolute **minimum** required for your bug fix or feature addition. _"It is not daily increase but daily decrease, hack away the unessential. The closer to the source, the less wastage there is."_ — Bruce Lee.
+- :white_check_mark: Reduce changes to the absolute **minimum** required for your bug fix or feature addition. _"It is not daily increase but daily decrease, hack away the unessential. The closer to the source, the less wastage there is."_ — Bruce Lee
 
 For more details about pull requests workflow, please read [GitHub's guides](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
