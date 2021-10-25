@@ -41,11 +41,11 @@ def yolov5n(upstream_version: str = "r6.0", export_friendly: bool = False, **kwa
     return model
 
 
-def yolov5s(upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any):
+def yolov5s(upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r3.1", "r4.0", "r6.0"]. Default: "r4.0".
+            are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -64,11 +64,11 @@ def yolov5s(upstream_version: str = "r4.0", export_friendly: bool = False, **kwa
     return model
 
 
-def yolov5m(upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any):
+def yolov5m(upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r3.1", "r4.0", "r6.0"]. Default: "r4.0".
+            are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -87,11 +87,11 @@ def yolov5m(upstream_version: str = "r4.0", export_friendly: bool = False, **kwa
     return model
 
 
-def yolov5l(upstream_version: str = "r4.0", export_friendly: bool = False, **kwargs: Any):
+def yolov5l(upstream_version: str = "r6.0", export_friendly: bool = False, **kwargs: Any):
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r3.1", "r4.0", "r6.0"]. Default: "r4.0".
+            are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """

@@ -94,7 +94,7 @@ def test_vanilla_coco_evaluator():
     coco = data_helper.get_coco_api_from_dataset(val_dataloader.dataset)
     coco_evaluator = COCOEvaluator(coco)
     # Load model
-    model = yolov5s(pretrained=True)
+    model = yolov5s(upstream_version="r4.0", pretrained=True)
     model.eval()
     for images, targets in val_dataloader:
         preds = model(images)
@@ -116,7 +116,7 @@ def test_test_epoch_end():
     val_dataloader = data_helper.get_dataloader(data_root=data_path, mode="val")
 
     # Load model
-    model = yolov5s(pretrained=True, annotation_path=annotation_file)
+    model = yolov5s(upstream_version="r4.0", pretrained=True, annotation_path=annotation_file)
 
     # test step
     trainer = pl.Trainer(max_epochs=1)
