@@ -39,7 +39,7 @@ ______________________________________________________________________
 
 `yolort` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolort`!
 
-<a href=".github/zidane.jpg"><img src=".github/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
+<a href="notebooks/assets/zidane.jpg"><img src="notebooks/assets/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
 ## :new: What's New
 
