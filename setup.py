@@ -38,9 +38,10 @@ def get_long_description():
     # Get the long description from the README file
     description = (PATH_ROOT / "README.md").read_text(encoding="utf-8")
     # replace relative repository path to absolute link to the release
-    static_url = f"https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/release/v{VERSION}"
+    static_url = f"https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/v{VERSION}"
     description = description.replace("docs/source/_static/", f"{static_url}/docs/source/_static/")
     description = description.replace("notebooks/assets/", f"{static_url}/notebooks/assets/")
+    description = description.replace("_graph_visualize.svg", "_graph_visualize.png")
     return description
 
 
