@@ -7,7 +7,6 @@ https://github.com/pypa/sampleproject
 Adopted from TorchVision, see:
 https://github.com/pytorch/vision/blob/master/setup.py
 """
-import io
 import subprocess
 from pathlib import Path
 
@@ -37,8 +36,12 @@ def write_version_file():
 
 def get_long_description():
     # Get the long description from the README file
-    with io.open(str(PATH_ROOT / "README.md"), encoding="utf-8") as f:
-        return f.read()
+    description = (PATH_ROOT / "README.md").read_text(encoding="utf-8")
+    # replace relative repository path to absolute link to the release
+    static_url = f"https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/release/v{VERSION}"
+    description = description.replace("docs/source/_static/", f"{static_url}/docs/source/_static/")
+    description = description.replace("notebooks/assets/", f"{static_url}/notebooks/assets/")
+    return description
 
 
 def load_requirements(path_dir=PATH_ROOT, file_name="requirements.txt", comment_char="#"):
