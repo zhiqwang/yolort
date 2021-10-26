@@ -45,7 +45,7 @@ def yolov5s(upstream_version: str = "r6.0", export_friendly: bool = False, **kwa
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -53,6 +53,8 @@ def yolov5s(upstream_version: str = "r6.0", export_friendly: bool = False, **kwa
         model = YOLOv5(arch="yolov5_darknet_pan_s_r31", **kwargs)
     elif upstream_version == "r4.0":
         model = YOLOv5(arch="yolov5_darknet_pan_s_r40", **kwargs)
+    elif upstream_version == "r5.0":
+        model = YOLOv5(arch="yolov5_darknet_pan_s_r50", **kwargs)
     elif upstream_version == "r6.0":
         model = YOLOv5(arch="yolov5_darknet_pan_s_r60", **kwargs)
     else:
@@ -68,7 +70,7 @@ def yolov5m(upstream_version: str = "r6.0", export_friendly: bool = False, **kwa
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -76,6 +78,8 @@ def yolov5m(upstream_version: str = "r6.0", export_friendly: bool = False, **kwa
         model = YOLOv5(arch="yolov5_darknet_pan_m_r31", **kwargs)
     elif upstream_version == "r4.0":
         model = YOLOv5(arch="yolov5_darknet_pan_m_r40", **kwargs)
+    elif upstream_version == "r5.0":
+        model = YOLOv5(arch="yolov5_darknet_pan_m_r50", **kwargs)
     elif upstream_version == "r6.0":
         model = YOLOv5(arch="yolov5_darknet_pan_m_r60", **kwargs)
     else:
@@ -91,7 +95,7 @@ def yolov5l(upstream_version: str = "r6.0", export_friendly: bool = False, **kwa
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+            are ["r3.1", "r4.0", "r5.0", "r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
@@ -99,6 +103,8 @@ def yolov5l(upstream_version: str = "r6.0", export_friendly: bool = False, **kwa
         model = YOLOv5(arch="yolov5_darknet_pan_l_r31", **kwargs)
     elif upstream_version == "r4.0":
         model = YOLOv5(arch="yolov5_darknet_pan_l_r40", **kwargs)
+    elif upstream_version == "r5.0":
+        model = YOLOv5(arch="yolov5_darknet_pan_l_r50", **kwargs)
     elif upstream_version == "r6.0":
         model = YOLOv5(arch="yolov5_darknet_pan_l_r60", **kwargs)
     else:

@@ -20,6 +20,11 @@ __all__ = [
     "yolov5_darknet_pan_s_r40",
     "yolov5_darknet_pan_m_r40",
     "yolov5_darknet_pan_l_r40",
+    "yolov5_darknet_pan_s_r50",
+    "yolov5_darknet_pan_s6_r50",
+    "yolov5_darknet_pan_m_r50",
+    "yolov5_darknet_pan_m6_r50",
+    "yolov5_darknet_pan_l_r50",
     "yolov5_darknet_pan_n_r60",
     "yolov5_darknet_pan_n6_r60",
     "yolov5_darknet_pan_s_r60",
@@ -268,27 +273,34 @@ def build_model(
     return model
 
 
-model_urls_root_r30 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
-model_urls_root_r52 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2-alpha"
+model_urls_root_r40 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0"
+model_urls_root_r50 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2rc1"
+model_urls_root_r60 = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.5.2-alpha"
 
 model_urls = {
     # Path Aggregation Network 3.1 and 4.0
-    "yolov5_darknet_pan_s_r31_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_s_r31_coco-eb728698.pt",
-    "yolov5_darknet_pan_m_r31_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_m_r31_coco-670dc553.pt",
-    "yolov5_darknet_pan_l_r31_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt",
-    "yolov5_darknet_pan_s_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt",
-    "yolov5_darknet_pan_m_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt",
-    "yolov5_darknet_pan_l_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_pan_l_r40_coco-4416841f.pt",
+    "yolov5_darknet_pan_s_r31_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_s_r31_coco-eb728698.pt",
+    "yolov5_darknet_pan_m_r31_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_m_r31_coco-670dc553.pt",
+    "yolov5_darknet_pan_l_r31_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_l_r31_coco-4dcc8209.pt",
+    "yolov5_darknet_pan_s_r40_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_s_r40_coco-e3fd213d.pt",
+    "yolov5_darknet_pan_m_r40_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt",
+    "yolov5_darknet_pan_l_r40_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_l_r40_coco-4416841f.pt",
+    # Path Aggregation Network 5.0
+    "yolov5_darknet_pan_s_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_s_r50_coco.pt",
+    "yolov5_darknet_pan_s6_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_s6_r50_coco.pt",
+    "yolov5_darknet_pan_m_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_m_r50_coco.pt",
+    "yolov5_darknet_pan_m6_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_m6_r50_coco.pt",
+    "yolov5_darknet_pan_l_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_l_r50_coco.pt",
     # Path Aggregation Network 6.0
-    "yolov5_darknet_pan_n_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_n_r60_coco-bc15659e.pt",
-    "yolov5_darknet_pan_n6_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_n6_r60_coco-4e823e0f.pt",
-    "yolov5_darknet_pan_s_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_s_r60_coco-9f44bf3f.pt",
-    "yolov5_darknet_pan_s6_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_s6_r60_coco-b4ff1fc2.pt",
-    "yolov5_darknet_pan_m_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_m_r60_coco-58d32352.pt",
-    "yolov5_darknet_pan_m6_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_m6_r60_coco-cc010533.pt",
-    "yolov5_darknet_pan_l_r60_coco": f"{model_urls_root_r52}/yolov5_darknet_pan_l_r60_coco-321d8dcd.pt",
+    "yolov5_darknet_pan_n_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_n_r60_coco-bc15659e.pt",
+    "yolov5_darknet_pan_n6_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_n6_r60_coco-4e823e0f.pt",
+    "yolov5_darknet_pan_s_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_s_r60_coco-9f44bf3f.pt",
+    "yolov5_darknet_pan_s6_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_s6_r60_coco-b4ff1fc2.pt",
+    "yolov5_darknet_pan_m_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_m_r60_coco-58d32352.pt",
+    "yolov5_darknet_pan_m6_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_m6_r60_coco-cc010533.pt",
+    "yolov5_darknet_pan_l_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_l_r60_coco-321d8dcd.pt",
     # Tranformer Attention Network
-    "yolov5_darknet_tan_s_r40_coco": f"{model_urls_root_r30}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt",
+    "yolov5_darknet_tan_s_r40_coco": f"{model_urls_root_r40}/yolov5_darknet_tan_s_r40_coco-fe1069ce.pt",
 }
 
 
@@ -456,6 +468,96 @@ def yolov5_darknet_pan_l_r40(
     """
     backbone_name = "darknet_l_r4_0"
     weights_name = "yolov5_darknet_pan_l_r40_coco"
+    depth_multiple = 1.0
+    width_multiple = 1.0
+    version = "r4.0"
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_s_r50(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""yolov5 small release 5.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_s_r4_0"
+    weights_name = "yolov5_darknet_pan_s_r50_coco"
+    depth_multiple = 0.33
+    width_multiple = 0.5
+    version = "r4.0"
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_m_r50(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""yolov5 medium release 5.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_m_r4_0"
+    weights_name = "yolov5_darknet_pan_m_r50_coco"
+    depth_multiple = 0.67
+    width_multiple = 0.75
+    version = "r4.0"
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_l_r50(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""yolov5 large release 5.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_l_r4_0"
+    weights_name = "yolov5_darknet_pan_l_r50_coco"
     depth_multiple = 1.0
     width_multiple = 1.0
     version = "r4.0"
