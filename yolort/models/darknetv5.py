@@ -51,7 +51,7 @@ class DarkNetV5(nn.Module):
         self,
         depth_multiple: float,
         width_multiple: float,
-        version: str,
+        version: str = "r4.0",
         block: Optional[Callable[..., nn.Module]] = None,
         stages_repeats: Optional[List[int]] = None,
         stages_out_channels: Optional[List[int]] = None,
@@ -137,9 +137,7 @@ _block = {
 
 def _darknetv5(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV5:
     """
-    Constructs a DarkNetV5 architecture from
-    # TODO
-
+    Build a DarkNetV5 model.
     """
     model = DarkNetV5(*args, **kwargs)
 
@@ -156,71 +154,65 @@ def _darknetv5(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs
 
 def darknet_s_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV5:
     """
-    Constructs a DarkNetV5 with small channels, as described in release 3.1
-    # TODO
+    Constructs the DarkNet release 3.1 model with small channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv5("darknet_s_r3.1", pretrained, progress, 0.33, 0.5, "r3.1", **kwargs)
+    return _darknetv5("darknet_s_r3.1", pretrained, progress, 0.33, 0.5, version="r3.1", **kwargs)
 
 
 def darknet_m_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV5:
     """
-    Constructs a DarkNetV5 with small channels, as described in release 3.1
-    # TODO
+    Constructs the DarkNet release 3.1 model with medium channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv5("darknet_m_r3.1", pretrained, progress, 0.67, 0.75, "r3.1", **kwargs)
+    return _darknetv5("darknet_m_r3.1", pretrained, progress, 0.67, 0.75, version="r3.1", **kwargs)
 
 
 def darknet_l_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV5:
     """
-    Constructs a DarkNetV5 with small channels, as described in release 3.1
-    # TODO
+    Constructs the DarkNet release 3.1 model with large channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv5("darknet_l_r3.1", pretrained, progress, 1.0, 1.0, "r3.1", **kwargs)
+    return _darknetv5("darknet_l_r3.1", pretrained, progress, 1.0, 1.0, version="r3.1", **kwargs)
 
 
 def darknet_s_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV5:
     """
-    Constructs a DarkNetV5 with small channels, as described in release 3.1
-    # TODO
+    Constructs the DarkNet release 4.0 model with small channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv5("darknet_s_r4.0", pretrained, progress, 0.33, 0.5, "r4.0", **kwargs)
+    return _darknetv5("darknet_s_r4.0", pretrained, progress, 0.33, 0.5, version="r4.0", **kwargs)
 
 
 def darknet_m_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV5:
     """
-    Constructs a DarkNetV5 with small channels, as described in release 3.1
-    # TODO
+    Constructs the DarkNet release 4.0 model with medium channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv5("darknet_m_r4.0", pretrained, progress, 0.67, 0.75, "r4.0", **kwargs)
+    return _darknetv5("darknet_m_r4.0", pretrained, progress, 0.67, 0.75, version="r4.0", **kwargs)
 
 
 def darknet_l_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV5:
     """
-    Constructs a DarkNetV5 with small channels, as described in release 3.1
-    # TODO
+    Constructs the DarkNet release 4.0 model with large channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv5("darknet_l_r4.0", pretrained, progress, 1.0, 1.0, "r4.0", **kwargs)
+    return _darknetv5("darknet_l_r4.0", pretrained, progress, 1.0, 1.0, version="r4.0", **kwargs)
