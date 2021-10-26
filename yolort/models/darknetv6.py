@@ -126,9 +126,7 @@ class DarkNetV6(nn.Module):
 
 def _darknetv6(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 architecture from
-    # TODO
-
+    Build a DarkNetV6 model.
     """
     model = DarkNetV6(*args, **kwargs)
 
@@ -145,8 +143,7 @@ def _darknetv6(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs
 
 def darknet_n_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with nano channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with nano channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -157,8 +154,7 @@ def darknet_n_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
 
 def darknet_s_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with small channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with small channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -169,8 +165,7 @@ def darknet_s_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
 
 def darknet_m_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with small channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with medium channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -181,8 +176,7 @@ def darknet_m_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
 
 def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with small channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with large channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
