@@ -339,9 +339,9 @@ def test_torchscript(arch):
     "arch, version, upstream_version, hash_prefix",
     [
         ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
-        ("yolov5s", "r5.0", "v5.0", "f1610cfd"),
-        ("yolov5m", "r5.0", "v5.0", "317d7425"),
-        ("yolov5l", "r5.0", "v5.0", "3edc11d9"),
+        ("yolov5s", "r4.0", "v5.0", "f1610cfd"),
+        ("yolov5m", "r4.0", "v5.0", "317d7425"),
+        ("yolov5l", "r4.0", "v5.0", "3edc11d9"),
         ("yolov5n", "r6.0", "v6.0", "649e089f"),
         ("yolov5s", "r6.0", "v6.0", "c3b140f3"),
         ("yolov5n6", "r6.0", "v6.0", "beecbbae"),
@@ -379,7 +379,7 @@ def test_load_from_yolov5(
     assert isinstance(out_from_yolov5[0]["scores"], Tensor)
 
     model = models.__dict__[arch](
-        upstream_version=version,
+        upstream_version=upstream_version.replace("v", "r"),
         pretrained=True,
         score_thresh=score_thresh,
     )
