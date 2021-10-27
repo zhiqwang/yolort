@@ -124,11 +124,9 @@ class DarkNetV6(nn.Module):
         return self._forward_impl(x)
 
 
-def _darknetv6(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV6:
+def _darknet_v6_conf(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 architecture from
-    # TODO
-
+    Build a DarkNetV6 model.
     """
     model = DarkNetV6(*args, **kwargs)
 
@@ -145,47 +143,43 @@ def _darknetv6(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs
 
 def darknet_n_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with nano channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with nano channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_n_r6.0", pretrained, progress, 0.33, 0.25, **kwargs)
+    return _darknet_v6_conf("darknet_n_r6.0", pretrained, progress, 0.33, 0.25, **kwargs)
 
 
 def darknet_s_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with small channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with small channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, **kwargs)
+    return _darknet_v6_conf("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, **kwargs)
 
 
 def darknet_m_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with small channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with medium channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs)
+    return _darknet_v6_conf("darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs)
 
 
 def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs a DarkNetV6 with small channels, as described in release 6.0
-    # TODO
+    Constructs the DarkNet release 6.0 model with large channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, **kwargs)
+    return _darknet_v6_conf("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, **kwargs)
