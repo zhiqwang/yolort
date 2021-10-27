@@ -133,13 +133,11 @@ def yolov5s6(upstream_version: str = "r6.0", export_friendly: bool = False, **kw
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r5.0", "r6.0"]. Default: "r6.0".
+            are ["r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
-    if upstream_version == "r5.0":
-        model = YOLOv5(arch="yolov5_darknet_pan_s6_r50", **kwargs)
-    elif upstream_version == "r6.0":
+    if upstream_version == "r6.0":
         model = YOLOv5(arch="yolov5_darknet_pan_s6_r60", **kwargs)
     else:
         raise NotImplementedError("Currently only supports r5.0 and r6.0 versions")
@@ -154,13 +152,11 @@ def yolov5m6(upstream_version: str = "r6.0", export_friendly: bool = False, **kw
     """
     Args:
         upstream_version (str): model released by the upstream YOLOv5. Possible values
-            are ["r5.0", "r6.0"]. Default: "r6.0".
+            are ["r6.0"]. Default: "r6.0".
         export_friendly (bool): Deciding whether to use (ONNX/TVM) export friendly mode.
             Default: False.
     """
-    if upstream_version == "r5.0":
-        model = YOLOv5(arch="yolov5_darknet_pan_m6_r50", **kwargs)
-    elif upstream_version == "r6.0":
+    if upstream_version == "r6.0":
         model = YOLOv5(arch="yolov5_darknet_pan_m6_r60", **kwargs)
     else:
         raise NotImplementedError("Currently only supports r5.0 and r6.0 versions")
