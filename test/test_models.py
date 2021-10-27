@@ -339,6 +339,9 @@ def test_torchscript(arch):
     "arch, version, upstream_version, hash_prefix",
     [
         ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
+        ("yolov5s", "r5.0", "v5.0", "f1610cfd"),
+        ("yolov5m", "r5.0", "v5.0", "317d7425"),
+        ("yolov5l", "r5.0", "v5.0", "3edc11d9"),
         ("yolov5n", "r6.0", "v6.0", "649e089f"),
         ("yolov5s", "r6.0", "v6.0", "c3b140f3"),
         ("yolov5n6", "r6.0", "v6.0", "beecbbae"),
