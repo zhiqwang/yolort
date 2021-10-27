@@ -124,7 +124,7 @@ class DarkNetV6(nn.Module):
         return self._forward_impl(x)
 
 
-def _darknetv6(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV6:
+def _darknet_v6_conf(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV6:
     """
     Build a DarkNetV6 model.
     """
@@ -149,7 +149,7 @@ def darknet_n_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_n_r6.0", pretrained, progress, 0.33, 0.25, **kwargs)
+    return _darknet_v6_conf("darknet_n_r6.0", pretrained, progress, 0.33, 0.25, **kwargs)
 
 
 def darknet_s_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
@@ -160,7 +160,7 @@ def darknet_s_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, **kwargs)
+    return _darknet_v6_conf("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, **kwargs)
 
 
 def darknet_m_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
@@ -171,7 +171,7 @@ def darknet_m_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs)
+    return _darknet_v6_conf("darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs)
 
 
 def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
@@ -182,4 +182,4 @@ def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknetv6("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, **kwargs)
+    return _darknet_v6_conf("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, **kwargs)
