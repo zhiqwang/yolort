@@ -1,5 +1,5 @@
-from .darknetv5 import (
-    DarkNetV5,
+from .darknetv4 import (
+    DarkNetV4,
     darknet_s_r3_1,
     darknet_m_r3_1,
     darknet_l_r3_1,
@@ -16,7 +16,7 @@ from .darknetv6 import (
 )
 
 __all__ = (
-    "DarkNetV5",
+    "DarkNetV4",
     "DarkNetV6",
     "darknet_s_r3_1",
     "darknet_m_r3_1",
