@@ -286,11 +286,11 @@ model_urls = {
     "yolov5_darknet_pan_m_r40_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_m_r40_coco-d295cb02.pt",
     "yolov5_darknet_pan_l_r40_coco": f"{model_urls_root_r40}/yolov5_darknet_pan_l_r40_coco-4416841f.pt",
     # Path Aggregation Network 5.0
-    "yolov5_darknet_pan_s_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_s_r50_coco.pt",
+    "yolov5_darknet_pan_s_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_s_r50_coco-d2ce131a.pt",
     "yolov5_darknet_pan_s6_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_s6_r50_coco.pt",
-    "yolov5_darknet_pan_m_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_m_r50_coco.pt",
+    "yolov5_darknet_pan_m_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_m_r50_coco-dc1584f4.pt",
     "yolov5_darknet_pan_m6_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_m6_r50_coco.pt",
-    "yolov5_darknet_pan_l_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_l_r50_coco.pt",
+    "yolov5_darknet_pan_l_r50_coco": f"{model_urls_root_r50}/yolov5_darknet_pan_l_r50_coco-8de59a51.pt",
     # Path Aggregation Network 6.0
     "yolov5_darknet_pan_n_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_n_r60_coco-bc15659e.pt",
     "yolov5_darknet_pan_n6_r60_coco": f"{model_urls_root_r60}/yolov5_darknet_pan_n6_r60_coco-4e823e0f.pt",
