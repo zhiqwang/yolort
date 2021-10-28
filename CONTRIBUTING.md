@@ -99,7 +99,7 @@ TBD
 
 If all previous checks (flake8, mypy, unit tests) are passing, please send a PR. Submitted PR will pass other tests on different operation systems, python versions and hardwares. To allow your work to be integrated as seamlessly as possible, we advise you to:
 
-- :white_check_mark: Verify your PR is **up-to-date with origin/main**. If your PR is behind origin/main an automatic [GitHub actions](.github/workflows/rebase.yml) rebase may be attempted by including the `/rebase` command in a comment body, or by running the following code, replacing 'feature' with the name of your local branch:
+- :white_check_mark: Verify your PR is **up-to-date with upstream/main**. If your PR is behind upstream/main an automatic [GitHub actions](.github/workflows/rebase.yml) rebase may be attempted by including the `/rebase` command in a comment body, or by running the following code, replacing 'feature' with the name of your local branch:
 
   ```bash
   git remote add upstream https://github.com/zhiqwang/yolov5-rt-stack.git
