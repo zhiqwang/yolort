@@ -4,7 +4,7 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
 
 ## Dependencies
 
-- Ubuntu 20.04 / Windows 10
+- Ubuntu 20.04 / Windows 10 / macOS
 - ONNXRuntime 1.7 +
 - OpenCV 4.5 +
 - CUDA 11 \[Optional\]
@@ -40,7 +40,6 @@ The `ONNX` model exported with `yolort` differs from the official one in the fol
 
    ```bash
    python tools/export_model.py [--checkpoint_path path/to/custom/best.pt]
-                                [--simplify]
    ```
 
    And then, you can find that a new pair of ONNX models ("best.onnx" and "best.sim.onnx") has been generated in the directory of "best.pt".
@@ -50,7 +49,7 @@ The `ONNX` model exported with `yolort` differs from the official one in the fol
    ```python
    from yolort.runtime import PredictorORT
 
-   detector = PredictorORT("best.sim.onnx")
+   detector = PredictorORT("best.onnx")
    img_path = "bus.jpg"
    scores, class_ids, boxes = detector.run_on_image(img_path)
    ```
