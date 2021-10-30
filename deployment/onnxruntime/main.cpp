@@ -9,7 +9,7 @@ struct Detection
 {
     cv::Rect box;
     float conf{};
-    int classId{};
+    int64_t classId{};
 };
 
 namespace utils
@@ -54,7 +54,7 @@ namespace utils
             int y = detection.box.y;
 
             int conf = (int)(detection.conf * 100);
-            int classId = detection.classId;
+            int64_t classId = detection.classId;
             std::string label = classNames[classId] + " 0." + std::to_string(conf);
 
             int baseline = 0;
@@ -147,7 +147,7 @@ void YOLOv5Detector::preprocessing(cv::Mat &image, float* blob)
 std::vector<Detection> YOLOv5Detector::postprocessing(cv::Mat& image, std::vector<Ort::Value>& outputTensors)
 {
     const auto* scoresTensor = outputTensors[0].GetTensorData<float>();
-    const auto* classIdsTensor = outputTensors[1].GetTensorData<float>();
+    const auto* classIdsTensor = outputTensors[1].GetTensorData<int64_t>();
     const auto* boxesTensor = outputTensors[2].GetTensorData<float>();
 
     size_t count = outputTensors[0].GetTensorTypeAndShapeInfo().GetElementCount();
@@ -161,7 +161,7 @@ std::vector<Detection> YOLOv5Detector::postprocessing(cv::Mat& image, std::vecto
         int height = (int)boxesTensor[i * 4 + 3] - y;
 
         det.conf = scoresTensor[i];
-        det.classId = (int)classIdsTensor[i];
+        det.classId = classIdsTensor[i];
         det.box = cv::Rect(x, y, width, height);
         detections.push_back(det);
     }
