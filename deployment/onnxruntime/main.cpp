@@ -147,7 +147,7 @@ void YOLOv5Detector::preprocessing(cv::Mat &image, float* blob)
 std::vector<Detection> YOLOv5Detector::postprocessing(cv::Mat& image, std::vector<Ort::Value>& outputTensors)
 {
     const auto* scoresTensor = outputTensors[0].GetTensorData<float>();
-    const auto* classIdsTensor = outputTensors[1].GetTensorData<float>();
+    const auto* classIdsTensor = outputTensors[1].GetTensorData<int64_t>();
     const auto* boxesTensor = outputTensors[2].GetTensorData<float>();
 
     size_t count = outputTensors[0].GetTensorTypeAndShapeInfo().GetElementCount();
