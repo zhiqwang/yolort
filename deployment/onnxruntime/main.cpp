@@ -9,7 +9,7 @@ struct Detection
 {
     cv::Rect box;
     float conf{};
-    int64_t classId{};
+    int classId{};
 };
 
 namespace utils
@@ -54,7 +54,7 @@ namespace utils
             int y = detection.box.y;
 
             int conf = (int)(detection.conf * 100);
-            int64_t classId = detection.classId;
+            int classId = detection.classId;
             std::string label = classNames[classId] + " 0." + std::to_string(conf);
 
             int baseline = 0;
@@ -161,7 +161,7 @@ std::vector<Detection> YOLOv5Detector::postprocessing(cv::Mat& image, std::vecto
         int height = (int)boxesTensor[i * 4 + 3] - y;
 
         det.conf = scoresTensor[i];
-        det.classId = classIdsTensor[i];
+        det.classId = (int)classIdsTensor[i];
         det.box = cv::Rect(x, y, width, height);
         detections.push_back(det);
     }
