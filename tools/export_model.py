@@ -34,6 +34,13 @@ def get_parser():
         help="Score threshold used for postprocessing the detections.",
     )
     parser.add_argument(
+        "--version",
+        type=str,
+        default="r6.0",
+        help="Upstream version released by the ultralytics/yolov5, Possible "
+        "values are ['r3.1', 'r4.0', 'r6.0']. Default: 'r6.0'.",
+    )
+    parser.add_argument(
         "--export_friendly",
         action="store_true",
         help="Replace torch.nn.SiLU with SiLU.",
@@ -132,7 +139,11 @@ def cli_main():
         }
         input_names = ["images_tensors"]
         output_names = ["scores", "labels", "boxes"]
-        model = YOLO.load_from_yolov5(checkpoint_path, score_thresh=args.score_thresh)
+        model = YOLO.load_from_yolov5(
+            checkpoint_path,
+            score_thresh=args.score_thresh,
+            version=args.version,
+        )
         model.eval()
     else:
         # input data
@@ -146,7 +157,11 @@ def cli_main():
         }
         input_names = ["images_tensors"]
         output_names = ["scores", "labels", "boxes"]
-        model = YOLOv5.load_from_yolov5(checkpoint_path, score_thresh=args.score_thresh)
+        model = YOLOv5.load_from_yolov5(
+            checkpoint_path,
+            score_thresh=args.score_thresh,
+            version=args.version,
+        )
         model.eval()
 
     # export ONNX models
