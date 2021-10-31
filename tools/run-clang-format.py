@@ -141,7 +141,11 @@ def run_clang_format_diff(args, file):
 
     try:
         proc = subprocess.Popen(
-            invocation, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding="utf-8"
+            invocation,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            encoding="utf-8",
         )
     except OSError as exc:
         raise DiffError(f"Command '{subprocess.list2cmdline(invocation)}' failed to start: {exc}")
@@ -229,7 +233,10 @@ def main():
         help="run N clang-format jobs in parallel (default number of cpus + 1)",
     )
     parser.add_argument(
-        "--color", default="auto", choices=["auto", "always", "never"], help="show colored diff (default: auto)"
+        "--color",
+        default="auto",
+        choices=["auto", "always", "never"],
+        help="show colored diff (default: auto)",
     )
     parser.add_argument(
         "-e",
