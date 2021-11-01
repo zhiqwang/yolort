@@ -18,13 +18,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: 'x64'
-      - name: code-format
+      - name: Run clang format
         run: |
           curl https://oss-clang-format.s3.us-east-2.amazonaws.com/linux64/clang-format-linux64 -o clang-format
           chmod +x clang-format
           sudo mv clang-format /opt/clang-format
           python tools/run_clang_format.py --files deployment test/tracing --recursive --clang_format_executable /opt/clang-format --style file --fix
-      - name: Auto commit
+      - name: Apply code-format changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Apply code-format changes
