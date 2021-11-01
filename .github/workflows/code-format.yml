@@ -13,11 +13,6 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: 'x64'
       - name: Run clang format
         run: |
           curl https://oss-clang-format.s3.us-east-2.amazonaws.com/linux64/clang-format-linux64 -o clang-format
