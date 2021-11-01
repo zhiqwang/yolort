@@ -7,50 +7,28 @@ on:
     branches: [ main ]
 
 jobs:
-  code-format:
-    runs-on: ubuntu-20.04
+  clang-format:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        python-version: [ 3.7 ]
+        image: [ 'ubuntu-latest' ]
+
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Cache clang format
-        id: cache-clang-format
-        uses: actions/cache@v2.1.6
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
         with:
-          path: clang-format-install
-          key: clang-format-install-4
-      - name: Install clang format
-        if: steps.cache-clang-format.outputs.cache-hit != 'true'
-        run: |
-          wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.1/llvm-project-10.0.1.tar.xz
-          tar -xf llvm-project-10.0.1.tar.xz
-          cd llvm-project-10.0.1
-          mkdir build
-          cd build
-          cmake -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="" -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_DOCS=OFF ../llvm/
-          make -j2 clang-format
-          mkdir $GITHUB_WORKSPACE/clang-format-install
-          cp -r bin/clang-format $GITHUB_WORKSPACE/clang-format-install
-          cd ../../
-          rm -rf llvm-project-10.0.1
-          rm llvm-project-10.0.1.tar.xz
-
-      - name: Install astyle
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y astyle
-
+          python-version: ${{ matrix.python-version }}
+          architecture: 'x64'
       - name: code-format
         run: |
-          mkdir -p ~/bin
-          mv $GITHUB_WORKSPACE/clang-format-install/clang-format ~/bin/clang-format
-          rm -rf $GITHUB_WORKSPACE/clang-format-install
-          export PATH=~/bin:$PATH
-          sh codeformat.sh
-      - uses: stefanzweifel/git-auto-commit-action@v4
+          curl https://oss-clang-format.s3.us-east-2.amazonaws.com/linux64/clang-format-linux64 -o clang-format
+          chmod +x clang-format
+          sudo mv clang-format /opt/clang-format
+          python tools/run_clang_format.py --files deployment test/tracing --recursive --clang_format_executable /opt/clang-format --style file --fix
+      - name: Auto commit
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Apply code-format changes
-
-      - name: Restore clang-format cache
-        run: |
-          mkdir $GITHUB_WORKSPACE/clang-format-install
-          cp -r ~/bin/clang-format $GITHUB_WORKSPACE/clang-format-install
