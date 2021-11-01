@@ -8,11 +8,7 @@ on:
 
 jobs:
   clang-format:
-    runs-on: ${{ matrix.image }}
-    strategy:
-      matrix:
-        python-version: [ 3.7 ]
-        image: [ 'ubuntu-latest' ]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Clone repository
