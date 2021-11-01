@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(yolo_inference)
+project(yolort_torch)
 
 find_package(Torch REQUIRED)
 find_package(TorchVision REQUIRED)
@@ -20,13 +20,13 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 # This due to some headers importing Python.h
 find_package(Python3 COMPONENTS Development)
 
-FILE(GLOB YOLO_SOURCE_FILES *.cpp)
+file(GLOB YOLO_SOURCE_FILES *.cpp)
 
-add_executable(yolo_inference ${YOLO_SOURCE_FILES})
-target_compile_features(yolo_inference PUBLIC cxx_range_for)
+add_executable(yolort_torch ${YOLO_SOURCE_FILES})
+target_compile_features(yolort_torch PUBLIC cxx_range_for)
 
 target_link_libraries(
-  yolo_inference
+  yolort_torch
   ${OpenCV_LIBS}
   ${TORCH_LIBRARIES}
   TorchVision::TorchVision
@@ -34,4 +34,4 @@ target_link_libraries(
 )
 
 # set C++14 to compile
-set_property(TARGET yolo_inference PROPERTY CXX_STANDARD 14)
+set_property(TARGET yolort_torch PROPERTY CXX_STANDARD 14)

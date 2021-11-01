@@ -16,7 +16,7 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
 find_package(ncnn REQUIRED)
 
-FILE(GLOB YOLO_SOURCE_FILES *.cpp)
+file(GLOB YOLO_SOURCE_FILES *.cpp)
 
 add_executable(yolort_ncnn ${YOLO_SOURCE_FILES})
 

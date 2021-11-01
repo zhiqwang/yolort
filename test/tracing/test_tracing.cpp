@@ -1,9 +1,8 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include <torchvision/vision.h>
 #include <torchvision/ops/nms.h>
-
+#include <torchvision/vision.h>
 
 int main() {
   torch::DeviceType device_type;
