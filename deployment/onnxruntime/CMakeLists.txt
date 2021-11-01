@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (APPLE)
-  target_include_directories(yolort_onnx PRIVATE "${ONNXRUNTIME_DIR}/include/core/session")
+  target_include_directories(yolort_onnx PRIVATE "${ONNXRUNTIME_DIR}/include/onnxruntime/core/session")
 else()
   target_include_directories(yolort_onnx PRIVATE "${ONNXRUNTIME_DIR}/include")
 endif()
