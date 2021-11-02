@@ -47,7 +47,7 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Build docs
-
+        uses: docker://pandoc/core:2.9
         run: |
           cd docs
           pip install --progress-bar off -r requirements.txt
