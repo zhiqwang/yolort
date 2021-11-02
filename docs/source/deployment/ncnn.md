@@ -1,1 +1,0 @@
-../../../deployment/ncnn/README.md

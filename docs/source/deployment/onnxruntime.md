@@ -1,1 +1,0 @@
-../../../deployment/onnxruntime/README.md
