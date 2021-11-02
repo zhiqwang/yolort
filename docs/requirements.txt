@@ -1,8 +1,7 @@
-sphinx
-recommonmark
-sphinx-markdown-tables
-insipid-sphinx-theme
-nbsphinx
-pandoc
-numpy
-jieba
+numpy>=1.19.5
+docutils
+recommonmark==0.5.0
+sphinx==3.5.4
+sphinx_rtd_theme==0.4.3
+sphinxcontrib-programoutput==0.16
+-e git+git://github.com/pytorch/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme

@@ -12,20 +12,23 @@
 #
 import os
 import sys
+from typing import Any, List
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes.
+#
+from recommonmark.transform import AutoStructify
 
+sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 
 project = "yolort"
 copyright = "2020-2021, yolort community"
-author = "yolort authors"
+author = "Zhiqiang Wang and others"
 
-# The short X.Y version
-version = "0.3.2"
 # The full version, including alpha/beta/rc tags
-release = "beta"
+release = "0.5.2"
 
 # -- General configuration ---------------------------------------------------
 
@@ -34,67 +37,104 @@ release = "beta"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.viewcode",
-    "sphinx_markdown_tables",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.napoleon",  # support NumPy and Google style docstrings
     "recommonmark",
-    "nbsphinx",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.doctest",
+    "sphinx.ext.ifconfig",
 ]
 
+# autosectionlabel throws warnings if section names are duplicated.
+# The following tells autosectionlabel to not throw a warning for
+# duplicated section names that are in different documents.
+autosectionlabel_prefix_document = True
+
+# -- Configurations for plugins ------------
+napoleon_google_docstring = True
+napoleon_include_init_with_doc = True
+napoleon_include_special_with_doc = True
+napoleon_numpy_docstring = False
+napoleon_use_rtype = False
+autodoc_inherit_docstrings = False
+autodoc_member_order = "bysource"
+
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "PIL": ("https://pillow.readthedocs.io/en/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
-}
-
-nbsphinx_allow_errors = False
-nbsphinx_execute = "never"
-
-source_suffix = {
-    ".rst": "restructuredtext",
-    ".md": "markdown",
+    "python": ("https://docs.python.org/3.6", None),
+    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "torch": ("https://pytorch.org/docs/master/", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
-# The master toctree document.
-master_doc = "index"
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
+exclude_patterns: List[Any] = []
 
-pygments_style = "sphinx"
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
 
-autodoc_inherit_docstrings = False
+source_suffix = [".rst", ".md"]
 
-autosummary_generate = True
+# The master toctree document.
+master_doc = "index"
+
+# If true, `todo` and `todoList` produce output, else they produce nothing.
+todo_include_todos = True
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = "insipid"
+html_theme = "pytorch_sphinx_theme"
+templates_path = ["_templates"]
 
+# Add any paths that contain custom static files (such as style sheets) here,
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
+
 html_theme_options = {
-    "logo_only": True,
+    "includehidden": True,
+    "canonical_url": "https://zhiqwang.com/yolov5-rt-stack",
+    "pytorch_project": "docs",
+    "logo_only": True,  # default = False
 }
 
-# The name of an image file (relative to this directory) to place at the top
-# of the sidebar.
-html_logo = "_static/rt_logo.png"
-
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-# -- Options for LaTex output -------------------------------------------------
-latex_engine = "xelatex"
+# setting custom stylesheets https://stackoverflow.com/a/34420612
+html_context = {"css_files": ["_static/css/customize.css"]}
+
+# -- Options for HTMLHelp output ------------------------------------------
+
+# Output file base name for HTML help builder.
+htmlhelp_basename = "xformersdocs"
+github_doc_root = "https://github.com/zhiqwang/yolov5-rt-stack/tree/main/docs/"
+
+
+def setup(app):
+    """
+    Over-ride PyTorch Sphinx css
+    """
+    app.add_config_value(
+        "recommonmark_config",
+        {
+            "url_resolver": lambda url: github_doc_root + url,
+            "auto_toc_tree_section": "Contents",
+            "enable_math": True,
+            "enable_inline_math": True,
+            "enable_eval_rst": True,
+            "enable_auto_toc_tree": True,
+        },
+        True,
+    )
+    app.add_transform(AutoStructify)
+    app.add_css_file("css/customize.css")
