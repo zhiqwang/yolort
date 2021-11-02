@@ -116,7 +116,7 @@ html_context = {"css_files": ["_static/css/customize.css"]}
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "xformersdocs"
+htmlhelp_basename = "yolortdocs"
 github_doc_root = "https://github.com/zhiqwang/yolov5-rt-stack/tree/main/docs/"
 
 
