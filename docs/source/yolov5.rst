@@ -1,4 +1,4 @@
-Modules and utils of YOLOv5
+Modules and utils for YOLOv5
 ===========================
 
 .. automodule:: yolort.v5
