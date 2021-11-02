@@ -31,3 +31,4 @@ yolort is a runtime stack for yolov5 on specialized accelerators such as ``libto
    :caption: API Reference
 
    models
+   yolov5

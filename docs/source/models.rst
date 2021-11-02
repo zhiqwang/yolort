@@ -1,6 +1,7 @@
 Models and pre-trained weights
 ==============================
 
-.. autoclass:: yolort.models
-    :members:
-    :undoc-members:
+.. automodule:: yolort.models
+   :imported-members:
+   :members:
+   :undoc-members:
