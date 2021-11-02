@@ -10,33 +10,24 @@ yolort is a runtime stack for yolov5 on specialized accelerators such as ``libto
 
 .. toctree::
    :maxdepth: 2
-   :caption: Get started:
+   :caption: Get started
 
    what_is_yolort
    installation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorials:
+   :caption: Tutorials
 
-   notebooks/inference_pytorch_export_libtorch
-   notebooks/how_to_align_with_ultralytics_yolov5
-   notebooks/anchor_label_assignment_visualization
-   notebooks/model_graph_visualization
-   notebooks/export_onnx_inference_onnxruntime
-   notebooks/export_relay_inference_tvm
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Deployment:
-
-   deployment/libtorch
-   deployment/onnxruntime
-   deployment/ncnn
+   notebooks/inference-pytorch-export-libtorch
+   notebooks/how-to-align-with-ultralytics-yolov5
+   notebooks/anchor-label-assignment-visualization
+   notebooks/model-graph-visualization
+   notebooks/export-onnx-inference-onnxruntime
+   notebooks/export-relay-inference-tvm
 
 .. toctree::
    :maxdepth: 2
    :caption: API Reference
 
    models
-   runtime
