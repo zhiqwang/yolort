@@ -1,5 +1,6 @@
 numpy
 pandoc
+jupyterlab
 sphinx==3.5.4
 insipid-sphinx-theme
 nbsphinx
