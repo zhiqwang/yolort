@@ -1,8 +1,4 @@
-sphinx
-recommonmark
-sphinx-markdown-tables
+numpy
+sphinx==3.5.4
 insipid-sphinx-theme
 nbsphinx
-pandoc
-numpy
-jieba
