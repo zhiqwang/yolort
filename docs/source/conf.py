@@ -12,6 +12,7 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 
@@ -99,5 +100,7 @@ html_context = {
 }
 html_theme_options = {
     "left_buttons": [],
-    "right_buttons": ["repo-button.html", ],
+    "right_buttons": [
+        "repo-button.html",
+    ],
 }
