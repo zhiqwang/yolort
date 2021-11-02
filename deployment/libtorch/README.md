@@ -60,7 +60,7 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
    ```bash
    ./yolo_inference [--input_source ../../../test/assets/zidane.jpg]
-                    [--checkpoint ../../../test/tracing/yolov5n.torchscript.pt]
+                    [--checkpoint ../yolov5n.torchscript.pt]
                     [--labelmap ../../../notebooks/assets/coco.names]
                     [--gpu]  # GPU switch, which is optional, and set False as default
    ```
