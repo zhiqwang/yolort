@@ -6,8 +6,8 @@
 
 ______________________________________________________________________
 
-[Documentation](#hammer_and_wrench-usage) •
-[Installation Instructions](#installation-and-inference-examples) •
+[Documentation](https://zhiqwang.com/yolov5-rt-stack/) •
+[Installation Instructions](https://zhiqwang.com/yolov5-rt-stack/installation.html) •
 [Deployment](#rocket-deployment) •
 [Contributing](CONTRIBUTING.md) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
