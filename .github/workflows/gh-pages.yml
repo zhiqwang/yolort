@@ -1,4 +1,4 @@
-name: Build & deploy documentation
+name: Build & deploy docs
 
 on:
   push:
@@ -28,15 +28,7 @@ jobs:
       - name: Upgrade pip
         run: |
           # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
-
-      - name: Install pip dependencies
-        run: |
-          # requirements for unittest
-          pip install numpy
-          pip install torch torchvision
-          pip install opencv-python pycocotools>=2.0.2 onnxruntime
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install --upgrade pip
 
       - name: Get pip cache dir
         id: pip-cache
@@ -45,10 +37,18 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v2
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      - name: Install pip dependencies
+        run: |
+          # requirements for unittest
+          pip install --progress-bar off numpy
+          pip install --progress-bar off torch torchvision
+          pip install --progress-bar off opencv-python pycocotools>=2.0.2 onnxruntime
+          if [ -f requirements.txt ]; then pip install --progress-bar off -r requirements.txt; fi
 
       - name: Build docs
         run: |
@@ -57,7 +57,7 @@ jobs:
           make help
           make html
 
-      - name: Deploy
+      - name: Deploy to GH pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
