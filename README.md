@@ -18,13 +18,15 @@ ______________________________________________________________________
 [![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=blue&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
 [![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=downloads&logo=github&logoColor=lightgrey)](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=Downloads&logo=github&logoColor=lightgrey)
-[![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml)
 [![Build & deploy docs](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/main.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/main)
+
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/main/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+[![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 
 ______________________________________________________________________
 
