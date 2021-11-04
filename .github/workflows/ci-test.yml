@@ -10,19 +10,18 @@ on:
     branches: [ main ]
 
 jobs:
-  UnitTest:
+  Unittest:
     runs-on: ${{ matrix.image }}
     strategy:
       matrix:
-        python-version: [ 3.7 ]
         image: [ 'ubuntu-latest' ]
-        torch: [ '1.9.1+cpu', '1.10.0+cpu' ]
+        torch: [ 'torch 1.9.1+cpu', 'torch 1.10.0+cpu' ]
         include:
-          - torch: '1.9.1+cpu'
+          - torch: 'torch 1.9.1+cpu'
             torch_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.10
-          - torch: '1.10.0+cpu'
+          - torch: 'torch 1.10.0+cpu'
             torch_address: install torch==1.10.0+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.11
@@ -34,8 +33,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: 'x64'
+          python-version: '3.8'
 
       - name: Upgrade pip
         run: |
