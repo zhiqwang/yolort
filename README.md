@@ -9,7 +9,7 @@ ______________________________________________________________________
 [Documentation](https://zhiqwang.com/yolov5-rt-stack/) •
 [Installation Instructions](https://zhiqwang.com/yolov5-rt-stack/installation.html) •
 [Deployment](#rocket-deployment) •
-[Contributing](CONTRIBUTING.md) •
+[Contributing](.github/CONTRIBUTING.md) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
 
 ______________________________________________________________________
@@ -146,6 +146,6 @@ Now, `yolort` can draw the model graph directly, checkout our [model-graph-visua
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
 
-## :thinking: Contributing
+## :+1: Contributing
 
-See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)
+See the [CONTRIBUTING](.github/CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)
