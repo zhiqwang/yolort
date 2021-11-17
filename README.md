@@ -32,7 +32,7 @@ ______________________________________________________________________
 
 </div>
 
-## :hugs: Introduction
+## 🤗 Introduction
 
 **What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNXRuntime`, `TVM` and so on.
 
@@ -44,7 +44,7 @@ ______________________________________________________________________
 
 <a href="notebooks/assets/zidane.jpg"><img src="notebooks/assets/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
-## :new: What's New
+## 🆕 What's New
 
 - *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [itsnine](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
@@ -54,7 +54,7 @@ ______________________________________________________________________
 - *Nov. 4, 2020*. Add `LibTorch` C++ inference example.
 - *Oct. 8, 2020*. Support exporting to `TorchScript` model.
 
-## :hammer_and_wrench: Usage
+## 🛠️ Usage
 
 There are no extra compiled components in `yolort` and package dependencies are minimal, so the code is very simple to use.
 
@@ -135,17 +135,30 @@ We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to de
 
 On the `ONNXRuntime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNXRuntime`.
 
-## :art: Model Graph Visualization
+## 🎨 Model Graph Visualization
 
 Now, `yolort` can draw the model graph directly, checkout our [model-graph-visualization](notebooks/model-graph-visualization.ipynb) notebook to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5_graph_visualize.svg"><img src="notebooks/assets/yolov5_graph_visualize.svg" alt="YOLO model visualize" width="500"/></a>
 
-## :mortar_board: Acknowledgement
+## 🎓 Acknowledgement
 
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
 
-## :+1: Contributing
+## 📖 Citing yolort
+
+If you use yolort in your publication, please cite it by using the following BibTeX entry.
+
+```bibtex
+@Misc{yolort2021,
+  author =       {Zhiqiang Wang, Fidan Kharrasov},
+  title =        {yolort: A runtime stack for object detection on specialized accelerators},
+  howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
+  year =         {2021}
+}
+```
+
+## 👋 Contributing
 
 See the [CONTRIBUTING](.github/CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)
