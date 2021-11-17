@@ -146,6 +146,19 @@ Now, `yolort` can draw the model graph directly, checkout our [model-graph-visua
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
 
+## Citing yolort
+
+If you use yolort in your publication, please cite it by using the following BibTeX entry.
+
+```bibtex
+@Misc{yolort2021,
+  author =       {Zhiqiang Wang, Fidan Kharrasov},
+  title =        {yolort: A runtime stack for object detection on specialized accelerators},
+  howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
+  year =         {2021}
+}
+```
+
 ## :+1: Contributing
 
 See the [CONTRIBUTING](.github/CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)
