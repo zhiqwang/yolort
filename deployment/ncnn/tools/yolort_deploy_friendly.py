@@ -2,7 +2,7 @@
 from typing import Any, List, Optional
 
 from torch import nn, Tensor
-from torchvision.models.utils import load_state_dict_from_url
+from yolort.utils import load_state_dict_from_url
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.yolo import YOLO, model_urls
 
