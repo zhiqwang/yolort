@@ -196,7 +196,8 @@ class SetCriterion:
 
                 # Classification
                 if self.num_classes > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(pred_logits_subset[:, 5:], self.smooth_neg, device=device)  # targets
+                    # targets
+                    t = torch.full_like(pred_logits_subset[:, 5:], self.smooth_neg, device=device)
                     t[torch.arange(num_targets), target_cls[i]] = self.smooth_pos
                     loss_cls += F.binary_cross_entropy_with_logits(
                         pred_logits_subset[:, 5:], t, pos_weight=pos_weight_cls
