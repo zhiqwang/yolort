@@ -31,8 +31,8 @@ class YOLODeployFriendly(YOLO):
 
     def forward(self, samples: Tensor):
         """
-        Arguments:
-            samples (Tensor): batched images, of shape [batch_size x 3 x H x W]
+        Args:
+            samples (Tensor): batched images, with shape [batch_size x 3 x H x W]
         """
         # get the features from the backbone
         features = self.backbone(samples)
