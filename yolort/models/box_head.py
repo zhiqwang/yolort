@@ -317,6 +317,19 @@ class SetCriterion:
         return target_cls, target_box, indices, anch
 
 
+def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
+    # Concat all pred logits
+    batch_size, _, _, _, K = head_outputs[0].shape
+
+    all_pred_logits = []
+    for pred_logits in head_outputs:
+        pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(N, HWA, K)
+        all_pred_logits.append(pred_logits)
+
+    all_pred_logits = torch.cat(all_pred_logits, dim=1)
+    return all_pred_logits
+
+
 class PostProcess(nn.Module):
     """
     Performs Non-Maximum Suppression (NMS) on inference results
@@ -355,14 +368,9 @@ class PostProcess(nn.Module):
                 shape of the element is (N, A, H, W, K).
             anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
         """
-        batch_size, _, _, _, K = head_outputs[0].shape
+        batch_size = head_outputs[0][0]
 
-        all_pred_logits = []
-        for pred_logits in head_outputs:
-            pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(N, HWA, K)
-            all_pred_logits.append(pred_logits)
-
-        all_pred_logits = torch.cat(all_pred_logits, dim=1)
+        all_pred_logits = _concat_pred_logits(head_outputs)
 
         detections: List[Dict[str, Tensor]] = []
 
