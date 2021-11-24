@@ -1,4 +1,4 @@
-# YOLOv5 by Ultralytics, GPL-3.0 license
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 """
 General utils
 """
@@ -14,8 +14,6 @@ import re
 import signal
 import time
 import urllib
-from itertools import repeat
-from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
 import cv2
@@ -27,15 +25,31 @@ import torchvision
 import yaml
 
 from .metrics import box_iou, fitness
-from .torch_utils import init_torch_seeds
 
 # Settings
 torch.set_printoptions(linewidth=320, precision=5, profile="long")
 # format short g, %precision=5
 np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})
 pd.options.display.max_columns = 10
-cv2.setNumThreads(0)  # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
+# prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
+cv2.setNumThreads(0)
 os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # NumExpr max threads
+
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[1]  # YOLOv5 root directory
+
+
+def set_logging(name=None, verbose=True):
+    # Sets level and returns logger
+    rank = int(os.getenv("RANK", -1))  # rank in world for Multi-GPU trainings
+    logging.basicConfig(
+        format="%(message)s", level=logging.INFO if (verbose and rank in (-1, 0)) else logging.WARNING
+    )
+    return logging.getLogger(name)
+
+
+# define globally (used in train.py, val.py, detect.py, etc.)
+LOGGER = set_logging(__name__)
 
 
 class Profile(contextlib.ContextDecorator):
@@ -83,18 +97,37 @@ def methods(instance):
     return [f for f in dir(instance) if callable(getattr(instance, f)) and not f.startswith("__")]
 
 
-def set_logging(rank=-1, verbose=True):
-    logging.basicConfig(
-        format="%(message)s",
-        level=logging.INFO if (verbose and rank in [-1, 0]) else logging.WARN,
-    )
+def print_args(name, opt):
+    # Print argparser arguments
+    LOGGER.info(colorstr(f"{name}: ") + ", ".join(f"{k}={v}" for k, v in vars(opt).items()))
 
 
 def init_seeds(seed=0):
-    # Initialize random number generator (RNG) seeds
+    """
+    Initialize random number generator (RNG) seeds
+    https://pytorch.org/docs/stable/notes/randomness.html
+
+    cudnn seed 0 settings are slower and more reproducible,
+    else faster and less reproducible
+    """
+    import torch.backends.cudnn as cudnn
+
     random.seed(seed)
     np.random.seed(seed)
-    init_torch_seeds(seed)
+    torch.manual_seed(seed)
+    cudnn.benchmark, cudnn.deterministic = (False, True) if seed == 0 else (True, False)
+
+
+def intersect_dicts(dict1, dict2, exclude=()):
+    """
+    Dictionary intersection of matching keys and shapes,
+    omitting 'exclude' keys, using dict1 values
+    """
+    return {
+        k: v
+        for k, v in dict1.items()
+        if k in dict2 and not any(x in k for x in exclude) and v.shape == dict2[k].shape
+    }
 
 
 def get_latest_run(search_dir="."):
@@ -104,28 +137,32 @@ def get_latest_run(search_dir="."):
 
 
 def user_config_dir(dir="Ultralytics", env_var="YOLOV5_CONFIG_DIR"):
-    # Return path of user configuration directory. Prefer environment
-    # variable if exists. Make dir if required.
+    """
+    Return path of user configuration directory. Prefer environment
+    variable if exists. Make dir if required.
+    """
     env = os.getenv(env_var)
     if env:
         path = Path(env)  # use environment variable
     else:
-        # 3 OS dirs
         cfg = {
             "Windows": "AppData/Roaming",
             "Linux": ".config",
             "Darwin": "Library/Application Support",
-        }
+        }  # 3 OS dirs
         path = Path.home() / cfg.get(platform.system(), "")  # OS-specific config dir
-        # GCP and AWS lambda fix, only /tmp is writeable
-        path = (path if is_writeable(path) else Path("/tmp")) / dir
+        path = (
+            path if is_writeable(path) else Path("/tmp")
+        ) / dir  # GCP and AWS lambda fix, only /tmp is writeable
     path.mkdir(exist_ok=True)  # make if required
     return path
 
 
 def is_writeable(dir, test=False):
-    # Return True if directory has write permissions, test opening
-    # a file with write permissions if test=True
+    """
+    Return True if directory has write permissions, test opening a file
+    with write permissions if test=True
+    """
     if test:  # method 1
         file = Path(dir) / "tmp.txt"
         try:
@@ -133,7 +170,7 @@ def is_writeable(dir, test=False):
                 pass
             file.unlink()  # remove file
             return True
-        except IOError:
+        except OSError:
             return False
     else:  # method 2
         return os.access(dir, os.R_OK)  # possible issues on Windows
@@ -141,13 +178,21 @@ def is_writeable(dir, test=False):
 
 def is_pip():
     # Is file in a pip package?
-    return "site-packages" in Path(__file__).absolute().parts
+    return "site-packages" in Path(__file__).resolve().parts
 
 
 def is_ascii(s=""):
-    # Is string composed of all ASCII (no UTF) characters?
+    """
+    Is string composed of all ASCII (no UTF) characters?
+    (note str().isascii() introduced in python 3.7)
+    """
     s = str(s)  # convert list, tuple, None, etc. to str
     return len(s.encode().decode("ascii", "ignore")) == len(s)
+
+
+def is_chinese(s="人工智能"):
+    # Is string composed of any Chinese characters?
+    return re.search("[\u4e00-\u9fff]", s)
 
 
 def emojis(str=""):
@@ -155,9 +200,15 @@ def emojis(str=""):
     return str.encode().decode("ascii", "ignore") if platform.system() == "Windows" else str
 
 
-def file_size(file):
-    # Return file size in MB
-    return Path(file).stat().st_size / 1e6
+def file_size(path):
+    # Return file/dir size (MB)
+    path = Path(path)
+    if path.is_file():
+        return path.stat().st_size / 1e6
+    elif path.is_dir():
+        return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file()) / 1e6
+    else:
+        return 0.0
 
 
 def check_online():
@@ -173,14 +224,17 @@ def check_online():
 
 def check_python(minimum="3.6.2"):
     # Check current python version vs. required python version
-    check_version(platform.python_version(), minimum, name="Python ")
+    check_version(platform.python_version(), minimum, name="Python ", hard=True)
 
 
-def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=False):
+def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=False, hard=False):
     # Check version vs. required version
     current, minimum = (pkg.parse_version(x) for x in (current, minimum))
-    result = (current == minimum) if pinned else (current >= minimum)
-    assert result, f"{name}{minimum} required by YOLOv5, but {name}{current} is currently installed"
+    result = (current == minimum) if pinned else (current >= minimum)  # bool
+    if hard:  # assert min requirements met
+        assert result, f"{name}{minimum} required by YOLOv5, but {name}{current} is currently installed"
+    else:
+        return result
 
 
 def check_img_size(imgsz, s=32, floor=0):
@@ -190,120 +244,59 @@ def check_img_size(imgsz, s=32, floor=0):
     else:  # list i.e. img_size=[640, 480]
         new_size = [max(make_divisible(x, int(s)), floor) for x in imgsz]
     if new_size != imgsz:
-        print(f"WARNING: --img-size {imgsz} must be multiple of max stride {s}, updating to {new_size}")
+        print(f"WARNING: --img-size {imgsz} must be multiple of " f"max stride {s}, updating to {new_size}")
     return new_size
 
 
-def check_file(file):
+def check_suffix(file="yolov5s.pt", suffix=(".pt",), msg=""):
+    # Check file(s) for acceptable suffix
+    if file and suffix:
+        if isinstance(suffix, str):
+            suffix = [suffix]
+        for f in file if isinstance(file, (list, tuple)) else [file]:
+            s = Path(f).suffix.lower()  # file suffix
+            if len(s):
+                assert s in suffix, f"{msg}{f} acceptable suffix is {suffix}"
+
+
+def check_yaml(file, suffix=(".yaml", ".yml")):
+    # Search/download YAML file (if necessary) and return path, checking suffix
+    return check_file(file, suffix)
+
+
+def check_file(file, suffix=""):
     # Search/download file (if necessary) and return path
+    check_suffix(file, suffix)  # optional
     file = str(file)  # convert to str()
     if Path(file).is_file() or file == "":  # exists
         return file
     elif file.startswith(("http:/", "https:/")):  # download
         url = str(Path(file)).replace(":/", "://")  # Pathlib turns :// -> :/
         # '%2F' to '/', split https://url.com/file.txt?auth
-        file = Path(urllib.parse.unquote(file)).name.split("?")[0]
-        print(f"Downloading {url} to {file}...")
-        torch.hub.download_url_to_file(url, file)
-        assert Path(file).exists() and Path(file).stat().st_size > 0, f"File download failed: {url}"
+        file = Path(urllib.parse.unquote(file).split("?")[0]).name
+        if Path(file).is_file():
+            print(f"Found {url} locally at {file}")  # file already exists
+        else:
+            print(f"Downloading {url} to {file}...")
+            torch.hub.download_url_to_file(url, file)
+            assert Path(file).exists() and Path(file).stat().st_size > 0, f"File download failed: {url}"
         return file
     else:  # search
-        files = glob.glob("./**/" + file, recursive=True)  # find file
+        files = []
+        for d in "data", "models", "utils":  # search directories
+            files.extend(glob.glob(str(ROOT / d / "**" / file), recursive=True))  # find file
         assert len(files), f"File not found: {file}"  # assert file was found
         # assert unique
         assert len(files) == 1, f"Multiple files match '{file}', specify exact path: {files}"
         return files[0]  # return file
 
 
-def check_dataset(data, autodownload=True):
-    # Download and/or unzip dataset if not found locally
-    # Usage: https://github.com/ultralytics/yolov5/releases/download/v1.0/coco128_with_yaml.zip
-
-    # Download (optional)
-    extract_dir = ""
-    # i.e. gs://bucket/dir/coco128.zip
-    if isinstance(data, (str, Path)) and str(data).endswith(".zip"):
-        download(data, dir="../datasets", unzip=True, delete=False, curl=False, threads=1)
-        data = next((Path("../datasets") / Path(data).stem).rglob("*.yaml"))
-        extract_dir, autodownload = data.parent, False
-
-    # Read yaml (optional)
-    if isinstance(data, (str, Path)):
-        with open(data, errors="ignore") as f:
-            data = yaml.safe_load(f)  # dictionary
-
-    # Parse yaml
-    path = extract_dir or Path(data.get("path") or "")  # optional 'path' default to '.'
-    for k in "train", "val", "test":
-        if data.get(k):  # prepend path
-            data[k] = str(path / data[k]) if isinstance(data[k], str) else [str(path / x) for x in data[k]]
-
-    assert "nc" in data, "Dataset 'nc' key missing."
-    if "names" not in data:
-        data["names"] = [f"class{i}" for i in range(data["nc"])]  # assign class names if missing
-    train, val, test, s = [data.get(x) for x in ("train", "val", "test", "download")]
-    if val:
-        val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
-        if not all(x.exists() for x in val):
-            print(
-                "\nWARNING: Dataset not found, "
-                f"nonexistent paths: {[str(x) for x in val if not x.exists()]}"
-            )
-            if s and autodownload:  # download script
-                if s.startswith("http") and s.endswith(".zip"):  # URL
-                    f = Path(s).name  # filename
-                    print(f"Downloading {s} ...")
-                    torch.hub.download_url_to_file(s, f)
-                    root = path.parent if "path" in data else ".."  # unzip directory i.e. '../'
-                    Path(root).mkdir(parents=True, exist_ok=True)  # create root
-                    r = os.system(f"unzip -q {f} -d {root} && rm {f}")  # unzip
-                elif s.startswith("bash "):  # bash script
-                    print(f"Running {s} ...")
-                    r = os.system(s)
-                else:  # python script
-                    r = exec(s, {"yaml": data})  # return None
-                # print result
-                print("Dataset autodownload %s\n" % ("success" if r in (0, None) else "failure"))
-            else:
-                raise Exception("Dataset not found.")
-
-    return data  # dictionary
-
-
-def download(url, dir=".", unzip=True, delete=True, curl=False, threads=1):
-    # Multi-threaded file download and unzip function, used in data.yaml for autodownload
-    def download_one(url, dir):
-        # Download 1 file
-        f = dir / Path(url).name  # filename
-        if Path(url).is_file():  # exists in current path
-            Path(url).rename(f)  # move to dir
-        elif not f.exists():
-            print(f"Downloading {url} to {f}...")
-            if curl:
-                # curl download, retry and resume on fail
-                os.system(f"curl -L '{url}' -o '{f}' --retry 9 -C -")
-            else:
-                torch.hub.download_url_to_file(url, f, progress=True)  # torch download
-        if unzip and f.suffix in (".zip", ".gz"):
-            print(f"Unzipping {f}...")
-            if f.suffix == ".zip":
-                s = f"unzip -qo {f} -d {dir}"  # unzip -quiet -overwrite
-            elif f.suffix == ".gz":
-                s = f"tar xfz {f} --directory {f.parent}"  # unzip
-            if delete:  # delete zip file after unzip
-                s += f" && rm {f}"
-            os.system(s)
-
-    dir = Path(dir)
-    dir.mkdir(parents=True, exist_ok=True)  # make directory
-    if threads > 1:
-        pool = ThreadPool(threads)
-        pool.imap(lambda x: download_one(*x), zip(url, repeat(dir)))  # multi-threaded
-        pool.close()
-        pool.join()
-    else:
-        for u in [url] if isinstance(url, (str, Path)) else url:
-            download_one(u, dir)
+def url2file(url):
+    # Convert URL to filename, i.e. https://url.com/file.txt?auth -> file.txt
+    url = str(Path(url)).replace(":/", "://")  # Pathlib turns :// -> :/
+    # '%2F' to '/', split https://url.com/file.txt?auth
+    file = Path(urllib.parse.unquote(url)).name.split("?")[0]
+    return file
 
 
 def make_divisible(x, divisor):
@@ -322,10 +315,11 @@ def one_cycle(y1=0.0, y2=1.0, steps=100):
 
 
 def colorstr(*input):
-    # Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code,
-    # i.e.  colorstr('blue', 'hello world')
-    # color arguments, string
-    *args, string = input if len(input) > 1 else ("blue", "bold", input[0])
+    """
+    Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code,
+    i.e.  colorstr('blue', 'hello world')
+    """
+    *args, string = input if len(input) > 1 else ("blue", "bold", input[0])  # color arguments, string
     colors = {
         "black": "\033[30m",  # basic colors
         "red": "\033[31m",
@@ -379,8 +373,10 @@ def labels_to_image_weights(labels, nc=80, class_weights=np.ones(80)):
 
 
 def xyxy2xywh(x):
-    # Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h]
-    # where xy1=top-left, xy2=bottom-right
+    """
+    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h]
+    where xy1=top-left, xy2=bottom-right
+    """
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[:, 0] = (x[:, 0] + x[:, 2]) / 2  # x center
     y[:, 1] = (x[:, 1] + x[:, 3]) / 2  # y center
@@ -390,8 +386,10 @@ def xyxy2xywh(x):
 
 
 def xywh2xyxy(x):
-    # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2]
-    # where xy1=top-left, xy2=bottom-right
+    """
+    Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2]
+    where xy1=top-left, xy2=bottom-right
+    """
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[:, 0] = x[:, 0] - x[:, 2] / 2  # top left x
     y[:, 1] = x[:, 1] - x[:, 3] / 2  # top left y
@@ -401,8 +399,10 @@ def xywh2xyxy(x):
 
 
 def xywhn2xyxy(x, w=640, h=640, padw=0, padh=0):
-    # Convert nx4 boxes from [x, y, w, h] normalized to [x1, y1, x2, y2]
-    # where xy1=top-left, xy2=bottom-right
+    """
+    Convert nx4 boxes from [x, y, w, h] normalized to [x1, y1, x2, y2]
+    where xy1=top-left, xy2=bottom-right
+    """
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[:, 0] = w * (x[:, 0] - x[:, 2] / 2) + padw  # top left x
     y[:, 1] = h * (x[:, 1] - x[:, 3] / 2) + padh  # top left y
@@ -412,8 +412,10 @@ def xywhn2xyxy(x, w=640, h=640, padw=0, padh=0):
 
 
 def xyxy2xywhn(x, w=640, h=640, clip=False, eps=0.0):
-    # Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] normalized
-    # where xy1=top-left, xy2=bottom-right
+    """
+    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h]
+    normalized where xy1=top-left, xy2=bottom-right
+    """
     if clip:
         clip_coords(x, (h - eps, w - eps))  # warning: inplace clip
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
@@ -433,15 +435,16 @@ def xyn2xy(x, w=640, h=640, padw=0, padh=0):
 
 
 def segment2box(segment, width=640, height=640):
-    # Convert 1 segment label to 1 box label, applying inside-image constraint,
-    # i.e. (xy1, xy2, ...) to (xyxy)
+    """
+    Convert 1 segment label to 1 box label, applying inside-image
+    constraint, i.e. (xy1, xy2, ...) to (xyxy)
+    """
     x, y = segment.T  # segment xy
     inside = (x >= 0) & (y >= 0) & (x <= width) & (y <= height)
     x, y, = (
         x[inside],
         y[inside],
     )
-    # xyxy
     return np.array([x.min(), y.min(), x.max(), y.max()]) if any(x) else np.zeros((1, 4))
 
 
@@ -521,7 +524,8 @@ def non_max_suppression(
     assert 0 <= iou_thres <= 1, f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     # Settings
-    _, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
+    # min_wh = 2  # (pixels) minimum box width and height
+    max_wh = 4096  # (pixels) maximum box width and height
     max_nms = 30000  # maximum number of boxes into torchvision.ops.nms()
     time_limit = 10.0  # seconds to quit after
     redundant = True  # require redundant detections
@@ -600,7 +604,7 @@ def non_max_suppression(
     return output
 
 
-def strip_optimizer(f="best.pt", s=""):  # from utils.general import *; strip_optimizer()
+def strip_optimizer(f="best.pt", s=""):
     # Strip optimizer from 'f' to finalize training, optionally save as 's'
     x = torch.load(f, map_location=torch.device("cpu"))
     if x.get("ema"):
@@ -613,11 +617,12 @@ def strip_optimizer(f="best.pt", s=""):  # from utils.general import *; strip_op
         p.requires_grad = False
     torch.save(x, s or f)
     mb = os.path.getsize(s or f) / 1e6  # filesize
-    print(f"Optimizer stripped from {f},{' saved as {s},' if s else ''} {mb:.1f}MB")
+    print(f"Optimizer stripped from {f},{(' saved as %s,' % s) if s else ''} {mb:.1f}MB")
 
 
-def print_mutation(results, hyp, save_dir):
+def print_mutation(results, hyp, save_dir, bucket):
     evolve_csv, evolve_yaml = save_dir / "evolve.csv", save_dir / "hyp_evolve.yaml"
+    # [results + hyps]
     keys = (
         "metrics/precision",
         "metrics/recall",
@@ -626,9 +631,7 @@ def print_mutation(results, hyp, save_dir):
         "val/box_loss",
         "val/obj_loss",
         "val/cls_loss",
-    ) + tuple(
-        hyp.keys()
-    )  # [results + hyps]
+    ) + tuple(hyp.keys())
     keys = tuple(x.strip() for x in keys)
     vals = results + tuple(hyp.values())
     n = len(keys)
@@ -660,9 +663,12 @@ def print_mutation(results, hyp, save_dir):
         )
         yaml.safe_dump(hyp, f, sort_keys=False)
 
+    if bucket:
+        os.system(f"gsutil cp {evolve_csv} {evolve_yaml} gs://{bucket}")  # upload
+
 
 def apply_classifier(x, model, img, im0):
-    # Apply a second stage classifier to yolo outputs
+    # Apply a second stage classifier to YOLO outputs
     im0 = [im0] if isinstance(im0, np.ndarray) else im0
     for i, d in enumerate(x):  # per image
         if d is not None and len(d):
@@ -687,7 +693,7 @@ def apply_classifier(x, model, img, im0):
 
                 im = im[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
                 im = np.ascontiguousarray(im, dtype=np.float32)  # uint8 to float32
-                im /= 255.0  # 0 - 255 to 0.0 - 1.0
+                im /= 255  # 0 - 255 to 0.0 - 1.0
                 ims.append(im)
 
             pred_cls2 = model(torch.Tensor(ims).to(d.device)).argmax(1)  # classifier prediction
@@ -696,38 +702,16 @@ def apply_classifier(x, model, img, im0):
     return x
 
 
-def save_one_box(xyxy, im, file="image.jpg", gain=1.02, pad=10, square=False, BGR=False, save=True):
-    # Save image crop as {file} with crop size multiple {gain}
-    # and {pad} pixels. Save and/or return crop
-    xyxy = torch.tensor(xyxy).view(-1, 4)
-    b = xyxy2xywh(xyxy)  # boxes
-    if square:
-        b[:, 2:] = b[:, 2:].max(1)[0].unsqueeze(1)  # attempt rectangle to square
-    b[:, 2:] = b[:, 2:] * gain + pad  # box wh * gain + pad
-    xyxy = xywh2xyxy(b).long()
-    clip_coords(xyxy, im.shape)
-    crop = im[
-        int(xyxy[0, 1]) : int(xyxy[0, 3]),
-        int(xyxy[0, 0]) : int(xyxy[0, 2]),
-        :: (1 if BGR else -1),
-    ]
-    if save:
-        cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix(".jpg")), crop)
-    return crop
-
-
 def increment_path(path, exist_ok=False, sep="", mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
     path = Path(path)  # os-agnostic
     if path.exists() and not exist_ok:
-        suffix = path.suffix
-        path = path.with_suffix("")
+        path, suffix = (path.with_suffix(""), path.suffix) if path.is_file() else (path, "")
         dirs = glob.glob(f"{path}{sep}*")  # similar paths
         matches = [re.search(rf"%s{sep}(\d+)" % path.stem, d) for d in dirs]
         i = [int(m.groups()[0]) for m in matches if m]  # indices
         n = max(i) + 1 if i else 2  # increment number
-        path = Path(f"{path}{sep}{n}{suffix}")  # update path
-    dir = path if path.suffix == "" else path.parent  # directory
-    if not dir.exists() and mkdir:
-        dir.mkdir(parents=True, exist_ok=True)  # make directory
+        path = Path(f"{path}{sep}{n}{suffix}")  # increment path
+    if mkdir:
+        path.mkdir(parents=True, exist_ok=True)  # make directory
     return path

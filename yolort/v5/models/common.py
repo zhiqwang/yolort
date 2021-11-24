@@ -1,4 +1,4 @@
-# YOLOv5 by Ultralytics, GPL-3.0 license
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 """
 Common modules
 """
@@ -16,18 +16,16 @@ import torch
 from PIL import Image
 from torch import nn, Tensor
 from torch.cuda import amp
-from yolort.v5.utils.datasets import exif_transpose, letterbox
 from yolort.v5.utils.general import (
     colorstr,
     increment_path,
     is_ascii,
     make_divisible,
     non_max_suppression,
-    save_one_box,
     scale_coords,
     xyxy2xywh,
 )
-from yolort.v5.utils.plots import Annotator, colors
+from yolort.v5.utils.plots import Annotator, colors, save_one_box
 from yolort.v5.utils.torch_utils import time_sync
 
 LOGGER = logging.getLogger(__name__)
@@ -414,8 +412,11 @@ class Expand(nn.Module):
 
 
 class AutoShape(nn.Module):
-    # YOLOv5 input-robust model wrapper for passing cv2/np/PIL/torch inputs.
-    # Includes preprocessing, inference and NMS
+    """
+    YOLOv5 input-robust model wrapper for passing cv2/np/PIL/torch inputs.
+    Includes preprocessing, inference and NMS
+    """
+
     conf = 0.25  # NMS confidence threshold
     iou = 0.45  # NMS IoU threshold
     classes = None  # (optional list) filter by class
@@ -427,11 +428,14 @@ class AutoShape(nn.Module):
         self.model = model.eval()
 
     def autoshape(self):
-        LOGGER.info("AutoShape already enabled, skipping... ")  # model already converted to model.autoshape()
+        # model already converted to model.autoshape()
+        LOGGER.info("AutoShape already enabled, skipping... ")
         return self
 
     @torch.no_grad()
     def forward(self, imgs, size=640, augment=False, profile=False):
+        from yolort.v5.utils.augmentations import letterbox
+
         # Inference from various sources. For height=640, width=1280, RGB images example inputs are:
         #   file:       imgs = 'data/images/zidane.jpg'  # str or PosixPath
         #   URI:             = 'https://ultralytics.com/images/zidane.jpg'
@@ -440,6 +444,8 @@ class AutoShape(nn.Module):
         #   numpy:           = np.zeros((640,1280,3))  # HWC
         #   torch:           = torch.zeros(16,3,320,640)  # BCHW (scaled to size=640, 0-1 values)
         #   multiple:        = [Image.open('image1.jpg'), Image.open('image2.jpg'), ...]  # list of images
+
+        from yolort.v5.utils.datasets import exif_transpose
 
         t = [time_sync()]
         p = next(self.model.parameters())  # for device and type
