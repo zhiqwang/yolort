@@ -4,8 +4,9 @@ from pathlib import Path
 
 import torch
 
+from .models import AutoShape
 from .models.yolo import Model
-from .utils import attempt_download, set_logging
+from .utils import attempt_download, intersect_dicts, set_logging
 
 __all__ = ["add_yolov5_context", "load_yolov5_model", "get_yolov5_size"]
 
@@ -63,9 +64,11 @@ def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bo
         model_ckpt = ckpt["model"]  # load model
 
     model = Model(model_ckpt.yaml)  # create model
-    model.load_state_dict(model_ckpt.float().state_dict())  # load state_dict
+    ckpt_state_dict = model_ckpt.float().state_dict()  # checkpoint state_dict as FP32
+    ckpt_state_dict = intersect_dicts(ckpt_state_dict, model.state_dict(), exclude=["anchors"])
+    model.load_state_dict(ckpt_state_dict, strict=False)
 
     if autoshape:
-        model = model.autoshape()
+        model = AutoShape(model)
 
     return model

@@ -1,10 +1,9 @@
-# YOLOv5 by Ultralytics, GPL-3.0 license
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 """
 PyTorch utils
 """
 
 import datetime
-import logging
 import math
 import os
 import platform
@@ -15,18 +14,16 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
-import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
+
+from .general import LOGGER
 
 try:
     import thop  # for FLOPs computation
 except ImportError:
     thop = None
-
-LOGGER = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -42,16 +39,6 @@ def torch_distributed_zero_first(local_rank: int):
         dist.barrier(device_ids=[0])
 
 
-def init_torch_seeds(seed=0):
-    # Speed-reproducibility tradeoff
-    # https://pytorch.org/docs/stable/notes/randomness.html
-    torch.manual_seed(seed)
-    if seed == 0:  # slower, more reproducible
-        cudnn.benchmark, cudnn.deterministic = False, True
-    else:  # faster, less reproducible
-        cudnn.benchmark, cudnn.deterministic = True, False
-
-
 def date_modified(path=__file__):
     # return human-readable file modification date, i.e. '2021-3-26'
     t = datetime.datetime.fromtimestamp(Path(path).stat().st_mtime)
@@ -59,27 +46,27 @@ def date_modified(path=__file__):
 
 
 def git_describe(path=Path(__file__).parent):
-    # path must be a directory
-    # return human-readable git description,
-    # i.e. v5.0-5-g3e25f1e https://git-scm.com/docs/git-describe
+    """
+    Return human-readable git description,
+    i.e. v5.0-5-g3e25f1e https://git-scm.com/docs/git-describe
+    """
     s = f"git -C {path} describe --tags --long --always"
     try:
         return subprocess.check_output(s, shell=True, stderr=subprocess.STDOUT).decode()[:-1]
-    except subprocess.CalledProcessError:
-        return ""  # not a git repository
+    except subprocess.CalledProcessError as e:
+        print(f"Wraning, not a git repository: {e}")
+        return ""
 
 
-def select_device(device="", batch_size=None):
+def select_device(device="", batch_size=None, newline=True):
     # device = 'cpu' or '0' or '0,1,2,3'
-    s = f"YOLOv5 {git_describe() or date_modified()} torch {torch.__version__} "  # string
+    s = f"YOLOv5 🚀 {git_describe() or date_modified()} torch {torch.__version__} "  # string
     device = str(device).strip().lower().replace("cuda:", "")  # to string, 'cuda:0' to '0'
     cpu = device == "cpu"
     if cpu:
-        # force torch.cuda.is_available() = False
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # force torch.cuda.is_available() = False
     elif device:  # non-cpu device requested
-        # set environment variable
-        os.environ["CUDA_VISIBLE_DEVICES"] = device
+        os.environ["CUDA_VISIBLE_DEVICES"] = device  # set environment variable
         # check availability
         assert torch.cuda.is_available(), f"CUDA unavailable, invalid device {device} requested"
 
@@ -94,10 +81,12 @@ def select_device(device="", batch_size=None):
         for i, d in enumerate(devices):
             p = torch.cuda.get_device_properties(i)
             # bytes to MB
-            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / 1024 ** 2}MB)\n"
+            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / 1024 ** 2:.0f}MiB)\n"
     else:
         s += "CPU\n"
 
+    if not newline:
+        s = s.rstrip()
     # emoji-safe
     LOGGER.info(s.encode().decode("ascii", "ignore") if platform.system() == "Windows" else s)
     return torch.device("cuda:0" if cuda else "cpu")
@@ -111,16 +100,21 @@ def time_sync():
 
 
 def profile(input, ops, n=10, device=None):
-    # YOLOv5 speed/memory/FLOPs profiler
-    #
-    # Usage:
-    #     input = torch.randn(16, 3, 640, 640)
-    #     m1 = lambda x: x * torch.sigmoid(x)
-    #     m2 = nn.SiLU()
-    #     profile(input, [m1, m2], n=100)  # profile over 100 iterations
+    """
+    YOLOv5 speed/memory/FLOPs profiler
+
+    Example:
+
+        from yolort.v5.utils.torch_utils import profile
+
+        input = torch.randn(16, 3, 640, 640)
+        m1 = lambda x: x * torch.sigmoid(x)
+        m2 = nn.SiLU()
+        # profile over 100 iterations
+        profile(input, [m1, m2], n=100)
+    """
 
     results = []
-    logging.basicConfig(format="%(message)s", level=logging.INFO)
     device = device or select_device()
     print(
         f"{'Params':>12s}{'GFLOPs':>12s}{'GPU_mem (GB)':>14s}"
@@ -138,13 +132,12 @@ def profile(input, ops, n=10, device=None):
                 if hasattr(m, "half") and isinstance(x, torch.Tensor) and x.dtype is torch.float16
                 else m
             )
-            # dt forward, backward
-            tf, tb, t = 0.0, 0.0, [0.0, 0.0, 0.0]
-            if thop is None:
+            tf, tb, t = 0, 0, [0, 0, 0]  # dt forward, backward
+            try:
+                flops = thop.profile(m, inputs=(x,), verbose=False)[0] / 1e9 * 2  # GFLOPs
+            except Exception as e:
+                print(f"Warning: {e}")
                 flops = 0
-            else:
-                # GFLOPs
-                flops = thop.profile(m, inputs=(x,), verbose=False)[0] / 1e9 * 2
 
             try:
                 for _ in range(n):
@@ -152,25 +145,19 @@ def profile(input, ops, n=10, device=None):
                     y = m(x)
                     t[1] = time_sync()
                     try:
-                        _ = (sum([yi.sum() for yi in y]) if isinstance(y, list) else y).sum().backward()
+                        _ = (sum(yi.sum() for yi in y) if isinstance(y, list) else y).sum().backward()
                         t[2] = time_sync()
-                    # no backward method
-                    except Exception as e:
-                        print(e)
+                    except Exception as e:  # no backward method
+                        print(f"Warning: {e}")
                         t[2] = float("nan")
-                    # ms per op forward
-                    tf += (t[1] - t[0]) * 1000 / n
-                    # ms per op backward
-                    tb += (t[2] - t[1]) * 1000 / n
+                    tf += (t[1] - t[0]) * 1000 / n  # ms per op forward
+                    tb += (t[2] - t[1]) * 1000 / n  # ms per op backward
                 mem = torch.cuda.memory_reserved() / 1e9 if torch.cuda.is_available() else 0  # (GB)
                 s_in = tuple(x.shape) if isinstance(x, torch.Tensor) else "list"
                 s_out = tuple(y.shape) if isinstance(y, torch.Tensor) else "list"
                 # parameters
                 p = sum(list(x.numel() for x in m.parameters())) if isinstance(m, nn.Module) else 0
-                print(
-                    f"{p:12}{flops:12.4g}{mem:>14.3f}{tf:14.4g}{tb:14.4g}"
-                    f"{str(s_in):>24s}{str(s_out):>24s}"
-                )
+                print(f"{p:12}{flops:12.4g}{mem:>14.3f}{tf:14.4g}{tb:14.4g}{str(s_in):>24s}{str(s_out):>24s}")
                 results.append([p, flops, mem, tf, tb, s_in, s_out])
             except Exception as e:
                 print(e)
@@ -181,24 +168,14 @@ def profile(input, ops, n=10, device=None):
 
 def is_parallel(model):
     # Returns True if model is of type DP or DDP
-    return type(model) in (
-        nn.parallel.DataParallel,
-        nn.parallel.DistributedDataParallel,
-    )
+    return type(model) in (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel)
 
 
 def de_parallel(model):
-    # De-parallelize a model:
-    # returns single-GPU model if model is of type DP or DDP
+    """
+    De-parallelize a model: returns single-GPU model if model is of type DP or DDP
+    """
     return model.module if is_parallel(model) else model
-
-
-def intersect_dicts(da, db, exclude=()):
-    # Dictionary intersection of matching keys and shapes,
-    # omitting 'exclude' keys, using da values
-    return {
-        k: v for k, v in da.items() if k in db and not any(x in k for x in exclude) and v.shape == db[k].shape
-    }
 
 
 def initialize_weights(model):
@@ -209,7 +186,7 @@ def initialize_weights(model):
         elif t is nn.BatchNorm2d:
             m.eps = 1e-3
             m.momentum = 0.03
-        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6]:
+        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
             m.inplace = True
 
 
@@ -220,7 +197,7 @@ def find_modules(model, mclass=nn.Conv2d):
 
 def sparsity(model):
     # Return global model sparsity
-    a, b = 0.0, 0.0
+    a, b = 0, 0
     for p in model.parameters():
         a += p.numel()
         b += (p == 0).sum()
@@ -232,17 +209,18 @@ def prune(model, amount=0.3):
     import torch.nn.utils.prune as prune
 
     print("Pruning model... ", end="")
-    for _, m in model.named_modules():
+    for name, m in model.named_modules():
         if isinstance(m, nn.Conv2d):
-            # prune
-            prune.l1_unstructured(m, name="weight", amount=amount)
+            prune.l1_unstructured(m, name="weight", amount=amount)  # prune
             prune.remove(m, "weight")  # make permanent
     print(" %.3g global sparsity" % sparsity(model))
 
 
 def fuse_conv_and_bn(conv, bn):
-    # Fuse convolution and batchnorm layers
-    # https://tehnokv.com/posts/fusing-batchnorm-and-conv/
+    """
+    Fuse convolution and batchnorm layers
+    https://tehnokv.com/posts/fusing-batchnorm-and-conv/
+    """
     fusedconv = (
         nn.Conv2d(
             conv.in_channels,
@@ -271,23 +249,19 @@ def fuse_conv_and_bn(conv, bn):
 
 
 def model_info(model, verbose=False, img_size=640):
-    # Model information. img_size may be int or list,
-    # i.e. img_size=640 or img_size=[640, 320]
-
-    # number parameters
-    n_p = sum(x.numel() for x in model.parameters())
-    # number gradients
-    n_g = sum(x.numel() for x in model.parameters() if x.requires_grad)
+    # Model information. img_size may be int or list, i.e. img_size=640 or img_size=[640, 320]
+    n_p = sum(x.numel() for x in model.parameters())  # number parameters
+    n_g = sum(x.numel() for x in model.parameters() if x.requires_grad)  # number gradients
     if verbose:
         print(
-            "%5s %40s %9s %12s %20s %10s %10s"
-            % ("layer", "name", "gradient", "parameters", "shape", "mu", "sigma")
+            f"{'layer':>5} {'name':>40} {'gradient':>9} {'parameters':>12} "
+            f"{'shape':>20} {'mu':>10} {'sigma':>10}"
         )
         for i, (name, p) in enumerate(model.named_parameters()):
             name = name.replace("module_list.", "")
             print(
-                f"{i:5g} {name:40s} {p.requires_grad:9s} {p.numel():12g} "
-                f"{list(p.shape):20s} {p.mean():10.3g} {p.std():10.3g}"
+                "%5g %40s %9s %12g %20s %10.3g %10.3g"
+                % (i, name, p.requires_grad, p.numel(), list(p.shape), p.mean(), p.std())
             )
 
     try:  # FLOPs
@@ -296,8 +270,7 @@ def model_info(model, verbose=False, img_size=640):
         stride = max(int(model.stride.max()), 32) if hasattr(model, "stride") else 32
         # input
         img = torch.zeros(
-            (1, model.yaml.get("ch", 3), stride, stride),
-            device=next(model.parameters()).device,
+            (1, model.yaml.get("ch", 3), stride, stride), device=next(model.parameters()).device
         )
         # stride GFLOPs
         flops = profile(deepcopy(model), inputs=(img,), verbose=False)[0] / 1e9 * 2
@@ -308,44 +281,24 @@ def model_info(model, verbose=False, img_size=640):
     except (ImportError, Exception):
         fs = ""
 
-    LOGGER.info(f"Model Summary: {len(list(model.modules()))} layers, {n_p} parameters, {n_g} gradients{fs}")
-
-
-def load_classifier(name="resnet101", n=2):
-    # Loads a pretrained model reshaped to n-class output
-    model = torchvision.models.__dict__[name](pretrained=True)
-
-    # ResNet model properties
-    # input_size = [3, 224, 224]
-    # input_space = 'RGB'
-    # input_range = [0, 1]
-    # mean = [0.485, 0.456, 0.406]
-    # std = [0.229, 0.224, 0.225]
-
-    # Reshape output to n classes
-    filters = model.fc.weight.shape[1]
-    model.fc.bias = nn.Parameter(torch.zeros(n), requires_grad=True)
-    model.fc.weight = nn.Parameter(torch.zeros(n, filters), requires_grad=True)
-    model.fc.out_features = n
-    return model
+    LOGGER.info(
+        f"Model Summary: {len(list(model.modules()))} layers, " f"{n_p} parameters, {n_g} gradients{fs}"
+    )
 
 
 def scale_img(img, ratio=1.0, same_shape=False, gs=32):
-    # img(16,3,256,416)
-    # scales img(bs,3,y,x) by ratio constrained to gs-multiple
+    """
+    Scales img(bs,3,y,x) by ratio constrained to gs-multiple
+    """
     if ratio == 1.0:
         return img
     else:
         h, w = img.shape[2:]
-        # new size
-        s = (int(h * ratio), int(w * ratio))
-        # resize
-        img = F.interpolate(img, size=s, mode="bilinear", align_corners=False)
-        # pad/crop img
-        if not same_shape:
-            h, w = [math.ceil(x * ratio / gs) * gs for x in (h, w)]
-        # value = imagenet mean
-        return F.pad(img, [0, w - s[1], 0, h - s[0]], value=0.447)
+        s = (int(h * ratio), int(w * ratio))  # new size
+        img = F.interpolate(img, size=s, mode="bilinear", align_corners=False)  # resize
+        if not same_shape:  # pad/crop img
+            h, w = (math.ceil(x * ratio / gs) * gs for x in (h, w))
+        return F.pad(img, [0, w - s[1], 0, h - s[0]], value=0.447)  # value = imagenet mean
 
 
 def copy_attr(a, b, include=(), exclude=()):
@@ -360,21 +313,27 @@ def copy_attr(a, b, include=(), exclude=()):
 class EarlyStopping:
     # YOLOv5 simple early stopper
     def __init__(self, patience=30):
-        # i.e. mAP
-        self.best_fitness = 0.0
+        self.best_fitness = 0.0  # i.e. mAP
         self.best_epoch = 0
         # epochs to wait after fitness stops improving to stop
-        self.patience = patience
+        self.patience = patience or float("inf")
+        self.possible_stop = False  # possible stop may occur next epoch
 
     def __call__(self, epoch, fitness):
-        # >= 0 to allow for early zero-fitness stage of training
-        if fitness >= self.best_fitness:
+        if fitness >= self.best_fitness:  # >= 0 to allow for early zero-fitness stage of training
             self.best_epoch = epoch
             self.best_fitness = fitness
-        # stop training if patience exceeded
-        stop = (epoch - self.best_epoch) >= self.patience
+        delta = epoch - self.best_epoch  # epochs without improvement
+        # possible stop may occur next epoch
+        self.possible_stop = delta >= (self.patience - 1)
+        stop = delta >= self.patience  # stop training if patience exceeded
         if stop:
-            LOGGER.info(f"EarlyStopping patience {self.patience} exceeded, stopping training.")
+            LOGGER.info(
+                f"Stopping training early as no improvement observed in last {self.patience} epochs. "
+                f"Best results observed at epoch {self.best_epoch}, best model saved as best.pt.\n"
+                f"To update EarlyStopping(patience={self.patience}) pass a new patience value, "
+                "i.e. `python train.py --patience 300` or use `--patience 0` to disable EarlyStopping."
+            )
         return stop
 
 
@@ -409,12 +368,12 @@ class ModelEMA:
         with torch.no_grad():
             self.updates += 1
             d = self.decay(self.updates)
-            # model state_dict
+
             msd = model.module.state_dict() if is_parallel(model) else model.state_dict()
             for k, v in self.ema.state_dict().items():
                 if v.dtype.is_floating_point:
                     v *= d
-                    v += (1.0 - d) * msd[k].detach()
+                    v += (1 - d) * msd[k].detach()
 
     def update_attr(self, model, include=(), exclude=("process_group", "reducer")):
         # Update EMA attributes
