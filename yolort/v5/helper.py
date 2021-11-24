@@ -4,6 +4,7 @@ from pathlib import Path
 
 import torch
 
+from .models import AutoShape
 from .models.yolo import Model
 from .utils import attempt_download, intersect_dicts, set_logging
 
@@ -68,6 +69,6 @@ def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bo
     model.load_state_dict(ckpt_state_dict, strict=False)
 
     if autoshape:
-        model = model.autoshape()
+        model = AutoShape(model)
 
     return model
