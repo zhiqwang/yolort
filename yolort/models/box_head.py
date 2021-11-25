@@ -368,7 +368,7 @@ class PostProcess(nn.Module):
                 shape of the element is (N, A, H, W, K).
             anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
         """
-        batch_size = head_outputs[0][0]
+        batch_size = len(head_outputs[0])
 
         all_pred_logits = _concat_pred_logits(head_outputs)
 
