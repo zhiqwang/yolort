@@ -330,31 +330,70 @@ def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
     return all_pred_logits
 
 
-def _decode_pred_logits(
-    pred_logits: List[Tensor],
-    idx: int,
-    anchors_tuple: Tuple[Tensor, Tensor, Tensor],
-    score_thresh: float,
-):
+class LogitsDecoder(nn.Module):
     """
-    Decode the prediction logit from the Post_precess
+    This is a simplified version of PostProcess to remove the ``torchvision::nms`` module.
+
+    Args:
+        score_thresh (float): Score threshold used for postprocessing the detections.
     """
-    pred_logits = torch.sigmoid(pred_logits[idx])
 
-    # Compute conf
-    # box_conf x class_conf, w/ shape: num_anchors x num_classes
-    scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
+    def __init__(self, score_thresh: float = 0.25) -> None:
+        super().__init__()
+        self.score_thresh = score_thresh
 
-    boxes = det_utils.decode_single(pred_logits[:, :4], anchors_tuple)
+    def _decode_pred_logits(
+        self,
+        pred_logits: Tensor,
+        idx: int,
+        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+    ):
+        """
+        Decode the prediction logit from the Post_precess
+        """
+        pred_logits = torch.sigmoid(pred_logits[idx])
 
-    # remove low scoring boxes
-    inds, labels = torch.where(scores > score_thresh)
-    boxes, scores = boxes[inds], scores[inds, labels]
+        # Compute conf
+        # box_conf x class_conf, w/ shape: num_anchors x num_classes
+        scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
 
-    return scores, labels, boxes
+        boxes = det_utils.decode_single(pred_logits[:, :4], anchors_tuple)
+
+        # remove low scoring boxes
+        inds, labels = torch.where(scores > self.score_thresh)
+        boxes, scores = boxes[inds], scores[inds, labels]
+
+        return scores, labels, boxes
+
+    def forward(
+        self,
+        head_outputs: List[Tensor],
+        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+    ) -> List[Dict[str, Tensor]]:
+        """
+        Just concat the predict logits, ignore the original ``torchvision::nms`` module
+        from original ``yolort.models.box_head.PostProcess``.
+
+        Args:
+            head_outputs (List[Tensor]): The predicted locations and class/object confidence,
+                shape of the element is (N, A, H, W, K).
+            anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
+        """
+        batch_size = len(head_outputs[0])
+
+        all_pred_logits = _concat_pred_logits(head_outputs)
+
+        detections: List[Dict[str, Tensor]] = []
+
+        for idx in range(batch_size):  # image idx, image inference
+            scores, labels, boxes = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
+
+            detections.append({"scores": scores, "labels": labels, "boxes": boxes})
+
+        return detections
 
 
-class PostProcess(nn.Module):
+class PostProcess(LogitsDecoder):
     """
     Performs Non-Maximum Suppression (NMS) on inference results
     """
@@ -371,8 +410,7 @@ class PostProcess(nn.Module):
             nms_thresh (float): NMS threshold used for postprocessing the detections.
             detections_per_img (int): Number of best detections to keep after NMS.
         """
-        super().__init__()
-        self.score_thresh = score_thresh
+        super().__init__(score_thresh=score_thresh)
         self.nms_thresh = nms_thresh
         self.detections_per_img = detections_per_img
 
@@ -399,16 +437,12 @@ class PostProcess(nn.Module):
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
-            scores, labels, boxes = _decode_pred_logits(
-                all_pred_logits,
-                idx,
-                anchors_tuple,
-                self.score_thresh,
-            )
+            # Decode the predict logits
+            scores, labels, boxes = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
 
             # non-maximum suppression, independently done per level
             keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)
-            # keep only topk scoring head_outputs
+            # Keep only topk scoring head_outputs
             keep = keep[: self.detections_per_img]
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 

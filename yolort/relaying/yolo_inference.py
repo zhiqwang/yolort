@@ -1,10 +1,8 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import Dict, List, Tuple
-
 import torch
 from torch import nn, Tensor
 from yolort.models import YOLO
-from yolort.models.box_head import _concat_pred_logits, _decode_pred_logits
+from yolort.models.box_head import LogitsDecoder
 
 __all__ = ["YOLOInference"]
 
@@ -24,7 +22,7 @@ class YOLOInference(nn.Module):
         version: str = "r6.0",
     ):
         super().__init__()
-        post_process = PostProcess(score_thresh)
+        post_process = LogitsDecoder(score_thresh)
 
         self.model = YOLO.load_from_yolov5(
             checkpoint_path,
@@ -42,48 +40,3 @@ class YOLOInference(nn.Module):
         outputs = self.model(inputs)
 
         return outputs
-
-
-class PostProcess(nn.Module):
-    """
-    This is a simplified version of PostProcess to remove the ``torchvision::nms`` module.
-
-    Args:
-        score_thresh (float): Score threshold used for postprocessing the detections.
-    """
-
-    def __init__(self, score_thresh: float) -> None:
-        super().__init__()
-        self.score_thresh = score_thresh
-
-    def forward(
-        self,
-        head_outputs: List[Tensor],
-        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
-    ) -> List[Dict[str, Tensor]]:
-        """
-        Just concat the predict logits, ignore the original ``torchvision::nms`` module
-        from original ``yolort.models.box_head.PostProcess``.
-
-        Args:
-            head_outputs (List[Tensor]): The predicted locations and class/object confidence,
-                shape of the element is (N, A, H, W, K).
-            anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
-        """
-        batch_size = len(head_outputs[0])
-
-        all_pred_logits = _concat_pred_logits(head_outputs)
-
-        detections: List[Dict[str, Tensor]] = []
-
-        for idx in range(batch_size):  # image idx, image inference
-            scores, labels, boxes = _decode_pred_logits(
-                all_pred_logits,
-                idx,
-                anchors_tuple,
-                self.score_thresh,
-            )
-
-            detections.append({"scores": scores, "labels": labels, "boxes": boxes})
-
-        return detections
