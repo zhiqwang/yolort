@@ -12,7 +12,7 @@ from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
 from yolort.models.transformer import darknet_tan_backbone
-from yolort.v5 import get_yolov5_size
+from yolort.v5 import get_yolov5_size, attempt_download
 
 
 @contextlib.contextmanager
@@ -351,16 +351,11 @@ def test_load_from_yolov5(
     hash_prefix: str,
 ):
     img_path = "test/assets/bus.jpg"
-    checkpoint_path = f"{arch}_{upstream_version}_{hash_prefix}"
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
+    checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
 
-    torch.hub.download_url_to_file(
-        model_url,
-        checkpoint_path,
-        hash_prefix=hash_prefix,
-    )
     score_thresh = 0.25
 
     model_yolov5 = YOLOv5.load_from_yolov5(

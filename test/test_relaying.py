@@ -4,6 +4,7 @@ from torch import Tensor
 from torch.jit._trace import TopLevelTracedModule
 from yolort.models import yolov5s
 from yolort.relaying import get_trace_module, YOLOInference
+from yolort.v5 import attempt_download
 
 
 def test_get_trace_module():
@@ -23,16 +24,10 @@ def test_get_trace_module():
     ],
 )
 def test_yolo_inference(arch, version, upstream_version, hash_prefix):
-    checkpoint_path = f"{arch}_{upstream_version}_{hash_prefix}"
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
-
-    torch.hub.download_url_to_file(
-        model_url,
-        checkpoint_path,
-        hash_prefix=hash_prefix,
-    )
+    checkpoint_path = attempt_download(model_url)
     score_thresh = 0.25
 
     model = YOLOInference(
