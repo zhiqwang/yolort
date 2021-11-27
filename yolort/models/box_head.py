@@ -330,6 +330,30 @@ def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
     return all_pred_logits
 
 
+def _decode_pred_logits(
+    pred_logits: List[Tensor],
+    idx: int,
+    anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+    score_thresh: float,
+):
+    """
+    Decode the prediction logit from the Post_precess
+    """
+    pred_logits = torch.sigmoid(pred_logits[idx])
+
+    # Compute conf
+    # box_conf x class_conf, w/ shape: num_anchors x num_classes
+    scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
+
+    boxes = det_utils.decode_single(pred_logits[:, :4], anchors_tuple)
+
+    # remove low scoring boxes
+    inds, labels = torch.where(scores > score_thresh)
+    boxes, scores = boxes[inds], scores[inds, labels]
+
+    return scores, labels, boxes
+
+
 class PostProcess(nn.Module):
     """
     Performs Non-Maximum Suppression (NMS) on inference results
@@ -375,17 +399,12 @@ class PostProcess(nn.Module):
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
-            pred_logits = torch.sigmoid(all_pred_logits[idx])
-
-            # Compute conf
-            # box_conf x class_conf, w/ shape: num_anchors x num_classes
-            scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
-
-            boxes = det_utils.decode_single(pred_logits[:, :4], anchors_tuple)
-
-            # remove low scoring boxes
-            inds, labels = torch.where(scores > self.score_thresh)
-            boxes, scores = boxes[inds], scores[inds, labels]
+            scores, labels, boxes = _decode_pred_logits(
+                all_pred_logits,
+                idx,
+                anchors_tuple,
+                self.score_thresh,
+            )
 
             # non-maximum suppression, independently done per level
             keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)

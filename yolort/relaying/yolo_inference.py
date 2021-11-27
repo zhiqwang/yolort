@@ -4,8 +4,7 @@ from typing import Dict, List, Tuple
 import torch
 from torch import nn, Tensor
 from yolort.models import YOLO
-from yolort.models._utils import decode_single
-from yolort.models.box_head import _concat_pred_logits
+from yolort.models.box_head import _concat_pred_logits, _decode_pred_logits
 
 __all__ = ["YOLOInference"]
 
@@ -78,17 +77,12 @@ class PostProcess(nn.Module):
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
-            pred_logits = torch.sigmoid(all_pred_logits[idx])
-
-            # Compute conf
-            # box_conf x class_conf, w/ shape: num_anchors x num_classes
-            scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
-
-            boxes = decode_single(pred_logits[:, :4], anchors_tuple)
-
-            # remove low scoring boxes
-            inds, labels = torch.where(scores > self.score_thresh)
-            boxes, scores = boxes[inds], scores[inds, labels]
+            scores, labels, boxes = _decode_pred_logits(
+                all_pred_logits,
+                idx,
+                anchors_tuple,
+                self.score_thresh,
+            )
 
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
 
