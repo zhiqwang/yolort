@@ -10,7 +10,7 @@ from yolort.models.box_head import _concat_pred_logits
 __all__ = ["YOLOInference"]
 
 
-class YOLOInference(YOLO):
+class YOLOInference(nn.Module):
     """
     A deployment friendly wrapper of YOLO.
 
@@ -24,6 +24,7 @@ class YOLOInference(YOLO):
         score_thresh: float = 0.25,
         version: str = "r6.0",
     ):
+        super().__init__()
         post_process = PostProcess(score_thresh)
 
         self.model = YOLO.load_from_yolov5(
@@ -32,6 +33,7 @@ class YOLOInference(YOLO):
             post_process=post_process,
         )
 
+    @torch.no_grad()
     def forward(self, inputs: Tensor):
         """
         Args:
