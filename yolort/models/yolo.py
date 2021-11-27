@@ -190,6 +190,7 @@ class YOLO(nn.Module):
         score_thresh: float = 0.25,
         nms_thresh: float = 0.45,
         version: str = "r6.0",
+        post_process: Optional[nn.Module] = None,
     ):
         """
         Load model state from the checkpoint trained by YOLOv5.
@@ -220,6 +221,7 @@ class YOLO(nn.Module):
             anchor_grids=model_info["anchor_grids"],
             score_thresh=score_thresh,
             nms_thresh=nms_thresh,
+            post_process=post_process,
         )
 
         model.load_state_dict(model_info["state_dict"])
