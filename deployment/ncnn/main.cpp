@@ -28,7 +28,6 @@ class AnchorGenerator : public ncnn::Layer {
 
 DEFINE_LAYER_CREATOR(AnchorGenerator)
 
-
 class LogitsDecoder : public ncnn::Layer {
  public:
   LogitsDecoder() {
