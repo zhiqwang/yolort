@@ -3,7 +3,7 @@ from typing import List, Dict, Callable, Optional
 
 import torch
 from torch import nn, Tensor
-from yolort.v5 import Conv, BottleneckCSP, C3, SPPF
+from yolort.v5 import Conv, BottleneckCSP, C3, SPP
 
 
 class IntermediateLevelP6(nn.Module):
@@ -106,7 +106,7 @@ class PathAggregationNetwork(nn.Module):
         depth_gain = max(round(3 * depth_multiple), 1)
 
         if version == "r6.0":
-            init_block = SPPF(in_channels[-1], in_channels[-1], k=5)
+            init_block = SPP(in_channels[-1], in_channels[-1], k=(5, 9, 13))
         elif version in ["r3.1", "r4.0"]:
             init_block = block(in_channels[-1], in_channels[-1], n=depth_gain, shortcut=False)
         else:

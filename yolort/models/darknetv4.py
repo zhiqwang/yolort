@@ -4,7 +4,7 @@ from typing import Callable, List, Optional, Any
 import torch
 from torch import nn, Tensor
 from yolort.utils import load_state_dict_from_url
-from yolort.v5 import Conv, Focus, BottleneckCSP, C3, SPPF
+from yolort.v5 import Conv, Focus, BottleneckCSP, C3, SPP
 
 from ._utils import _make_divisible
 
@@ -95,7 +95,7 @@ class DarkNetV4(nn.Module):
         # building last CSP blocks
         last_channel = _make_divisible(last_channel * width_multiple, round_nearest)
         layers.append(Conv(input_channel, last_channel, k=3, s=2, version=version))
-        layers.append(SPPF(last_channel, last_channel, k=5, version=version))
+        layers.append(SPP(last_channel, last_channel, k=(5, 9, 13), version=version))
 
         self.features = nn.Sequential(*layers)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
