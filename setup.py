@@ -4,7 +4,7 @@ See:
 https://packaging.python.org/guides/distributing-packages-using-setuptools/
 https://github.com/pypa/sampleproject
 
-Adopted from TorchVision, see:
+Adapted from TorchVision, see:
 https://github.com/pytorch/vision/blob/master/setup.py
 """
 import os
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     setup(
         name=PACKAGE_NAME,
         version=version_yolort,
-        description="Yet another yolov5 and its runtime stack for specialized accelerators.",
+        description="yolort is a runtime stack for object detection on specialized accelerators.",
         author="Zhiqiang Wang",
         author_email="me@zhiqwang.com",
         long_description=get_long_description(),
