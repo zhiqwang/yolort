@@ -64,7 +64,7 @@ class YOLOTRTModule(nn.Module):
             **kwargs: Will be passed to torch.onnx.export function.
         """
         if input_sample is None:
-            input_sample = torch.rand(1, 3, 320, 320)
+            input_sample = torch.rand(1, 3, 320, 320).to(next(self.parameters()).device)
 
         dynamic_axes = (
             {
