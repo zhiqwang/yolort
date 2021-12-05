@@ -1,15 +1,17 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All Rights Reserved.
+from pytorch_lightning import LightningModule
 import torch
-from torch import nn, Tensor
+from torch import Tensor
+
 from yolort.models import YOLO
 from yolort.models.box_head import LogitsDecoder
 
-__all__ = ["YOLOInference"]
+__all__ = ["YOLOTRTModule"]
 
 
-class YOLOInference(nn.Module):
+class YOLOTRTModule(LightningModule):
     """
-    A deployment friendly wrapper of YOLO.
+    TensorRT deployment friendly wrapper for YOLO.
 
     Remove the ``torchvision::nms`` in this warpper, due to the fact that some third-party
     inference frameworks currently do not support this operator very well.
