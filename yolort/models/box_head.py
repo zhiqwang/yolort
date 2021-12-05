@@ -317,19 +317,6 @@ class SetCriterion:
         return target_cls, target_box, indices, anch
 
 
-def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
-    # Concat all pred logits
-    batch_size, _, _, _, K = head_outputs[0].shape
-
-    all_pred_logits = []
-    for pred_logits in head_outputs:
-        pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(N, HWA, K)
-        all_pred_logits.append(pred_logits)
-
-    all_pred_logits = torch.cat(all_pred_logits, dim=1)
-    return all_pred_logits
-
-
 class LogitsDecoder(nn.Module):
     """
     This is a simplified version of PostProcess to remove the ``torchvision::nms`` module.
@@ -341,6 +328,19 @@ class LogitsDecoder(nn.Module):
     def __init__(self, score_thresh: float = 0.25) -> None:
         super().__init__()
         self.score_thresh = score_thresh
+
+    @staticmethod
+    def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
+        # Concat all pred logits
+        batch_size, _, _, _, K = head_outputs[0].shape
+
+        all_pred_logits = []
+        for pred_logits in head_outputs:
+            pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(N, HWA, K)
+            all_pred_logits.append(pred_logits)
+
+        all_pred_logits = torch.cat(all_pred_logits, dim=1)
+        return all_pred_logits
 
     def _decode_pred_logits(
         self,
@@ -359,11 +359,7 @@ class LogitsDecoder(nn.Module):
 
         boxes = det_utils.decode_single(pred_logits[:, :4], anchors_tuple)
 
-        # remove low scoring boxes
-        inds, labels = torch.where(scores > self.score_thresh)
-        boxes, scores = boxes[inds], scores[inds, labels]
-
-        return scores, labels, boxes
+        return boxes, scores
 
     def forward(
         self,
@@ -381,14 +377,14 @@ class LogitsDecoder(nn.Module):
         """
         batch_size = len(head_outputs[0])
 
-        all_pred_logits = _concat_pred_logits(head_outputs)
+        all_pred_logits = self._concat_pred_logits(head_outputs)
 
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
-            scores, labels, boxes = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
+            boxes, scores = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
 
-            detections.append({"scores": scores, "labels": labels, "boxes": boxes})
+            detections.append({"boxes": boxes, "scores": scores})
 
         return detections
 
@@ -432,13 +428,17 @@ class PostProcess(LogitsDecoder):
         """
         batch_size = len(head_outputs[0])
 
-        all_pred_logits = _concat_pred_logits(head_outputs)
+        all_pred_logits = self._concat_pred_logits(head_outputs)
 
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
             # Decode the predict logits
-            scores, labels, boxes = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
+            boxes, scores = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
+
+            # remove low scoring boxes
+            inds, labels = torch.where(scores > self.score_thresh)
+            boxes, scores = boxes[inds], scores[inds, labels]
 
             # non-maximum suppression, independently done per level
             keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)
