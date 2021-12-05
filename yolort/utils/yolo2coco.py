@@ -1,12 +1,15 @@
 # Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
 import argparse
+import cv2
 import json
 from pathlib import Path
-
 from PIL import Image
+try:
+    from pycocotools import mask as coco_mask
+except ImportError:
+    coco_mask = None
 
 from .builtin_meta import COCO_CATEGORIES
-
 
 class YOLO2COCO:
     def __init__(self, root, split):
@@ -122,6 +125,40 @@ class YOLO2COCO:
         bbox = [x, y, w, h]
         return segmentation, bbox, area
 
+    @staticmethod
+    def _get_ellipse_mask(img_shape, ellipse_info, mask_id=1):
+        assert len(img_shape) == 2
+        img_mask = np.zeros(img_shape, dtype="uint8")
+        center = tuple([int(round(i)) for i in ellipse_info[:2]])
+        axes = tuple([int(np.ceil(i / 2)) for i in ellipse_info[2:4]])
+
+        cv2.ellipse(img_mask, center, axes, ellipse_info[4], 0, 360, (mask_id,), -1)
+        return img_mask
+
+    def _get_seg_annotation(self, img_mask, img_vis=None):
+
+        _, contours, _ = cv2.findContours(img_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        segmentation = []
+        for contour in contours:
+            # Valid polygons have >= 6 coordinates (3 points)
+            if contour.size >= 6:
+                segmentation.append(contour.flatten().tolist())
+
+        RLEs = coco_mask.frPyObjects(segmentation, img_mask.shape[0], img_mask.shape[1])
+        RLE = coco_mask.merge(RLEs)
+        # RLE = coco_mask.encode(np.asfortranarray(img_mask))
+        area = coco_mask.area(RLE)
+        [x, y, w, h] = cv2.boundingRect(img_mask)
+
+        if img_vis is not None:
+            img_vis = img_vis.copy()
+            cv2.drawContours(img_vis, contours, -1, (0, 255, 0), 1)
+            cv2.rectangle(img_vis, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        else:
+            img_vis = None
+
+        return segmentation, [x, y, w, h], area, img_vis
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Datasets converter from yolo to coco", add_help=False)
