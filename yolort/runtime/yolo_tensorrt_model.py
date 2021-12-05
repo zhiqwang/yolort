@@ -1,8 +1,9 @@
 # Copyright (c) 2021, yolort team. All Rights Reserved.
-import torch
 from pathlib import Path
-from torch import nn, Tensor
 from typing import Dict, List, Optional, Union
+
+import torch
+from torch import nn, Tensor
 from yolort.models import YOLO
 from yolort.models.box_head import LogitsDecoder
 
@@ -65,11 +66,15 @@ class YOLOTRTModule(nn.Module):
         if input_sample is None:
             input_sample = torch.rand(1, 3, 320, 320)
 
-        dynamic_axes = {
-            "images_tensors": {0: "batch", 2: "height", 3: "width"},
-            "boxes": {0: "batch", 1: "num_objects"},
-            "scores": {0: "batch", 1: "num_objects"},
-        } if enable_dynamic else None
+        dynamic_axes = (
+            {
+                "images_tensors": {0: "batch", 2: "height", 3: "width"},
+                "boxes": {0: "batch", 1: "num_objects"},
+                "scores": {0: "batch", 1: "num_objects"},
+            }
+            if enable_dynamic
+            else None
+        )
 
         input_names = ["images_tensors"]
         output_names = ["boxes", "scores"]
