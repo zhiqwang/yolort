@@ -60,5 +60,6 @@ def test_trt_model_onnx_saves(arch, version, upstream_version, hash_prefix):
     )
     model.eval()
     onnx_file_path = f"trt_model_onnx_saves_{arch}_{hash_prefix}.onnx"
+    assert not Path(onnx_file_path).exists()
     model.to_onnx(onnx_file_path)
     assert Path(onnx_file_path).exists()
