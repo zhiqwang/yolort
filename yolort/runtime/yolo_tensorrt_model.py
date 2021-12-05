@@ -1,8 +1,7 @@
 # Copyright (c) 2021, yolort team. All Rights Reserved.
-from pytorch_lightning import LightningModule
 import torch
+from pytorch_lightning import LightningModule
 from torch import Tensor
-
 from yolort.models import YOLO
 from yolort.models.box_head import LogitsDecoder
 
