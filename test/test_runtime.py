@@ -1,5 +1,6 @@
 # Copyright (c) 2021, yolort team. All Rights Reserved.
 from pathlib import Path
+
 import pytest
 import torch
 from torch import Tensor
