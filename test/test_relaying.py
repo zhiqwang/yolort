@@ -41,5 +41,4 @@ def test_yolo_inference(arch, version, upstream_version, hash_prefix):
 
     assert isinstance(outs[0], dict)
     assert isinstance(outs[0]["boxes"], Tensor)
-    assert isinstance(outs[0]["labels"], Tensor)
     assert isinstance(outs[0]["scores"], Tensor)
