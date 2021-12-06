@@ -40,6 +40,7 @@ class YOLOv5GraphSurgeon:
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         enable_dynamic: Whether to specify axes of tensors as dynamic. Default: True.
     """
+
     def __init__(
         self,
         checkpoint_path: str,
@@ -157,7 +158,9 @@ class YOLOv5GraphSurgeon:
 
         # NMS Outputs
         output_num_detections = gs.Variable(
-            name="num_detections", dtype=np.int32, shape=[self.batch_size, 1],
+            name="num_detections",
+            dtype=np.int32,
+            shape=[self.batch_size, 1],
         )  # A scalar indicating the number of valid detections per batch image.
         output_boxes = gs.Variable(
             name="detection_boxes",
