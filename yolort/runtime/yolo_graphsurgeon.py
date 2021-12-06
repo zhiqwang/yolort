@@ -29,22 +29,24 @@ log = logging.getLogger("YOLOv5GraphSurgeon")
 
 
 class YOLOv5GraphSurgeon:
+    """
+    Constructor of the YOLOv5 Graph Surgeon object, TensorRT treat ``nms`` as
+    plugin, especially ``EfficientNMS_TRT`` in our yolort PostProcess module.
+
+    Args:
+        checkpoint_path: The path pointing to the PyTorch saved model to load.
+        score_thresh (float): Score threshold used for postprocessing the detections.
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+        enable_dynamic: Whether to specify axes of tensors as dynamic. Default: True.
+    """
     def __init__(
         self,
         checkpoint_path: str,
         score_thresh: float = 0.25,
         version: str = "r6.0",
+        enable_dynamic: bool = True,
     ):
-        """
-        Constructor of the YOLOv5 Graph Surgeon object, to do the conversion
-        of a YOLOv5 saved onnx model to an ONNX-TensorRT parsable model.
-
-        Args:
-            checkpoint_path: The path pointing to the PyTorch saved model to load.
-            score_thresh (float): Score threshold used for postprocessing the detections.
-            version (str): upstream version released by the ultralytics/yolov5, Possible
-                values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
-        """
         checkpoint_path = Path(checkpoint_path)
         assert checkpoint_path.exists()
 
@@ -54,7 +56,7 @@ class YOLOv5GraphSurgeon:
 
         log.info(f"Loaded saved model from {checkpoint_path}")
         onnx_model_path = checkpoint_path.with_suffix(".onnx")
-        model.to_onnx(onnx_model_path)
+        model.to_onnx(onnx_model_path, enable_dynamic=enable_dynamic)
         self.graph = gs.import_onnx(onnx.load(onnx_model_path))
         assert self.graph
         log.info("PyTorch2ONNX graph created successfully")
@@ -62,7 +64,7 @@ class YOLOv5GraphSurgeon:
         # Fold constants via ONNX-GS that PyTorch2ONNX may have missed
         self.graph.fold_constants()
 
-        self.batch_size = None
+        self.batch_size = 1
 
     def infer(self):
         """
@@ -110,37 +112,25 @@ class YOLOv5GraphSurgeon:
         onnx.save(model, output_path)
         log.info(f"Saved ONNX model to {output_path}")
 
-    def find_head_concat(self, name_scope):
-        # This will find the concatenation node at the end of either Class Net or Box Net. These concatenation nodes
-        # bring together prediction data for each of 5 scales.
-        # The concatenated Class Net node will have shape [batch_size, num_anchors, num_classes],
-        # and the concatenated Box Net node has the shape [batch_size, num_anchors, 4].
-        # These concatenation nodes can be be found by searching for all Concat's and checking if the node two
-        # steps above in the graph has a name that begins with either "box_net/..." or "class_net/...".
-        for node in [node for node in self.graph.nodes if node.op == "Transpose" and name_scope in node.name]:
-            concat = self.graph.find_descendant_by_op(node, "Concat")
-            assert concat and len(concat.inputs) == 5
-            log.info("Found {} node '{}' as the tip of {}".format(concat.op, concat.name, name_scope))
-            return concat
-
     def register_nms(
         self,
         score_thresh: float = 0.25,
         nms_thresh: float = 0.45,
-        detections_per_img: int = 300,
+        detections_per_img: int = 100,
     ):
         """
         Register the ``EfficientNMS_TRT`` plugin node.
 
         NMS expects these shapes for its input tensors:
-        box_net: [batch_size, number_boxes, 4]
-        class_net: [batch_size, number_boxes, number_labels]
+        - box_net: [batch_size, number_boxes, 4]
+        - class_net: [batch_size, number_boxes, number_labels]
 
         EfficientNMS TensorRT Plugin
         Fusing the decoder will always be faster, so this is the default NMS method supported.
         In this case, three inputs are given to the NMS TensorRT node:
         - The box predictions (from the Box Net node found above)
         - The class predictions (from the Class Net node found above)
+
         As the original tensors from YOLOv5 will be used, the NMS code type is set to 0 (Corners),
         because this is the internal box coding format used by the network.
 
@@ -153,22 +143,22 @@ class YOLOv5GraphSurgeon:
 
         self.infer()
         # Find the concat node at the end of the network
+        nms_inputs = self.graph.outputs
         op = "EfficientNMS_TRT"
         attrs = {
             "plugin_version": "1",
-            "background_class": -1,
+            "background_class": -1,  # no background class
             "max_output_boxes": detections_per_img,
             "score_threshold": max(0.01, score_thresh),
             "iou_threshold": nms_thresh,
             "score_activation": True,
             "box_coding": 0,
         }
-        nms_output_labels_dtype = np.int32
 
         # NMS Outputs
         output_num_detections = gs.Variable(
-            name="num_detections", dtype=np.int32, shape=[self.batch_size, 1]
-        )
+            name="num_detections", dtype=np.int32, shape=[self.batch_size, 1],
+        )  # A scalar indicating the number of valid detections per batch image.
         output_boxes = gs.Variable(
             name="detection_boxes",
             dtype=np.float32,
@@ -181,7 +171,7 @@ class YOLOv5GraphSurgeon:
         )
         output_labels = gs.Variable(
             name="detection_labels",
-            dtype=nms_output_labels_dtype,
+            dtype=np.int32,
             shape=[self.batch_size, detections_per_img],
         )
 
@@ -189,10 +179,10 @@ class YOLOv5GraphSurgeon:
 
         # Create the NMS Plugin node with the selected inputs. The outputs of the node will also
         # become the final outputs of the graph.
-        self.graph.plugin(
+        self.graph.layer(
             op=op,
-            name="nms/non_maximum_suppression",
-            inputs=self.graph.outputs,
+            name="batched_nms",
+            inputs=nms_inputs,
             outputs=nms_outputs,
             attrs=attrs,
         )
