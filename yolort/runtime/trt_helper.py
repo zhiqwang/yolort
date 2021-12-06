@@ -9,8 +9,8 @@
 # LICENSE file in the root directory of TensorRT source tree.
 #
 
-from pathlib import Path
 import logging
+from pathlib import Path
 
 import numpy as np
 import onnx
@@ -151,10 +151,10 @@ class YOLOv5GraphSurgeon:
         Updates the graph to replace the NMS op by BatchedNMS_TRT TensorRT plugin node.
 
         Args:
-            threshold: Override the score threshold attribute.
-                If set to None, use the value in the graph.
-            detections: Override the max detections attribute.
-                If set to None, use the value in the graph.
+            threshold: Override the score threshold attribute. If set to None,
+                use the value in the graph.
+            detections: Override the max detections attribute. If set to None,
+                use the value in the graph.
         """
 
         self.infer()
@@ -208,13 +208,13 @@ class YOLOv5GraphSurgeon:
         nms_inputs = [box_net_tensor, class_net_tensor]
         nms_op = "EfficientNMS_TRT"
         nms_attrs = {
-            'plugin_version': "1",
-            'background_class': -1,
-            'max_output_boxes': num_detections,
-            'score_thresh': max(0.01, score_thresh),
-            'iou_threshold': iou_threshold,
-            'score_activation': True,
-            'box_coding': 0,
+            "plugin_version": "1",
+            "background_class": -1,
+            "max_output_boxes": num_detections,
+            "score_thresh": max(0.01, score_thresh),
+            "iou_threshold": iou_threshold,
+            "score_activation": True,
+            "box_coding": 0,
         }
         nms_output_labels_dtype = np.int32
 
@@ -247,7 +247,8 @@ class YOLOv5GraphSurgeon:
             name="nms/non_maximum_suppression",
             inputs=nms_inputs,
             outputs=nms_outputs,
-            attrs=nms_attrs)
+            attrs=nms_attrs,
+        )
         log.info(f"Created NMS plugin '{nms_op}' with attributes: {nms_attrs}")
 
         self.graph.outputs = nms_outputs
@@ -262,10 +263,8 @@ class YOLOv5GraphSurgeon:
         # These concatenation nodes can be be found by searching for all Concat's and checking
         # if the node two steps above in the graph has a name that begins with either
         # "box_net/..." or "class_net/...".
-        for node in [
-            node for node in self.graph.nodes if node.op == "Transpose" and name_scope in node.name
-        ]:
+        for node in [node for node in self.graph.nodes if node.op == "Transpose" and name_scope in node.name]:
             concat = self.graph.find_descendant_by_op(node, "Concat")
             assert concat and len(concat.inputs) == 5
-            log.info("Found {} node '{}' as the tip of {}".format(concat.op, concat.name, name_scope))
+            log.info(f"Found {concat.op} node '{concat.name}' as the tip of {name_scope}")
             return concat
