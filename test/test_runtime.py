@@ -33,9 +33,10 @@ def test_yolo_trt_module(arch, version, upstream_version, hash_prefix):
     samples = torch.rand(1, 3, 320, 320)
     outs = model(samples)
 
-    assert isinstance(outs[0], dict)
-    assert isinstance(outs[0]["boxes"], Tensor)
-    assert isinstance(outs[0]["scores"], Tensor)
+    assert isinstance(outs, tuple)
+    assert len(outs) == 2
+    assert isinstance(outs[0], Tensor)
+    assert isinstance(outs[1], Tensor)
 
 
 @pytest.mark.parametrize(

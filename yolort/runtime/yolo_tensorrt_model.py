@@ -1,6 +1,6 @@
 # Copyright (c) 2021, yolort team. All Rights Reserved.
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Tuple, Union
 
 import torch
 from torch import nn, Tensor
@@ -34,7 +34,7 @@ class YOLOTRTModule(nn.Module):
         )
 
     @torch.no_grad()
-    def forward(self, inputs: Tensor) -> List[Dict[str, Tensor]]:
+    def forward(self, inputs: Tensor) -> Tuple[Tensor, Tensor]:
         """
         Args:
             inputs (Tensor): batched images, of shape [batch_size x 3 x H x W]
