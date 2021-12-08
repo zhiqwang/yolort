@@ -1,4 +1,5 @@
 #include <cuda_runtime_api.h>
+#include <opencv2/opencv.hpp>
 #include <string.h>
 #include <sys/time.h>
 #include <cassert>
@@ -9,7 +10,6 @@
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <opencv2/opencv.hpp>
 #include "NvInfer.h"
 #include "NvOnnxParser.h"
 #include "cmdline.h"
@@ -131,9 +131,9 @@ ICudaEngine* CreateCudaEngineFromOnnx(
   // {
   //   Dims dim = network->getInput(0)->getDimensions();
   //   const char* name = network->getInput(0)->getName();
-  //   profile->setDimensions(name, OptProfileSelector::kMIN, Dims4(1, dim.d[1], dim.d[2], dim.d[3]));
-  //   profile->setDimensions(name, OptProfileSelector::kOPT, Dims4(1, dim.d[1], dim.d[2], dim.d[3]));
-  //   profile->setDimensions(
+  //   profile->setDimensions(name, OptProfileSelector::kMIN, Dims4(1, dim.d[1], dim.d[2],
+  //   dim.d[3])); profile->setDimensions(name, OptProfileSelector::kOPT, Dims4(1, dim.d[1],
+  //   dim.d[2], dim.d[3])); profile->setDimensions(
   //       name,
   //       OptProfileSelector::kMAX,
   //       Dims4(builder->getMaxBatchSize(), dim.d[1], dim.d[2], dim.d[3]));
@@ -215,21 +215,18 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   int detection_labels_index = engine->getBindingIndex("detection_labels");
 
   int32_t num_detections = 0;
-  float *detection_boxes = nullptr;
-  float *detection_scores = nullptr;
-  int32_t *detection_labels = nullptr;
+  float* detection_boxes = nullptr;
+  float* detection_scores = nullptr;
+  int32_t* detection_labels = nullptr;
 
-  for (int32_t i = 0; i < engine->getNbBindings(); i++)
-  {
+  for (int32_t i = 0; i < engine->getNbBindings(); i++) {
     {
       /* Debug output */
       std::cout << "  Bind[" << i << "] {"
                 << "Name:" << engine->getBindingName(i)
-                << ", Datatype:" << static_cast<int>(engine->getBindingDataType(i))
-                << ", Shape:(";
-      for (int j = 0; j < engine->getBindingDimensions(i).nbDims; j++)
-      {
-          std::cout << engine->getBindingDimensions(i).d[j] << ",";
+                << ", Datatype:" << static_cast<int>(engine->getBindingDataType(i)) << ", Shape:(";
+      for (int j = 0; j < engine->getBindingDimensions(i).nbDims; j++) {
+        std::cout << engine->getBindingDimensions(i).d[j] << ",";
       }
       std::cout << ")"
                 << "}" << std::endl;
@@ -237,9 +234,8 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
     Dims dim = engine->getBindingDimensions(i);
     size_t buffer_size = batch_size;
     // FIXME: 此处如果为 dynamic input，部分形状为 -1
-    for (int j = 1; j < engine->getBindingDimensions(i).nbDims; j++)
-    {
-        buffer_size *= engine->getBindingDimensions(i).d[j];
+    for (int j = 1; j < engine->getBindingDimensions(i).nbDims; j++) {
+      buffer_size *= engine->getBindingDimensions(i).d[j];
     }
     CHECK(cudaMalloc(&buffers[i], buffer_size * getElementSize(engine->getBindingDataType(i))));
     if (i == detection_boxes_index) {
@@ -254,7 +250,7 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   /* Dims == > NCHW */
   int32_t input_h = engine->getBindingDimensions(0).d[2];
   int32_t input_w = engine->getBindingDimensions(0).d[3];
-  cudaStream_t stream;  /* XXX: 此处应该可以直接声明为类成员变量？ */
+  cudaStream_t stream; /* XXX: 此处应该可以直接声明为类成员变量？ */
   CHECK(cudaStreamCreate(&stream));
   cv::resize(image, image, cv::Size(input_w, input_h));
   image.convertTo(image, CV_32FC3);
@@ -300,13 +296,11 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
 
   cudaStreamDestroy(stream);
 
-  for (int i = 0; i < engine->getNbBindings(); ++i)
-  {
-      CHECK(cudaFree(buffers[i]));
+  for (int i = 0; i < engine->getNbBindings(); ++i) {
+    CHECK(cudaFree(buffers[i]));
   }
 
-  for (int32_t i = 0; i < num_detections; i++)
-  {
+  for (int32_t i = 0; i < num_detections; i++) {
     Detection detection;
     detection.box.x = detection_boxes[4 * i];
     detection.box.y = detection_boxes[4 * i + 1];
