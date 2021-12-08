@@ -1,8 +1,5 @@
-sphinx
-recommonmark
-sphinx-markdown-tables
-insipid-sphinx-theme
-nbsphinx
-pandoc
 numpy
-jieba
+jupyterlab
+sphinx==3.5.4
+insipid-sphinx-theme
+nbsphinx==0.8.7

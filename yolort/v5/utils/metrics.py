@@ -86,11 +86,14 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir=".", names
 
 
 def compute_ap(recall, precision):
-    """Compute the average precision, given the recall and precision curves
-    # Arguments
-        recall:    The recall curve (list)
+    """
+    Compute the average precision, given the recall and precision curves
+
+    Args:
+        recall: The recall curve (list)
         precision: The precision curve (list)
-    # Returns
+
+    Returns:
         Average precision, precision curve, recall curve
     """
 

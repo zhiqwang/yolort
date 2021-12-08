@@ -18,6 +18,7 @@ from yolort.v5 import (
     load_yolov5_model,
     scale_coords,
     non_max_suppression,
+    attempt_download,
 )
 
 
@@ -36,15 +37,10 @@ def test_load_from_ultralytics(
     hash_prefix: str,
     use_p6: bool,
 ):
-    checkpoint_path = f"{arch}_{upstream_version}_{hash_prefix}"
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
+    checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
 
-    torch.hub.download_url_to_file(
-        model_url,
-        checkpoint_path,
-        hash_prefix=hash_prefix,
-    )
     model_info = load_from_ultralytics(checkpoint_path, version=version)
     assert isinstance(model_info, dict)
     assert model_info["num_classes"] == 80
@@ -53,6 +49,7 @@ def test_load_from_ultralytics(
     assert len(model_info["strides"]) == 4 if use_p6 else 3
 
 
+@pytest.mark.skip(reason="Due to #235")
 @pytest.mark.parametrize(
     "arch, version, upstream_version, hash_prefix",
     [("yolov5s-VOC", "r4.0", "v5.0", "23818cff")],
@@ -64,16 +61,10 @@ def test_load_from_ultralytics_voc(
     hash_prefix: str,
 ):
     img_path = "test/assets/bus.jpg"
-    checkpoint_path = f"{arch}_{upstream_version}_{hash_prefix}"
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
-
-    torch.hub.download_url_to_file(
-        model_url,
-        checkpoint_path,
-        hash_prefix=hash_prefix,
-    )
+    checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
 
     # Preprocess
     img_raw = cv2.imread(img_path)

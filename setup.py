@@ -4,9 +4,10 @@ See:
 https://packaging.python.org/guides/distributing-packages-using-setuptools/
 https://github.com/pypa/sampleproject
 
-Adopted from TorchVision, see:
+Adapted from TorchVision, see:
 https://github.com/pytorch/vision/blob/master/setup.py
 """
+import os
 import subprocess
 from pathlib import Path
 
@@ -23,11 +24,16 @@ try:
 except Exception:
     pass
 
+if os.getenv("BUILD_VERSION"):
+    version_yolort = os.getenv("BUILD_VERSION")
+elif sha != "Unknown":
+    version_yolort = f"{VERSION}+{sha[:7]}"
+
 
 def write_version_file():
     version_path = PATH_ROOT / PACKAGE_NAME / "version.py"
     with open(version_path, "w") as f:
-        f.write(f"__version__ = '{VERSION}'\n")
+        f.write(f"__version__ = '{version_yolort}'\n")
         f.write(f"git_version = {repr(sha)}\n")
         f.write("from torchvision.extension import _check_cuda_version\n")
         f.write("if _check_cuda_version() > 0:\n")
@@ -60,14 +66,14 @@ def load_requirements(path_dir=PATH_ROOT, file_name="requirements.txt", comment_
 
 
 if __name__ == "__main__":
-    print("Building wheel {}-{}".format(PACKAGE_NAME, VERSION))
+    print(f"Building wheel {PACKAGE_NAME}-{version_yolort}")
 
     write_version_file()
 
     setup(
         name=PACKAGE_NAME,
-        version=VERSION,
-        description="Yet another yolov5 and its runtime stack for specialized accelerators.",
+        version=version_yolort,
+        description="yolort is a runtime stack for object detection on specialized accelerators.",
         author="Zhiqiang Wang",
         author_email="me@zhiqwang.com",
         long_description=get_long_description(),

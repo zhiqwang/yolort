@@ -1,57 +1,79 @@
-yolort - YOLOv5 Runtime Stack
-=======================================
+Welcome to yolort's documentation!
+==================================
 
-yolort is another implementation of Ultralytics's [yolov5](https://github.com/ultralytics/yolov5),
-and with modules refactoring to make it available in deployment backends such as `libtorch`,
-`onnxruntime`, `tvm` and so on.
+Runtime stack for YOLOv5 on specialized accelerators such as ``libtorch``,
+``onnxruntime``, ``tvm`` and ``ncnn``.
+
+.. image:: _static/yolort_logo.png
+   :width: 400px
+   :align: center
+
+
+.. _what-is-yolort:
+
+**What is yolort?**
+
+``yolort`` focus on making the training and inference of the object detection task
+integrate more seamlessly together. ``yolort`` now adopts the same model
+structure as the official YOLOv5. The significant difference is that we adopt
+the dynamic shape mechanism, and within this, we can embed both pre-processing
+(``letterbox``) and post-processing (``nms``) into the model graph, which
+simplifies the deployment strategy. In this sense, ``yolort`` makes it possible
+to be deployed more friendly on ``LibTorch``, ``ONNXRuntime``, ``TVM`` and so on.
+
+.. _about-the-code:
+
+**About the code**
+
+Follow the design principle of `detr <https://github.com/facebookresearch/detr>`_:
+
+..
+
+   object detection should not be more difficult than classification, and should
+   not require complex libraries for training and inference.
+
+``yolort`` is very simple to implement and experiment with. You like the implementation
+of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love ``yolort``!
+
+.. _quick-get-stated:
+
+**Quick Get started**
+
+Read a source of image(s) and detect its objects:
+
+.. code:: python
+
+   from yolort.models import yolov5s
+
+   # Load model
+   model = yolov5s(pretrained=True, score_thresh=0.45)
+   model.eval()
+
+   # Perform inference on an image file
+   predictions = model.predict("bus.jpg")
+   # Perform inference on a list of image files
+   predictions = model.predict(["bus.jpg", "zidane.jpg"])
 
 .. toctree::
    :maxdepth: 2
-   :caption: Get started:
+   :caption: Get started
 
    installation
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Examples:
+   :maxdepth: 2
+   :caption: Tutorials
 
-   notebooks/how_to_align_with_ultralytics_yolov5
-   notebooks/model_graph_visualization
-   notebooks/anchor_label_assignment_visualization
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Deployment:
-
-   notebooks/inference_pytorch_export_libtorch
-   notebooks/export_onnx_inference_onnxruntime
-   notebooks/export_relay_inference_tvm
+   notebooks/inference-pytorch-export-libtorch
+   notebooks/how-to-align-with-ultralytics-yolov5
+   notebooks/anchor-label-assignment-visualization
+   notebooks/model-graph-visualization
+   notebooks/export-onnx-inference-onnxruntime
+   notebooks/export-relay-inference-tvm
 
 .. toctree::
    :maxdepth: 2
-   :caption: yolort API:
+   :caption: API Reference
 
-   datasets
    models
-   utils
-
-
-Authors
-=======
-
-The yolort Team: Zhiqiang Wang
-
-Acknowledgements
-================
-
-We were inspired by
-
-- The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
-- This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
+   yolov5

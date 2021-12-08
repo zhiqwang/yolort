@@ -1,7 +1,5 @@
-models
-=========
-
-The models are the central components of yolort.
+Models and pre-trained weights
+==============================
 
 .. automodule:: yolort.models
    :imported-members:

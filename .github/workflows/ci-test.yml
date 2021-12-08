@@ -1,0 +1,120 @@
+# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# GH actions
+
+name: CI testing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  Unittest:
+    runs-on: ${{ matrix.image }}
+    strategy:
+      matrix:
+        image: [ 'ubuntu-latest' ]
+        torch: [ 'torch 1.9.1+cpu', 'torch 1.10.0+cpu' ]
+        include:
+          - torch: 'torch 1.9.1+cpu'
+            torch_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+            unittest_type: --cov=test --cov-report=xml
+            torchvision: release/0.10
+          - torch: 'torch 1.10.0+cpu'
+            torch_address: install torch==1.10.0+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+            unittest_type: --cov=test --cov-report=xml
+            torchvision: release/0.11
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python -m pip install --progress-bar off --upgrade pip
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install PyTorch ${{ matrix.torch }} Version
+        run: |
+          # requirements for PyTorch and torchvision
+          pip install --progress-bar off numpy pillow scipy
+          pip install --progress-bar off ${{ matrix.torch_address }}
+
+      - name: Install dependencies
+        run: |
+          # requirements for unittest
+          pip install --progress-bar off flake8 pytest
+          pip install --progress-bar off pytest-cov
+          # Install other dependencies
+          if [ -f requirements.txt ]; then pip install --progress-bar off -r requirements.txt; fi
+          pip install --progress-bar off opencv-python
+          pip install --progress-bar off pycocotools>=2.0.2
+          pip install --progress-bar off onnxruntime
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=18 --max-line-length=120 --statistics
+
+      - name: Test and Generate coverage report
+        run: |
+          PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Build TorchVision Cpp ${{ matrix.torch }}
+        run: |
+          export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
+          cd ..
+          git clone https://github.com/pytorch/vision.git vision
+          cd vision
+          git checkout ${{ matrix.torchvision }}
+          mkdir build && cd build
+          cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
+          make -j4
+          sudo make install
+
+      - name: Export torchscript model
+        run: |
+          python -m test.tracing.trace_model
+
+      - name: Test libtorch tracing
+        run: |
+          export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
+          cd test/tracing
+          mkdir build && cd build
+          cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
+          make
+          mv ../yolov5s.torchscript.pt ./
+          echo ">> Test libtorch tracing"
+          ./test_tracing

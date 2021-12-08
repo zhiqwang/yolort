@@ -6,10 +6,10 @@
 
 ______________________________________________________________________
 
-[Documentation](#hammer_and_wrench-usage) •
-[Installation Instructions](#installation-and-inference-examples) •
+[Documentation](https://zhiqwang.com/yolov5-rt-stack/) •
+[Installation Instructions](https://zhiqwang.com/yolov5-rt-stack/installation.html) •
 [Deployment](#rocket-deployment) •
-[Contributing](CONTRIBUTING.md) •
+[Contributing](.github/CONTRIBUTING.md) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
 
 ______________________________________________________________________
@@ -18,18 +18,21 @@ ______________________________________________________________________
 [![PyPI version](https://badge.fury.io/py/yolort.svg)](https://badge.fury.io/py/yolort)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=blue&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
 [![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=downloads&logo=github&logoColor=lightgrey)](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=blue&label=Downloads&logo=github&logoColor=lightgrey)
-[![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
 
-[![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/workflows/CI%20testing/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions?query=workflow%3A%22CI+testing%22)
+[![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml)
+[![Build & deploy docs](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/main.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/main)
+
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/main/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+[![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 
 ______________________________________________________________________
 
 </div>
 
-## :hugs: Introduction
+## 🤗 Introduction
 
 **What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNXRuntime`, `TVM` and so on.
 
@@ -41,7 +44,7 @@ ______________________________________________________________________
 
 <a href="notebooks/assets/zidane.jpg"><img src="notebooks/assets/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
-## :new: What's New
+## 🆕 What's New
 
 - *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [itsnine](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
@@ -51,7 +54,7 @@ ______________________________________________________________________
 - *Nov. 4, 2020*. Add `LibTorch` C++ inference example.
 - *Oct. 8, 2020*. Support exporting to `TorchScript` model.
 
-## :hammer_and_wrench: Usage
+## 🛠️ Usage
 
 There are no extra compiled components in `yolort` and package dependencies are minimal, so the code is very simple to use.
 
@@ -132,17 +135,30 @@ We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to de
 
 On the `ONNXRuntime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNXRuntime`.
 
-## :art: Model Graph Visualization
+## 🎨 Model Graph Visualization
 
 Now, `yolort` can draw the model graph directly, checkout our [model-graph-visualization](notebooks/model-graph-visualization.ipynb) notebook to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5_graph_visualize.svg"><img src="notebooks/assets/yolov5_graph_visualize.svg" alt="YOLO model visualize" width="500"/></a>
 
-## :mortar_board: Acknowledgement
+## 🎓 Acknowledgement
 
 - The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
 - This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
 
-## :thinking: Contributing
+## 📖 Citing yolort
 
-See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)
+If you use yolort in your publication, please cite it by using the following BibTeX entry.
+
+```bibtex
+@Misc{yolort2021,
+  author =       {Zhiqiang Wang, Fidan Kharrasov},
+  title =        {yolort: A runtime stack for object detection on specialized accelerators},
+  howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
+  year =         {2021}
+}
+```
+
+## 👋 Contributing
+
+See the [CONTRIBUTING](.github/CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)

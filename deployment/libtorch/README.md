@@ -37,10 +37,14 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
    Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/8ee9fd1/export.py) `torch.jit.trace` mechanism, We're using `torch.jit.script` to trace the YOLOv5 models which containing the whole pre-processing (especially with the [`letterbox`](https://github.com/ultralytics/yolov5/blob/8ee9fd1/utils/augmentations.py#L85-L115) ops) and post-processing (especially with the `nms` ops) procedures, as such you don't need to rewrite manually the C++ codes of pre-processing and post-processing.
 
-   ```bash
-   git clone https://github.com/zhiqwang/yolov5-rt-stack.git
-   cd yolov5-rt-stack
-   python -m test.tracing.trace_model
+   ```python
+   from yolort.models import yolov5n
+
+   model = yolov5n(pretrained=True)
+   model.eval()
+
+   traced_model = torch.jit.script(model)
+   traced_model.save("yolov5n.torchscript.pt")
    ```
 
 1. Then compile the source code.
@@ -56,7 +60,7 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
    ```bash
    ./yolo_inference [--input_source ../../../test/assets/zidane.jpg]
-                    [--checkpoint ../../../test/tracing/yolov5s.torchscript.pt]
+                    [--checkpoint ../yolov5n.torchscript.pt]
                     [--labelmap ../../../notebooks/assets/coco.names]
                     [--gpu]  # GPU switch, which is optional, and set False as default
    ```

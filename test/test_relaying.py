@@ -1,3 +1,4 @@
+# Copyright (c) 2021, yolort team. All Rights Reserved.
 from torch.jit._trace import TopLevelTracedModule
 from yolort.models import yolov5s
 from yolort.relaying import get_trace_module

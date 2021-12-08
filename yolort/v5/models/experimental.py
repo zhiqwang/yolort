@@ -1,4 +1,4 @@
-# YOLOv5 by Ultralytics, GPL-3.0 license
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 """
 Experimental modules
 """
@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from . import Conv
+from .common import Conv
 
 
 class CrossConv(nn.Module):
