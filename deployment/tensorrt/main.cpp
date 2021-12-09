@@ -396,9 +396,7 @@ int main(int argc, char* argv[]) {
 
   visualizeDetection(image, result, classNames);
 
-  cv::imshow("image", image);
-  cv::waitKey(0);
-  cv::destroyAllWindows();
+  cv::imwrite("result.jpg", image);
 
   return 0;
 }
