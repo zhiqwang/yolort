@@ -126,12 +126,6 @@ class YOLOv5GraphSurgeon:
         - box_net: [batch_size, number_boxes, 4]
         - class_net: [batch_size, number_boxes, number_labels]
 
-        EfficientNMS TensorRT Plugin
-        Fusing the decoder will always be faster, so this is the default NMS method supported.
-        In this case, three inputs are given to the NMS TensorRT node:
-        - The box predictions (from the Box Net node found above)
-        - The class predictions (from the Class Net node found above)
-
         As the original tensors from YOLOv5 will be used, the NMS code type is set to 0 (Corners),
         because this is the internal box coding format used by the network.
 
