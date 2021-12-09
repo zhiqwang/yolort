@@ -320,14 +320,10 @@ class SetCriterion:
 class LogitsDecoder(nn.Module):
     """
     This is a simplified version of PostProcess to remove the ``torchvision::nms`` module.
-
-    Args:
-        score_thresh (float): Score threshold used for postprocessing the detections.
     """
 
-    def __init__(self, score_thresh: float = 0.25) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.score_thresh = score_thresh
 
     @staticmethod
     def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
@@ -342,8 +338,8 @@ class LogitsDecoder(nn.Module):
         all_pred_logits = torch.cat(all_pred_logits, dim=1)
         return all_pred_logits
 
+    @staticmethod
     def _decode_pred_logits(
-        self,
         pred_logits: Tensor,
         idx: int,
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
@@ -365,7 +361,7 @@ class LogitsDecoder(nn.Module):
         self,
         head_outputs: List[Tensor],
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
-    ) -> List[Dict[str, Tensor]]:
+    ) -> Tuple[Tensor, Tensor]:
         """
         Just concat the predict logits, ignore the original ``torchvision::nms`` module
         from original ``yolort.models.box_head.PostProcess``.
@@ -379,14 +375,15 @@ class LogitsDecoder(nn.Module):
 
         all_pred_logits = self._concat_pred_logits(head_outputs)
 
-        detections: List[Dict[str, Tensor]] = []
+        bbox_regression = []
+        pred_scores = []
 
         for idx in range(batch_size):  # image idx, image inference
             boxes, scores = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
+            bbox_regression.append(boxes)
+            pred_scores.append(scores)
 
-            detections.append({"boxes": boxes, "scores": scores})
-
-        return detections
+        return torch.stack(bbox_regression), torch.stack(pred_scores)
 
 
 class PostProcess(LogitsDecoder):
@@ -406,7 +403,8 @@ class PostProcess(LogitsDecoder):
             nms_thresh (float): NMS threshold used for postprocessing the detections.
             detections_per_img (int): Number of best detections to keep after NMS.
         """
-        super().__init__(score_thresh=score_thresh)
+        super().__init__()
+        self.score_thresh = score_thresh
         self.nms_thresh = nms_thresh
         self.detections_per_img = detections_per_img
 
