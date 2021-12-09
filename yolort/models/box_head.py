@@ -320,14 +320,10 @@ class SetCriterion:
 class LogitsDecoder(nn.Module):
     """
     This is a simplified version of PostProcess to remove the ``torchvision::nms`` module.
-
-    Args:
-        score_thresh (float): Score threshold used for postprocessing the detections.
     """
 
-    def __init__(self, score_thresh: float = 0.25) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.score_thresh = score_thresh
 
     @staticmethod
     def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
@@ -342,8 +338,8 @@ class LogitsDecoder(nn.Module):
         all_pred_logits = torch.cat(all_pred_logits, dim=1)
         return all_pred_logits
 
+    @staticmethod
     def _decode_pred_logits(
-        self,
         pred_logits: Tensor,
         idx: int,
         anchors_tuple: Tuple[Tensor, Tensor, Tensor],
@@ -407,7 +403,8 @@ class PostProcess(LogitsDecoder):
             nms_thresh (float): NMS threshold used for postprocessing the detections.
             detections_per_img (int): Number of best detections to keep after NMS.
         """
-        super().__init__(score_thresh=score_thresh)
+        super().__init__()
+        self.score_thresh = score_thresh
         self.nms_thresh = nms_thresh
         self.detections_per_img = detections_per_img
 

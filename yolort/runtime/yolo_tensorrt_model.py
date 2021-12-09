@@ -21,11 +21,10 @@ class YOLOTRTModule(nn.Module):
     def __init__(
         self,
         checkpoint_path: str,
-        score_thresh: float = 0.25,
         version: str = "r6.0",
     ):
         super().__init__()
-        post_process = LogitsDecoder(score_thresh)
+        post_process = LogitsDecoder()
 
         self.model = YOLO.load_from_yolov5(
             checkpoint_path,

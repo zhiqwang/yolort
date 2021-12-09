@@ -22,13 +22,8 @@ def test_yolo_trt_module(arch, version, upstream_version, hash_prefix):
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
     checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
-    score_thresh = 0.25
 
-    model = YOLOTRTModule(
-        checkpoint_path,
-        score_thresh=score_thresh,
-        version=version,
-    )
+    model = YOLOTRTModule(checkpoint_path, version=version)
     model.eval()
     samples = torch.rand(1, 3, 320, 320)
     outs = model(samples)
@@ -52,13 +47,8 @@ def test_trt_model_onnx_saves(arch, version, upstream_version, hash_prefix):
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
     checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
-    score_thresh = 0.25
 
-    model = YOLOTRTModule(
-        checkpoint_path,
-        score_thresh=score_thresh,
-        version=version,
-    )
+    model = YOLOTRTModule(checkpoint_path, version=version)
     model.eval()
     onnx_file_path = f"trt_model_onnx_saves_{arch}_{hash_prefix}.onnx"
     assert not Path(onnx_file_path).exists()
