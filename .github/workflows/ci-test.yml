@@ -14,13 +14,13 @@ jobs:
     strategy:
       matrix:
         image: [ 'ubuntu-latest' ]
-        torch: [ '1.9.1+cpu', '1.10.0+cpu' ]
+        torch: [ 'PyTorch 1.9.1+cpu', 'PyTorch 1.10.0+cpu' ]
         include:
-          - torch: '1.9.1+cpu'
+          - torch: 'PyTorch 1.9.1+cpu'
             torch_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.10
-          - torch: '1.10.0+cpu'
+          - torch: 'PyTorch 1.10.0+cpu'
             torch_address: torch==1.10.0+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.11
@@ -51,7 +51,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install PyTorch ${{ matrix.torch }}
+      - name: Install ${{ matrix.torch }}
         run: |
           # requirements for PyTorch and torchvision
           pip install --user --progress-bar off numpy pillow scipy
@@ -91,7 +91,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
-      - name: Build TorchVision Cpp ${{ matrix.torch }}
+      - name: Build LibTorchVision for ${{ matrix.torch }}
         run: |
           export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
           cd ..
