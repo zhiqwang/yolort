@@ -15,14 +15,14 @@ jobs:
     strategy:
       matrix:
         image: [ 'ubuntu-latest' ]
-        torch: [ 'torch 1.9.1+cpu', 'torch 1.10.0+cpu' ]
+        torch: [ '1.9.1+cpu', '1.10.0+cpu' ]
         include:
-          - torch: 'torch 1.9.1+cpu'
+          - torch: '1.9.1+cpu'
             torch_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.10
-          - torch: 'torch 1.10.0+cpu'
-            torch_address: install torch==1.10.0+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          - torch: '1.10.0+cpu'
+            torch_address: torch==1.10.0+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.11
 
@@ -38,7 +38,7 @@ jobs:
       - name: Upgrade pip
         run: |
           # install pip=>20.1 to use "pip cache dir"
-          python -m pip install --progress-bar off --upgrade pip
+          python -m pip install --user --progress-bar off --upgrade pip
 
       - name: Get pip cache dir
         id: pip-cache
@@ -52,23 +52,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install PyTorch ${{ matrix.torch }} Version
+      - name: Install PyTorch ${{ matrix.torch }}
         run: |
           # requirements for PyTorch and torchvision
-          pip install --progress-bar off numpy pillow scipy
-          pip install --progress-bar off ${{ matrix.torch_address }}
+          pip install --user --progress-bar off numpy pillow scipy
+          pip install --user --progress-bar off ${{ matrix.torch_address }}
 
       - name: Install dependencies
         run: |
           # requirements for unittest
-          pip install --progress-bar off flake8 pytest
-          pip install --progress-bar off pytest-cov
+          pip install --user --progress-bar off flake8 pytest
+          pip install --user --progress-bar off pytest-cov
           # Install other dependencies
-          if [ -f requirements.txt ]; then pip install --progress-bar off -r requirements.txt; fi
-          pip install --progress-bar off opencv-python
-          pip install --progress-bar off pycocotools>=2.0.2
-          pip install --progress-bar off onnxruntime
-          pip install onnx_graphsurgeon --index-url https://pypi.ngc.nvidia.com
+          if [ -f requirements.txt ]; then pip install --user --progress-bar off -r requirements.txt; fi
+          pip install --user --progress-bar off opencv-python
+          pip install --user --progress-bar off pycocotools>=2.0.2
+          pip install --user --progress-bar off onnxruntime
+          pip install --user onnx_graphsurgeon --index-url https://pypi.ngc.nvidia.com
 
       - name: Lint with flake8
         run: |
