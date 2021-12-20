@@ -23,9 +23,6 @@ class YOLOTRTModule(nn.Module):
     def __init__(
         self,
         checkpoint_path: str,
-        # Post Process parameter
-        score_thresh: float = 0.25,
-        nms_thresh: float = 0.45,
         version: str = "r6.0",
     ):
         super().__init__()
@@ -48,8 +45,6 @@ class YOLOTRTModule(nn.Module):
             model_info["num_classes"],
             strides=model_info["strides"],
             anchor_grids=model_info["anchor_grids"],
-            score_thresh=score_thresh,
-            nms_thresh=nms_thresh,
             post_process=post_process,
         )
 
