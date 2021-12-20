@@ -8,7 +8,6 @@ import torch
 from torch import Tensor
 from yolort import models
 from yolort.models import YOLOv5
-from yolort.models import anchor_utils
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
