@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 from yolort import models
 from yolort.models import YOLOv5
+from yolort.models import anchor_utils
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
@@ -125,12 +126,13 @@ class TestModel:
             ]
         return anchor_grids
 
-    def _compute_num_anchors(self, height, width, use_p6: bool):
+    def _compute_anchors(self, height, width, use_p6: bool):
         strides = self._get_strides(use_p6)
-        num_anchors = 0
+        anchors_num = len(strides)
+        anchors_shape = []
         for s in strides:
-            num_anchors += (height // s) * (width // s)
-        return num_anchors * 3
+            anchors_shape.append((height // s, width // s))
+        return anchors_num, anchors_shape
 
     def _get_feature_shapes(self, height, width, width_multiple=0.5, use_p6=False):
         in_channels = self._get_in_channels(width_multiple, use_p6)
@@ -238,12 +240,14 @@ class TestModel:
         )
         model = self._init_test_anchor_generator(use_p6)
         anchors = model(feature_maps)
-        expected_num_anchors = self._compute_num_anchors(height, width, use_p6)
+        expected_anchors_num, expected_anchors_shape = self._compute_anchors(height, width, use_p6)
 
-        assert len(anchors) == 3
-        assert tuple(anchors[0].shape) == (expected_num_anchors, 2)
-        assert tuple(anchors[1].shape) == (expected_num_anchors, 1)
-        assert tuple(anchors[2].shape) == (expected_num_anchors, 2)
+        assert len(anchors) == 2
+        assert len(anchors[0]) == len(anchors[1]) == expected_anchors_num
+        for i in range(expected_anchors_num):
+            assert tuple(anchors[0][i].shape) == (1, 3, *(expected_anchors_shape[i]), 2)
+            assert tuple(anchors[1][i].shape) == (1, 3, *(expected_anchors_shape[i]), 2)
+
         _check_jit_scriptable(model, (feature_maps,))
 
     def _init_test_yolo_head(self, width_multiple=0.5, use_p6=False):
