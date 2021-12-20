@@ -280,7 +280,6 @@ class TestModel:
         postprocessors = PostProcess(strides, score_thresh, nms_thresh, detections_per_img)
         return postprocessors
 
-
     @pytest.mark.parametrize("use_p6", [False, True])
     def test_postprocessors(self, use_p6):
         N, H, W = 4, 416, 352
