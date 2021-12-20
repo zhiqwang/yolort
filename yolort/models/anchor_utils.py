@@ -28,18 +28,12 @@ class AnchorGenerator(nn.Module):
         grids = []
         for (height, width) in grid_sizes:
             # For output anchor, compute [x_center, y_center, x_center, y_center]
-            widths = torch.arange(width, dtype=torch.int32, device=device).to(
-                dtype=dtype
-            )
-            heights = torch.arange(height, dtype=torch.int32, device=device).to(
-                dtype=dtype
-            )
+            widths = torch.arange(width, dtype=torch.int32, device=device).to(dtype=dtype)
+            heights = torch.arange(height, dtype=torch.int32, device=device).to(dtype=dtype)
 
             shift_y, shift_x = torch.meshgrid(heights, widths)
 
-            grid = torch.stack((shift_x, shift_y), 2).expand(
-                (1, self.num_anchors, height, width, 2)
-            )
+            grid = torch.stack((shift_x, shift_y), 2).expand((1, self.num_anchors, height, width, 2))
             grids.append(grid)
 
         return grids
