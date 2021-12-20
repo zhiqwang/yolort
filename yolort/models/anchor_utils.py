@@ -6,89 +6,61 @@ from torch import nn, Tensor
 
 
 class AnchorGenerator(nn.Module):
-    def __init__(
-        self,
-        strides: List[int],
-        anchor_grids: List[List[float]],
-    ):
+    def __init__(self, strides: List[int], anchor_grids: List[List[float]]):
+
         super().__init__()
         assert len(strides) == len(anchor_grids)
-        self.num_anchors = len(anchor_grids[0]) // 2
         self.strides = strides
         self.anchor_grids = anchor_grids
+        self.num_layers = len(anchor_grids)
+        self.num_anchors = len(anchor_grids[0]) // 2
 
-    def set_wh_weights(
+    def _generate_grids(
         self,
         grid_sizes: List[List[int]],
         dtype: torch.dtype = torch.float32,
         device: torch.device = torch.device("cpu"),
-    ) -> Tensor:
+    ) -> List[Tensor]:
 
-        wh_weights = []
-
-        for size, stride in zip(grid_sizes, self.strides):
-            grid_height, grid_width = size
-            stride = torch.as_tensor([stride], dtype=dtype, device=device)
-            stride = stride.view(-1, 1)
-            stride = stride.repeat(1, grid_height * grid_width * self.num_anchors)
-            stride = stride.reshape(-1, 1)
-            wh_weights.append(stride)
-
-        return torch.cat(wh_weights)
-
-    def set_xy_weights(
-        self,
-        grid_sizes: List[List[int]],
-        dtype: torch.dtype = torch.float32,
-        device: torch.device = torch.device("cpu"),
-    ) -> Tensor:
-
-        xy_weights = []
-
-        for size, anchor_grid in zip(grid_sizes, self.anchor_grids):
-            grid_height, grid_width = size
-            anchor_grid = torch.as_tensor(anchor_grid, dtype=dtype, device=device)
-            anchor_grid = anchor_grid.view(-1, 2)
-            anchor_grid = anchor_grid.repeat(1, grid_height * grid_width)
-            anchor_grid = anchor_grid.reshape(-1, 2)
-            xy_weights.append(anchor_grid)
-
-        return torch.cat(xy_weights)
-
-    def grid_anchors(
-        self,
-        grid_sizes: List[List[int]],
-        dtype: torch.dtype = torch.float32,
-        device: torch.device = torch.device("cpu"),
-    ) -> Tensor:
-
-        anchors = []
-
-        for size in grid_sizes:
-            grid_height, grid_width = size
-
+        grids = []
+        for height, width in grid_sizes:
             # For output anchor, compute [x_center, y_center, x_center, y_center]
-            shifts_x = torch.arange(0, grid_width, dtype=torch.int32, device=device).to(dtype=dtype)
-            shifts_y = torch.arange(0, grid_height, dtype=torch.int32, device=device).to(dtype=dtype)
+            widths = torch.arange(width, dtype=torch.int32, device=device).to(dtype=dtype)
+            heights = torch.arange(height, dtype=torch.int32, device=device).to(dtype=dtype)
 
-            shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x)
+            shift_y, shift_x = torch.meshgrid(heights, widths)
 
-            shifts = torch.stack((shift_x, shift_y), dim=2)
-            shifts = shifts.view(1, grid_height, grid_width, 2)
-            shifts = shifts.repeat(self.num_anchors, 1, 1, 1)
-            shifts = shifts - torch.tensor(0.5, dtype=shifts.dtype, device=device)
-            shifts = shifts.reshape(-1, 2)
+            grid = torch.stack((shift_x, shift_y), 2).expand((1, self.num_anchors, height, width, 2))
+            grids.append(grid)
 
-            anchors.append(shifts)
+        return grids
 
-        return torch.cat(anchors)
+    def _generate_shifts(
+        self,
+        grid_sizes: List[List[int]],
+        dtype: torch.dtype = torch.float32,
+        device: torch.device = torch.device("cpu"),
+    ) -> List[Tensor]:
 
-    def forward(self, feature_maps: List[Tensor]) -> Tuple[Tensor, Tensor, Tensor]:
+        anchors = torch.tensor(self.anchor_grids, dtype=dtype, device=device)
+        strides = torch.tensor(self.strides, dtype=dtype, device=device)
+        anchors = anchors.view(self.num_layers, -1, 2) / strides.view(-1, 1, 1)
+
+        shifts = []
+        for i, (height, width) in enumerate(grid_sizes):
+            shift = (
+                (anchors[i].clone() * self.strides[i])
+                .view((1, self.num_anchors, 1, 1, 2))
+                .expand((1, self.num_anchors, height, width, 2))
+                .contiguous()
+                .to(dtype=dtype)
+            )
+            shifts.append(shift)
+        return shifts
+
+    def forward(self, feature_maps: List[Tensor]) -> Tuple[List[Tensor], List[Tensor]]:
         grid_sizes = list([feature_map.shape[-2:] for feature_map in feature_maps])
         dtype, device = feature_maps[0].dtype, feature_maps[0].device
-
-        wh_weights = self.set_wh_weights(grid_sizes, dtype, device)
-        xy_weights = self.set_xy_weights(grid_sizes, dtype, device)
-        anchors = self.grid_anchors(grid_sizes, dtype, device)
-
-        return anchors, wh_weights, xy_weights
+        grids = self._generate_grids(grid_sizes, dtype=dtype, device=device)
+        shifts = self._generate_shifts(grid_sizes, dtype=dtype, device=device)
+        return grids, shifts
