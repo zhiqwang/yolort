@@ -273,29 +273,32 @@ class TestModel:
         assert head_outputs[2].shape == target_head_outputs[2].shape
         _check_jit_scriptable(model, (feature_maps,))
 
-    def _init_test_postprocessors(self):
+    def _init_test_postprocessors(self, strides):
         score_thresh = 0.5
         nms_thresh = 0.45
         detections_per_img = 100
-        postprocessors = PostProcess(score_thresh, nms_thresh, detections_per_img)
+        postprocessors = PostProcess(strides, score_thresh, nms_thresh, detections_per_img)
         return postprocessors
 
-    def test_postprocessors(self):
-        N, H, W = 4, 416, 352
-        feature_maps = self._get_feature_maps(N, H, W)
-        head_outputs = self._get_head_outputs(N, H, W)
 
-        anchor_generator = self._init_test_anchor_generator()
-        anchors_tuple = anchor_generator(feature_maps)
-        model = self._init_test_postprocessors()
-        out = model(head_outputs, anchors_tuple)
+    @pytest.mark.parametrize("use_p6", [False, True])
+    def test_postprocessors(self, use_p6):
+        N, H, W = 4, 416, 352
+        strides = self._get_strides(use_p6)
+        feature_maps = self._get_feature_maps(N, H, W, use_p6=use_p6)
+        head_outputs = self._get_head_outputs(N, H, W, use_p6=use_p6)
+
+        anchor_generator = self._init_test_anchor_generator(use_p6=use_p6)
+        grids, shifts = anchor_generator(feature_maps)
+        model = self._init_test_postprocessors(strides)
+        out = model(head_outputs, grids, shifts)
 
         assert len(out) == N
         assert isinstance(out[0], dict)
         assert isinstance(out[0]["boxes"], Tensor)
         assert isinstance(out[0]["labels"], Tensor)
         assert isinstance(out[0]["scores"], Tensor)
-        _check_jit_scriptable(model, (head_outputs, anchors_tuple))
+        _check_jit_scriptable(model, (head_outputs, grids, shifts))
 
     def test_criterion(self, use_p6=False):
         N, H, W = 4, 640, 640
