@@ -67,7 +67,7 @@ def decode_single(
         stride (int): Stride
     """
     pred_xy = (rel_codes[..., 0:2] * 2.0 - 0.5 + grid) * stride
-    pred_wh = (rel_codes[..., 2:4] * 2) ** 2 * shift
+    pred_wh = (rel_codes[..., 2:4] * 2.0) ** 2 * shift
 
     return pred_xy, pred_wh
 
