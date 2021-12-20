@@ -6,11 +6,8 @@ from torch import nn, Tensor
 
 
 class AnchorGenerator(nn.Module):
-    def __init__(
-        self,
-        strides: List[int],
-        anchor_grids: List[List[float]],
-    ):
+    def __init__(self, strides: List[int], anchor_grids: List[List[float]]):
+
         super().__init__()
         assert len(strides) == len(anchor_grids)
         self.strides = strides
@@ -26,7 +23,7 @@ class AnchorGenerator(nn.Module):
     ) -> List[Tensor]:
 
         grids = []
-        for (height, width) in grid_sizes:
+        for height, width in grid_sizes:
             # For output anchor, compute [x_center, y_center, x_center, y_center]
             widths = torch.arange(width, dtype=torch.int32, device=device).to(dtype=dtype)
             heights = torch.arange(height, dtype=torch.int32, device=device).to(dtype=dtype)
@@ -38,12 +35,26 @@ class AnchorGenerator(nn.Module):
 
         return grids
 
-    def _generate_shifts(self) -> List[Tensor]:
-        return self.anchors.clone().view(self.num_layers, 1, -1, 1, 1, 2)
+    def _generate_shifts(
+        self,
+        grid_sizes: List[List[int]],
+        dtype: torch.dtype = torch.float32,
+    ) -> List[Tensor]:
+
+        shifts = []
+        for i, (height, width) in enumerate(grid_sizes):
+            shift = (
+                (self.anchors[i].clone() * self.strides[i])
+                .view((1, self.num_anchors, 1, 1, 2))
+                .expand((1, self.num_anchors, height, width, 2))
+                .to(dtype=dtype)
+            )
+            shifts.append(shift)
+        return shifts
 
     def forward(self, feature_maps: List[Tensor]) -> Tuple[List[Tensor], List[Tensor]]:
         grid_sizes = list([feature_map.shape[-2:] for feature_map in feature_maps])
         dtype, device = feature_maps[0].dtype, feature_maps[0].device
-        grids = self._generate_grids(grid_sizes, dtype, device)
-        shifts = self._generate_shifts()
+        grids = self._generate_grids(grid_sizes, dtype=dtype, device=device)
+        shifts = self._generate_shifts(grid_sizes, dtype=dtype)
         return grids, shifts

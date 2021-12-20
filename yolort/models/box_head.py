@@ -5,7 +5,7 @@ from typing import Tuple, List, Dict
 import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
-from torchvision.ops import boxes as box_ops
+from torchvision.ops import box_convert, boxes as box_ops
 
 from . import _utils as det_utils
 
@@ -322,45 +322,58 @@ class LogitsDecoder(nn.Module):
     This is a simplified version of PostProcess to remove the ``torchvision::nms`` module.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, strides: List[int]) -> None:
+        """
+        Args:
+            strides (List[int]): Strides of the AnchorGenerator.
+        """
 
-    @staticmethod
-    def _concat_pred_logits(head_outputs: List[Tensor]) -> Tensor:
+        super().__init__()
+        self.strides = strides
+
+    def _concat_pred_logits(
+        self,
+        head_outputs: List[Tensor],
+        grids: List[Tensor],
+        shifts: List[Tensor],
+    ) -> Tensor:
         # Concat all pred logits
         batch_size, _, _, _, K = head_outputs[0].shape
 
+        # Decode bounding box with the shifts and grids
         all_pred_logits = []
-        for pred_logits in head_outputs:
-            pred_logits = pred_logits.reshape(batch_size, -1, K)  # Size=(N, HWA, K)
-            all_pred_logits.append(pred_logits)
+
+        for i, head_output in enumerate(head_outputs):
+            head_feature = head_output.sigmoid()
+            pred_xy, pred_wh = det_utils.decode_single(
+                head_feature[..., :4],
+                grids[i],
+                shifts[i],
+                self.strides[i],
+            )
+            pred_logits = torch.cat((pred_xy, pred_wh, head_feature[..., 4:]), dim=-1)
+            all_pred_logits.append(pred_logits.reshape(batch_size, -1, K))
 
         all_pred_logits = torch.cat(all_pred_logits, dim=1)
+
         return all_pred_logits
 
-    @staticmethod
-    def _decode_pred_logits(
-        pred_logits: Tensor,
-        idx: int,
-        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
-    ):
+    def _decode_pred_logits(self, pred_logits: Tensor):
         """
-        Decode the prediction logit from the Post_precess
+        Decode the prediction logit from the PostPrecess.
         """
-        pred_logits = torch.sigmoid(pred_logits[idx])
-
         # Compute conf
         # box_conf x class_conf, w/ shape: num_anchors x num_classes
         scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
-
-        boxes = det_utils.decode_single(pred_logits[:, :4], anchors_tuple)
+        boxes = box_convert(pred_logits[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
 
         return boxes, scores
 
     def forward(
         self,
         head_outputs: List[Tensor],
-        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+        grids: List[Tensor],
+        shifts: List[Tensor],
     ) -> Tuple[Tensor, Tensor]:
         """
         Just concat the predict logits, ignore the original ``torchvision::nms`` module
@@ -370,16 +383,18 @@ class LogitsDecoder(nn.Module):
             head_outputs (List[Tensor]): The predicted locations and class/object confidence,
                 shape of the element is (N, A, H, W, K).
             anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
+            grids (List[Tensor]): Anchor grids.
+            shifts (List[Tensor]): Anchor shifts.
         """
         batch_size = len(head_outputs[0])
 
-        all_pred_logits = self._concat_pred_logits(head_outputs)
+        all_pred_logits = self._concat_pred_logits(head_outputs, grids, shifts)
 
         bbox_regression = []
         pred_scores = []
 
         for idx in range(batch_size):  # image idx, image inference
-            boxes, scores = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
+            boxes, scores = self._decode_pred_logits(all_pred_logits[idx])
             bbox_regression.append(boxes)
             pred_scores.append(scores)
 
@@ -393,17 +408,19 @@ class PostProcess(LogitsDecoder):
 
     def __init__(
         self,
+        strides: List[int],
         score_thresh: float,
         nms_thresh: float,
         detections_per_img: int,
     ) -> None:
         """
         Args:
+            strides (List[int]): Strides of the AnchorGenerator.
             score_thresh (float): Score threshold used for postprocessing the detections.
             nms_thresh (float): NMS threshold used for postprocessing the detections.
             detections_per_img (int): Number of best detections to keep after NMS.
         """
-        super().__init__()
+        super().__init__(strides)
         self.score_thresh = score_thresh
         self.nms_thresh = nms_thresh
         self.detections_per_img = detections_per_img
@@ -411,7 +428,8 @@ class PostProcess(LogitsDecoder):
     def forward(
         self,
         head_outputs: List[Tensor],
-        anchors_tuple: Tuple[Tensor, Tensor, Tensor],
+        grids: List[Tensor],
+        shifts: List[Tensor],
     ) -> List[Dict[str, Tensor]]:
         """
         Perform the computation. At test time, postprocess_detections is the final layer of YOLO.
@@ -422,28 +440,24 @@ class PostProcess(LogitsDecoder):
         Args:
             head_outputs (List[Tensor]): The predicted locations and class/object confidence,
                 shape of the element is (N, A, H, W, K).
-            anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
+            grids (List[Tensor]): Anchor grids.
+            shifts (List[Tensor]): Anchor shifts.
         """
         batch_size = len(head_outputs[0])
 
-        all_pred_logits = self._concat_pred_logits(head_outputs)
-
+        all_pred_logits = self._concat_pred_logits(head_outputs, grids, shifts)
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
-            # Decode the predict logits
-            boxes, scores = self._decode_pred_logits(all_pred_logits, idx, anchors_tuple)
-
+            boxes, scores = self._decode_pred_logits(all_pred_logits[idx])
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)
             boxes, scores = boxes[inds], scores[inds, labels]
 
             # non-maximum suppression, independently done per level
             keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)
-            # Keep only topk scoring head_outputs
+            # keep only topk scoring head_outputs
             keep = keep[: self.detections_per_img]
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
-
-        return detections
