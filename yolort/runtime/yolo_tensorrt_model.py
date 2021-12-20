@@ -5,7 +5,9 @@ from typing import Optional, Tuple, Union
 import torch
 from torch import nn, Tensor
 from yolort.models import YOLO
+from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import LogitsDecoder
+from yolort.utils import load_from_ultralytics
 
 __all__ = ["YOLOTRTModule"]
 
@@ -21,16 +23,38 @@ class YOLOTRTModule(nn.Module):
     def __init__(
         self,
         checkpoint_path: str,
+        # Post Process parameter
+        score_thresh: float = 0.25,
+        nms_thresh: float = 0.45,
         version: str = "r6.0",
     ):
         super().__init__()
-        post_process = LogitsDecoder()
+        model_info = load_from_ultralytics(checkpoint_path, version=version)
 
-        self.model = YOLO.load_from_yolov5(
-            checkpoint_path,
+        backbone_name = f"darknet_{model_info['size']}_{version.replace('.', '_')}"
+        depth_multiple = model_info["depth_multiple"]
+        width_multiple = model_info["width_multiple"]
+        use_p6 = model_info["use_p6"]
+        backbone = darknet_pan_backbone(
+            backbone_name,
+            depth_multiple,
+            width_multiple,
             version=version,
+            use_p6=use_p6,
+        )
+        post_process = LogitsDecoder(model_info["strides"])
+        model = YOLO(
+            backbone,
+            model_info["num_classes"],
+            strides=model_info["strides"],
+            anchor_grids=model_info["anchor_grids"],
+            score_thresh=score_thresh,
+            nms_thresh=nms_thresh,
             post_process=post_process,
         )
+
+        model.load_state_dict(model_info["state_dict"])
+        self.model = model
 
     @torch.no_grad()
     def forward(self, inputs: Tensor) -> Tuple[Tensor, Tensor]:
