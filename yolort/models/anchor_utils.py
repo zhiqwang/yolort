@@ -52,7 +52,7 @@ class AnchorGenerator(nn.Module):
                 (anchors[i].clone() * self.strides[i])
                 .view((1, self.num_anchors, 1, 1, 2))
                 .expand((1, self.num_anchors, height, width, 2))
-                .to(dtype=dtype)
+                .float()
             )
             shifts.append(shift)
         return shifts

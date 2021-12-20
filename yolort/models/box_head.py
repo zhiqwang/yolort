@@ -70,7 +70,8 @@ class YOLOHead(nn.Module):
             # Permute output from (N, A * K, H, W) to (N, A, H, W, K)
             N, _, H, W = pred_logits.shape
             pred_logits = pred_logits.view(N, self.num_anchors, -1, H, W)
-            pred_logits = pred_logits.permute(0, 1, 3, 4, 2)  # Size=(N, A, H, W, K)
+            # Size=(N, A, H, W, K)
+            pred_logits = pred_logits.permute(0, 1, 3, 4, 2).contiguous()
 
             all_pred_logits.append(pred_logits)
 

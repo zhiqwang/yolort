@@ -26,5 +26,5 @@ class TestAnchorGenerator:
         assert tuple(anchors[0][0].shape) == (1, 1, 2, 2, 2)
         assert tuple(anchors[1][0].shape) == (1, 1, 2, 2, 2)
 
-        torch.testing.assert_close(anchors[0][0], expected_grids, rtol=0, atol=0)
-        torch.testing.assert_close(anchors[1][0], expected_shifts, rtol=0, atol=0)
+        torch.testing.assert_close(anchors[0][0], expected_grids)
+        torch.testing.assert_close(anchors[1][0], expected_shifts)
