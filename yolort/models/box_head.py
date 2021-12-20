@@ -344,7 +344,7 @@ class LogitsDecoder(nn.Module):
         all_pred_logits = []
 
         for i, head_output in enumerate(head_outputs):
-            head_feature = head_output.sigmoid()
+            head_feature = torch.sigmoid(head_output)
             pred_xy, pred_wh = det_utils.decode_single(
                 head_feature[..., :4],
                 grids[i],
@@ -352,7 +352,7 @@ class LogitsDecoder(nn.Module):
                 self.strides[i],
             )
             pred_logits = torch.cat((pred_xy, pred_wh, head_feature[..., 4:]), dim=-1)
-            all_pred_logits.append(pred_logits.reshape(batch_size, -1, K))
+            all_pred_logits.append(pred_logits.view(batch_size, -1, K))
 
         all_pred_logits = torch.cat(all_pred_logits, dim=1)
 
@@ -394,7 +394,8 @@ class LogitsDecoder(nn.Module):
         pred_scores = []
 
         for idx in range(batch_size):  # image idx, image inference
-            boxes, scores = self._decode_pred_logits(all_pred_logits[idx])
+            pred_logits = all_pred_logits[idx]
+            boxes, scores = self._decode_pred_logits(pred_logits)
             bbox_regression.append(boxes)
             pred_scores.append(scores)
 
@@ -449,7 +450,8 @@ class PostProcess(LogitsDecoder):
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
-            boxes, scores = self._decode_pred_logits(all_pred_logits[idx])
+            pred_logits = all_pred_logits[idx]
+            boxes, scores = self._decode_pred_logits(pred_logits)
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)
             boxes, scores = boxes[inds], scores[inds, labels]
@@ -461,3 +463,5 @@ class PostProcess(LogitsDecoder):
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
+
+        return detections

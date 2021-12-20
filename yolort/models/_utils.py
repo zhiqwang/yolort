@@ -1,5 +1,5 @@
 import math
-from typing import List, Tuple, Optional
+from typing import Tuple, Optional
 
 import torch
 from torch import nn, Tensor
@@ -54,7 +54,7 @@ def decode_single(
     rel_codes: Tensor,
     grid: Tensor,
     shift: Tensor,
-    stride: List[int],
+    stride: int,
 ) -> Tuple[Tensor, Tensor]:
     """
     From a set of original boxes and encoded relative box offsets,
