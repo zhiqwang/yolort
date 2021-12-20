@@ -107,7 +107,7 @@ class YOLO(nn.Module):
             criterion = SetCriterion(
                 anchor_generator.num_anchors,
                 anchor_generator.strides,
-                anchor_generator.anchors,
+                anchor_generator.anchor_grids,
                 num_classes,
             )
         self.compute_loss = criterion
@@ -270,7 +270,7 @@ def build_model(
         if model_urls.get(weights_name, None) is None:
             raise ValueError(f"No checkpoint is available for model {weights_name}")
         state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
-        model.load_state_dict(state_dict, strict=False)
+        model.load_state_dict(state_dict)
 
     return model
 

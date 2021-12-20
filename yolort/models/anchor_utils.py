@@ -11,9 +11,9 @@ class AnchorGenerator(nn.Module):
         super().__init__()
         assert len(strides) == len(anchor_grids)
         self.strides = strides
+        self.anchor_grids = anchor_grids
         self.num_layers = len(anchor_grids)
         self.num_anchors = len(anchor_grids[0]) // 2
-        self.register_buffer("anchors", torch.tensor(anchor_grids).float().view(self.num_layers, -1, 2))
 
     def _generate_grids(
         self,
@@ -39,12 +39,17 @@ class AnchorGenerator(nn.Module):
         self,
         grid_sizes: List[List[int]],
         dtype: torch.dtype = torch.float32,
+        device: torch.device = torch.device("cpu"),
     ) -> List[Tensor]:
+
+        anchors = torch.tensor(self.anchor_grids, dtype=dtype, device=device)
+        strides = torch.tensor(self.strides, dtype=dtype, device=device)
+        anchors = anchors.view(self.num_layers, -1, 2) / strides.view(-1, 1, 1)
 
         shifts = []
         for i, (height, width) in enumerate(grid_sizes):
             shift = (
-                (self.anchors[i].clone() * self.strides[i])
+                (anchors[i].clone() * self.strides[i])
                 .view((1, self.num_anchors, 1, 1, 2))
                 .expand((1, self.num_anchors, height, width, 2))
                 .to(dtype=dtype)
@@ -56,5 +61,5 @@ class AnchorGenerator(nn.Module):
         grid_sizes = list([feature_map.shape[-2:] for feature_map in feature_maps])
         dtype, device = feature_maps[0].dtype, feature_maps[0].device
         grids = self._generate_grids(grid_sizes, dtype=dtype, device=device)
-        shifts = self._generate_shifts(grid_sizes, dtype=dtype)
+        shifts = self._generate_shifts(grid_sizes, dtype=dtype, device=device)
         return grids, shifts
