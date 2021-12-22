@@ -47,8 +47,8 @@ def get_parser():
     )
     parser.add_argument(
         "--image_size",
-        default=640,
-        type=int,
+        default=(320,320),
+        type=tupe,
         help="Image size for evaluation (default: 640).",
     )
     parser.add_argument("--batch_size", default=1, type=int, help="Batch size.")
@@ -159,7 +159,8 @@ def cli_main():
         output_names = ["scores", "labels", "boxes"]
         model = YOLOv5.load_from_yolov5(
             checkpoint_path,
-            score_thresh=args.score_thresh,
+            size=args.image_size,
+            core_thresh=args.score_thresh,
             version=args.version,
         )
         model.eval()
