@@ -4,8 +4,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-from collections import OrderedDict, namedtuple
 import logging
+from collections import OrderedDict, namedtuple
 
 import cv2
 import numpy as np
@@ -45,13 +45,13 @@ class PredictorTRT:
 
     def __init__(self, engine_path: str) -> None:
         self.device = torch.device("cuda")
-        self.named_binding = namedtuple('Binding', ('name', 'dtype', 'shape', 'data', 'ptr'))
+        self.named_binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
         self.logger = trt.Logger(trt.Logger.INFO)
         self.engine_path = engine_path
 
         self._runtime = None
         log.info(f"Loading {self.engine_path} for TensorRT inference...")
-        with open(self.engine_path, 'rb') as f, trt.Runtime(self.logger) as runtime:
+        with open(self.engine_path, "rb") as f, trt.Runtime(self.logger) as runtime:
             self._runtime = runtime.deserialize_cuda_engine(f.read())
 
         self.bindings = OrderedDict()
@@ -63,7 +63,7 @@ class PredictorTRT:
             self.bindings[name] = self.named_binding(name, dtype, shape, data, int(data.data_ptr()))
         self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
         self.context = self._runtime.create_execution_context()
-        self.batch_size = self.bindings['images'].shape[0]
+        self.batch_size = self.bindings["images"].shape[0]
 
     def _preprocessing(self, image: np.ndarray) -> Tensor:
         blob = letterbox(image, new_shape=(320, 320), auto=False)[0]
@@ -86,10 +86,10 @@ class PredictorTRT:
         print(blob.shape)
         blob = blob.to(device)
 
-        assert blob.shape == self.bindings['images'].shape, (blob.shape, self.bindings['images'].shape)
-        self.binding_addrs['images'] = int(blob.data_ptr())
+        assert blob.shape == self.bindings["images"].shape, (blob.shape, self.bindings["images"].shape)
+        self.binding_addrs["images"] = int(blob.data_ptr())
         self.context.execute_v2(list(self.binding_addrs.values()))
-        predictions = self.bindings['output'].data
+        predictions = self.bindings["output"].data
         return predictions
 
     def run_on_image(self, image_path):

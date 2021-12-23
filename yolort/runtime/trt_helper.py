@@ -57,7 +57,7 @@ class EngineBuilder:
             onnx_path: The path to the ONNX graph to load.
         """
 
-        flag = (1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+        flag = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
         self.network = self.builder.create_network(flag)
         self.parser = trt.OnnxParser(self.network, self.logger)
         if not self.parser.parse_from_file(onnx_path):
