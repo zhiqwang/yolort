@@ -40,7 +40,7 @@ class PredictorTRT:
         >>> detector = PredictorTRT(engine_path, device)
         >>>
         >>> img_path = 'bus.jpg'
-        >>> scores, class_ids, boxes = detector.run_on_image(img_path)
+        >>> detections = detector.run_on_image(img_path)
     """
 
     def __init__(
@@ -62,6 +62,7 @@ class PredictorTRT:
 
         self.engine = self._build_engine()
         self._set_context()
+        self.half = False
 
     def _build_engine(self):
         logger.info(f"Loading {self.engine_path} for TensorRT inference...")
@@ -83,6 +84,14 @@ class PredictorTRT:
         self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
         self.context = self.engine.create_execution_context()
 
+    def preprocessing(self, image):
+        image = torch.from_numpy(image).to(self.device)
+        image = image.half() if self.half else image.float()  # uint8 to fp16/32
+        image /= 255  # 0 - 255 to 0.0 - 1.0
+        if len(image.shape) == 3:
+            image = image[None]  # expand for batch dim
+        return image
+
     def __call__(self, image: Tensor):
         """
         Args:
@@ -99,34 +108,27 @@ class PredictorTRT:
         boxes = self.bindings["detection_boxes"].data
         scores = self.bindings["detection_scores"].data
         labels = self.bindings["detection_classes"].data
-        return num_dets, boxes, scores, labels
+        return boxes, scores, labels, num_dets
 
-    def run_on_image(self, image):
+    def run_on_image(self, image: Tensor):
         """
         Run the TensorRT engine for one image only.
 
         Args:
-            image_path (str): The image path to be predicted.
+            image (Tensor): an image of shape (C, N, H, W).
         """
-        boxes, scores = self(image)
-        detections = self.postprocessing(boxes, scores)
+        boxes, scores, labels, num_dets = self(image)
+
+        detections = self.postprocessing(boxes, scores, labels, num_dets)
         return detections
 
-    def postprocessing(self, all_boxes: Tensor, all_scores: Tensor):
-
+    @staticmethod
+    def postprocessing(all_boxes, all_scores, all_labels, all_num_dets):
         detections: List[Dict[str, Tensor]] = []
 
-        for boxes, scores in zip(all_boxes, all_scores):
-            # remove low scoring boxes
-            inds, labels = torch.where(scores > self.score_thresh)
-            boxes, scores = boxes[inds], scores[inds, labels]
-
-            # non-maximum suppression, independently done per level
-            keep = box_ops.batched_nms(boxes, scores, labels, self.iou_thresh)
-            # Keep only topk scoring head_outputs
-            keep = keep[: self.detections_per_img]
-            boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
-
+        for boxes, scores, labels, num_dets in zip(all_boxes, all_scores, all_labels, all_num_dets):
+            keep = num_dets.item()
+            boxes, scores, labels = boxes[:keep], scores[:keep], labels[:keep]
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
 
         return detections
