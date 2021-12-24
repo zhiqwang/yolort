@@ -66,6 +66,7 @@ class PredictorTRT:
     def _build_engine(self):
         logger.info(f"Loading {self.engine_path} for TensorRT inference...")
         trt_logger = trt.Logger(trt.Logger.INFO)
+        trt.init_libnvinfer_plugins(trt_logger, namespace="")
         with open(self.engine_path, "rb") as f, trt.Runtime(trt_logger) as runtime:
             engine = runtime.deserialize_cuda_engine(f.read())
 
