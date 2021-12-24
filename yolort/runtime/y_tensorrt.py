@@ -11,7 +11,7 @@ from typing import Dict, List
 import numpy as np
 import torch
 from torch import Tensor
-from torchvision.ops import box_convert, boxes as box_ops
+from torchvision.ops import boxes as box_ops
 
 try:
     import tensorrt as trt
@@ -95,8 +95,9 @@ class PredictorTRT:
         assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
         self.binding_addrs["images"] = int(image.data_ptr())
         self.context.execute_v2(list(self.binding_addrs.values()))
-        pred_logits = self.bindings["output"].data
-        return pred_logits
+        boxes = self.bindings["boxes"].data
+        scores = self.bindings["scores"].data
+        return boxes, scores
 
     def run_on_image(self, image):
         """
@@ -105,30 +106,15 @@ class PredictorTRT:
         Args:
             image_path (str): The image path to be predicted.
         """
-        pred_logits = self(image)
-        detections = self.postprocessing(pred_logits)
+        boxes, scores = self(image)
+        detections = self.postprocessing(boxes, scores)
         return detections
 
-    @staticmethod
-    def _decode_pred_logits(pred_logits: Tensor):
-        """
-        Decode the prediction logit from the PostPrecess.
-        """
-        # Compute conf
-        # box_conf x class_conf, w/ shape: num_anchors x num_classes
-        scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
-        boxes = box_convert(pred_logits[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
+    def postprocessing(self, all_boxes: Tensor, all_scores: Tensor):
 
-        return boxes, scores
-
-    def postprocessing(self, pred_logits: Tensor):
-        batch_size = pred_logits.shape[0]
         detections: List[Dict[str, Tensor]] = []
 
-        for idx in range(batch_size):  # image idx, image inference
-            # Decode the predict logits
-            boxes, scores = self._decode_pred_logits(pred_logits[idx])
-
+        for boxes, scores in zip(all_boxes, all_scores):
             # remove low scoring boxes
             inds, labels = torch.where(scores > self.score_thresh)
             boxes, scores = boxes[inds], scores[inds, labels]

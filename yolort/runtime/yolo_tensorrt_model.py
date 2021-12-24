@@ -88,7 +88,7 @@ class YOLOTRTModule(nn.Module):
 
         dynamic_axes = (
             {
-                "images_tensors": {0: "batch", 2: "height", 3: "width"},
+                "images": {0: "batch", 2: "height", 3: "width"},
                 "boxes": {0: "batch", 1: "num_objects"},
                 "scores": {0: "batch", 1: "num_objects"},
             }
@@ -96,7 +96,7 @@ class YOLOTRTModule(nn.Module):
             else None
         )
 
-        input_names = ["images_tensors"]
+        input_names = ["images"]
         output_names = ["boxes", "scores"]
 
         torch.onnx.export(

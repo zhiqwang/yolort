@@ -78,7 +78,7 @@ class EngineBuilder:
     def create_engine(
         self,
         engine_path: str,
-        precision: str,
+        precision: str = "fp32",
         calib_input: Optional[str] = None,
         calib_cache: Optional[str] = None,
         calib_num_images: int = 5000,
