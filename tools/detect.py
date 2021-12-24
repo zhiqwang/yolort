@@ -3,6 +3,7 @@
 # This source code is licensed under the GPL-3.0 license found in the
 # LICENSE file in the root directory of this source tree.
 #
+
 import argparse
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -165,7 +166,8 @@ def run(
                         # normalized xywh
                         xywh = box_convert(torch.tensor(box).view(1, 4), in_fmt="xyxy", out_fmt="cxcywh")
                         xywh = (xywh / gn).view(-1).tolist()
-                        line = (class_idx, *xywh, score) if save_conf else (class_idx, *xywh)  # label format
+                        # label format
+                        line = (class_idx, *xywh, score) if save_conf else (class_idx, *xywh)
                         with open(txt_path + ".txt", "a") as f:
                             f.write(("%g " * len(line)).rstrip() % line + "\n")
 
@@ -230,9 +232,7 @@ def get_parser():
     parser.add_argument("--save_conf", action="store_true", help="save confidences in --save-txt labels")
     parser.add_argument("--save_crop", action="store_true", help="save cropped prediction boxes")
     parser.add_argument("--nosave", action="store_true", help="do not save images/videos")
-    parser.add_argument(
-        "--classes", nargs="+", type=int, help="filter by class: --classes 0, or --classes 0 2 3"
-    )
+    parser.add_argument("--classes", nargs="+", type=int, help="filter by class: --classes 0 2 3")
     parser.add_argument("--visualize", action="store_true", help="visualize features")
     parser.add_argument("--update", action="store_true", help="update all models")
     parser.add_argument("--project", default="./runs/detect", help="save results to project/name")
