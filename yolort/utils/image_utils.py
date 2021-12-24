@@ -200,14 +200,14 @@ def cast_image_tensor_to_numpy(images):
     return images
 
 
-def parse_images(images):
+def parse_images(images: Tensor):
     images = images.permute(0, 2, 3, 1)
     images = cast_image_tensor_to_numpy(images)
 
     return images
 
 
-def parse_single_image(image):
+def parse_single_image(image: Tensor):
     image = image.permute(1, 2, 0)
     image = cast_image_tensor_to_numpy(image)
     return image
@@ -221,7 +221,7 @@ def parse_single_target(target):
     return boxes
 
 
-def to_numpy(tensor):
+def to_numpy(tensor: Tensor):
     if tensor.requires_grad:
         return tensor.detach().cpu().numpy()
     else:
