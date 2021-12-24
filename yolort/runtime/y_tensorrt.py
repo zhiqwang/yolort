@@ -10,8 +10,6 @@ from typing import Dict, List
 
 import numpy as np
 import torch
-import torch
-from torch import Tensor
 from torch import Tensor
 from torchvision.ops import box_convert, boxes as box_ops
 
@@ -22,7 +20,7 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("PredictorTRT").setLevel(logging.INFO)
-log = logging.getLogger("PredictorTRT")
+logger = logging.getLogger("PredictorTRT")
 
 
 class PredictorTRT:
@@ -51,19 +49,16 @@ class PredictorTRT:
         iou_thresh: float = 0.45,
         detections_per_img: int = 100,
     ) -> None:
+        self.engine_path = engine_path
         self.device = device
         self.named_binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
-        self.logger = trt.Logger(trt.Logger.INFO)
         self.stride = 32
         self.names = [f"class{i}" for i in range(1000)]  # assign defaults
         self.score_thresh = score_thresh
         self.iou_thresh = iou_thresh
         self.detections_per_img = detections_per_img
 
-        self.engine = None
-        log.info(f"Loading {engine_path} for TensorRT inference...")
-        with open(engine_path, "rb") as f, trt.Runtime(self.logger) as runtime:
-            self.engine = runtime.deserialize_cuda_engine(f.read())
+        self.engine = self._build_engine()
 
         self.bindings = OrderedDict()
         for index in range(self.engine.num_bindings):
@@ -75,6 +70,14 @@ class PredictorTRT:
         self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
         self.context = self.engine.create_execution_context()
         self.batch_size = self.bindings["images"].shape[0]
+
+    def _build_engine(self):
+        logger.info(f"Loading {self.engine_path} for TensorRT inference...")
+        trt_logger = trt.Logger(trt.Logger.INFO)
+        with open(self.engine_path, "rb") as f, trt.Runtime(trt_logger) as runtime:
+            engine = runtime.deserialize_cuda_engine(f.read())
+
+        return engine
 
     def __call__(self, image):
         """
