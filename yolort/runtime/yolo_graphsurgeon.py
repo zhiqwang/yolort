@@ -120,20 +120,19 @@ class YOLOGraphSurgeon:
         normalized: bool = True,
     ):
         """
-        Register the ``EfficientNMS_TRT`` plugin node.
+        Register the ``BatchedNMS_TRT`` plugin node.
 
         NMS expects these shapes for its input tensors:
-        - box_net: [batch_size, number_boxes, 4]
-        - class_net: [batch_size, number_boxes, number_labels]
-
-        As the original tensors from YOLOv5 will be used, the NMS code type is set to 0 (Corners),
-        because this is the internal box coding format used by the network.
+            - box_net: [batch_size, number_boxes, 1, 4]
+            - class_net: [batch_size, number_boxes, number_labels]
 
         Args:
-            threshold: Override the score threshold attribute. If set to None,
-                use the value in the graph.
-            detections: Override the max detections attribute. If set to None,
-                use the value in the graph.
+            score_thresh (float): The scalar threshold for score (low scoring boxes are removed).
+            nms_thresh (float): The scalar threshold for IOU (new boxes that have high IOU
+                overlap with previously selected boxes are removed).
+            detections_per_img (int): Number of best detections to keep after NMS.
+            normalized (bool): Set to false if the box coordinates are not normalized,
+                meaning they are not in the range [0,1]. Defaults: True.
         """
 
         self.infer()
