@@ -401,7 +401,12 @@ class LogitsDecoder(nn.Module):
             bbox_regression.append(boxes)
             pred_scores.append(scores)
 
-        return torch.stack(bbox_regression), torch.stack(pred_scores)
+        # The default boxes tensor has shape [batch_size, number_boxes, 4].
+        # This will insert a "1" dimension in the second axis, to become
+        # [batch_size, number_boxes, 1, 4], the shape that plugin/BatchedNMS expects.
+        boxes = torch.stack(bbox_regression).unsqueeze_(2)
+        scores = torch.stack(pred_scores)
+        return boxes, scores
 
 
 class PostProcess(LogitsDecoder):

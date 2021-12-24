@@ -95,9 +95,11 @@ class PredictorTRT:
         assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
         self.binding_addrs["images"] = int(image.data_ptr())
         self.context.execute_v2(list(self.binding_addrs.values()))
-        boxes = self.bindings["boxes"].data
-        scores = self.bindings["scores"].data
-        return boxes, scores
+        num_dets = self.bindings["num_detections"].data
+        boxes = self.bindings["detection_boxes"].data
+        scores = self.bindings["detection_scores"].data
+        labels = self.bindings["detection_classes"].data
+        return num_dets, boxes, scores, labels
 
     def run_on_image(self, image):
         """
