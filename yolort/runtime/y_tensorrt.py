@@ -32,10 +32,12 @@ class PredictorTRT:
         engine_path (str): Path of the ONNX checkpoint.
 
     Examples:
+        >>> import torch
         >>> from yolort.runtime import PredictorTRT
         >>>
         >>> engine_path = 'yolov5s.engine'
-        >>> detector = PredictorTRT(engine_path)
+        >>> device = torch.device("cuda")
+        >>> detector = PredictorTRT(engine_path, device)
         >>>
         >>> img_path = 'bus.jpg'
         >>> scores, class_ids, boxes = detector.run_on_image(img_path)
