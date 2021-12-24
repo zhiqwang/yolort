@@ -59,17 +59,7 @@ class PredictorTRT:
         self.detections_per_img = detections_per_img
 
         self.engine = self._build_engine()
-
-        self.bindings = OrderedDict()
-        for index in range(self.engine.num_bindings):
-            name = self.engine.get_binding_name(index)
-            dtype = trt.nptype(self.engine.get_binding_dtype(index))
-            shape = tuple(self.engine.get_binding_shape(index))
-            data = torch.from_numpy(np.empty(shape, dtype=np.dtype(dtype))).to(self.device)
-            self.bindings[name] = self.named_binding(name, dtype, shape, data, int(data.data_ptr()))
-        self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
-        self.context = self.engine.create_execution_context()
-        self.batch_size = self.bindings["images"].shape[0]
+        self._set_context()
 
     def _build_engine(self):
         logger.info(f"Loading {self.engine_path} for TensorRT inference...")
@@ -79,11 +69,22 @@ class PredictorTRT:
 
         return engine
 
-    def __call__(self, image):
+    def _set_context(self):
+        self.bindings = OrderedDict()
+        for index in range(self.engine.num_bindings):
+            name = self.engine.get_binding_name(index)
+            dtype = trt.nptype(self.engine.get_binding_dtype(index))
+            shape = tuple(self.engine.get_binding_shape(index))
+            data = torch.from_numpy(np.empty(shape, dtype=np.dtype(dtype))).to(self.device)
+            self.bindings[name] = self.named_binding(name, dtype, shape, data, int(data.data_ptr()))
+
+        self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
+        self.context = self.engine.create_execution_context()
+
+    def __call__(self, image: Tensor):
         """
         Args:
-            image (np.ndarray): an image of shape (H, W, C) (in BGR order).
-                This is the format used by OpenCV.
+            image (Tensor): an image of shape (C, N, H, W).
 
         Returns:
             predictions (Tuple[List[float], List[int], List[float, float]]):
@@ -144,5 +145,5 @@ class PredictorTRT:
         # Warmup model by running inference once
         # only warmup GPU models
         if isinstance(self.device, torch.device) and self.device.type != "cpu":
-            im = torch.zeros(*img_size).to(self.device).type(torch.half if half else torch.float)
-            self(im)
+            image = torch.zeros(*img_size).to(self.device).type(torch.half if half else torch.float)
+            self(image)
