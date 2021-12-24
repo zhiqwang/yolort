@@ -5,6 +5,7 @@ from typing import Optional, Tuple, Union
 import torch
 from torch import nn, Tensor
 from yolort.models import YOLO
+from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import LogitsDecoder
 from yolort.utils import load_from_ultralytics
@@ -39,12 +40,13 @@ class YOLOTRTModule(nn.Module):
             version=version,
             use_p6=use_p6,
         )
+        num_classes = model_info["num_classes"]
+        anchor_generator = AnchorGenerator(model_info["strides"], model_info["anchor_grids"])
         post_process = LogitsDecoder(model_info["strides"])
         model = YOLO(
             backbone,
-            model_info["num_classes"],
-            strides=model_info["strides"],
-            anchor_grids=model_info["anchor_grids"],
+            num_classes,
+            anchor_generator=anchor_generator,
             post_process=post_process,
         )
 

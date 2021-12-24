@@ -359,7 +359,8 @@ class LogitsDecoder(nn.Module):
 
         return all_pred_logits
 
-    def _decode_pred_logits(self, pred_logits: Tensor):
+    @staticmethod
+    def _decode_pred_logits(pred_logits: Tensor):
         """
         Decode the prediction logit from the PostPrecess.
         """

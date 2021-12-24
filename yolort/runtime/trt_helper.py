@@ -28,22 +28,22 @@ class EngineBuilder:
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
 
-    def __init__(self, verbose=False, workspace=8):
+    def __init__(self, verbose=False, workspace=4):
         """
         Args:
             verbose: If enabled, a higher verbosity level will be
                 set on the TensorRT logger.
             workspace: Max memory workspace to allow, in Gb.
         """
-        self.trt_logger = trt.Logger(trt.Logger.INFO)
+        self.logger = trt.Logger(trt.Logger.INFO)
         if verbose:
-            self.trt_logger.min_severity = trt.Logger.Severity.VERBOSE
+            self.logger.min_severity = trt.Logger.Severity.VERBOSE
 
-        trt.init_libnvinfer_plugins(self.trt_logger, namespace="")
+        trt.init_libnvinfer_plugins(self.logger, namespace="")
 
-        self.builder = trt.Builder(self.trt_logger)
+        self.builder = trt.Builder(self.logger)
         self.config = self.builder.create_builder_config()
-        self.config.max_workspace_size = workspace * (2 ** 30)
+        self.config.max_workspace_size = workspace * 1 << 30
 
         self.batch_size = None
         self.network = None
@@ -56,19 +56,12 @@ class EngineBuilder:
         Args:
             onnx_path: The path to the ONNX graph to load.
         """
-        network_flags = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
 
-        self.network = self.builder.create_network(network_flags)
-        self.parser = trt.OnnxParser(self.network, self.trt_logger)
-
-        onnx_path = Path(onnx_path)
-        with open(onnx_path, "rb") as f:
-            if not self.parser.parse(f.read()):
-                err_message = f"Failed to load ONNX file: {onnx_path}"
-                log.error(err_message)
-                for error in range(self.parser.num_errors):
-                    log.error(self.parser.get_error(error))
-                raise OSError(err_message)
+        flag = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+        self.network = self.builder.create_network(flag)
+        self.parser = trt.OnnxParser(self.network, self.logger)
+        if not self.parser.parse_from_file(onnx_path):
+            raise RuntimeError(f"Failed to load ONNX file: {onnx_path}")
 
         inputs = [self.network.get_input(i) for i in range(self.network.num_inputs)]
         outputs = [self.network.get_output(i) for i in range(self.network.num_outputs)]
@@ -120,5 +113,5 @@ class EngineBuilder:
             raise NotImplementedError(f"Currently hasn't been implemented: {precision}.")
 
         with self.builder.build_engine(self.network, self.config) as engine, open(engine_path, "wb") as f:
-            log.info(f"Serializing engine to file: {engine_path}")
             f.write(engine.serialize())
+            log.info(f"Serialize engine success, saved as {engine_path}")
