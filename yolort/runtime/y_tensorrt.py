@@ -11,7 +11,6 @@ from typing import Dict, List
 import numpy as np
 import torch
 from torch import Tensor
-from torchvision.ops import boxes as box_ops
 
 try:
     import tensorrt as trt

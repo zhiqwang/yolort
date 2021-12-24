@@ -141,15 +141,15 @@ class YOLOGraphSurgeon:
         op = "BatchedNMS_TRT"
         attrs = {
             "plugin_version": "1",
-            'shareLocation': True,
-            'backgroundLabelId': -1,  # no background class
-            'numClasses': self.num_classes,
-            'topK': 1024,
-            'keepTopK': detections_per_img,
-            'scoreThreshold': score_thresh,
-            'iouThreshold': nms_thresh,
-            'isNormalized': normalized,
-            'clipBoxes': False,
+            "shareLocation": True,
+            "backgroundLabelId": -1,  # no background class
+            "numClasses": self.num_classes,
+            "topK": 1024,
+            "keepTopK": detections_per_img,
+            "scoreThreshold": score_thresh,
+            "iouThreshold": nms_thresh,
+            "isNormalized": normalized,
+            "clipBoxes": False,
         }
 
         # NMS Outputs
