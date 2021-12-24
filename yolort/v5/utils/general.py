@@ -237,14 +237,19 @@ def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=Fals
         return result
 
 
-def check_img_size(imgsz, s=32, floor=0):
-    # Verify image size is a multiple of stride s in each dimension
-    if isinstance(imgsz, int):  # integer i.e. img_size=640
-        new_size = max(make_divisible(imgsz, int(s)), floor)
+def check_img_size(image_size, stride=32, floor=0):
+    """
+    Verify image size is a multiple of stride stride in each dimension
+    """
+    if isinstance(image_size, int):  # integer i.e. img_size=640
+        new_size = max(make_divisible(image_size, int(stride)), floor)
     else:  # list i.e. img_size=[640, 480]
-        new_size = [max(make_divisible(x, int(s)), floor) for x in imgsz]
-    if new_size != imgsz:
-        print(f"WARNING: --img-size {imgsz} must be multiple of " f"max stride {s}, updating to {new_size}")
+        new_size = [max(make_divisible(x, int(stride)), floor) for x in image_size]
+    if new_size != image_size:
+        print(
+            f"WARNING: --img-size {image_size} must be multiple of "
+            f"max stride {stride}, updating to {new_size}"
+        )
     return new_size
 
 
@@ -265,12 +270,18 @@ def check_yaml(file, suffix=(".yaml", ".yml")):
 
 
 def check_file(file, suffix=""):
-    # Search/download file (if necessary) and return path
+    """
+    Search/download file (if necessary) and return path
+    """
     check_suffix(file, suffix)  # optional
     file = str(file)  # convert to str()
-    if Path(file).is_file() or file == "":  # exists
+
+    if Path(file).is_file() or file == "":
+        # return the file if the file exists
         return file
-    elif file.startswith(("http:/", "https:/")):  # download
+
+    if file.startswith(("http:/", "https:/")):
+        # download the file if the image source is a link
         url = str(Path(file)).replace(":/", "://")  # Pathlib turns :// -> :/
         # '%2F' to '/', split https://url.com/file.txt?auth
         file = Path(urllib.parse.unquote(file).split("?")[0]).name
@@ -281,14 +292,15 @@ def check_file(file, suffix=""):
             torch.hub.download_url_to_file(url, file)
             assert Path(file).exists() and Path(file).stat().st_size > 0, f"File download failed: {url}"
         return file
-    else:  # search
-        files = []
-        for d in "data", "models", "utils":  # search directories
-            files.extend(glob.glob(str(ROOT / d / "**" / file), recursive=True))  # find file
-        assert len(files), f"File not found: {file}"  # assert file was found
-        # assert unique
-        assert len(files) == 1, f"Multiple files match '{file}', specify exact path: {files}"
-        return files[0]  # return file
+
+    files = []
+    for d in "data", "models", "utils":
+        # search the directories
+        files.extend(glob.glob(str(ROOT / d / "**" / file), recursive=True))  # find file
+    assert len(files), f"File not found: {file}"  # assert file was found
+    # assert unique
+    assert len(files) == 1, f"Multiple files match '{file}', specify exact path: {files}"
+    return files[0]  # return file
 
 
 def url2file(url):
@@ -604,9 +616,12 @@ def non_max_suppression(
     return output
 
 
-def strip_optimizer(f="best.pt", s=""):
-    # Strip optimizer from 'f' to finalize training, optionally save as 's'
-    x = torch.load(f, map_location=torch.device("cpu"))
+def strip_optimizer(checkpoint_path="best.pt", saved_path=""):
+    """
+    Strip optimizer from 'checkpoint_path' to finalize training,
+    optionally save as 'saved_path'
+    """
+    x = torch.load(checkpoint_path, map_location=torch.device("cpu"))
     if x.get("ema"):
         x["model"] = x["ema"]  # replace model with ema
     for k in "optimizer", "training_results", "wandb_id", "ema", "updates":  # keys
@@ -615,9 +630,10 @@ def strip_optimizer(f="best.pt", s=""):
     x["model"].half()  # to FP16
     for p in x["model"].parameters():
         p.requires_grad = False
-    torch.save(x, s or f)
-    mb = os.path.getsize(s or f) / 1e6  # filesize
-    print(f"Optimizer stripped from {f},{(' saved as %s,' % s) if s else ''} {mb:.1f}MB")
+    torch.save(x, saved_path or checkpoint_path)
+    mb = os.path.getsize(saved_path or checkpoint_path) / 1e6  # filesize
+    saved_info = f" saved as {saved_path}," if saved_path else ""
+    print(f"Optimizer stripped from {checkpoint_path},{saved_info} {mb:.1f}MB")
 
 
 def print_mutation(results, hyp, save_dir, bucket):
@@ -703,7 +719,10 @@ def apply_classifier(x, model, img, im0):
 
 
 def increment_path(path, exist_ok=False, sep="", mkdir=False):
-    # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
+    """
+    Increment file or directory path.
+    i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
+    """
     path = Path(path)  # os-agnostic
     if path.exists() and not exist_ok:
         path, suffix = (path.with_suffix(""), path.suffix) if path.is_file() else (path, "")

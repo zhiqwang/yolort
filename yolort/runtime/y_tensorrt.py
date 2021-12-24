@@ -7,18 +7,19 @@
 import logging
 from collections import OrderedDict, namedtuple
 
-import cv2
 import numpy as np
 import torch
 from torch import Tensor
+
+from typing import Dict, List
+import torch
+from torch import Tensor
+from torchvision.ops import box_convert, boxes as box_ops
 
 try:
     import tensorrt as trt
 except ImportError:
     trt = None
-
-from yolort.utils import read_image_to_tensor
-from yolort.v5 import letterbox
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("PredictorTRT").setLevel(logging.INFO)
@@ -43,35 +44,40 @@ class PredictorTRT:
         >>> scores, class_ids, boxes = detector.run_on_image(img_path)
     """
 
-    def __init__(self, engine_path: str) -> None:
-        self.device = torch.device("cuda")
+    def __init__(
+        self,
+        engine_path: str,
+        device: torch.device = torch.device("cuda"),
+        score_thresh: float = 0.25,
+        iou_thresh: float = 0.45,
+        detections_per_img: int = 100,
+    ) -> None:
+        self.device = device
         self.named_binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
         self.logger = trt.Logger(trt.Logger.INFO)
-        self.engine_path = engine_path
+        self.stride = 32
+        self.names = [f'class{i}' for i in range(1000)]  # assign defaults
+        self.score_thresh = score_thresh
+        self.iou_thresh = iou_thresh
+        self.detections_per_img = detections_per_img
 
-        self._runtime = None
-        log.info(f"Loading {self.engine_path} for TensorRT inference...")
-        with open(self.engine_path, "rb") as f, trt.Runtime(self.logger) as runtime:
-            self._runtime = runtime.deserialize_cuda_engine(f.read())
+        self.engine = None
+        log.info(f"Loading {engine_path} for TensorRT inference...")
+        with open(engine_path, "rb") as f, trt.Runtime(self.logger) as runtime:
+            self.engine = runtime.deserialize_cuda_engine(f.read())
 
         self.bindings = OrderedDict()
-        for index in range(self._runtime.num_bindings):
-            name = self._runtime.get_binding_name(index)
-            dtype = trt.nptype(self._runtime.get_binding_dtype(index))
-            shape = tuple(self._runtime.get_binding_shape(index))
+        for index in range(self.engine.num_bindings):
+            name = self.engine.get_binding_name(index)
+            dtype = trt.nptype(self.engine.get_binding_dtype(index))
+            shape = tuple(self.engine.get_binding_shape(index))
             data = torch.from_numpy(np.empty(shape, dtype=np.dtype(dtype))).to(self.device)
             self.bindings[name] = self.named_binding(name, dtype, shape, data, int(data.data_ptr()))
         self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
-        self.context = self._runtime.create_execution_context()
+        self.context = self.engine.create_execution_context()
         self.batch_size = self.bindings["images"].shape[0]
 
-    def _preprocessing(self, image: np.ndarray) -> Tensor:
-        blob = letterbox(image, new_shape=(320, 320), auto=False)[0]
-        blob = read_image_to_tensor(blob)
-        blob = blob[None]
-        return blob
-
-    def __call__(self, image: np.ndarray):
+    def __call__(self, image):
         """
         Args:
             image (np.ndarray): an image of shape (H, W, C) (in BGR order).
@@ -81,25 +87,60 @@ class PredictorTRT:
             predictions (Tuple[List[float], List[int], List[float, float]]):
                 stands for scores, labels and boxes respectively.
         """
-        device = torch.device("cuda")
-        blob = self._preprocessing(image)
-        print(blob.shape)
-        blob = blob.to(device)
-
-        assert blob.shape == self.bindings["images"].shape, (blob.shape, self.bindings["images"].shape)
-        self.binding_addrs["images"] = int(blob.data_ptr())
+        assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
+        self.binding_addrs["images"] = int(image.data_ptr())
         self.context.execute_v2(list(self.binding_addrs.values()))
-        predictions = self.bindings["output"].data
-        return predictions
+        pred_logits = self.bindings["output"].data
+        return pred_logits
 
-    def run_on_image(self, image_path):
+    def run_on_image(self, image):
         """
         Run the TensorRT engine for one image only.
 
         Args:
             image_path (str): The image path to be predicted.
         """
-        img = cv2.imread(image_path)
-        predictions = self(img)
+        pred_logits = self(image)
+        detections = self.postprocessing(pred_logits)
+        return detections
 
-        return predictions
+    @staticmethod
+    def _decode_pred_logits(pred_logits: Tensor):
+        """
+        Decode the prediction logit from the PostPrecess.
+        """
+        # Compute conf
+        # box_conf x class_conf, w/ shape: num_anchors x num_classes
+        scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
+        boxes = box_convert(pred_logits[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
+
+        return boxes, scores
+
+    def postprocessing(self, pred_logits: Tensor):
+        batch_size = pred_logits.shape[0]
+        detections: List[Dict[str, Tensor]] = []
+
+        for idx in range(batch_size):  # image idx, image inference
+            # Decode the predict logits
+            boxes, scores = self._decode_pred_logits(pred_logits[idx])
+
+            # remove low scoring boxes
+            inds, labels = torch.where(scores > self.score_thresh)
+            boxes, scores = boxes[inds], scores[inds, labels]
+
+            # non-maximum suppression, independently done per level
+            keep = box_ops.batched_nms(boxes, scores, labels, self.iou_thresh)
+            # Keep only topk scoring head_outputs
+            keep = keep[: self.detections_per_img]
+            boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
+
+            detections.append({"scores": scores, "labels": labels, "boxes": boxes})
+
+        return detections
+
+    def warmup(self, img_size=(1, 3, 320, 320), half=False):
+        # Warmup model by running inference once
+        # only warmup GPU models
+        if isinstance(self.device, torch.device) and self.device.type != 'cpu':
+            im = torch.zeros(*img_size).to(self.device).type(torch.half if half else torch.float)
+            self(im)
