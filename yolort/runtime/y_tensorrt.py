@@ -6,13 +6,12 @@
 
 import logging
 from collections import OrderedDict, namedtuple
+from typing import Dict, List
 
 import numpy as np
 import torch
-from torch import Tensor
-
-from typing import Dict, List
 import torch
+from torch import Tensor
 from torch import Tensor
 from torchvision.ops import box_convert, boxes as box_ops
 
@@ -56,7 +55,7 @@ class PredictorTRT:
         self.named_binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
         self.logger = trt.Logger(trt.Logger.INFO)
         self.stride = 32
-        self.names = [f'class{i}' for i in range(1000)]  # assign defaults
+        self.names = [f"class{i}" for i in range(1000)]  # assign defaults
         self.score_thresh = score_thresh
         self.iou_thresh = iou_thresh
         self.detections_per_img = detections_per_img
@@ -141,6 +140,6 @@ class PredictorTRT:
     def warmup(self, img_size=(1, 3, 320, 320), half=False):
         # Warmup model by running inference once
         # only warmup GPU models
-        if isinstance(self.device, torch.device) and self.device.type != 'cpu':
+        if isinstance(self.device, torch.device) and self.device.type != "cpu":
             im = torch.zeros(*img_size).to(self.device).type(torch.half if half else torch.float)
             self(im)

@@ -2,22 +2,24 @@
 """
 Dataloaders and dataset utils
 """
-from PIL import Image
-import cv2
-import numpy as np
-from pathlib import Path
 import glob
 import os
+from pathlib import Path
+
+import cv2
+import numpy as np
+from PIL import Image
+
 from .augmentations import letterbox
 
 
 # Parameters
 
 # acceptable image suffixes
-IMG_FORMATS = ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff', 'dng', 'webp', 'mpo']
+IMG_FORMATS = ["bmp", "jpg", "jpeg", "png", "tif", "tiff", "dng", "webp", "mpo"]
 # acceptable video suffixes
-VID_FORMATS = ['mov', 'avi', 'mp4', 'mpg', 'mpeg', 'm4v', 'wmv', 'mkv']
-WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))  # DPP
+VID_FORMATS = ["mov", "avi", "mp4", "mpg", "mpeg", "m4v", "wmv", "mkv"]
+WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))  # DPP
 
 
 def exif_transpose(image):
@@ -55,6 +57,7 @@ class LoadImages:
     """
     YOLOv5 image/video dataloader. And we're using th CHW RGB format.
     """
+
     def __init__(self, path: str, img_size: int = 640, stride: int = 32, auto: bool = True):
         path_source = str(Path(path).resolve())  # os-agnostic absolute path
         if "*" in path_source:

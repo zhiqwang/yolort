@@ -5,12 +5,11 @@
 #
 import argparse
 from pathlib import Path
-import cv2
-
 from typing import List, Optional, Tuple
+
+import cv2
 import torch
 from torchvision.ops import box_convert
-
 from yolort.runtime import PredictorTRT
 from yolort.utils.image_utils import to_numpy
 from yolort.v5.utils.datasets import IMG_FORMATS, VID_FORMATS, LoadImages
@@ -93,7 +92,7 @@ def run(
     # increment run
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)
     # make dir
-    (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)
+    (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)
 
     # Load model
     device = select_device(device)
@@ -173,7 +172,11 @@ def run(
                     xyxy = to_numpy(box)
                     if save_img or save_crop or view_img:  # Add bbox to image
                         cls = int(class_idx)  # integer class
-                        label = None if hide_labels else (names[cls] if hide_conf else f"{names[cls]} {score:.2f}")
+                        label = (
+                            None
+                            if hide_labels
+                            else (names[cls] if hide_conf else f"{names[cls]} {score:.2f}")
+                        )
                         annotator.box_label(xyxy, label, color=colors(cls, True))
                         if save_crop:
                             save_path = save_dir / "crops" / names[cls] / f"{p.stem}.jpg"
@@ -196,15 +199,16 @@ def run(
                     raise NotImplementedError("Currently this method hasn't implemented yet.")
 
     # Print results
-    speeds_info = tuple(x / seen * 1E3 for x in dt)  # speeds per image
+    speeds_info = tuple(x / seen * 1e3 for x in dt)  # speeds per image
     logger.info(
         f"Speed: {speeds_info[0]:.1f}ms pre-process, {speeds_info[1]:.1f}ms inference, "
         f"{speeds_info[2]:.1f}ms NMS per image at shape {(1, 3, *img_size)}",
     )
     if save_txt or save_img:
         saved_info = (
-            f"\n{len(list(save_dir.glob('labels/*.txt')))} labels "
-            f"saved to {save_dir / 'labels'}" if save_txt else "",
+            f"\n{len(list(save_dir.glob('labels/*.txt')))} labels " f"saved to {save_dir / 'labels'}"
+            if save_txt
+            else "",
         )
         logger.info(f"Results saved to {colorstr('bold', save_dir)}{saved_info}")
     if update:
@@ -226,7 +230,9 @@ def get_parser():
     parser.add_argument("--save_conf", action="store_true", help="save confidences in --save-txt labels")
     parser.add_argument("--save_crop", action="store_true", help="save cropped prediction boxes")
     parser.add_argument("--nosave", action="store_true", help="do not save images/videos")
-    parser.add_argument("--classes", nargs="+", type=int, help="filter by class: --classes 0, or --classes 0 2 3")
+    parser.add_argument(
+        "--classes", nargs="+", type=int, help="filter by class: --classes 0, or --classes 0 2 3"
+    )
     parser.add_argument("--visualize", action="store_true", help="visualize features")
     parser.add_argument("--update", action="store_true", help="update all models")
     parser.add_argument("--project", default="./runs/detect", help="save results to project/name")
