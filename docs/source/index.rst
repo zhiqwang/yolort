@@ -69,6 +69,7 @@ Read a source of image(s) and detect its objects:
    notebooks/anchor-label-assignment-visualization
    notebooks/model-graph-visualization
    notebooks/export-onnx-inference-onnxruntime
+   notebooks/onnx-graphsurgeon-inference-tensorrt
    notebooks/export-relay-inference-tvm
 
 .. toctree::
