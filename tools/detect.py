@@ -97,43 +97,35 @@ def run(
     # make dir
     (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)
 
-    # Load model
+    # Load the TensorRT engine
     device = select_device(device)
-    model = PredictorTRT(
+    engine = PredictorTRT(
         weights,
         device=device,
         score_thresh=conf_thres,
         iou_thresh=iou_thres,
         detections_per_img=max_det,
     )
-    stride, names = model.stride, model.names
+    stride, names = engine.stride, engine.names
     img_size = check_img_size(img_size, stride=stride)  # check image size
 
     # Dataloader
     dataset = LoadImages(source, img_size=img_size, stride=stride, auto=False)
 
     # Run inference
-    model.warmup(img_size=(1, 3, *img_size), half=half)
-    dt, seen = [0.0, 0.0, 0.0], 0
-    for path, im, im0s, _, s in dataset:
+    engine.warmup(img_size=(1, 3, *img_size), half=half)
+    dt, seen = [0.0, 0.0], 0
+    for path, image, im0s, _, s in dataset:
         t1 = time_sync()
-        im = torch.from_numpy(im).to(device)
-        im = im.half() if half else im.float()  # uint8 to fp16/32
-        im /= 255  # 0 - 255 to 0.0 - 1.0
-        if len(im.shape) == 3:
-            im = im[None]  # expand for batch dim
+        image = engine.preprocessing(image)
         t2 = time_sync()
         dt[0] += t2 - t1
 
         # Inference
         visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
-        pred_logits = model(im)
+        detections = engine.run_on_image(image)
         t3 = time_sync()
         dt[1] += t3 - t2
-
-        # NMS
-        detections = model.postprocessing(pred_logits)
-        dt[2] += time_sync() - t3
 
         # Process predictions
         for i, det in enumerate(detections):  # per image
@@ -145,15 +137,15 @@ def run(
                 p, im0, frame = path, im0s.copy(), getattr(dataset, "frame", 0)
 
             p = Path(p)  # to Path
-            save_path = str(save_dir / p.name)  # im.jpg
+            save_path = str(save_dir / p.name)  # image.jpg
             txt_path = str(save_dir / "labels" / p.stem) + ("" if dataset.mode == "image" else f"_{frame}")
-            s += "%gx%g " % im.shape[2:]  # print string
+            s += "%gx%g " % image.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
             if len(det):
                 # Rescale boxes from img_size to im0 size
-                boxes = scale_coords(im.shape[2:], det["boxes"], im0.shape).round()
+                boxes = scale_coords(image.shape[2:], det["boxes"], im0.shape).round()
                 scores = det["scores"]
                 labels = det["labels"]
 
@@ -205,8 +197,8 @@ def run(
     # Print results
     speeds_info = tuple(x / seen * 1e3 for x in dt)  # speeds per image
     logger.info(
-        f"Speed: {speeds_info[0]:.1f}ms pre-process, {speeds_info[1]:.1f}ms inference, "
-        f"{speeds_info[2]:.1f}ms NMS per image at shape {(1, 3, *img_size)}",
+        f"Speed: {speeds_info[0]:.1f}ms pre-process, {speeds_info[1]:.1f}ms inference & "
+        f"NMS per image at shape {(1, 3, *img_size)}",
     )
     if save_txt or save_img:
         saved_info = (

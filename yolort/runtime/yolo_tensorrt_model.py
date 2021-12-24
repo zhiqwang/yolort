@@ -52,6 +52,7 @@ class YOLOTRTModule(nn.Module):
 
         model.load_state_dict(model_info["state_dict"])
         self.model = model
+        self.num_clases = num_classes
 
     @torch.no_grad()
     def forward(self, inputs: Tensor) -> Tuple[Tensor, Tensor]:
@@ -88,7 +89,7 @@ class YOLOTRTModule(nn.Module):
 
         dynamic_axes = (
             {
-                "images_tensors": {0: "batch", 2: "height", 3: "width"},
+                "images": {0: "batch", 2: "height", 3: "width"},
                 "boxes": {0: "batch", 1: "num_objects"},
                 "scores": {0: "batch", 1: "num_objects"},
             }
@@ -96,7 +97,7 @@ class YOLOTRTModule(nn.Module):
             else None
         )
 
-        input_names = ["images_tensors"]
+        input_names = ["images"]
         output_names = ["boxes", "scores"]
 
         torch.onnx.export(

@@ -11,7 +11,6 @@ from typing import Dict, List
 import numpy as np
 import torch
 from torch import Tensor
-from torchvision.ops import box_convert, boxes as box_ops
 
 try:
     import tensorrt as trt
@@ -40,7 +39,7 @@ class PredictorTRT:
         >>> detector = PredictorTRT(engine_path, device)
         >>>
         >>> img_path = 'bus.jpg'
-        >>> scores, class_ids, boxes = detector.run_on_image(img_path)
+        >>> detections = detector.run_on_image(img_path)
     """
 
     def __init__(
@@ -62,10 +61,12 @@ class PredictorTRT:
 
         self.engine = self._build_engine()
         self._set_context()
+        self.half = False
 
     def _build_engine(self):
         logger.info(f"Loading {self.engine_path} for TensorRT inference...")
         trt_logger = trt.Logger(trt.Logger.INFO)
+        trt.init_libnvinfer_plugins(trt_logger, namespace="")
         with open(self.engine_path, "rb") as f, trt.Runtime(trt_logger) as runtime:
             engine = runtime.deserialize_cuda_engine(f.read())
 
@@ -83,6 +84,14 @@ class PredictorTRT:
         self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
         self.context = self.engine.create_execution_context()
 
+    def preprocessing(self, image):
+        image = torch.from_numpy(image).to(self.device)
+        image = image.half() if self.half else image.float()  # uint8 to fp16/32
+        image /= 255  # 0 - 255 to 0.0 - 1.0
+        if len(image.shape) == 3:
+            image = image[None]  # expand for batch dim
+        return image
+
     def __call__(self, image: Tensor):
         """
         Args:
@@ -95,50 +104,31 @@ class PredictorTRT:
         assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
         self.binding_addrs["images"] = int(image.data_ptr())
         self.context.execute_v2(list(self.binding_addrs.values()))
-        pred_logits = self.bindings["output"].data
-        return pred_logits
+        num_dets = self.bindings["num_detections"].data
+        boxes = self.bindings["detection_boxes"].data
+        scores = self.bindings["detection_scores"].data
+        labels = self.bindings["detection_classes"].data
+        return boxes, scores, labels, num_dets
 
-    def run_on_image(self, image):
+    def run_on_image(self, image: Tensor):
         """
         Run the TensorRT engine for one image only.
 
         Args:
-            image_path (str): The image path to be predicted.
+            image (Tensor): an image of shape (C, N, H, W).
         """
-        pred_logits = self(image)
-        detections = self.postprocessing(pred_logits)
+        boxes, scores, labels, num_dets = self(image)
+
+        detections = self.postprocessing(boxes, scores, labels, num_dets)
         return detections
 
     @staticmethod
-    def _decode_pred_logits(pred_logits: Tensor):
-        """
-        Decode the prediction logit from the PostPrecess.
-        """
-        # Compute conf
-        # box_conf x class_conf, w/ shape: num_anchors x num_classes
-        scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
-        boxes = box_convert(pred_logits[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
-
-        return boxes, scores
-
-    def postprocessing(self, pred_logits: Tensor):
-        batch_size = pred_logits.shape[0]
+    def postprocessing(all_boxes, all_scores, all_labels, all_num_dets):
         detections: List[Dict[str, Tensor]] = []
 
-        for idx in range(batch_size):  # image idx, image inference
-            # Decode the predict logits
-            boxes, scores = self._decode_pred_logits(pred_logits[idx])
-
-            # remove low scoring boxes
-            inds, labels = torch.where(scores > self.score_thresh)
-            boxes, scores = boxes[inds], scores[inds, labels]
-
-            # non-maximum suppression, independently done per level
-            keep = box_ops.batched_nms(boxes, scores, labels, self.iou_thresh)
-            # Keep only topk scoring head_outputs
-            keep = keep[: self.detections_per_img]
-            boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
-
+        for boxes, scores, labels, num_dets in zip(all_boxes, all_scores, all_labels, all_num_dets):
+            keep = num_dets.item()
+            boxes, scores, labels = boxes[:keep], scores[:keep], labels[:keep]
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
 
         return detections

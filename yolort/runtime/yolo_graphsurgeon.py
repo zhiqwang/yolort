@@ -24,11 +24,11 @@ except ImportError:
 from .yolo_tensorrt_model import YOLOTRTModule
 
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("YOLOv5GraphSurgeon").setLevel(logging.INFO)
-log = logging.getLogger("YOLOv5GraphSurgeon")
+logging.getLogger("YOLOGraphSurgeon").setLevel(logging.INFO)
+logger = logging.getLogger("YOLOGraphSurgeon")
 
 
-class YOLOv5GraphSurgeon:
+class YOLOGraphSurgeon:
     """
     Constructor of the YOLOv5 Graph Surgeon object, TensorRT treat ``nms`` as
     plugin, especially ``EfficientNMS_TRT`` in our yolort PostProcess module.
@@ -44,7 +44,6 @@ class YOLOv5GraphSurgeon:
     def __init__(
         self,
         checkpoint_path: str,
-        score_thresh: float = 0.25,
         version: str = "r6.0",
         enable_dynamic: bool = True,
     ):
@@ -52,19 +51,19 @@ class YOLOv5GraphSurgeon:
         assert checkpoint_path.exists()
 
         # Use YOLOTRTModule to convert saved model to an initial ONNX graph.
-        model = YOLOTRTModule(checkpoint_path, score_thresh=score_thresh, version=version)
+        model = YOLOTRTModule(checkpoint_path, version=version)
         model = model.eval()
 
-        log.info(f"Loaded saved model from {checkpoint_path}")
+        logger.info(f"Loaded saved model from {checkpoint_path}")
         onnx_model_path = checkpoint_path.with_suffix(".onnx")
         model.to_onnx(onnx_model_path, enable_dynamic=enable_dynamic)
         self.graph = gs.import_onnx(onnx.load(onnx_model_path))
         assert self.graph
-        log.info("PyTorch2ONNX graph created successfully")
+        logger.info("PyTorch2ONNX graph created successfully")
 
         # Fold constants via ONNX-GS that PyTorch2ONNX may have missed
         self.graph.fold_constants()
-
+        self.num_classes = model.num_clases
         self.batch_size = 1
 
     def infer(self):
@@ -85,11 +84,11 @@ class YOLOv5GraphSurgeon:
                 model = shape_inference.infer_shapes(model)
                 self.graph = gs.import_onnx(model)
             except Exception as e:
-                log.info(f"Shape inference could not be performed at this time:\n{e}")
+                logger.info(f"Shape inference could not be performed at this time:\n{e}")
             try:
                 self.graph.fold_constants(fold_shapes=True)
             except TypeError as e:
-                log.error(
+                logger.error(
                     "This version of ONNX GraphSurgeon does not support folding shapes, "
                     f"please upgrade your onnx_graphsurgeon module. Error:\n{e}"
                 )
@@ -111,43 +110,46 @@ class YOLOv5GraphSurgeon:
         self.graph.cleanup().toposort()
         model = gs.export_onnx(self.graph)
         onnx.save(model, output_path)
-        log.info(f"Saved ONNX model to {output_path}")
+        logger.info(f"Saved ONNX model to {output_path}")
 
     def register_nms(
         self,
         score_thresh: float = 0.25,
         nms_thresh: float = 0.45,
         detections_per_img: int = 100,
+        normalized: bool = True,
     ):
         """
-        Register the ``EfficientNMS_TRT`` plugin node.
+        Register the ``BatchedNMS_TRT`` plugin node.
 
         NMS expects these shapes for its input tensors:
-        - box_net: [batch_size, number_boxes, 4]
-        - class_net: [batch_size, number_boxes, number_labels]
-
-        As the original tensors from YOLOv5 will be used, the NMS code type is set to 0 (Corners),
-        because this is the internal box coding format used by the network.
+            - box_net: [batch_size, number_boxes, 1, 4]
+            - class_net: [batch_size, number_boxes, number_labels]
 
         Args:
-            threshold: Override the score threshold attribute. If set to None,
-                use the value in the graph.
-            detections: Override the max detections attribute. If set to None,
-                use the value in the graph.
+            score_thresh (float): The scalar threshold for score (low scoring boxes are removed).
+            nms_thresh (float): The scalar threshold for IOU (new boxes that have high IOU
+                overlap with previously selected boxes are removed).
+            detections_per_img (int): Number of best detections to keep after NMS.
+            normalized (bool): Set to false if the box coordinates are not normalized,
+                meaning they are not in the range [0,1]. Defaults: True.
         """
 
         self.infer()
         # Find the concat node at the end of the network
         nms_inputs = self.graph.outputs
-        op = "EfficientNMS_TRT"
+        op = "BatchedNMS_TRT"
         attrs = {
             "plugin_version": "1",
-            "background_class": -1,  # no background class
-            "max_output_boxes": detections_per_img,
-            "score_threshold": max(0.01, score_thresh),
-            "iou_threshold": nms_thresh,
-            "score_activation": True,
-            "box_coding": 0,
+            "shareLocation": True,
+            "backgroundLabelId": -1,  # no background class
+            "numClasses": self.num_classes,
+            "topK": 1024,
+            "keepTopK": detections_per_img,
+            "scoreThreshold": score_thresh,
+            "iouThreshold": nms_thresh,
+            "isNormalized": normalized,
+            "clipBoxes": False,
         }
 
         # NMS Outputs
@@ -167,8 +169,8 @@ class YOLOv5GraphSurgeon:
             shape=[self.batch_size, detections_per_img],
         )
         output_labels = gs.Variable(
-            name="detection_labels",
-            dtype=np.int32,
+            name="detection_classes",
+            dtype=np.float32,
             shape=[self.batch_size, detections_per_img],
         )
 
@@ -183,7 +185,7 @@ class YOLOv5GraphSurgeon:
             outputs=nms_outputs,
             attrs=attrs,
         )
-        log.info(f"Created NMS plugin '{op}' with attributes: {attrs}")
+        logger.info(f"Created NMS plugin '{op}' with attributes: {attrs}")
 
         self.graph.outputs = nms_outputs
 
