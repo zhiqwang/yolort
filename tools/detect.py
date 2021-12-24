@@ -57,6 +57,8 @@ def run(
     """
     The core function for detecting source of image, path or directory.
 
+    Adapted form https://github.com/ultralytics/yolov5/blob/db6ec66/detect.py
+
     Args:
         weights: Path of the engine
         source: file/dir/URL/glob, 0 for webcam
