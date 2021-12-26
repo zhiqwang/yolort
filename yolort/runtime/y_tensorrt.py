@@ -31,15 +31,21 @@ class PredictorTRT:
         engine_path (str): Path of the ONNX checkpoint.
 
     Examples:
+        >>> import cv2
+        >>> import numpy as np
         >>> import torch
         >>> from yolort.runtime import PredictorTRT
         >>>
-        >>> engine_path = 'yolov5s.engine'
-        >>> device = torch.device("cuda")
-        >>> detector = PredictorTRT(engine_path, device)
+        >>> runtime = PredictorTRT(engine_path, device)
         >>>
         >>> img_path = 'bus.jpg'
-        >>> detections = detector.run_on_image(img_path)
+        >>> image = cv2.imread(img_path)
+        >>> image = cv2.resize(image, (320, 320))
+        >>> image = image.transpose((2, 0, 1))[::-1]  # Convert HWC to CHW, BGR to RGB
+        >>> image = np.ascontiguousarray(image)
+        >>>
+        >>> image = runtime.preprocessing(image)
+        >>> detections = runtime.run_on_image(image)
     """
 
     def __init__(
@@ -98,8 +104,8 @@ class PredictorTRT:
             image (Tensor): an image of shape (C, N, H, W).
 
         Returns:
-            predictions (Tuple[List[float], List[int], List[float, float]]):
-                stands for scores, labels and boxes respectively.
+            predictions (Tuple[Tensor, Tensor, Tensor, Tensor]):
+                stands for boxes, scores, labels and number of boxes respectively.
         """
         assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
         self.binding_addrs["images"] = int(image.data_ptr())
