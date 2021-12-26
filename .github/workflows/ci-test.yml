@@ -20,8 +20,8 @@ jobs:
             torch_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.10
-          - torch: 'PyTorch 1.10.0+cpu'
-            torch_address: torch==1.10.0+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          - torch: 'PyTorch 1.10.1+cpu'
+            torch_address: torch==1.10.1+cpu torchvision==0.11.2+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
             unittest_type: --cov=test --cov-report=xml
             torchvision: release/0.11
 
