@@ -29,17 +29,27 @@ class PredictorTRT:
 
     Args:
         engine_path (str): Path of the ONNX checkpoint.
+        device (torch.device): The CUDA device to be used for inferencing.
+        score_thresh (float): Score threshold used for postprocessing the detections.
+        nms_thresh (float): NMS threshold used for postprocessing the detections.
+        detections_per_img (int): Number of best detections to keep after NMS.
 
     Examples:
+        >>> import cv2
+        >>> import numpy as np
         >>> import torch
         >>> from yolort.runtime import PredictorTRT
         >>>
-        >>> engine_path = 'yolov5s.engine'
-        >>> device = torch.device("cuda")
-        >>> detector = PredictorTRT(engine_path, device)
+        >>> runtime = PredictorTRT(engine_path, device)
         >>>
         >>> img_path = 'bus.jpg'
-        >>> detections = detector.run_on_image(img_path)
+        >>> image = cv2.imread(img_path)
+        >>> image = cv2.resize(image, (320, 320))
+        >>> image = image.transpose((2, 0, 1))[::-1]  # Convert HWC to CHW, BGR to RGB
+        >>> image = np.ascontiguousarray(image)
+        >>>
+        >>> image = runtime.preprocessing(image)
+        >>> detections = runtime.run_on_image(image)
     """
 
     def __init__(
@@ -47,7 +57,7 @@ class PredictorTRT:
         engine_path: str,
         device: torch.device = torch.device("cuda"),
         score_thresh: float = 0.25,
-        iou_thresh: float = 0.45,
+        nms_thresh: float = 0.45,
         detections_per_img: int = 100,
     ) -> None:
         self.engine_path = engine_path
@@ -56,7 +66,7 @@ class PredictorTRT:
         self.stride = 32
         self.names = [f"class{i}" for i in range(1000)]  # assign defaults
         self.score_thresh = score_thresh
-        self.iou_thresh = iou_thresh
+        self.nms_thresh = nms_thresh
         self.detections_per_img = detections_per_img
 
         self.engine = self._build_engine()
@@ -98,8 +108,8 @@ class PredictorTRT:
             image (Tensor): an image of shape (C, N, H, W).
 
         Returns:
-            predictions (Tuple[List[float], List[int], List[float, float]]):
-                stands for scores, labels and boxes respectively.
+            predictions (Tuple[Tensor, Tensor, Tensor, Tensor]):
+                stands for boxes, scores, labels and number of boxes respectively.
         """
         assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
         self.binding_addrs["images"] = int(image.data_ptr())
