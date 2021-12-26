@@ -31,6 +31,9 @@ logging.getLogger("TRTHelper").setLevel(logging.INFO)
 logger = logging.getLogger("TRTHelper")
 
 
+__all__ = ["YOLOTRTModule", "EngineBuilder"]
+
+
 class YOLOTRTModule(nn.Module):
     """
     TensorRT deployment friendly wrapper for YOLO.
