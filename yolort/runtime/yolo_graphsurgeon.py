@@ -30,8 +30,13 @@ logger = logging.getLogger("YOLOGraphSurgeon")
 
 class YOLOGraphSurgeon:
     """
-    Constructor of the YOLOv5 Graph Surgeon object, TensorRT treat ``nms`` as
-    plugin, especially ``EfficientNMS_TRT`` in our yolort PostProcess module.
+    Constructor of the YOLOv5 Graph Surgeon object.
+
+    Because TensorRT treat the ``torchvision::ops::nms`` as plugin, we use the a simple post-processing
+    module named ``LogitsDecoder`` to connect to ``BatchedNMS_TRT`` plugin in TensorRT.
+
+    And the ``BatchedNMS_TRT`` plays the same role of following computation.
+    https://github.com/zhiqwang/yolov5-rt-stack/blob/02c74a0/yolort/models/box_head.py#L462-L470
 
     Args:
         checkpoint_path: The path pointing to the PyTorch saved model to load.
