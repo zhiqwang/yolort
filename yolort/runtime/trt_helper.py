@@ -63,7 +63,6 @@ class LogitsDecoder(nn.Module):
         Args:
             head_outputs (List[Tensor]): The predicted locations and class/object confidence,
                 shape of the element is (N, A, H, W, K).
-            anchors_tuple (Tuple[Tensor, Tensor, Tensor]):
             grids (List[Tensor]): Anchor grids.
             shifts (List[Tensor]): Anchor shifts.
         """
