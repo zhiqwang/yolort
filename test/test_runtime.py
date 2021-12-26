@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import torch
 from torch import Tensor
-from yolort.runtime.yolo_tensorrt_model import YOLOTRTModule
+from yolort.runtime.trt_helper import YOLOTRTModule
 from yolort.v5 import attempt_download
 
 

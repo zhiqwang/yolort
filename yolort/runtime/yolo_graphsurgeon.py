@@ -21,7 +21,7 @@ try:
 except ImportError:
     gs = None
 
-from .yolo_tensorrt_model import YOLOTRTModule
+from .trt_helper import YOLOTRTModule
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("YOLOGraphSurgeon").setLevel(logging.INFO)
