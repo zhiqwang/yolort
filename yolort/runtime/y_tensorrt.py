@@ -37,6 +37,8 @@ class PredictorTRT:
         >>> import torch
         >>> from yolort.runtime import PredictorTRT
         >>>
+        >>> engine_path = 'yolov5n6.engine'
+        >>> device = torch.device('cuda')
         >>> runtime = PredictorTRT(engine_path, device)
         >>>
         >>> img_path = 'bus.jpg'
