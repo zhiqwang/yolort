@@ -27,47 +27,47 @@ The TensorRT inference for `yolort`, support CUDA only.
 
    - Set the super parameters
 
-      ```python
-      model_path = "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt"
-      checkpoint_path = attempt_download(model_path)
-      onnx_path = "yolov5n6.onnx"
-      engine_path = "yolov5n6.engine"
+     ```python
+     model_path = "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt"
+     checkpoint_path = attempt_download(model_path)
+     onnx_path = "yolov5n6.onnx"
+     engine_path = "yolov5n6.engine"
 
-      score_thresh = 0.4
-      iou_thresh = 0.45
-      detections_per_img = 100
-      ```
+     score_thresh = 0.4
+     iou_thresh = 0.45
+     detections_per_img = 100
+     ```
 
-   -  Surgeon the yolov5 ONNX models
+   - Surgeon the yolov5 ONNX models
 
-      ```python
-      from yolort.runtime.yolo_graphsurgeon import YOLOGraphSurgeon
+     ```python
+     from yolort.runtime.yolo_graphsurgeon import YOLOGraphSurgeon
 
-      yolo_gs = YOLOGraphSurgeon(
+     yolo_gs = YOLOGraphSurgeon(
          checkpoint_path,
          version="r6.0",
          enable_dynamic=False,
-      )
+     )
 
-      yolo_gs.register_nms(
+     yolo_gs.register_nms(
          score_thresh=score_thresh,
          nms_thresh=iou_thresh,
          detections_per_img=detections_per_img,
-      )
+     )
 
-      # Export the ONNX model
-      yolo_gs.save(onnx_path)
-      ```
+     # Export the ONNX model
+     yolo_gs.save(onnx_path)
+     ```
 
    - Build the TensorRT engine
 
-      ```python
-      from yolort.runtime.trt_helper import EngineBuilder
+     ```python
+     from yolort.runtime.trt_helper import EngineBuilder
 
-      engine_builder = EngineBuilder()
-      engine_builder.create_network(onnx_path)
-      engine_builder.create_engine(engine_path, precision="fp32")
-      ```
+     engine_builder = EngineBuilder()
+     engine_builder.create_network(onnx_path)
+     engine_builder.create_engine(engine_path, precision="fp32")
+     ```
 
 1. Now, you can infer your own images.
 
