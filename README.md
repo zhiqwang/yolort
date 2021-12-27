@@ -46,7 +46,9 @@ ______________________________________________________________________
 
 ## 🆕 What's New
 
-- *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [itsnine](https://github.com/itsnine).
+- *Dec. 27, 2021*. Add `TensorRT` C++ interface example. Thanks to [Shiquan](https://github.com/ShiquanYu).
+- *Dec. 25, 2021*. Support exporting to `TensorRT`, and inferencing with `TensorRT` Python interface.
+- *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [Fidan](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
 - *Nov. 21, 2020*. Add graph visualization tools.
 - *Nov. 17, 2020*. Support exporting to `ONNX`, and inferencing with `ONNXRuntime` Python interface.
@@ -152,7 +154,7 @@ If you use yolort in your publication, please cite it by using the following Bib
 
 ```bibtex
 @Misc{yolort2021,
-  author =       {Zhiqiang Wang, Fidan Kharrasov},
+  author =       {Zhiqiang Wang, Shiquan Yu, Fidan Kharrasov},
   title =        {yolort: A runtime stack for object detection on specialized accelerators},
   howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
   year =         {2021}
