@@ -24,9 +24,9 @@ ______________________________________________________________________
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/main.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/main)
 
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/main/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
-[![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=brightgreen)](LICENSE)
-[![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
+[![license](https://img.shields.io/github/license/zhiqwang/yolov5-rt-stack?color=dfd)](LICENSE)
+[![Slack](https://img.shields.io/badge/slack-chat-aff.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-pink.svg)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 
 ______________________________________________________________________
 
@@ -46,7 +46,9 @@ ______________________________________________________________________
 
 ## 🆕 What's New
 
-- *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [itsnine](https://github.com/itsnine).
+- *Dec. 27, 2021*. Add `TensorRT` C++ interface example. Thanks to [Shiquan](https://github.com/ShiquanYu).
+- *Dec. 25, 2021*. Support exporting to `TensorRT`, and inferencing with `TensorRT` Python interface.
+- *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [Fidan](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
 - *Nov. 21, 2020*. Add graph visualization tools.
 - *Nov. 17, 2020*. Support exporting to `ONNX`, and inferencing with `ONNXRuntime` Python interface.
@@ -135,6 +137,10 @@ We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to de
 
 On the `ONNXRuntime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNXRuntime`.
 
+### Inference on TensorRT backend
+
+On the `TensorRT` front you can use the [C++ example](deployment/tensorrt), and we also provide a tutorial [onnx-graphsurgeon-inference-tensorrt](notebooks/onnx-graphsurgeon-inference-tensorrt.ipynb) for using the `TensorRT`.
+
 ## 🎨 Model Graph Visualization
 
 Now, `yolort` can draw the model graph directly, checkout our [model-graph-visualization](notebooks/model-graph-visualization.ipynb) notebook to see how to use and visualize the model graph.
@@ -152,7 +158,7 @@ If you use yolort in your publication, please cite it by using the following Bib
 
 ```bibtex
 @Misc{yolort2021,
-  author =       {Zhiqiang Wang, Fidan Kharrasov},
+  author =       {Zhiqiang Wang, Shiquan Yu, Fidan Kharrasov},
   title =        {yolort: A runtime stack for object detection on specialized accelerators},
   howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
   year =         {2021}
