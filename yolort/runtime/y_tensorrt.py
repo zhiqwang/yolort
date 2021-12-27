@@ -30,9 +30,6 @@ class PredictorTRT:
     Args:
         engine_path (str): Path of the ONNX checkpoint.
         device (torch.device): The CUDA device to be used for inferencing.
-        score_thresh (float): Score threshold used for postprocessing the detections.
-        nms_thresh (float): NMS threshold used for postprocessing the detections.
-        detections_per_img (int): Number of best detections to keep after NMS.
 
     Examples:
         >>> import cv2
@@ -40,6 +37,8 @@ class PredictorTRT:
         >>> import torch
         >>> from yolort.runtime import PredictorTRT
         >>>
+        >>> engine_path = 'yolov5n6.engine'
+        >>> device = torch.device('cuda')
         >>> runtime = PredictorTRT(engine_path, device)
         >>>
         >>> img_path = 'bus.jpg'
@@ -56,18 +55,12 @@ class PredictorTRT:
         self,
         engine_path: str,
         device: torch.device = torch.device("cuda"),
-        score_thresh: float = 0.25,
-        nms_thresh: float = 0.45,
-        detections_per_img: int = 100,
     ) -> None:
         self.engine_path = engine_path
         self.device = device
         self.named_binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
         self.stride = 32
         self.names = [f"class{i}" for i in range(1000)]  # assign defaults
-        self.score_thresh = score_thresh
-        self.nms_thresh = nms_thresh
-        self.detections_per_img = detections_per_img
 
         self.engine = self._build_engine()
         self._set_context()
