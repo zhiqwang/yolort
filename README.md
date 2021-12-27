@@ -137,6 +137,10 @@ We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to de
 
 On the `ONNXRuntime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNXRuntime`.
 
+### Inference on TensorRT backend
+
+On the `TensorRT` front you can use the [C++ example](deployment/tensorrt), and we also provide a tutorial [onnx-graphsurgeon-inference-tensorrt](notebooks/onnx-graphsurgeon-inference-tensorrt.ipynb) for using the `TensorRT`.
+
 ## 🎨 Model Graph Visualization
 
 Now, `yolort` can draw the model graph directly, checkout our [model-graph-visualization](notebooks/model-graph-visualization.ipynb) notebook to see how to use and visualize the model graph.
