@@ -189,7 +189,7 @@ def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
 
 def darknet_x_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
     """
-    Constructs the DarkNet release 6.0 model with large channels.
+    Constructs the DarkNet release 6.0 model with X large channels.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
