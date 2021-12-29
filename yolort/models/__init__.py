@@ -1,4 +1,4 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
 from typing import Any
 
 from torch import nn

@@ -1,4 +1,4 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
 from typing import Callable, List, Optional, Any
 
 import torch
@@ -15,6 +15,7 @@ __all__ = [
     "darknet_s_r6_0",
     "darknet_m_r6_0",
     "darknet_l_r6_0",
+    "darknet_x_r6_0",
 ]
 
 model_urls = {
@@ -22,6 +23,7 @@ model_urls = {
     "darknet_s_r6.0": None,
     "darknet_m_r6.0": None,
     "darknet_l_r6.0": None,
+    "darknet_x_r6.0": None,
 }  # TODO: add checkpoint weights
 
 
@@ -183,3 +185,14 @@ def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: An
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _darknet_v6_conf("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, **kwargs)
+
+
+def darknet_x_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
+    """
+    Constructs the DarkNet release 6.0 model with X large channels.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _darknet_v6_conf("darknet_x_r6.0", pretrained, progress, 1.33, 1.25, **kwargs)

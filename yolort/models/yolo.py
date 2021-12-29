@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
 
 import warnings
 from typing import Any, List, Dict, Callable, Tuple, Optional
@@ -27,6 +27,9 @@ __all__ = [
     "yolov5_darknet_pan_m_r60",
     "yolov5_darknet_pan_m6_r60",
     "yolov5_darknet_pan_l_r60",
+    "yolov5_darknet_pan_l6_r60",
+    "yolov5_darknet_pan_x_r60",
+    "yolov5_darknet_pan_x6_r60",
     "yolov5_darknet_tan_s_r40",
     "build_model",
 ]
@@ -599,6 +602,36 @@ def yolov5_darknet_pan_l_r60(
     )
 
 
+def yolov5_darknet_pan_x_r60(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""yolov5 X large release 6.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_x_r6_0"
+    weights_name = "yolov5_darknet_pan_x_r60_coco"
+    depth_multiple = 1.33
+    width_multiple = 1.25
+    version = "r6.0"
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        **kwargs,
+    )
+
+
 def yolov5_darknet_pan_n6_r60(
     pretrained: bool = False,
     progress: bool = True,
@@ -702,6 +735,92 @@ def yolov5_darknet_pan_m6_r60(
     weights_name = "yolov5_darknet_pan_m6_r60_coco"
     depth_multiple = 0.67
     width_multiple = 0.75
+    version = "r6.0"
+    use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_l6_r60(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 X large release v6.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_l_r6_0"
+    weights_name = "yolov5_darknet_pan_l6_r60_coco"
+    depth_multiple = 1.0
+    width_multiple = 1.0
+    version = "r6.0"
+    use_p6 = True
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+
+    return build_model(
+        backbone_name,
+        depth_multiple,
+        width_multiple,
+        version,
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        use_p6=use_p6,
+        strides=strides,
+        anchor_grids=anchor_grids,
+        **kwargs,
+    )
+
+
+def yolov5_darknet_pan_x6_r60(
+    pretrained: bool = False,
+    progress: bool = True,
+    num_classes: int = 80,
+    **kwargs: Any,
+) -> YOLO:
+    r"""
+    YOLOv5 P6 X large release v6.0 model from
+    `"ultralytics/yolov5" <https://zenodo.org/badge/latestdoi/264818686>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    backbone_name = "darknet_x_r6_0"
+    weights_name = "yolov5_darknet_pan_x6_r60_coco"
+    depth_multiple = 1.33
+    width_multiple = 1.25
     version = "r6.0"
     use_p6 = True
     strides = [8, 16, 32, 64]
