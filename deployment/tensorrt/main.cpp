@@ -325,33 +325,29 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
 
   for (int32_t i = 1; i < engine->getNbBindings(); i++) {
     if (i == detection_boxes_index) {
-      CHECK(cudaMemcpyAsync(
+      CHECK(cudaMemcpy(
           detection_boxes.data(),
           buffers[detection_boxes_index],
           detection_boxes.size() * getElementSize(engine->getBindingDataType(i)),
-          cudaMemcpyDeviceToHost,
-          stream));
+          cudaMemcpyDeviceToHost));
     } else if (i == detection_scores_index) {
-      CHECK(cudaMemcpyAsync(
+      CHECK(cudaMemcpy(
           detection_scores.data(),
           buffers[detection_scores_index],
           detection_scores.size() * getElementSize(engine->getBindingDataType(i)),
-          cudaMemcpyDeviceToHost,
-          stream));
+          cudaMemcpyDeviceToHost));
     } else if (i == detection_labels_index) {
-      CHECK(cudaMemcpyAsync(
+      CHECK(cudaMemcpy(
           detection_labels.data(),
           buffers[detection_labels_index],
           detection_labels.size() * getElementSize(engine->getBindingDataType(i)),
-          cudaMemcpyDeviceToHost,
-          stream));
+          cudaMemcpyDeviceToHost));
     } else if (i == num_detections_index) {
-      CHECK(cudaMemcpyAsync(
+      CHECK(cudaMemcpy(
           &num_detections,
           buffers[num_detections_index],
           getElementSize(engine->getBindingDataType(i)),
-          cudaMemcpyDeviceToHost,
-          stream));
+          cudaMemcpyDeviceToHost));
     }
   }
 
