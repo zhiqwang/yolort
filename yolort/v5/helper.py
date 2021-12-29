@@ -1,3 +1,4 @@
+# Copyright (c) 2021, yolort team. All rights reserved.
 import contextlib
 import sys
 from pathlib import Path

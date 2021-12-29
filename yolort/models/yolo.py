@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
 
 import warnings
 from typing import Any, List, Dict, Callable, Tuple, Optional
