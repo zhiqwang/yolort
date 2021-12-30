@@ -102,8 +102,7 @@ def run(
     engine = PredictorTRT(weights, device=device)
     stride, names = engine.stride, engine.names
     img_size = check_img_size(img_size, stride=stride)  # check image size
-    if len(img_size) == 1:
-        img_size *= 2
+    img_size = img_size * 2 if len(img_size) == 1 else 1
     # Dataloader
     dataset = LoadImages(source, img_size=img_size, stride=stride, auto=False)
 
