@@ -99,16 +99,10 @@ def run(
 
     # Load the TensorRT engine
     device = select_device(device)
-    engine = PredictorTRT(
-        weights,
-        device=device,
-        score_thresh=conf_thres,
-        iou_thresh=iou_thres,
-        detections_per_img=max_det,
-    )
+    engine = PredictorTRT(weights, device=device)
     stride, names = engine.stride, engine.names
     img_size = check_img_size(img_size, stride=stride)  # check image size
-
+    img_size *= 2 if len(img_size) == 1 else 1  # auto expand
     # Dataloader
     dataset = LoadImages(source, img_size=img_size, stride=stride, auto=False)
 
