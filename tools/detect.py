@@ -99,13 +99,11 @@ def run(
 
     # Load the TensorRT engine
     device = select_device(device)
-    engine = PredictorTRT(
-        weights,
-        device=device
-    )
+    engine = PredictorTRT(weights, device=device)
     stride, names = engine.stride, engine.names
     img_size = check_img_size(img_size, stride=stride)  # check image size
-
+    if len(img_size) == 1:
+        img_size *= 2
     # Dataloader
     dataset = LoadImages(source, img_size=img_size, stride=stride, auto=False)
 
@@ -213,7 +211,7 @@ def get_parser():
     parser = argparse.ArgumentParser("CLI tool for detecting source.", add_help=True)
     parser.add_argument("--weights", type=str, default="yolov5s.pt", help="model path(s)")
     parser.add_argument("--source", type=str, default="data/images", help="file/dir/URL/glob, 0 for webcam")
-    parser.add_argument("--img_size", nargs="+", type=int, default=[320,320], help="inference size h,w")
+    parser.add_argument("--img_size", nargs="+", type=int, default=[320], help="inference size h,w")
     parser.add_argument("--conf_thres", type=float, default=0.25, help="confidence threshold")
     parser.add_argument("--iou_thres", type=float, default=0.45, help="NMS IoU threshold")
     parser.add_argument("--max_det", type=int, default=1000, help="maximum detections per image")
