@@ -129,7 +129,9 @@ def cli_main():
     checkpoint_path = Path(args.checkpoint_path)
     assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
 
-    image_size = args.image_size * 2 if len(args.image_size) == 1 else 1  # expand
+    image_size = args.image_size
+    image_size *= 2 if len(args.image_size) == 1 else 1  # auto expand
+
     if args.skip_preprocess:
         # input data
         inputs = torch.rand(args.batch_size, 3, *image_size)
