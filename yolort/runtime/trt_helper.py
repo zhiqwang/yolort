@@ -67,8 +67,11 @@ class LogitsDecoder(nn.Module):
             shifts (List[Tensor]): Anchor shifts.
         """
         batch_size = len(head_outputs[0])
+        device = head_outputs[0].device
+        dtype = head_outputs[0].dtype
+        strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
 
-        all_pred_logits = _concat_pred_logits(head_outputs, grids, shifts, self.strides)
+        all_pred_logits = _concat_pred_logits(head_outputs, grids, shifts, strides)
 
         bbox_regression = []
         pred_scores = []
