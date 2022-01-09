@@ -62,10 +62,6 @@ class YOLO(nn.Module):
         - scores (``Tensor[N]``): the scores or each prediction
     """
 
-    __annotations__ = {
-        "compute_loss": SetCriterion,
-    }
-
     def __init__(
         self,
         backbone: nn.Module,
@@ -107,12 +103,7 @@ class YOLO(nn.Module):
         self.anchor_generator = anchor_generator
 
         if criterion is None:
-            criterion = SetCriterion(
-                anchor_generator.num_anchors,
-                anchor_generator.strides,
-                anchor_generator.anchor_grids,
-                num_classes,
-            )
+            criterion = SetCriterion(strides, anchor_grids, num_classes)
         self.compute_loss = criterion
 
         if head is None:

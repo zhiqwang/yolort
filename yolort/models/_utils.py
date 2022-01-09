@@ -54,7 +54,7 @@ def decode_single(
     rel_codes: Tensor,
     grid: Tensor,
     shift: Tensor,
-    stride: int,
+    stride: Tensor,
 ) -> Tuple[Tensor, Tensor]:
     """
     From a set of original boxes and encoded relative box offsets,
