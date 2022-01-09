@@ -7,7 +7,7 @@ import pytest
 import torch
 from torch import Tensor
 from yolort import models
-from yolort.models import YOLOv5
+from yolort.models import YOLO, YOLOv5
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
@@ -418,18 +418,13 @@ def test_load_from_yolov5_torchscript(
 
     score_thresh = 0.25
 
-    model = YOLOv5.load_from_yolov5(
-        checkpoint_path,
-        score_thresh=score_thresh,
-        version=version,
-    )
+    model = YOLO.load_from_yolov5(checkpoint_path, score_thresh=score_thresh, version=version)
     model.eval()
     scripted_model = torch.jit.script(model)
     scripted_model.eval()
 
-    x = [img]
-    out = model(x)
-    out_script = scripted_model(x)
+    out = model(img[None])
+    out_script = scripted_model(img[None])
 
     torch.testing.assert_close(out[0]["scores"], out_script[1][0]["scores"], rtol=0, atol=0)
     torch.testing.assert_close(out[0]["labels"], out_script[1][0]["labels"], rtol=0, atol=0)
