@@ -407,7 +407,7 @@ def test_load_from_yolov5_torchscript(
     from yolort.v5 import letterbox
 
     # Loading and pre-processing the image
-    img_path = "test/assets/bus.jpg"
+    img_path = "test/assets/zidane.jpg"
     img_raw = cv2.imread(img_path)
     img = letterbox(img_raw, new_shape=(640, 640))[0]
     img = read_image_to_tensor(img)
