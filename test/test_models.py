@@ -303,7 +303,6 @@ class TestModel:
         head_outputs = self._get_head_outputs(N, H, W)
         strides = self._get_strides(use_p6)
         anchor_grids = self._get_anchor_grids(use_p6)
-        num_anchors = len(anchor_grids)
         num_classes = self.num_classes
 
         targets = torch.tensor(
@@ -314,7 +313,7 @@ class TestModel:
                 [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
             ]
         )
-        criterion = SetCriterion(num_anchors, strides, anchor_grids, num_classes)
+        criterion = SetCriterion(strides, anchor_grids, num_classes)
         losses = criterion(targets, head_outputs)
         assert isinstance(losses, dict)
         assert isinstance(losses["cls_logits"], Tensor)
@@ -403,7 +402,15 @@ def test_load_from_yolov5_torchscript(
     upstream_version: str,
     hash_prefix: str,
 ):
+    import cv2
+    from yolort.utils import read_image_to_tensor
+    from yolort.v5 import letterbox
+
+    # Loading and pre-processing the image
     img_path = "test/assets/bus.jpg"
+    img_raw = cv2.imread(img_path)
+    img = letterbox(img_raw, new_shape=(640, 640))[0]
+    img = read_image_to_tensor(img)
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
@@ -418,9 +425,9 @@ def test_load_from_yolov5_torchscript(
     )
     model.eval()
     scripted_model = torch.jit.script(model)
+    scripted_model.eval()
 
-    x = [torch.rand(3, 288, 320), torch.rand(3, 300, 256)]
-
+    x = [img]
     out = model(x)
     out_script = scripted_model(x)
 
