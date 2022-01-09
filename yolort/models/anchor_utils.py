@@ -42,8 +42,8 @@ class AnchorGenerator(nn.Module):
         device: torch.device = torch.device("cpu"),
     ) -> List[Tensor]:
 
-        anchors = torch.tensor(self.anchor_grids, dtype=dtype, device=device)
-        strides = torch.tensor(self.strides, dtype=dtype, device=device)
+        anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).to(dtype=dtype)
+        strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
         anchors = anchors.view(self.num_layers, -1, 2) / strides.view(-1, 1, 1)
 
         shifts = []

@@ -7,7 +7,7 @@ import pytest
 import torch
 from torch import Tensor
 from yolort import models
-from yolort.models import YOLOv5
+from yolort.models import YOLO, YOLOv5
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
@@ -303,7 +303,6 @@ class TestModel:
         head_outputs = self._get_head_outputs(N, H, W)
         strides = self._get_strides(use_p6)
         anchor_grids = self._get_anchor_grids(use_p6)
-        num_anchors = len(anchor_grids)
         num_classes = self.num_classes
 
         targets = torch.tensor(
@@ -314,7 +313,7 @@ class TestModel:
                 [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
             ]
         )
-        criterion = SetCriterion(num_anchors, strides, anchor_grids, num_classes)
+        criterion = SetCriterion(strides, anchor_grids, num_classes)
         losses = criterion(targets, head_outputs)
         assert isinstance(losses, dict)
         assert isinstance(losses["cls_logits"], Tensor)
@@ -386,3 +385,47 @@ def test_load_from_yolov5(
     torch.testing.assert_close(out_from_yolov5[0]["scores"], out[0]["scores"], rtol=0, atol=0)
     torch.testing.assert_close(out_from_yolov5[0]["labels"], out[0]["labels"], rtol=0, atol=0)
     torch.testing.assert_close(out_from_yolov5[0]["boxes"], out[0]["boxes"], rtol=0, atol=0)
+
+
+@pytest.mark.parametrize(
+    "arch, version, upstream_version, hash_prefix",
+    [
+        ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
+        ("yolov5n", "r6.0", "v6.0", "649e089f"),
+        ("yolov5s", "r6.0", "v6.0", "c3b140f3"),
+        ("yolov5n6", "r6.0", "v6.0", "beecbbae"),
+    ],
+)
+def test_load_from_yolov5_torchscript(
+    arch: str,
+    version: str,
+    upstream_version: str,
+    hash_prefix: str,
+):
+    import cv2
+    from yolort.utils import read_image_to_tensor
+    from yolort.v5 import letterbox
+
+    # Loading and pre-processing the image
+    img_path = "test/assets/zidane.jpg"
+    img_raw = cv2.imread(img_path)
+    img = letterbox(img_raw, new_shape=(640, 640))[0]
+    img = read_image_to_tensor(img)
+
+    base_url = "https://github.com/ultralytics/yolov5/releases/download/"
+    model_url = f"{base_url}/{upstream_version}/{arch}.pt"
+    checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
+
+    score_thresh = 0.25
+
+    model = YOLO.load_from_yolov5(checkpoint_path, score_thresh=score_thresh, version=version)
+    model.eval()
+    scripted_model = torch.jit.script(model)
+    scripted_model.eval()
+
+    out = model(img[None])
+    out_script = scripted_model(img[None])
+
+    torch.testing.assert_close(out[0]["scores"], out_script[1][0]["scores"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["labels"], out_script[1][0]["labels"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0, atol=0)

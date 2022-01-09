@@ -78,7 +78,7 @@ class YOLOHead(nn.Module):
         return all_pred_logits
 
 
-class SetCriterion:
+class SetCriterion(nn.Module):
     """
     This class computes the loss for YOLOv5.
 
@@ -98,7 +98,6 @@ class SetCriterion:
 
     def __init__(
         self,
-        num_anchors: int,
         strides: List[int],
         anchor_grids: List[List[float]],
         num_classes: int,
@@ -112,12 +111,13 @@ class SetCriterion:
         label_smoothing: float = 0.0,
         auto_balance: bool = False,
     ) -> None:
+        super().__init__()
         assert len(strides) == len(anchor_grids)
 
-        self.num_anchors = num_anchors
         self.num_classes = num_classes
         self.strides = strides
         self.anchor_grids = anchor_grids
+        self.num_anchors = len(anchor_grids[0]) // 2
 
         self.balance = [4.0, 1.0, 0.4]
         self.ssi = 0  # stride 16 index
@@ -142,7 +142,7 @@ class SetCriterion:
         self.obj_gain = obj_gain
         self.anchor_thresh = anchor_thresh
 
-    def __call__(
+    def forward(
         self,
         targets: Tensor,
         head_outputs: List[Tensor],
@@ -322,7 +322,7 @@ def _concat_pred_logits(
     head_outputs: List[Tensor],
     grids: List[Tensor],
     shifts: List[Tensor],
-    strides: List[int],
+    strides: Tensor,
 ) -> Tensor:
     # Concat all pred logits
     batch_size, _, _, _, K = head_outputs[0].shape
@@ -397,8 +397,11 @@ class PostProcess(nn.Module):
             shifts (List[Tensor]): Anchor shifts.
         """
         batch_size = len(head_outputs[0])
+        device = head_outputs[0].device
+        dtype = head_outputs[0].dtype
+        strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
 
-        all_pred_logits = _concat_pred_logits(head_outputs, grids, shifts, self.strides)
+        all_pred_logits = _concat_pred_logits(head_outputs, grids, shifts, strides)
         detections: List[Dict[str, Tensor]] = []
 
         for idx in range(batch_size):  # image idx, image inference
