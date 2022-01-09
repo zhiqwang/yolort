@@ -386,3 +386,44 @@ def test_load_from_yolov5(
     torch.testing.assert_close(out_from_yolov5[0]["scores"], out[0]["scores"], rtol=0, atol=0)
     torch.testing.assert_close(out_from_yolov5[0]["labels"], out[0]["labels"], rtol=0, atol=0)
     torch.testing.assert_close(out_from_yolov5[0]["boxes"], out[0]["boxes"], rtol=0, atol=0)
+
+
+@pytest.mark.parametrize(
+    "arch, version, upstream_version, hash_prefix",
+    [
+        ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
+        ("yolov5n", "r6.0", "v6.0", "649e089f"),
+        ("yolov5s", "r6.0", "v6.0", "c3b140f3"),
+        ("yolov5n6", "r6.0", "v6.0", "beecbbae"),
+    ],
+)
+def test_load_from_yolov5_torchscript(
+    arch: str,
+    version: str,
+    upstream_version: str,
+    hash_prefix: str,
+):
+    img_path = "test/assets/bus.jpg"
+
+    base_url = "https://github.com/ultralytics/yolov5/releases/download/"
+    model_url = f"{base_url}/{upstream_version}/{arch}.pt"
+    checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
+
+    score_thresh = 0.25
+
+    model = YOLOv5.load_from_yolov5(
+        checkpoint_path,
+        score_thresh=score_thresh,
+        version=version,
+    )
+    model.eval()
+    scripted_model = torch.jit.script(model)
+
+    x = [torch.rand(3, 288, 320), torch.rand(3, 300, 256)]
+
+    out = model(x)
+    out_script = scripted_model(x)
+
+    torch.testing.assert_close(out[0]["scores"], out_script[1][0]["scores"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["labels"], out_script[1][0]["labels"], rtol=0, atol=0)
+    torch.testing.assert_close(out[0]["boxes"], out_script[1][0]["boxes"], rtol=0, atol=0)
