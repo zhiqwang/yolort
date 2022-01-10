@@ -164,7 +164,7 @@ def cli_main():
         model = YOLOv5.load_from_yolov5(
             checkpoint_path,
             size=tuple(image_size),
-            core_thresh=args.score_thresh,
+            score_thresh=args.score_thresh,
             version=args.version,
         )
         model.eval()
