@@ -8,7 +8,7 @@ The TensorRT inference for `yolort`, support CUDA only.
 
 ## Usage
 
-1. Create build director and cmake config.
+1. Create build directory and cmake config.
 
    ```bash
    mkdir -p build/ && cd build/

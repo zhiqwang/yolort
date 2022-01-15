@@ -13,7 +13,7 @@ class BackboneWithPAN(nn.Module):
     Adds a PAN on top of a model.
     Internally, it uses torchvision.models._utils.IntermediateLayerGetter to
     extract a submodel that returns the feature maps specified in return_layers.
-    The same limitations of IntermediatLayerGetter apply here.
+    The same limitations of IntermediateLayerGetter apply here.
 
     Args:
         backbone (nn.Module)

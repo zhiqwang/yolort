@@ -59,10 +59,10 @@ class TestONNXExporter:
             with torch.no_grad():
                 if isinstance(test_inputs, Tensor) or isinstance(test_inputs, list):
                     test_inputs = (test_inputs,)
-                test_ouputs = model(*test_inputs)
-                if isinstance(test_ouputs, Tensor):
-                    test_ouputs = (test_ouputs,)
-            self.ort_validate(onnx_io, test_inputs, test_ouputs, tolerate_small_mismatch)
+                test_outputs = model(*test_inputs)
+                if isinstance(test_outputs, Tensor):
+                    test_outputs = (test_outputs,)
+            self.ort_validate(onnx_io, test_inputs, test_outputs, tolerate_small_mismatch)
 
     def ort_validate(self, onnx_io, inputs, outputs, tolerate_small_mismatch=False):
 
