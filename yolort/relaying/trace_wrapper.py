@@ -40,7 +40,7 @@ def get_trace_module(
     input_shape: Tuple[int, int] = (416, 416),
 ):
     """
-    Get the tarcing of a given model function.
+    Get the tracing of a given model function.
 
     Example:
 

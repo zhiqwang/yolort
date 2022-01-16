@@ -68,7 +68,7 @@ class YOLOGraphSurgeon:
 
         # Fold constants via ONNX-GS that PyTorch2ONNX may have missed
         self.graph.fold_constants()
-        self.num_classes = model.num_clases
+        self.num_classes = model.num_classes
         self.batch_size = 1
 
     def infer(self):

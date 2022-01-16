@@ -129,7 +129,7 @@ class YOLOTRTModule(nn.Module):
 
         model.load_state_dict(model_info["state_dict"])
         self.model = model
-        self.num_clases = num_classes
+        self.num_classes = num_classes
 
     @torch.no_grad()
     def forward(self, inputs: Tensor) -> Tuple[Tensor, Tensor]:

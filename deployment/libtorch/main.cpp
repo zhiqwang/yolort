@@ -172,9 +172,9 @@ int main(int argc, char* argv[]) {
 
   // Run once to warm up
   std::cout << "Run once on empty image" << std::endl;
-  auto img_dumy = torch::rand({3, 416, 320}, options);
+  auto img_dummy = torch::rand({3, 416, 320}, options);
 
-  images.push_back(img_dumy);
+  images.push_back(img_dummy);
   inputs.push_back(images);
 
   auto output = module.forward(inputs);

@@ -75,7 +75,7 @@ def export_onnx(
     Args:
         model (nn.Module): The model to be exported.
         inputs (Tuple[torch.Tensor]): The inputs to the model.
-        export_onnx_path (str): A string containg a file name. A binary Protobuf
+        export_onnx_path (str): A string containing a file name. A binary Protobuf
             will be written to this file.
         dynamic_axes (dict): A dictionary of dynamic axes.
         input_names (str): A names list of input names.
@@ -110,7 +110,7 @@ def simplify_onnx(onnx_path, input_shapes):
     # Load onnx mode
     onnx_model = onnx.load(onnx_path)
 
-    # Simlify the ONNX model
+    # Simplify the ONNX model
     model_sim, check = onnxsim.simplify(
         onnx_model,
         input_shapes=input_shapes,

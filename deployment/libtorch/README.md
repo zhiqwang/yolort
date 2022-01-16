@@ -59,8 +59,8 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 1. Now, you can infer your own images.
 
    ```bash
-   ./yolo_inference [--input_source ../../../test/assets/zidane.jpg]
-                    [--checkpoint ../yolov5n.torchscript.pt]
-                    [--labelmap ../../../notebooks/assets/coco.names]
-                    [--gpu]  # GPU switch, which is optional, and set False as default
+   ./yolort_torch [--input_source ../../../test/assets/zidane.jpg]
+                  [--checkpoint ../yolov5n.torchscript.pt]
+                  [--labelmap ../../../notebooks/assets/coco.names]
+                  [--gpu]  # GPU switch, which is optional, and set False as default
    ```

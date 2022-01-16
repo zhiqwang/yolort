@@ -296,7 +296,7 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
             )
 
             # The anchors need to restore the offset.
-            # In eacy layer there has at most 3x3=9 anchors for matching.
+            # In each layer there has at most 3x3=9 anchors for matching.
             anchor_restored = restore_anchor(anchor, grid_x, grid_y, stride, pred[i].shape, image_sizes)
 
             # visualize positive anchor
@@ -309,13 +309,13 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
     return images_with_anchor
 
 
-def overlay_bbox(image, bboxs_list, color=None, thickness=2, font_scale=0.3, with_mask=False):
+def overlay_bbox(image, bboxes_list, color=None, thickness=2, font_scale=0.3, with_mask=False):
     """
     Visualize bbox in object detection by drawing rectangle.
 
     Args:
         image: numpy.ndarray.
-        bboxs_list: list: [pts_xyxy, prob, id]: label or prediction.
+        bboxes_list: list: [pts_xyxy, prob, id]: label or prediction.
         color: tuple.
         thickness: int.
         font_scale: float.
@@ -329,7 +329,7 @@ def overlay_bbox(image, bboxs_list, color=None, thickness=2, font_scale=0.3, wit
     txt = ""
     COLORS = color_list()  # list of COLORS
 
-    for bbox in bboxs_list:
+    for bbox in bboxes_list:
         if len(bbox) == 5:
             txt = "{:.3f}".format(bbox[4])
         elif len(bbox) == 6:
