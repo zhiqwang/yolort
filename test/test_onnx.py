@@ -110,7 +110,7 @@ class TestONNXExporter:
         [
             ("yolov5s", "r3.1"),
             ("yolov5m", "r4.0"),
-            # ("yolov5ts", "r4.0"),
+            ("yolov5ts", "r4.0"),
         ],
     )
     def test_yolort_export_onnx(self, arch, upstream_version):
