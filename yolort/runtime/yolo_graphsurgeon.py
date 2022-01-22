@@ -68,7 +68,8 @@ class YOLOGraphSurgeon:
 
         logger.info(f"Loaded saved model from {checkpoint_path}")
         onnx_model_path = checkpoint_path.with_suffix(".onnx")
-        input_sample = input_sample.to(torch.device("cpu"))
+        if input_sample is not None:
+            input_sample = input_sample.to(torch.device("cpu"))
         model.to_onnx(onnx_model_path, input_sample=input_sample, enable_dynamic=enable_dynamic)
         self.graph = gs.import_onnx(onnx.load(onnx_model_path))
         assert self.graph
