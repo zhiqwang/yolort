@@ -9,14 +9,14 @@
 # LICENSE file in the root directory of TensorRT source tree.
 #
 
-from typing import Optional
 import logging
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import onnx
-from onnx import shape_inference
 import torch
+from onnx import shape_inference
 from torch import Tensor
 
 try:
