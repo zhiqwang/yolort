@@ -9,12 +9,15 @@
 # LICENSE file in the root directory of TensorRT source tree.
 #
 
+from typing import Optional
 import logging
 from pathlib import Path
 
 import numpy as np
 import onnx
 from onnx import shape_inference
+import torch
+from torch import Tensor
 
 try:
     import onnx_graphsurgeon as gs
@@ -39,7 +42,9 @@ class YOLOGraphSurgeon:
     https://github.com/zhiqwang/yolov5-rt-stack/blob/02c74a0/yolort/models/box_head.py#L462-L470
 
     Args:
-        checkpoint_path: The path pointing to the PyTorch saved model to load.
+        checkpoint_path (string): The path pointing to the PyTorch saved model to load.
+        input_sample (Tensor, optional): Specify the input shape to export ONNX, and the
+            default shape for the sample is (1, 3, 640, 640).
         score_thresh (float): Score threshold used for postprocessing the detections.
         version (str): upstream version released by the ultralytics/yolov5, Possible
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
@@ -49,6 +54,8 @@ class YOLOGraphSurgeon:
     def __init__(
         self,
         checkpoint_path: str,
+        *,
+        input_sample: Optional[Tensor] = None,
         version: str = "r6.0",
         enable_dynamic: bool = True,
     ):
@@ -61,7 +68,8 @@ class YOLOGraphSurgeon:
 
         logger.info(f"Loaded saved model from {checkpoint_path}")
         onnx_model_path = checkpoint_path.with_suffix(".onnx")
-        model.to_onnx(onnx_model_path, enable_dynamic=enable_dynamic)
+        input_sample = input_sample.to(torch.device("cpu"))
+        model.to_onnx(onnx_model_path, input_sample=input_sample, enable_dynamic=enable_dynamic)
         self.graph = gs.import_onnx(onnx.load(onnx_model_path))
         assert self.graph
         logger.info("PyTorch2ONNX graph created successfully")
