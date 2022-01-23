@@ -48,7 +48,8 @@ class YOLOGraphSurgeon:
         score_thresh (float): Score threshold used for postprocessing the detections.
         version (str): upstream version released by the ultralytics/yolov5, Possible
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
-        enable_dynamic: Whether to specify axes of tensors as dynamic. Default: True.
+        enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: True.
+        device (torch.device): The device to be used for importing ONNX. Default: torch.device("cpu").
     """
 
     def __init__(
@@ -58,6 +59,7 @@ class YOLOGraphSurgeon:
         input_sample: Optional[Tensor] = None,
         version: str = "r6.0",
         enable_dynamic: bool = True,
+        device: torch.device = torch.device("cpu"),
     ):
         checkpoint_path = Path(checkpoint_path)
         assert checkpoint_path.exists()
@@ -65,11 +67,12 @@ class YOLOGraphSurgeon:
         # Use YOLOTRTModule to convert saved model to an initial ONNX graph.
         model = YOLOTRTModule(checkpoint_path, version=version)
         model = model.eval()
-
+        model = model.to(device=device)
         logger.info(f"Loaded saved model from {checkpoint_path}")
+
         onnx_model_path = checkpoint_path.with_suffix(".onnx")
         if input_sample is not None:
-            input_sample = input_sample.to(torch.device("cpu"))
+            input_sample = input_sample.to(device=device)
         model.to_onnx(onnx_model_path, input_sample=input_sample, enable_dynamic=enable_dynamic)
         self.graph = gs.import_onnx(onnx.load(onnx_model_path))
         assert self.graph
