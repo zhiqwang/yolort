@@ -65,17 +65,11 @@ def test_load_from_ultralytics(
     assert len(model_info["strides"]) == 4 if use_p6 else 3
 
 
-@pytest.mark.skip(reason="Due to #235")
 @pytest.mark.parametrize(
     "arch, version, upstream_version, hash_prefix",
     [("yolov5s-VOC", "r4.0", "v5.0", "23818cff")],
 )
-def test_load_from_ultralytics_voc(
-    arch: str,
-    version: str,
-    upstream_version: str,
-    hash_prefix: str,
-):
+def test_load_from_ultralytics_voc(arch: str, version: str, upstream_version: str, hash_prefix: str):
     img_path = "test/assets/bus.jpg"
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
