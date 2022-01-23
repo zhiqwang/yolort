@@ -98,7 +98,7 @@ class PredictorTRT:
     def __call__(self, image: Tensor):
         """
         Args:
-            image (Tensor): an image of shape (C, N, H, W).
+            image (Tensor): an image of shape (N, C, H, W).
 
         Returns:
             predictions (Tuple[Tensor, Tensor, Tensor, Tensor]):
@@ -118,7 +118,7 @@ class PredictorTRT:
         Run the TensorRT engine for one image only.
 
         Args:
-            image (Tensor): an image of shape (C, N, H, W).
+            image (Tensor): an image of shape (N, C, H, W).
         """
         boxes, scores, labels, num_dets = self(image)
 
@@ -142,3 +142,17 @@ class PredictorTRT:
         if isinstance(self.device, torch.device) and self.device.type != "cpu":
             image = torch.zeros(*img_size).to(self.device).type(torch.half if half else torch.float)
             self(image)
+
+    def run_wo_postprocessing(self, image: Tensor):
+        """
+        Run the TensorRT engine for one image only.
+
+        Args:
+            image (Tensor): an image of shape (N, C, H, W).
+        """
+        assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
+        self.binding_addrs["images"] = int(image.data_ptr())
+        self.context.execute_v2(list(self.binding_addrs.values()))
+        boxes = self.bindings["boxes"].data
+        scores = self.bindings["scores"].data
+        return boxes, scores
