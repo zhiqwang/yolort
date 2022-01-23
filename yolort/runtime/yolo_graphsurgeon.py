@@ -39,7 +39,7 @@ class YOLOGraphSurgeon:
     module named ``LogitsDecoder`` to connect to ``BatchedNMS_TRT`` plugin in TensorRT.
 
     And the ``BatchedNMS_TRT`` plays the same role of following computation.
-    https://github.com/zhiqwang/yolov5-rt-stack/blob/02c74a0/yolort/models/box_head.py#L462-L470
+    https://github.com/zhiqwang/yolov5-rt-stack/blob/ba00833/yolort/models/box_head.py#L410-L418
 
     Args:
         checkpoint_path (string): The path pointing to the PyTorch saved model to load.
