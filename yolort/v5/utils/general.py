@@ -16,13 +16,17 @@ import time
 import urllib
 from pathlib import Path
 
-import cv2
 import numpy as np
 import pandas as pd
 import pkg_resources as pkg
 import torch
 import torchvision
 import yaml
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 from .metrics import box_iou, fitness
 
@@ -32,7 +36,8 @@ torch.set_printoptions(linewidth=320, precision=5, profile="long")
 np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})
 pd.options.display.max_columns = 10
 # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
-cv2.setNumThreads(0)
+if cv2 is not None:
+    cv2.setNumThreads(0)
 os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # NumExpr max threads
 
 FILE = Path(__file__).resolve()

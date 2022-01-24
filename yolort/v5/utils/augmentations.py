@@ -7,8 +7,12 @@ import logging
 import math
 import random
 
-import cv2
 import numpy as np
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 from .general import colorstr, segment2box, resample_segments, check_version
 from .metrics import bbox_ioa

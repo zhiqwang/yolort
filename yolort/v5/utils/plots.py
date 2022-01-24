@@ -8,13 +8,17 @@ import os
 from copy import copy
 from pathlib import Path
 
-import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 from PIL import Image, ImageDraw, ImageFont
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 from .general import (
     LOGGER,
