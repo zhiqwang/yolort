@@ -36,9 +36,9 @@ class YOLOGraphSurgeon:
     Constructor of the YOLOv5 Graph Surgeon object.
 
     Because TensorRT treat the ``torchvision::ops::nms`` as plugin, we use the a simple post-processing
-    module named ``LogitsDecoder`` to connect to ``BatchedNMS_TRT`` plugin in TensorRT.
+    module named ``LogitsDecoder`` to connect to ``EfficientNMS_TRT`` plugin in TensorRT.
 
-    And the ``BatchedNMS_TRT`` plays the same role of following computation.
+    And the ``EfficientNMS_TRT`` plays the same role of following computation.
     https://github.com/zhiqwang/yolov5-rt-stack/blob/ba00833/yolort/models/box_head.py#L410-L418
 
     Args:
@@ -58,7 +58,7 @@ class YOLOGraphSurgeon:
         *,
         input_sample: Optional[Tensor] = None,
         version: str = "r6.0",
-        enable_dynamic: bool = True,
+        enable_dynamic: bool = False,
         device: torch.device = torch.device("cpu"),
     ):
         checkpoint_path = Path(checkpoint_path)
@@ -131,13 +131,13 @@ class YOLOGraphSurgeon:
 
     def register_nms(
         self,
+        *,
         score_thresh: float = 0.25,
         nms_thresh: float = 0.45,
         detections_per_img: int = 100,
-        normalized: bool = True,
     ):
         """
-        Register the ``BatchedNMS_TRT`` plugin node.
+        Register the ``EfficientNMS_TRT`` plugin node.
 
         NMS expects these shapes for its input tensors:
             - box_net: [batch_size, number_boxes, 1, 4]
@@ -148,25 +148,21 @@ class YOLOGraphSurgeon:
             nms_thresh (float): The scalar threshold for IOU (new boxes that have high IOU
                 overlap with previously selected boxes are removed).
             detections_per_img (int): Number of best detections to keep after NMS.
-            normalized (bool): Set to false if the box coordinates are not normalized,
-                meaning they are not in the range [0,1]. Defaults: True.
         """
 
         self.infer()
         # Find the concat node at the end of the network
         nms_inputs = self.graph.outputs
-        op = "BatchedNMS_TRT"
+
+        op = "EfficientNMS_TRT"
         attrs = {
-            "plugin_version": "1",
-            "shareLocation": True,
-            "backgroundLabelId": -1,  # no background class
-            "numClasses": self.num_classes,
-            "topK": 1024,
-            "keepTopK": detections_per_img,
-            "scoreThreshold": score_thresh,
-            "iouThreshold": nms_thresh,
-            "isNormalized": normalized,
-            "clipBoxes": False,
+            'plugin_version': "1",
+            'background_class': -1,  # no background class
+            'max_output_boxes': detections_per_img,
+            'score_threshold': score_thresh,
+            'iou_threshold': nms_thresh,
+            'score_activation': False,
+            'box_coding': 0,
         }
 
         # NMS Outputs
@@ -187,7 +183,7 @@ class YOLOGraphSurgeon:
         )
         output_labels = gs.Variable(
             name="detection_classes",
-            dtype=np.float32,
+            dtype=np.int32,
             shape=[self.batch_size, detections_per_img],
         )
 

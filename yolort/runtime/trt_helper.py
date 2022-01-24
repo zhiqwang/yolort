@@ -37,8 +37,8 @@ __all__ = ["YOLOTRTModule", "EngineBuilder"]
 class LogitsDecoder(nn.Module):
     """
     This is a simplified version of post-processing module, we manually remove
-    the ``torchvision::ops::nms``, and it will be used later in the procedure of
-    exporting the ONNX graph for YOLOTRTModule.
+    the ``torchvision::ops::nms``, and it will be used later in the procedure for
+    exporting the ONNX Graph to YOLOTRTModule or others.
     """
 
     def __init__(self, strides: List[int]) -> None:
@@ -83,9 +83,7 @@ class LogitsDecoder(nn.Module):
             pred_scores.append(scores)
 
         # The default boxes tensor has shape [batch_size, number_boxes, 4].
-        # This will insert a "1" dimension in the second axis, to become
-        # [batch_size, number_boxes, 1, 4], the shape that plugin/BatchedNMS expects.
-        boxes = torch.stack(bbox_regression).unsqueeze_(2)
+        boxes = torch.stack(bbox_regression)
         scores = torch.stack(pred_scores)
         return boxes, scores
 
@@ -239,13 +237,13 @@ class EngineBuilder:
             logger.info(f"Input '{input.name}' with shape {input.shape} and dtype {input.dtype}")
         for output in outputs:
             logger.info(f"Output '{output.name}' with shape {output.shape} and dtype {output.dtype}")
-        assert self.batch_size > 0
-        self.builder.max_batch_size = self.batch_size
 
     def create_engine(
         self,
         engine_path: str,
+        *,
         precision: str = "fp32",
+        max_batch_size: int = 32,
         calib_input: Optional[str] = None,
         calib_cache: Optional[str] = None,
         calib_num_images: int = 5000,
@@ -264,10 +262,12 @@ class EngineBuilder:
             calib_batch_size: The batch size to use for the calibration process.
         """
         engine_path = Path(engine_path)
-
         engine_path.parent.mkdir(parents=True, exist_ok=True)
-
         logger.info(f"Building {precision} Engine in {engine_path}")
+
+        # Process the batch size and profile
+        assert self.batch_size > 0, "Currently only supports static shape."
+        self.builder.max_batch_size = self.batch_size
 
         if precision == "fp16":
             if not self.builder.platform_has_fast_fp16:
