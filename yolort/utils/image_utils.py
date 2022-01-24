@@ -3,7 +3,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
@@ -12,6 +11,11 @@ from IPython.display import display
 from PIL import Image
 from torch import Tensor
 from torchvision.ops.boxes import box_convert
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 logger = logging.getLogger(__name__)
 
@@ -80,10 +84,7 @@ def color_list():
     return [hex2rgb(h) for h in plt.rcParams["axes.prop_cycle"].by_key()["color"]]
 
 
-def get_image_from_url(
-    url: str,
-    flags: int = cv2.IMREAD_COLOR,
-) -> np.ndarray:
+def get_image_from_url(url: str, flags: int = 1) -> np.ndarray:
     """
     Generates an image directly from an URL
 
