@@ -48,7 +48,7 @@ class YOLOGraphSurgeon:
         score_thresh (float): Score threshold used for postprocessing the detections.
         version (str): upstream version released by the ultralytics/yolov5, Possible
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
-        enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: True.
+        enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: False.
         device (torch.device): The device to be used for importing ONNX. Default: torch.device("cpu").
     """
 
