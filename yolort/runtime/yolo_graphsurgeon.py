@@ -140,7 +140,7 @@ class YOLOGraphSurgeon:
         Register the ``EfficientNMS_TRT`` plugin node.
 
         NMS expects these shapes for its input tensors:
-            - box_net: [batch_size, number_boxes, 1, 4]
+            - box_net: [batch_size, number_boxes, 4]
             - class_net: [batch_size, number_boxes, number_labels]
 
         Args:
