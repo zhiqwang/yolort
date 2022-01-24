@@ -1,5 +1,6 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 from typing import List, Tuple
+
 import torch
 from torch import nn, Tensor
 from yolort.models.box_head import _concat_pred_logits, _decode_pred_logits

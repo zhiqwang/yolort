@@ -156,13 +156,13 @@ class YOLOGraphSurgeon:
 
         op = "EfficientNMS_TRT"
         attrs = {
-            'plugin_version': "1",
-            'background_class': -1,  # no background class
-            'max_output_boxes': detections_per_img,
-            'score_threshold': score_thresh,
-            'iou_threshold': nms_thresh,
-            'score_activation': False,
-            'box_coding': 0,
+            "plugin_version": "1",
+            "background_class": -1,  # no background class
+            "max_output_boxes": detections_per_img,
+            "score_threshold": score_thresh,
+            "iou_threshold": nms_thresh,
+            "score_activation": False,
+            "box_coding": 0,
         }
 
         # NMS Outputs
