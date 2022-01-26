@@ -1,0 +1,651 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="lang:clipboard.copy" content="Copy to clipboard">
+  <meta name="lang:clipboard.copied" content="Copied to clipboard">
+  <meta name="lang:search.language" content="en">
+  <meta name="lang:search.pipeline.stopwords" content="True">
+  <meta name="lang:search.pipeline.trimmer" content="True">
+  <meta name="lang:search.result.none" content="No matching documents">
+  <meta name="lang:search.result.one" content="1 matching document">
+  <meta name="lang:search.result.other" content="# matching documents">
+  <meta name="lang:search.tokenizer" content="[\s\-]+">
+
+  
+    <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&display=fallback" rel="stylesheet">
+
+    <style>
+      body,
+      input {
+        font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif
+      }
+
+      code,
+      kbd,
+      pre {
+        font-family: "Roboto Mono", "Courier New", Courier, monospace
+      }
+    </style>
+  
+
+  <link rel="stylesheet" href="_static/stylesheets/application.css"/>
+  <link rel="stylesheet" href="_static/stylesheets/application-palette.css"/>
+  <link rel="stylesheet" href="_static/stylesheets/application-fixes.css"/>
+  
+  <link rel="stylesheet" href="_static/fonts/material-icons.css"/>
+  
+  <meta name="theme-color" content="#3f51b5">
+  <script src="_static/javascripts/modernizr.js"></script>
+  
+  
+  
+    <title>Modules and utils for YOLOv5 &#8212; yolort  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/material.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Models and pre-trained weights" href="models.html" />
+  
+   
+
+  </head>
+  <body dir=ltr
+        data-md-color-primary=blue data-md-color-accent=light-blue>
+  
+  <svg class="md-svg">
+    <defs data-children-count="0">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+      
+    </defs>
+  </svg>
+  
+  <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
+  <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
+  <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+  <a href="#yolov5" tabindex="1" class="md-skip"> Skip to content </a>
+  <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex navheader">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="index.html" title="yolort  documentation"
+           class="md-header-nav__button md-logo">
+          
+              <img src="_static/yolort_logo.png" height="26"
+                   alt="yolort documentation logo">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          <span class="md-header-nav__topic">YOLOv5 Runtime Stack</span>
+          <span class="md-header-nav__topic"> Modules and utils for YOLOv5 </span>
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yolort
+  </div>
+</a>
+          </div>
+        </div>
+      
+      
+  
+  <script src="_static/javascripts/version_dropdown.js"></script>
+  <script>
+    var json_loc = ""versions.json"",
+        target_loc = "../",
+        text = "Versions";
+    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
+  </script>
+  
+
+    </div>
+  </nav>
+</header>
+
+  
+  <div class="md-container">
+    
+    
+    
+  <nav class="md-tabs" data-md-component="tabs">
+    <div class="md-tabs__inner md-grid">
+      <ul class="md-tabs__list">
+          <li class="md-tabs__item"><a href="index.html" class="md-tabs__link">yolort  documentation</a></li>
+      </ul>
+    </div>
+  </nav>
+    <main class="md-main">
+      <div class="md-main__inner md-grid" data-md-component="container">
+        
+          <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="index.html" title="yolort documentation" class="md-nav__button md-logo">
+      
+        <img src="_static/yolort_logo.png" alt=" logo" width="48" height="48">
+      
+    </a>
+    <a href="index.html"
+       title="yolort documentation">YOLOv5 Runtime Stack</a>
+  </label>
+    <div class="md-nav__source">
+      <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yolort
+  </div>
+</a>
+    </div>
+  
+  
+
+  
+  <ul class="md-nav__list">
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Getting Started</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="installation.html" class="md-nav__link">Install yolort</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Tutorials</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="notebooks/inference-pytorch-export-libtorch.html" class="md-nav__link">Intuition for yolort</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="notebooks/how-to-align-with-ultralytics-yolov5.html" class="md-nav__link">How to align with ultralytics yolov5</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="notebooks/anchor-label-assignment-visualization.html" class="md-nav__link">Visualize the anchor-target assignment</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="notebooks/model-graph-visualization.html" class="md-nav__link">Visualize model graph</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Deployment</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="notebooks/export-onnx-inference-onnxruntime.html" class="md-nav__link">Deploying yolort on ONNX Runtime</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="notebooks/onnx-graphsurgeon-inference-tensorrt.html" class="md-nav__link">Deploying yolort on TensorRT</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="notebooks/export-relay-inference-tvm.html" class="md-nav__link">Deploying yolort on TVM</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">API Reference</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="models.html" class="md-nav__link">Models and pre-trained weights</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <label class="md-nav__link md-nav__link--active" for="__toc"> Modules and utils for YOLOv5 </label>
+    
+      <a href="#" class="md-nav__link md-nav__link--active">Modules and utils for YOLOv5</a>
+      
+        
+<nav class="md-nav md-nav--secondary">
+  <ul class="md-nav__list" data-md-scrollfix="">
+  </ul>
+</nav>
+      
+    
+    </li>
+  </ul>
+  
+
+</nav>
+              </div>
+            </div>
+          </div>
+          <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                
+<nav class="md-nav md-nav--secondary">
+  <ul class="md-nav__list" data-md-scrollfix="">
+  </ul>
+</nav>
+              </div>
+            </div>
+          </div>
+        
+        <div class="md-content">
+          <article class="md-content__inner md-typeset" role="main">
+            
+  <section id="modules-and-utils-for-yolov5">
+<h1 id="yolov5--page-root">Modules and utils for YOLOv5<a class="headerlink" href="#yolov5--page-root" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-yolort.v5"></span><dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.AutoShape">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">AutoShape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#AutoShape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.AutoShape" title="Permalink to this definition">¶</a></dt>
+<dd><p>YOLOv5 input-robust model wrapper for passing cv2/np/PIL/torch inputs.
+Includes preprocessing, inference and NMS</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yolort.v5.AutoShape.classes">
+<span class="sig-name descname"><span class="pre">classes</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#yolort.v5.AutoShape.classes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yolort.v5.AutoShape.conf">
+<span class="sig-name descname"><span class="pre">conf</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.25</span></em><a class="headerlink" href="#yolort.v5.AutoShape.conf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="yolort.v5.AutoShape.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">640</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#AutoShape.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.AutoShape.forward" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Inference from various sources. For height=640, width=1280, RGB images example inputs are:</dt><dd><ul class="simple">
+<li><p>file: imgs = ‘data/images/zidane.jpg’  # str or PosixPath</p></li>
+<li><p>URI: = ‘<a class="reference external" href="https://ultralytics.com/images/zidane.jpg">https://ultralytics.com/images/zidane.jpg</a>’</p></li>
+<li><p>OpenCV: = cv2.imread(‘image.jpg’)[:,:,::-1]  # HWC BGR to RGB x(640,1280,3)</p></li>
+<li><p>PIL: = Image.open(‘image.jpg’) or ImageGrab.grab()  # HWC x(640,1280,3)</p></li>
+<li><p>numpy: = np.zeros((640,1280,3))  # HWC</p></li>
+<li><p>torch: = torch.zeros(16,3,320,640)  # BCHW (scaled to size=640, 0-1 values)</p></li>
+<li><p>multiple: = [Image.open(‘image1.jpg’), Image.open(‘image2.jpg’), …]  # list of images</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yolort.v5.AutoShape.iou">
+<span class="sig-name descname"><span class="pre">iou</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.45</span></em><a class="headerlink" href="#yolort.v5.AutoShape.iou" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yolort.v5.AutoShape.max_det">
+<span class="sig-name descname"><span class="pre">max_det</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#yolort.v5.AutoShape.max_det" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yolort.v5.AutoShape.multi_label">
+<span class="sig-name descname"><span class="pre">multi_label</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#yolort.v5.AutoShape.multi_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Bottleneck">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Bottleneck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shortcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'r4.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Bottleneck"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Bottleneck" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard bottleneck</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<em>int</em>) – ch_in</p></li>
+<li><p><strong>c2</strong> (<em>int</em>) – ch_out</p></li>
+<li><p><strong>shortcut</strong> (<em>bool</em>) – shortcut</p></li>
+<li><p><strong>g</strong> (<em>int</em>) – groups</p></li>
+<li><p><strong>e</strong> (<em>float</em>) – expansion</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – Module version released by ultralytics. Possible values
+are [“r3.1”, “r4.0”]. Default: “r4.0”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.BottleneckCSP">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">BottleneckCSP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shortcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#BottleneckCSP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.BottleneckCSP" title="Permalink to this definition">¶</a></dt>
+<dd><p>CSP Bottleneck <a class="reference external" href="https://github.com/WongKinYiu/CrossStagePartialNetworks">https://github.com/WongKinYiu/CrossStagePartialNetworks</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<em>int</em>) – ch_in</p></li>
+<li><p><strong>c2</strong> (<em>int</em>) – ch_out</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – number</p></li>
+<li><p><strong>shortcut</strong> (<em>bool</em>) – shortcut</p></li>
+<li><p><strong>g</strong> (<em>int</em>) – groups</p></li>
+<li><p><strong>e</strong> (<em>float</em>) – expansion</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.C3">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">C3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shortcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'r4.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#C3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.C3" title="Permalink to this definition">¶</a></dt>
+<dd><p>CSP Bottleneck with 3 convolutions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<em>int</em>) – ch_in</p></li>
+<li><p><strong>c2</strong> (<em>int</em>) – ch_out</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – number</p></li>
+<li><p><strong>shortcut</strong> (<em>bool</em>) – shortcut</p></li>
+<li><p><strong>g</strong> (<em>int</em>) – groups</p></li>
+<li><p><strong>e</strong> (<em>float</em>) – expansion</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – Module version released by ultralytics. Possible values
+are [“r4.0”]. Default: “r4.0”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.C3TR">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">C3TR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shortcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#C3TR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.C3TR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Concat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Concat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Concat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Concat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Contract">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Contract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Contract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Contract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Conv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'r4.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Conv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard convolution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<em>int</em>) – ch_in</p></li>
+<li><p><strong>c2</strong> (<em>int</em>) – ch_out</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – kernel</p></li>
+<li><p><strong>s</strong> (<em>int</em>) – stride</p></li>
+<li><p><strong>p</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – padding</p></li>
+<li><p><strong>g</strong> (<em>int</em>) – groups</p></li>
+<li><p><strong>act</strong> (<em>bool</em><em> or </em><em>nn.Module</em>) – determine the activation function</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – Module version released by ultralytics. Possible values
+are [“r3.1”, “r4.0”]. Default: “r4.0”.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="yolort.v5.Conv.fuseforward">
+<span class="sig-name descname"><span class="pre">fuseforward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Conv.fuseforward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Conv.fuseforward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.DWConv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">DWConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'r4.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#DWConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.DWConv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Depth-wise convolution class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<em>int</em>) – ch_in</p></li>
+<li><p><strong>c2</strong> (<em>int</em>) – ch_out</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – kernel</p></li>
+<li><p><strong>s</strong> (<em>int</em>) – stride</p></li>
+<li><p><strong>act</strong> (<em>bool</em><em> or </em><em>nn.Module</em>) – determine the activation function</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – Module version released by ultralytics. Possible values
+are [“r3.1”, “r4.0”]. Default: “r4.0”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Detect">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Detect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/yolo.html#Detect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Detect" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="yolort.v5.Detect.onnx_dynamic">
+<span class="sig-name descname"><span class="pre">onnx_dynamic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#yolort.v5.Detect.onnx_dynamic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yolort.v5.Detect.stride">
+<span class="sig-name descname"><span class="pre">stride</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#yolort.v5.Detect.stride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Ensemble">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Ensemble</span></span><a class="reference internal" href="_modules/yolort/v5/models/experimental.html#Ensemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Ensemble" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Expand">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Expand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Focus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Focus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'r4.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Focus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Focus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Focus wh information into c-space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<em>int</em>) – ch_in</p></li>
+<li><p><strong>c2</strong> (<em>int</em>) – ch_out</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – kernel</p></li>
+<li><p><strong>s</strong> (<em>int</em>) – stride</p></li>
+<li><p><strong>p</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – padding</p></li>
+<li><p><strong>g</strong> (<em>int</em>) – groups</p></li>
+<li><p><strong>act</strong> (<em>bool</em><em> or </em><em>nn.Module</em>) – determine the activation function</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – Module version released by ultralytics. Possible values
+are [“r3.1”, “r4.0”]. Default: “r4.0”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.GhostBottleneck">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">GhostBottleneck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#GhostBottleneck"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.GhostBottleneck" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.GhostConv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">GhostConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#GhostConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.GhostConv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.Model">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'yolov5s.yaml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/yolo.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Model" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="yolort.v5.Model.fuse">
+<span class="sig-name descname"><span class="pre">fuse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/yolo.html#Model.fuse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Model.fuse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="yolort.v5.Model.info">
+<span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">640</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/yolo.html#Model.info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Model.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.SPP">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">SPP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(5,</span> <span class="pre">9,</span> <span class="pre">13)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'r4.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#SPP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.SPP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="yolort.v5.SPPF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">SPPF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'r4.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#SPPF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.SPPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.add_yolov5_context">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">add_yolov5_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/helper.html#add_yolov5_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.add_yolov5_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Temporarily add yolov5 folder to <cite>sys.path</cite>. Adapted from
+<a class="reference external" href="https://github.com/fcakyon/yolov5-pip/blob/0d03de6/yolov5/utils/general.py#L739-L754">https://github.com/fcakyon/yolov5-pip/blob/0d03de6/yolov5/utils/general.py#L739-L754</a></p>
+<p>torch.hub handles it in the same way:
+<a class="reference external" href="https://github.com/pytorch/pytorch/blob/d3e36fa/torch/hub.py#L387-L416">https://github.com/pytorch/pytorch/blob/d3e36fa/torch/hub.py#L387-L416</a></p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.attempt_download">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">attempt_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ultralytics/yolov5'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hash_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/utils/downloads.html#attempt_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.attempt_download" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.focus_transform">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">focus_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/yolort/v5/models/common.html#focus_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.focus_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>x(b,c,w,h) -&gt; y(b,4c,w/2,h/2)</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.get_yolov5_size">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">get_yolov5_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth_multiple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_multiple</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/helper.html#get_yolov5_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.get_yolov5_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.intersect_dicts">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">intersect_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/utils/general.html#intersect_dicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.intersect_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary intersection of matching keys and shapes,
+omitting ‘exclude’ keys, using dict1 values</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.letterbox">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">letterbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(640,</span> <span class="pre">640)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(114,</span> <span class="pre">114,</span> <span class="pre">114)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaleFill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaleup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/utils/augmentations.html#letterbox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.letterbox" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.load_yolov5_model">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">load_yolov5_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoshape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/helper.html#load_yolov5_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.load_yolov5_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a specified YOLOv5 model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>checkpoint_path</strong> (<em>str</em>) – path of the YOLOv5 model, i.e. ‘yolov5s.pt’</p></li>
+<li><p><strong>autoshape</strong> (<em>bool</em>) – apply YOLOv5 .autoshape() wrapper to model. Default: False.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – print all information to screen. Default: True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>YOLOv5 pytorch model</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.non_max_suppression">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">non_max_suppression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_thres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agnostic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_det</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/utils/general.html#non_max_suppression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.non_max_suppression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs Non-Maximum Suppression (NMS) on inference results</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of detections, on (n,6) tensor per image [xyxy, conf, cls]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.scale_coords">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">scale_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img1_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img0_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratio_pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/utils/general.html#scale_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.scale_coords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.select_device">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">select_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/utils/torch_utils.html#select_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.select_device" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.set_logging">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">set_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/utils/general.html#set_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.set_logging" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.v5.space_to_depth">
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">space_to_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/yolort/v5/models/common.html#space_to_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.space_to_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>x(b,c,w,h) -&gt; y(b,4c,w/2,h/2)</p>
+</dd></dl>
+</section>
+
+
+          </article>
+        </div>
+      </div>
+    </main>
+  </div>
+  <footer class="md-footer">
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+          
+            <a href="models.html" title="Models and pre-trained weights"
+               class="md-flex md-footer-nav__link md-footer-nav__link--prev"
+               rel="prev">
+              <div class="md-flex__cell md-flex__cell--shrink">
+                <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+              </div>
+              <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+                <span class="md-flex__ellipsis">
+                  <span
+                      class="md-footer-nav__direction"> Previous </span> Models and pre-trained weights </span>
+              </div>
+            </a>
+          
+          
+        </a>
+        
+      </nav>
+    </div>
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-footer-copyright">
+          <div class="md-footer-copyright__highlight">
+              &#169; Copyright 2022, yolort team.
+              
+          </div>
+            Created using
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+             and
+            <a href="https://github.com/bashtage/sphinx-material/">Material for
+              Sphinx</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script src="_static/javascripts/application.js"></script>
+  <script>app.initialize({version: "1.0.4", url: {base: ".."}})</script>
+  </body>
+</html>
