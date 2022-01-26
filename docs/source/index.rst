@@ -1,14 +1,6 @@
 Welcome to yolort's documentation!
 ==================================
 
-Runtime stack for YOLOv5 on specialized accelerators such as ``libtorch``,
-``onnxruntime``, ``tvm`` and ``ncnn``.
-
-.. image:: _static/yolort_logo.png
-   :width: 400px
-   :align: center
-
-
 .. _what-is-yolort:
 
 **What is yolort?**
@@ -19,7 +11,8 @@ structure as the official YOLOv5. The significant difference is that we adopt
 the dynamic shape mechanism, and within this, we can embed both pre-processing
 (``letterbox``) and post-processing (``nms``) into the model graph, which
 simplifies the deployment strategy. In this sense, ``yolort`` makes it possible
-to be deployed more friendly on ``LibTorch``, ``ONNXRuntime``, ``TVM`` and so on.
+to be deployed more friendly on ``LibTorch``, ``ONNX Runtime``, ``TensorRT``, ``TVM``
+and so on.
 
 .. _about-the-code:
 
@@ -53,28 +46,3 @@ Read a source of image(s) and detect its objects:
    predictions = model.predict("bus.jpg")
    # Perform inference on a list of image files
    predictions = model.predict(["bus.jpg", "zidane.jpg"])
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Get started
-
-   installation
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Tutorials
-
-   notebooks/inference-pytorch-export-libtorch
-   notebooks/how-to-align-with-ultralytics-yolov5
-   notebooks/anchor-label-assignment-visualization
-   notebooks/model-graph-visualization
-   notebooks/export-onnx-inference-onnxruntime
-   notebooks/onnx-graphsurgeon-inference-tensorrt
-   notebooks/export-relay-inference-tvm
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference
-
-   models
-   yolov5
