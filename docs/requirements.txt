@@ -1,5 +1,6 @@
 numpy
 jupyterlab
-sphinx==3.5.4
-insipid-sphinx-theme
-nbsphinx==0.8.7
+ipython
+sphinx
+sphinx-material
+nbsphinx
