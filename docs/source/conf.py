@@ -12,6 +12,7 @@
 #
 import os
 import sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
@@ -19,9 +20,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 # -- Project information -----------------------------------------------------
 
 project = "yolort"
-copyright = "2020-2022, yolort team"
+copyright = f"{datetime.now().year}, yolort team"
 author = "Zhiqiang Wang, Shiquan Yu, Fidan Kharrasov"
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -95,12 +95,8 @@ html_theme = "sphinx_material"
 
 # Material theme options (see theme.conf for more information)
 html_theme_options = {
-    "left_buttons": [],
-    "right_buttons": [
-        "repo-button.html",
-    ],
     # Set the name of the project to appear in the navigation.
-    "nav_title": "yolort",
+    "nav_title": "Runtime Stack for Object Detection",
     # Set you GA account ID to enable tracking
     # "google_analytics_account": "UA-XXXXX",
     # Specify a base_url used to generate sitemap.xml. If not
@@ -118,4 +114,22 @@ html_theme_options = {
     "globaltoc_collapse": False,
     # If True, show hidden TOC entries
     "globaltoc_includehidden": False,
+    # Text to appear at the top of the home page in a "hero" div.
+    "heroes": {
+        # We can have heroes for the home pages of training and inferencing in future.
+        "index": "A runtime stack for object detection on specialized accelerators."
+    },
 }
+
+# Disable show source link.
+html_show_sourcelink = False
+
+# Custom sidebar templates, must be a dictionary that maps document names
+# to template names.
+#
+# The default sidebars (for documents that don't match any pattern) are
+# defined by theme itself.  Builtin themes are using these templates by
+# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
+# 'searchbox.html']``.
+#
+html_sidebars = {"**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]}
