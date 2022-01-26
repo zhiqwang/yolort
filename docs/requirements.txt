@@ -1,5 +1,6 @@
 numpy
 jupyterlab
+ipython
 sphinx
 sphinx-material
 nbsphinx

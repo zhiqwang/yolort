@@ -30,8 +30,13 @@ author = "Zhiqiang Wang, Shiquan Yu, Fidan Kharrasov"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.extlinks",
     "nbsphinx",
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

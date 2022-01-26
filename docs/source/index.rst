@@ -69,7 +69,7 @@ And we support loading the trained weights from YOLOv5:
 .. toctree::
    :maxdepth: 2
    :titlesonly:
-   :caption: Installation
+   :caption: Getting Started
 
    installation
 
