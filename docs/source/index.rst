@@ -66,6 +66,8 @@ And we support loading the trained weights from YOLOv5:
    img_path = "bus.jpg"
    predictions = model.predict(img_path)
 
+**Use Cases and Solutions**
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:
@@ -94,7 +96,6 @@ And we support loading the trained weights from YOLOv5:
 
 .. toctree::
    :maxdepth: 2
-   :titlesonly:
    :caption: API Reference
 
    models
