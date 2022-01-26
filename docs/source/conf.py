@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 # -- Project information -----------------------------------------------------
 
 project = "yolort"
-copyright = "2020-2021, yolort community"
-author = "Zhiqiang Wang"
+copyright = "2020-2022, yolort team"
+author = "Zhiqiang Wang, Shiquan Yu, Fidan Kharrasov"
 
 
 # -- General configuration ---------------------------------------------------
@@ -91,16 +91,31 @@ nbsphinx_prolog = """
     </style>
 """
 
-html_theme = "insipid"
+html_theme = "sphinx_material"
 
-html_context = {
-    "display_github": True,
-    "github_user": "zhiqwang",
-    "github_repo": "yolov5-rt-stack",
-}
+# Material theme options (see theme.conf for more information)
 html_theme_options = {
     "left_buttons": [],
     "right_buttons": [
         "repo-button.html",
     ],
+    # Set the name of the project to appear in the navigation.
+    "nav_title": "yolort",
+    # Set you GA account ID to enable tracking
+    # "google_analytics_account": "UA-XXXXX",
+    # Specify a base_url used to generate sitemap.xml. If not
+    # specified, then no sitemap will be built.
+    "base_url": "https://zhiqwang.com/yolov5-rt-stack",
+    # Set the color and the accent color
+    "color_primary": "blue",
+    "color_accent": "light-blue",
+    # Set the repo location to get a badge with stats
+    "repo_url": "https://github.com/zhiqwang/yolov5-rt-stack/",
+    "repo_name": "yolort",
+    # Visible levels of the global TOC; -1 means unlimited
+    "globaltoc_depth": 3,
+    # If False, expand all TOC entries
+    "globaltoc_collapse": False,
+    # If True, show hidden TOC entries
+    "globaltoc_includehidden": False,
 }
