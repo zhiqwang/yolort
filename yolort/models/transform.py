@@ -1,7 +1,7 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
+
 import math
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -48,7 +48,10 @@ class YOLOTransform(nn.Module):
             When fixed_size is set, Different images can have different sizes but
             they will be resized to a fixed size before passing it to the backbone.
 
-    It returns a NestedTensor for the inputs, and a List[Dict[Tensor]] for the targets
+    It returns a NestedTensor for the inputs, and a List[Dict[Tensor]] for the targets.
+
+    Adapted from:
+    https://github.com/pytorch/vision/blob/c949388/torchvision/models/detection/transform.py#L74-L84
     """
 
     def __init__(
