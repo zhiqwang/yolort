@@ -70,7 +70,6 @@ And we support loading the trained weights from YOLOv5:
 .. toctree::
    :maxdepth: 2
    :titlesonly:
-   :hidden:
 
    installation
    notebooks/inference-pytorch-export-libtorch
@@ -83,6 +82,7 @@ And we support loading the trained weights from YOLOv5:
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
    :caption: API Reference
 
    models
