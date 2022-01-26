@@ -336,10 +336,9 @@ class RandomPhotometricDistort(nn.Module):
         return image, target
 
 
-
-
-def letterbox(im, new_shape=(640, 640), color=114, mode="bilinear", auto=True, scaleFill=False, scaleup=True,
-              stride=32):
+def letterbox(
+    im, new_shape=(640, 640), color=114, mode="bilinear", auto=True, scaleFill=False, scaleup=True, stride=32
+):
     im = im.float() / 255
     shape = list(im.shape[1:])
     if isinstance(new_shape, int):
@@ -360,6 +359,6 @@ def letterbox(im, new_shape=(640, 640), color=114, mode="bilinear", auto=True, s
     dh /= 2
     if shape[::-1] != new_unpad:
         im = F.interpolate(im[None], size=new_unpad, scale_factor=None, mode=mode, align_corners=False)
-    pad = int(round(dw - 0.1)), int(round(dw + 0.1)),int(round(dh - 0.1)), int(round(dh + 0.1))
-    im = F.pad(im, pad=pad, mode= "constant", value=color / 255)
+    pad = int(round(dw - 0.1)), int(round(dw + 0.1)), int(round(dh - 0.1)), int(round(dh + 0.1))
+    im = F.pad(im, pad=pad, mode="constant", value=color / 255)
     return im, ratio, (dw, dh)
