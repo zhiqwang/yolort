@@ -66,16 +66,28 @@ And we support loading the trained weights from YOLOv5:
    img_path = "bus.jpg"
    predictions = model.predict(img_path)
 
+.. toctree::
+   :maxdepth: 2
+   :titlesonly:
+   :caption: Installation
+
+   installation
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
+   :caption: Tutorials
 
-   installation
    notebooks/inference-pytorch-export-libtorch
    notebooks/how-to-align-with-ultralytics-yolov5
    notebooks/anchor-label-assignment-visualization
    notebooks/model-graph-visualization
+
+.. toctree::
+   :maxdepth: 2
+   :titlesonly:
+   :caption: Deployment
+
    notebooks/export-onnx-inference-onnxruntime
    notebooks/onnx-graphsurgeon-inference-tensorrt
    notebooks/export-relay-inference-tvm
