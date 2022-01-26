@@ -30,7 +30,7 @@ of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love yolor
 
 .. _quick-get-stated:
 
-**Quick Get started**
+**Introduction to yolort**
 
 Read a source of image(s) and detect its objects:
 
