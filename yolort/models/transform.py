@@ -43,7 +43,8 @@ class YOLOTransform(nn.Module):
     The transformations it perform are:
         - input normalization
             YOLOv5 use (0, 1) as the default mean and std, so we just need to rescale
-            the image manually from uint8_t [0, 255] to float [0, 1] here.
+            the image manually from uint8_t [0, 255] to float [0, 1] here. Besides the
+            default channel mode is RGB.
         - input / target resizing to match min_size / max_size
             When fixed_size is set, Different images can have different sizes but
             they will be resized to a fixed size before passing it to the backbone.
