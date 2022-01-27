@@ -25,13 +25,13 @@ def test_yolo_transform():
 def test_letterbox():
     import cv2
     from torchvision.io import read_image
-    from yolort.models.transform import letterbox as letterbox1
+    from yolort.models.transform import _letterbox as letterbox1
     from yolort.utils import read_image_to_tensor
     from yolort.v5 import letterbox as letterbox2
 
     img_source = "test/assets/bus.jpg"
     im1 = read_image(img_source)
-    out1 = letterbox1(im1, auto=False)[0]
+    out1 = letterbox1(im1, auto=False)[0] / 255
 
     im2 = cv2.imread(img_source)
     im2 = letterbox2(im2, auto=False)[0]
