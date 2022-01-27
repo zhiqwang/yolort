@@ -337,8 +337,17 @@ class RandomPhotometricDistort(nn.Module):
 
 
 def letterbox(
-    im, new_shape=(640, 640), color=114, mode="bilinear", auto=True, scaleFill=False, scaleup=True, stride=32
+    im: Tensor,
+    new_shape: Tuple[int, int] = (640, 640),
+    color: int = 114,
+    mode: str = "bilinear",
+    auto: bool = True,
+    scaleFill: bool = False,
+    scaleup: bool = True,
+    stride: int = 32,
 ):
+    import torch.nn.functional as TF
+
     im = im.float() / 255
     shape = list(im.shape[1:])
     if isinstance(new_shape, int):
@@ -358,7 +367,7 @@ def letterbox(
     dw /= 2
     dh /= 2
     if shape[::-1] != new_unpad:
-        im = F.interpolate(im[None], size=new_unpad, scale_factor=None, mode=mode, align_corners=False)
+        im = TF.interpolate(im[None], size=new_unpad, scale_factor=None, mode=mode, align_corners=False)
     pad = int(round(dw - 0.1)), int(round(dw + 0.1)), int(round(dh - 0.1)), int(round(dh + 0.1))
-    im = F.pad(im, pad=pad, mode="constant", value=color / 255)
+    im = TF.pad(im, pad=pad, mode="constant", value=color / 255)
     return im, ratio, (dw, dh)
