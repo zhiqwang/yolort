@@ -339,3 +339,39 @@ def normalize_boxes(boxes: Tensor, original_size: List[int]) -> Tensor:
     boxes = torch.stack((xmin, ymin, xmax, ymax), dim=1)
     # Convert xyxy to cxcywh
     return box_convert(boxes, in_fmt="xyxy", out_fmt="cxcywh")
+
+
+def letterbox(
+    im: Tensor,
+    new_shape: Tuple[int, int] = (640, 640),
+    color: int = 114,
+    mode: str = "bilinear",
+    auto: bool = True,
+    scale_fill: bool = False,
+    scaleup: bool = True,
+    stride: int = 32,
+):
+
+    im = im.float()  # / 255
+    shape = list(im.shape[1:])
+    if isinstance(new_shape, int):
+        new_shape = (new_shape, new_shape)
+    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+    if not scaleup:
+        r = min(r, 1.0)
+    ratio = r, r
+    new_unpad = int(round(shape[0] * r)), int(round(shape[1] * r))
+    dh, dw = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]
+    if auto:
+        dw, dh = dw % stride, dh % stride
+    elif scale_fill:
+        dw, dh = 0.0, 0.0
+        new_unpad = (new_shape[1], new_shape[0])
+        ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]
+    dw /= 2
+    dh /= 2
+    if shape[::-1] != new_unpad:
+        im = F.interpolate(im[None], size=new_unpad, scale_factor=None, mode=mode, align_corners=False)
+    pad = int(round(dw - 0.1)), int(round(dw + 0.1)), int(round(dh - 0.1)), int(round(dh + 0.1))
+    im = F.pad(im, pad=pad, mode="constant", value=color)
+    return im, ratio, (dw, dh)
