@@ -14,15 +14,15 @@ jobs:
     strategy:
       matrix:
         image: [ 'ubuntu-latest' ]
-        torch: [ 'PyTorch 1.9.1+cpu', 'PyTorch 1.10.1+cpu' ]
+        torch: [ 'PyTorch 1.9.1+cpu', 'PyTorch 1.10.2+cpu' ]
         include:
           - torch: 'PyTorch 1.9.1+cpu'
             torch_address: torch==1.9.1+cpu torchvision==0.10.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
-            unittest_type: --cov=test --cov-report=xml
+            unittest_type: -v --cov=test --cov-report=xml
             torchvision: release/0.10
-          - torch: 'PyTorch 1.10.1+cpu'
-            torch_address: torch==1.10.1+cpu torchvision==0.11.2+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
-            unittest_type: --cov=test --cov-report=xml
+          - torch: 'PyTorch 1.10.2+cpu'
+            torch_address: torch==1.10.2+cpu torchvision==0.11.3+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+            unittest_type: -v --cov=test --cov-report=xml
             torchvision: release/0.11
 
     steps:
@@ -57,15 +57,15 @@ jobs:
           pip install --user --progress-bar off numpy pillow scipy
           pip install --user --progress-bar off ${{ matrix.torch_address }}
 
-      - name: Install dependencies
+      - name: Install dependencies for developers
         run: |
           # requirements for unittest
           pip install --user --progress-bar off flake8 pytest
           pip install --user --progress-bar off pytest-cov
           # Install other dependencies
-          if [ -f requirements.txt ]; then pip install --user --progress-bar off -r requirements.txt; fi
           pip install --user --progress-bar off opencv-python
           pip install --user --progress-bar off pycocotools>=2.0.2
+          pip install --user --progress-bar off onnx
           pip install --user --progress-bar off onnxruntime
           pip install --user onnx_graphsurgeon --index-url https://pypi.ngc.nvidia.com
 
@@ -75,6 +75,10 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=18 --max-line-length=120 --statistics
+
+      - name: Install yolort
+        run: |
+          pip install -e .
 
       - name: Test and Generate coverage report
         run: |
