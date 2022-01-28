@@ -57,13 +57,12 @@ jobs:
           pip install --user --progress-bar off numpy pillow scipy
           pip install --user --progress-bar off ${{ matrix.torch_address }}
 
-      - name: Install dependencies
+      - name: Install dependencies for developers
         run: |
           # requirements for unittest
           pip install --user --progress-bar off flake8 pytest
           pip install --user --progress-bar off pytest-cov
           # Install other dependencies
-          if [ -f requirements.txt ]; then pip install --user --progress-bar off -r requirements.txt; fi
           pip install --user --progress-bar off opencv-python
           pip install --user --progress-bar off pycocotools>=2.0.2
           pip install --user --progress-bar off onnxruntime
