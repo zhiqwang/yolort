@@ -88,7 +88,7 @@ class PredictorTRT:
         self.context = self.engine.create_execution_context()
 
     def preprocessing(self, image):
-        image = torch.from_numpy(image).to(self.device)
+        image = torch.from_numpy(image)
         image = image.half() if self.half else image.float()  # uint8 to fp16/32
         image /= 255  # 0 - 255 to 0.0 - 1.0
         if len(image.shape) == 3:
@@ -105,7 +105,7 @@ class PredictorTRT:
                 stands for boxes, scores, labels and number of boxes respectively.
         """
         assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
-        self.binding_addrs["images"] = int(image.data_ptr())
+        self.bindings["images"].data[...] = image[...]
         self.context.execute_v2(list(self.binding_addrs.values()))
         num_dets = self.bindings["num_detections"].data
         boxes = self.bindings["detection_boxes"].data
@@ -139,9 +139,8 @@ class PredictorTRT:
     def warmup(self, img_size=(1, 3, 320, 320), half=False):
         # Warmup model by running inference once
         # only warmup GPU models
-        if isinstance(self.device, torch.device) and self.device.type != "cpu":
-            image = torch.zeros(*img_size).to(self.device).type(torch.half if half else torch.float)
-            self(image)
+        image = torch.zeros(img_size, dtype=torch.half if half else torch.float)
+        self(image)
 
     def run_wo_postprocessing(self, image: Tensor):
         """
@@ -151,7 +150,7 @@ class PredictorTRT:
             image (Tensor): an image of shape (N, C, H, W).
         """
         assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
-        self.binding_addrs["images"] = int(image.data_ptr())
+        self.bindings["images"].data[...] = image[...]
         self.context.execute_v2(list(self.binding_addrs.values()))
         boxes = self.bindings["boxes"].data
         scores = self.bindings["scores"].data
