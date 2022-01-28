@@ -1,6 +1,8 @@
 # Copyright (c) 2022, yolort team. All rights reserved.
 import copy
 
+import numpy as np
+import pytest
 import torch
 from yolort.models.transform import YOLOTransform, NestedTensor
 
@@ -22,20 +24,26 @@ def test_yolo_transform():
     torch.testing.assert_close(annotations[1]["boxes"], annotations_copy[1]["boxes"], rtol=0, atol=0)
 
 
-def test_letterbox():
-    import cv2
-    from torchvision.io import read_image
+@pytest.mark.parametrize("img_h", [300, 500, 720, 800, 1080, 1280])
+@pytest.mark.parametrize("img_w", [300, 500, 720, 800, 1080, 1280])
+@pytest.mark.parametrize("auto", [True, False])
+@pytest.mark.parametrize("stride", [32, 64])
+def test_letterbox(img_h, img_w, auto, stride):
     from yolort.models.transform import _letterbox as letterbox1
-    from yolort.utils import read_image_to_tensor
     from yolort.v5 import letterbox as letterbox2
 
-    img_source = "test/assets/bus.jpg"
-    im1 = read_image(img_source)
-    out1 = letterbox1(im1, auto=False)[0]
+    img_tensor = torch.randint(0, 255, (3, img_h, img_w))
+    img_numpy = img_tensor.permute(1, 2, 0).numpy().astype("uint8")
 
-    im2 = cv2.imread(img_source)
-    im2 = letterbox2(im2, auto=False)[0]
-    out2 = read_image_to_tensor(im2)[None]
+    out1 = letterbox1(img_tensor, auto=auto, stride=stride)
+    out2 = letterbox2(img_numpy, auto=auto, stride=stride)
 
-    assert out1.shape == out2.shape
-    torch.testing.assert_allclose(out1, out2, rtol=1e-3, atol=1e-2)
+    assert out1[1] == out2[1]
+    assert out1[2] == out2[2]
+
+    aug1 = out1[0][0]
+    aug2 = out2[0].astype(float)  # uint8 to float32
+    aug2 = np.transpose(aug2 / 255.0, [2, 0, 1])
+    aug2 = torch.from_numpy(aug2)
+    assert aug1.shape == aug2.shape
+    torch.testing.assert_allclose(aug1, aug2, rtol=1e-4, atol=1e-2)
