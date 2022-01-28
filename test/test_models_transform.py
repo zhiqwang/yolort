@@ -31,7 +31,7 @@ def test_letterbox():
 
     img_source = "test/assets/bus.jpg"
     im1 = read_image(img_source)
-    out1 = letterbox1(im1, auto=False)[0] / 255
+    out1 = letterbox1(im1, auto=False)[0]
 
     im2 = cv2.imread(img_source)
     im2 = letterbox2(im2, auto=False)[0]

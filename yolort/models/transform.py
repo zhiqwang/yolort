@@ -372,5 +372,5 @@ def _letterbox(
             align_corners=False,
         )
     pad = int(round(dw - 0.1)), int(round(dw + 0.1)), int(round(dh - 0.1)), int(round(dh + 0.1))
-    img = F.pad(img, pad=pad, mode="constant", value=color)
+    img = F.pad(img, pad=pad, mode="constant", value=color) / 255
     return img, ratio, (dw, dh)
