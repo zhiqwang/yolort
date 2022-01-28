@@ -187,7 +187,7 @@ def nested_tensor_from_tensor_list(
     fill_color: int = 114,
 ):
     """
-    Nest a list of tensors.
+    Nest a list of tensors. It plays the same role of the lettebox function.
 
     Args:
         tensor_list (List[Tensor]): List of tensors to be nested

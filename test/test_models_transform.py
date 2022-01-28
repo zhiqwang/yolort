@@ -41,9 +41,8 @@ def test_letterbox(img_h, img_w, auto, stride):
     assert out1[1] == out2[1]
     assert out1[2] == out2[2]
 
-    aug1 = out1[0][0]
-    aug2 = out2[0].astype(float)  # uint8 to float32
+    aug1 = out1[0][0].numpy()
+    aug2 = out2[0].astype(np.float32)  # uint8 to float32
     aug2 = np.transpose(aug2 / 255.0, [2, 0, 1])
-    aug2 = torch.from_numpy(aug2)
     assert aug1.shape == aug2.shape
-    torch.testing.assert_allclose(aug1, aug2, rtol=1e-4, atol=1e-2)
+    np.testing.assert_allclose(aug1, aug2, rtol=1e-4, atol=1e-2)
