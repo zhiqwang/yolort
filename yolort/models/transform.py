@@ -181,13 +181,28 @@ class YOLOTransform(nn.Module):
         return result
 
 
-def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32):
-    # TODO make this more general
+def nested_tensor_from_tensor_list(
+    tensor_list: List[Tensor],
+    size_divisible: int = 32,
+    fill_color: int = 114,
+):
+    """
+    Nest a list of tensors.
+
+    Args:
+        tensor_list (List[Tensor]): List of tensors to be nested
+        size_divisible (int = 32): stride of the models. Default: 32
+        fill_color (int = 114): fill value for padding. Default: 114
+    """
     if tensor_list[0].ndim == 3:
         if torchvision._is_tracing():
             # nested_tensor_from_tensor_list() does not export well to ONNX
             # call _onnx_nested_tensor_from_tensor_list() instead
-            return _onnx_nested_tensor_from_tensor_list(tensor_list, size_divisible)
+            return _onnx_nested_tensor_from_tensor_list(
+                tensor_list,
+                size_divisible=size_divisible,
+                fill_color=fill_color,
+            )
 
         max_size = _max_by_axis([list(img.shape) for img in tensor_list])
         stride = float(size_divisible)
@@ -196,7 +211,7 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: in
         max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
 
         batch_shape = [len(tensor_list)] + max_size
-        tensor_batched = tensor_list[0].new_full(batch_shape, 0)
+        tensor_batched = tensor_list[0].new_full(batch_shape, fill_color)
         for img, pad_img in zip(tensor_list, tensor_batched):
             pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
     else:
@@ -215,7 +230,11 @@ def _max_by_axis(the_list: List[List[int]]) -> List[int]:
 # _onnx_nested_tensor_from_tensor_list() is an implementation of
 # nested_tensor_from_tensor_list() that is supported by ONNX tracing.
 @torch.jit.unused
-def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32) -> Tensor:
+def _onnx_nested_tensor_from_tensor_list(
+    tensor_list: List[Tensor],
+    size_divisible: int = 32,
+    fill_color: int = 114,
+) -> Tensor:
     max_size = []
     for i in range(tensor_list[0].dim()):
         max_size_i = torch.max(torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)).to(
@@ -235,7 +254,7 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisib
 
     for img in tensor_list:
         padding = [(s1 - s2) for s1, s2 in zip(max_size, tuple(img.shape))]
-        padded_img = F.pad(img, (0, padding[2], 0, padding[1], 0, padding[0]))
+        padded_img = F.pad(img, (0, padding[2], 0, padding[1], 0, padding[0]), value=fill_color)
         padded_imgs.append(padded_img)
 
     tensor = torch.stack(padded_imgs)
