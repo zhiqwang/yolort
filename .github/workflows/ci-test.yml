@@ -65,6 +65,7 @@ jobs:
           # Install other dependencies
           pip install --user --progress-bar off opencv-python
           pip install --user --progress-bar off pycocotools>=2.0.2
+          pip install --user --progress-bar off onnx
           pip install --user --progress-bar off onnxruntime
           pip install --user onnx_graphsurgeon --index-url https://pypi.ngc.nvidia.com
 
