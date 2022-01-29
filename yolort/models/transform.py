@@ -37,8 +37,7 @@ class NestedTensor:
 
 class YOLOTransform(nn.Module):
     """
-    Performs input / target transformation before feeding the data to a GeneralizedRCNN
-    model.
+    Performs input / target transformation before feeding the data to a YOLO model.
 
     The transformations it perform are:
         - input normalization
@@ -56,8 +55,9 @@ class YOLOTransform(nn.Module):
         max_size (int) : maximum size of the image to be rescaled.
         fixed_size (Optional[Tuple[int, int]]): Whether to specify and use the input size.
         size_divisible (int): stride of the models. Default: 32
-        auto_rectangle (bool): Auto padding the image with minimum rectangle, it will be
-            a square if set to false. Default: True
+        auto_rectangle (bool): The padding mode. If set to `True`, it will auto pad the image
+            to a minimum rectangle. If set to `False`, the image will be padded to a square.
+            Default: True
         fill_color (int): fill value for padding. Default: 114
     """
 
@@ -222,7 +222,7 @@ class YOLOTransform(nn.Module):
         tensor_list: List[Tensor],
         size_divisible: int = 32,
         fill_color: int = 114,
-    ):
+    ) -> Tensor:
         """
         Nest a list of tensors. It plays the same role of the lettebox function.
 
