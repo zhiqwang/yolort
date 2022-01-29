@@ -60,12 +60,16 @@ class YOLOTransform(nn.Module):
         min_size: int,
         max_size: int,
         fixed_size: Optional[Tuple[int, int]] = None,
+        size_divisible: int = 32,
+        fill_color: int = 114,
     ) -> None:
         """
         Args:
             min_size (int) : minimum size of the image to be rescaled.
             max_size (int) : maximum size of the image to be rescaled.
             fixed_size (Optional[Tuple[int, int]]): Whether to specify and use the input size.
+            size_divisible (int): stride of the models. Default: 32
+            fill_color (int): fill value for padding. Default: 114
         """
         super().__init__()
         if not isinstance(min_size, (list, tuple)):
@@ -73,6 +77,8 @@ class YOLOTransform(nn.Module):
         self.min_size = min_size
         self.max_size = max_size
         self.fixed_size = fixed_size
+        self.size_divisible = size_divisible
+        self.fill_color = fill_color
 
     def forward(
         self,
@@ -110,7 +116,11 @@ class YOLOTransform(nn.Module):
                 targets[i] = target_index
 
         image_sizes = [img.shape[-2:] for img in images]
-        images = nested_tensor_from_tensor_list(images)
+        images = nested_tensor_from_tensor_list(
+            images,
+            size_divisible=self.size_divisible,
+            fill_color=self.fill_color,
+        )
         image_sizes_list: List[Tuple[int, int]] = []
         for image_size in image_sizes:
             assert len(image_size) == 2
@@ -191,8 +201,8 @@ def nested_tensor_from_tensor_list(
 
     Args:
         tensor_list (List[Tensor]): List of tensors to be nested
-        size_divisible (int = 32): stride of the models. Default: 32
-        fill_color (int = 114): fill value for padding. Default: 114
+        size_divisible (int): stride of the models. Default: 32
+        fill_color (int): fill value for padding. Default: 114
     """
     if tensor_list[0].ndim == 3:
         if torchvision._is_tracing():
@@ -283,7 +293,7 @@ def _resize_image_and_masks(
     target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
     """
-    Resize the image and its targets
+    Resize the image and its targets.
     """
     if torchvision._is_tracing():
         im_shape = _get_shape_onnx(image)
