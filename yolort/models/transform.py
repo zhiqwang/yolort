@@ -12,10 +12,11 @@ from torchvision.ops import box_convert
 
 class NestedTensor:
     """
-    Structure that holds a list of images (of possibly
-    varying sizes) as a single tensor.
-    This works by padding the images to the same size,
-    and storing in a field the original sizes of each image
+    Structure that holds a list of images (of possibly varying sizes) as
+    a single tensor.
+
+    This works by padding the images to the same size, and storing in a
+    field the original sizes of each image.
     """
 
     def __init__(self, tensors: Tensor, image_sizes: List[Tuple[int, int]]):
@@ -45,15 +46,12 @@ class YOLOTransform(nn.Module):
             the image manually from uint8_t [0, 255] to float [0, 1] here. Besides the
             default channel mode is RGB.
         - input / target resizing to match min_size / max_size
-            When fixed_size is set, Different images can have different sizes but
-            they will be resized to a fixed size before passing it to the backbone.
 
-    It returns a NestedTensor for the inputs, and a List[Dict[Tensor]] for the targets.
+    It returns a `NestedTensor` for the inputs, and a List[Dict[Tensor]] for the targets.
 
     Args:
         min_size (int) : minimum size of the image to be rescaled.
         max_size (int) : maximum size of the image to be rescaled.
-        fixed_size (Optional[Tuple[int, int]]): Whether to specify and use the input size.
         size_divisible (int): stride of the models. Default: 32
         auto_rectangle (bool): The padding mode. If set to `True`, it will auto pad the image
             to a minimum rectangle. If set to `False`, the image will be padded to a square.
@@ -65,7 +63,6 @@ class YOLOTransform(nn.Module):
         self,
         min_size: int,
         max_size: int,
-        fixed_size: Optional[Tuple[int, int]] = None,
         size_divisible: int = 32,
         auto_rectangle: bool = True,
         fill_color: int = 114,
@@ -76,7 +73,6 @@ class YOLOTransform(nn.Module):
             min_size = (min_size,)
         self.min_size = min_size
         self.max_size = max_size
-        self.fixed_size = fixed_size
         self.size_divisible = size_divisible
         self.fill_color = fill_color
         self.auto_rectangle = auto_rectangle
@@ -166,7 +162,7 @@ class YOLOTransform(nn.Module):
             # FIXME assume for now that testing uses the largest scale
             size = float(self.min_size[-1])
 
-        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target)
+        image, target = _resize_image_and_masks(image, size, float(self.max_size), target)
 
         if target is None:
             return image, target
@@ -287,7 +283,6 @@ def _resize_image_and_masks(
     image: Tensor,
     self_min_size: float,
     self_max_size: float,
-    fixed_size: Optional[Tuple[int, int]] = None,
     target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
     """
@@ -300,27 +295,21 @@ def _resize_image_and_masks(
 
     size: Optional[List[int]] = None
     scale_factor: Optional[float] = None
-    recompute_scale_factor: Optional[bool] = None
-    if fixed_size is not None:
-        size = [fixed_size[1], fixed_size[0]]
-    else:
-        min_size = torch.min(im_shape).to(dtype=torch.float32)
-        max_size = torch.max(im_shape).to(dtype=torch.float32)
-        scale = torch.min(self_min_size / min_size, self_max_size / max_size)
 
-        if torchvision._is_tracing():
-            scale_factor = _fake_cast_onnx(scale)
-        else:
-            scale_factor = scale.item()
-        recompute_scale_factor = True
+    min_size = torch.min(im_shape).to(dtype=torch.float32)
+    max_size = torch.max(im_shape).to(dtype=torch.float32)
+    scale = torch.min(self_min_size / min_size, self_max_size / max_size)
+
+    if torchvision._is_tracing():
+        scale_factor = _fake_cast_onnx(scale)
+    else:
+        scale_factor = scale.item()
 
     image = F.interpolate(
         image[None],
         size=size,
         scale_factor=scale_factor,
         mode="bilinear",
-        recompute_scale_factor=recompute_scale_factor,
-        align_corners=False,
     )[0]
 
     if target is None:
@@ -332,7 +321,6 @@ def _resize_image_and_masks(
             mask[:, None].float(),
             size=size,
             scale_factor=scale_factor,
-            recompute_scale_factor=recompute_scale_factor,
         )[:, 0].byte()
         target["masks"] = mask
     return image, target

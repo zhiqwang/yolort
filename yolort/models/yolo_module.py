@@ -64,7 +64,7 @@ class YOLOv5(LightningModule):
             )
         self.model = model
 
-        self.transform = YOLOTransform(min(size), max(size), fixed_size=size)
+        self.transform = YOLOTransform(min(size), max(size))
 
         # metrics
         self.evaluator = None
