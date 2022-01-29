@@ -51,8 +51,14 @@ class YOLOTransform(nn.Module):
 
     It returns a NestedTensor for the inputs, and a List[Dict[Tensor]] for the targets.
 
-    Adapted from:
-    https://github.com/pytorch/vision/blob/c949388/torchvision/models/detection/transform.py#L74-L84
+    Args:
+        min_size (int) : minimum size of the image to be rescaled.
+        max_size (int) : maximum size of the image to be rescaled.
+        fixed_size (Optional[Tuple[int, int]]): Whether to specify and use the input size.
+        size_divisible (int): stride of the models. Default: 32
+        auto_rectangle (bool): Auto padding the image with minimum rectangle, it will be
+            a square if set to false. Default: True
+        fill_color (int): fill value for padding. Default: 114
     """
 
     def __init__(
@@ -61,16 +67,10 @@ class YOLOTransform(nn.Module):
         max_size: int,
         fixed_size: Optional[Tuple[int, int]] = None,
         size_divisible: int = 32,
+        auto_rectangle: bool = True,
         fill_color: int = 114,
     ) -> None:
-        """
-        Args:
-            min_size (int) : minimum size of the image to be rescaled.
-            max_size (int) : maximum size of the image to be rescaled.
-            fixed_size (Optional[Tuple[int, int]]): Whether to specify and use the input size.
-            size_divisible (int): stride of the models. Default: 32
-            fill_color (int): fill value for padding. Default: 114
-        """
+
         super().__init__()
         if not isinstance(min_size, (list, tuple)):
             min_size = (min_size,)
@@ -79,6 +79,7 @@ class YOLOTransform(nn.Module):
         self.fixed_size = fixed_size
         self.size_divisible = size_divisible
         self.fill_color = fill_color
+        self.auto_rectangle = auto_rectangle
 
     def forward(
         self,
@@ -401,5 +402,5 @@ def _letterbox(
             align_corners=False,
         )
     pad = int(round(dw - 0.1)), int(round(dw + 0.1)), int(round(dh - 0.1)), int(round(dh + 0.1))
-    img = F.pad(img, pad=pad, mode="constant", value=color) / 255
-    return img, ratio, (dw, dh)
+    img = F.pad(img, pad=pad, mode="constant", value=color)
+    return img / 255, ratio, (dw, dh)
