@@ -45,7 +45,7 @@ class YOLOTransform(nn.Module):
             YOLOv5 use (0, 1) as the default mean and std, so we just need to rescale
             the image manually from uint8_t [0, 255] to float [0, 1] here. Besides the
             default channel mode is RGB.
-        - input / target resizing to match min_size / max_size
+        - input / target resizing to match (heigth, width)
 
     It returns a `NestedTensor` for the inputs, and a List[Dict[Tensor]] for the targets.
 
@@ -53,7 +53,7 @@ class YOLOTransform(nn.Module):
         min_size (int) : minimum size of the image to be rescaled.
         max_size (int) : maximum size of the image to be rescaled.
         size_divisible (int): stride of the models. Default: 32
-        auto_rectangle (bool): The padding mode. If set to `True`, it will auto pad the image
+        auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded
             to a minimum rectangle. If set to `False`, the image will be padded to a square.
             Default: True
         fill_color (int): fill value for padding. Default: 114
@@ -63,6 +63,7 @@ class YOLOTransform(nn.Module):
         self,
         min_size: int,
         max_size: int,
+        *,
         size_divisible: int = 32,
         auto_rectangle: bool = True,
         fill_color: int = 114,
@@ -309,6 +310,7 @@ def _resize_image_and_masks(
         image[None],
         size=size,
         scale_factor=scale_factor,
+        recompute_scale_factor=True,
         mode="bilinear",
     )[0]
 
@@ -321,6 +323,7 @@ def _resize_image_and_masks(
             mask[:, None].float(),
             size=size,
             scale_factor=scale_factor,
+            recompute_scale_factor=True,
         )[:, 0].byte()
         target["masks"] = mask
     return image, target
