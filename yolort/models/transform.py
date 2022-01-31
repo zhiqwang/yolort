@@ -261,7 +261,7 @@ class YOLOTransform(nn.Module):
 
 def _resize_image_and_masks(
     image: Tensor,
-    new_shape: Tuple[float, float],
+    new_shape: Tuple[int, int],
     target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
