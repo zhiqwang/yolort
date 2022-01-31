@@ -27,6 +27,8 @@ class YOLOv5(LightningModule):
         lr (float): The initial learning rate
         arch (string): YOLO model architecture. Default: None
         model (nn.Module): YOLO model. Default: None
+        num_classes (int): number of output classes of the model (doesn't including
+            background). Default: 80.
         pretrained (bool): If true, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
         size: (Tuple[int, int]): the height and width to which images will be rescaled
@@ -36,8 +38,6 @@ class YOLOv5(LightningModule):
             to a minimum rectangle. If set to `False`, the image will be padded to a square.
             Default: True
         fill_color (int): fill value for padding. Default: 114
-        num_classes (int): number of output classes of the model (doesn't including
-            background). Default: 80.
         annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file
             Default: None.
     """
@@ -47,13 +47,13 @@ class YOLOv5(LightningModule):
         lr: float = 0.01,
         arch: Optional[str] = None,
         model: Optional[nn.Module] = None,
+        num_classes: int = 80,
         pretrained: bool = False,
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
         auto_rectangle: bool = True,
         fill_color: int = 114,
-        num_classes: int = 80,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
     ) -> None:
