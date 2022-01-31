@@ -38,12 +38,12 @@ class NestedTensor:
 
 class YOLOTransform(nn.Module):
     """
-    Performs input / target transformation before feeding the data to a YOLO model.
+    Performs input / target transformation before feeding the data to a YOLO model. YOLOv5
+    adopt 0, 1, RGB as the default mean, std and channel mode. We do not normalize below,
+    the inputs need to be scaled down to float [0-1] from int[0-255] and transpose the image
+    channel to RGB before being sent to this transformation.
 
     The transformations it perform are:
-        - input normalization
-            YOLOv5 use (0, 1) as the default mean and std, RGB as the default image channel. We
-            just need to rescale the image manually from uint8_t [0, 255] to float [0, 1] here.
         - input / target resizing to get a rectangle within shape `(height, width)` that
             can be divided by `size_divisible`
 
@@ -74,7 +74,7 @@ class YOLOTransform(nn.Module):
         self.new_shape = (height, width)
         self.size_divisible = size_divisible
         self.auto_rectangle = auto_rectangle
-        self.fill_color = fill_color
+        self.fill_color = fill_color / 255
 
     def forward(
         self,
