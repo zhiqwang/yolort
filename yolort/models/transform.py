@@ -39,7 +39,7 @@ class NestedTensor:
 class YOLOTransform(nn.Module):
     """
     Performs input / target transformation before feeding the data to a YOLO model. It plays
-    the same role of `LetterBox`, and YOLov5 adopt (0, 1, RGB) as the default mean, std and
+    the same role of `LetterBox`, and YOLOv5 adopt (0, 1, RGB) as the default mean, std and
     channel mode. We do not normalize below, the inputs need to be scaled down to float [0-1]
     from int[0-255] and transpose the image channel to RGB before being fed to this transformation.
 
@@ -173,7 +173,6 @@ class YOLOTransform(nn.Module):
         stride = self.size_divisible
         max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
         max_size[2] = (torch.ceil((max_size[2].to(torch.float32)) / stride) * stride).to(torch.int64)
-        max_size = tuple(max_size)
 
         # work around for
         # pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
@@ -183,14 +182,20 @@ class YOLOTransform(nn.Module):
 
             img_h, img_w = img.shape[-2:]
 
-            dh = self.new_shape[0] - img_w
+            dh = max_size[2] - img_w
             dh = dh % stride
             dh = dh / 2  # divide padding into 2 sides
 
-            dw = self.new_shape[1] - img_h
+            dw = max_size[1] - img_h
             dw = dw % stride
             dw = dw / 2
-            padding = int(round(dh - 0.1)), int(round(dh + 0.1)), int(round(dw - 0.1)), int(round(dw + 0.1))
+
+            padding = (
+                int(torch.round(dh - 0.1)),
+                int(torch.round(dh + 0.1)),
+                int(torch.round(dw - 0.1)),
+                int(torch.round(dw + 0.1)),
+            )
             padded_img = F.pad(img, padding, value=self.fill_color)
 
             padded_imgs.append(padded_img)
@@ -265,10 +270,10 @@ def _resize_image_and_masks(
     target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
-    im_shape = list(image.shape[-2:])
-    r = min(new_shape[0] / im_shape[0], new_shape[1] / im_shape[1])
+    im_shape = torch.tensor(image.shape[-2:])
+    ratio = torch.min(new_shape[0] / im_shape[0], new_shape[1] / im_shape[1])
 
-    new_unpad = int(round(im_shape[0] * r)), int(round(im_shape[1] * r))
+    new_unpad = int(torch.round(im_shape[0] * ratio)), int(torch.round(im_shape[1] * ratio))
     image = F.interpolate(image[None], size=new_unpad, mode="bilinear", align_corners=False)[0]
 
     if target is None:
