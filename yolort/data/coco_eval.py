@@ -120,7 +120,7 @@ class COCOEvaluator(Metric):
     def derive_coco_results(self, class_names: Optional[List[str]] = None):
         """
         Derive the desired score numbers from summarized COCOeval. Modified from
-        https://github.com/facebookresearch/detectron2/blob/7205996/detectron2/evaluation/coco_evaluation.py#L291
+        https://github.com/facebookresearch/detectron2/blob/main/detectron2/evaluation/coco_evaluation.py
 
         Args:
             coco_eval (None or COCOEval): None represents no predictions from model.
