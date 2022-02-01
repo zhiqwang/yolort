@@ -38,10 +38,10 @@ class NestedTensor:
 
 class YOLOTransform(nn.Module):
     """
-    Performs input / target transformation before feeding the data to a YOLO model. YOLOv5
-    adopt 0, 1, RGB as the default mean, std and channel mode. We do not normalize below,
-    the inputs need to be scaled down to float [0-1] from int[0-255] and transpose the image
-    channel to RGB before being sent to this transformation.
+    Performs input / target transformation before feeding the data to a YOLO model. It plays
+    the same role of `LetterBox`, and YOLov5 adopt (0, 1, RGB) as the default mean, std and
+    channel mode. We do not normalize below, the inputs need to be scaled down to float [0-1]
+    from int[0-255] and transpose the image channel to RGB before being fed to this transformation.
 
     The transformations it perform are:
         - input / target resizing to get a rectangle within shape `(height, width)` that
