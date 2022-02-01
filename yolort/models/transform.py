@@ -233,7 +233,7 @@ class YOLOTransform(nn.Module):
             dw = dw % self.size_divisible
             dw = int(round(dw / 2 - 0.1))
 
-            pad_img[: channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
+            pad_img[:channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
 
         return batched_imgs
 
@@ -246,7 +246,7 @@ class YOLOTransform(nn.Module):
 
         for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
             boxes = pred["boxes"]
-            boxes = resize_boxes(boxes, im_s, o_im_s)
+            boxes = scale_coords(boxes, im_s, o_im_s)
             result[i]["boxes"] = boxes
 
         return result
@@ -281,20 +281,21 @@ def _resize_image_and_masks(
     return image, target
 
 
-def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -> Tensor:
-    ratios = [
-        torch.tensor(s, dtype=torch.float32, device=boxes.device)
-        / torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
-        for s, s_orig in zip(new_size, original_size)
-    ]
-    ratio_height, ratio_width = ratios
+def scale_coords(boxes: Tensor, new_size: List[int], original_size: List[int]) -> Tensor:
+    """
+    Rescale boxes (xyxy) from new_size to original_size
+    """
+    gain = min(new_size[0] / original_size[0], new_size[1] / original_size[1])
+    # wh padding
+    pad = (new_size[1] - original_size[1] * gain) / 2, (new_size[0] - original_size[0] * gain) / 2
     xmin, ymin, xmax, ymax = boxes.unbind(1)
 
-    xmin = xmin * ratio_width
-    xmax = xmax * ratio_width
-    ymin = ymin * ratio_height
-    ymax = ymax * ratio_height
-    return torch.stack((xmin, ymin, xmax, ymax), dim=1)
+    xmin = xmin - pad[0]
+    xmax = xmax - pad[0]
+    ymin = ymin - pad[1]
+    ymax = ymax - pad[1]
+
+    return torch.stack((xmin, ymin, xmax, ymax), dim=1) / gain
 
 
 def normalize_boxes(boxes: Tensor, original_size: List[int]) -> Tensor:
