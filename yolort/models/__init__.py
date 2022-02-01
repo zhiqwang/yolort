@@ -119,7 +119,7 @@ def yolov5n6(upstream_version: str = "r6.0", export_friendly: bool = False, **kw
             Default: False.
     """
     if upstream_version == "r6.0":
-        model = YOLOv5(arch="yolov5_darknet_pan_n6_r60", **kwargs)
+        model = YOLOv5(arch="yolov5_darknet_pan_n6_r60", size_divisible=64, **kwargs)
     else:
         raise NotImplementedError("Currently only supports r6.0 version")
 
@@ -138,7 +138,7 @@ def yolov5s6(upstream_version: str = "r6.0", export_friendly: bool = False, **kw
             Default: False.
     """
     if upstream_version == "r6.0":
-        model = YOLOv5(arch="yolov5_darknet_pan_s6_r60", **kwargs)
+        model = YOLOv5(arch="yolov5_darknet_pan_s6_r60", size_divisible=64, **kwargs)
     else:
         raise NotImplementedError("Currently only supports r5.0 and r6.0 versions")
 
@@ -157,7 +157,7 @@ def yolov5m6(upstream_version: str = "r6.0", export_friendly: bool = False, **kw
             Default: False.
     """
     if upstream_version == "r6.0":
-        model = YOLOv5(arch="yolov5_darknet_pan_m6_r60", **kwargs)
+        model = YOLOv5(arch="yolov5_darknet_pan_m6_r60", size_divisible=64, **kwargs)
     else:
         raise NotImplementedError("Currently only supports r5.0 and r6.0 versions")
 
