@@ -15,6 +15,28 @@ except ImportError:
     )
 
 
+def collate_fn(batch):
+    return tuple(zip(*batch))
+
+
+def default_train_transforms(hflip_prob=0.5):
+
+    return Compose(
+        [
+            RandomPhotometricDistort(),
+            RandomZoomOut(),
+            RandomIoUCrop(),
+            RandomHorizontalFlip(p=hflip_prob),
+            PILToTensor(),
+            ConvertImageDtype(torch.float),
+        ]
+    )
+
+
+def default_val_transforms():
+    return ToTensor()
+
+
 def _flip_coco_person_keypoints(kps, width):
     flip_inds = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
     flipped_data = kps[:, flip_inds]
