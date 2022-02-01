@@ -281,7 +281,7 @@ def _resize_image_and_masks(
     return image, target
 
 
-def scale_coords(boxes: Tensor, new_size: List[int], original_size: List[int]) -> Tensor:
+def scale_coords(boxes: Tensor, new_size: Tuple[int, int], original_size: Tuple[int, int]) -> Tensor:
     """
     Rescale boxes (xyxy) from new_size to original_size
     """
