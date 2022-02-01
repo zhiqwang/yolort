@@ -111,8 +111,8 @@ class YOLOTransform(nn.Module):
             if targets is not None and target_index is not None:
                 targets[i] = target_index
 
-        image_sizes = [img.shape[-2:] for img in images]
         images = self.batch_images(images)
+        image_sizes = [img.shape[-2:] for img in images]
         image_sizes_list: List[Tuple[int, int]] = []
         for image_size in image_sizes:
             assert len(image_size) == 2
@@ -254,7 +254,7 @@ class YOLOTransform(nn.Module):
     def __repr__(self):
         format_string = self.__class__.__name__ + "("
         _indent = "\n    "
-        format_string += f"{_indent}Resize(min_size={self.min_size}, max_size={self.max_size})"
+        format_string += f"{_indent}Resize(height={self.new_shape[0]}, width={self.new_shape[1]})"
         format_string += "\n)"
         return format_string
 
