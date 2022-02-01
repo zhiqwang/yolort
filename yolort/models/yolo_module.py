@@ -1,4 +1,4 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
 import argparse
 import warnings
 from pathlib import PosixPath
@@ -307,8 +307,12 @@ class YOLOv5(LightningModule):
     def load_from_yolov5(
         cls,
         checkpoint_path: str,
+        *,
         lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
+        size_divisible: int = 32,
+        auto_rectangle: bool = True,
+        fill_color: int = 114,
         **kwargs: Any,
     ):
         """
@@ -317,9 +321,21 @@ class YOLOv5(LightningModule):
         Args:
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
             lr (float): The initial learning rate
-            size: (Tuple[int, int]): the width and height to which images will be rescaled
+            size: (Tuple[int, int]): the height and width to which images will be rescaled
                 before feeding them to the backbone. Default: (640, 640).
+            size_divisible (int): stride of the models. Default: 32
+            auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded
+                to a minimum rectangle. If set to `False`, the image will be padded to a square.
+                Default: True
+            fill_color (int): fill value for padding. Default: 114
         """
         model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
-        yolov5 = cls(lr=lr, model=model, size=size)
+        yolov5 = cls(
+            lr=lr,
+            model=model,
+            size=size,
+            size_divisible=size_divisible,
+            auto_rectangle=auto_rectangle,
+            fill_color=fill_color,
+        )
         return yolov5
