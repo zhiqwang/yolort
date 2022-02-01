@@ -131,8 +131,13 @@ class TestONNXExporter:
             model,
             [(images_one,), (images_two,), (images_dummy,)],
             input_names=["images_tensors"],
-            output_names=["outputs"],
-            dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
+            output_names=["scores", "labels", "boxes"],
+            dynamic_axes={
+                "images_tensors": [0, 1, 2],
+                "boxes": [0, 1],
+                "labels": [0],
+                "scores": [0],
+            },
             tolerate_small_mismatch=True,
         )
         # Test exported model for an image with no detections on other images
@@ -140,7 +145,12 @@ class TestONNXExporter:
             model,
             [(images_dummy,), (images_one,)],
             input_names=["images_tensors"],
-            output_names=["outputs"],
-            dynamic_axes={"images_tensors": [0, 1, 2], "outputs": [0, 1, 2]},
+            output_names=["scores", "labels", "boxes"],
+            dynamic_axes={
+                "images_tensors": [0, 1, 2],
+                "boxes": [0, 1],
+                "labels": [0],
+                "scores": [0],
+            },
             tolerate_small_mismatch=True,
         )
