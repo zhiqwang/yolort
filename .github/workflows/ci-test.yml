@@ -12,6 +12,7 @@ jobs:
   Unittest:
     runs-on: ${{ matrix.image }}
     strategy:
+      fail-fast: false
       matrix:
         image: [ 'ubuntu-latest' ]
         torch: [ 'PyTorch 1.9.1+cpu', 'PyTorch 1.10.2+cpu' ]
