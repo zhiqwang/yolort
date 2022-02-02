@@ -284,17 +284,19 @@ def scale_coords(boxes: Tensor, new_size: Tuple[int, int], original_size: Tuple[
     """
     Rescale boxes (xyxy) from new_size to original_size
     """
-    gain = min(new_size[0] / original_size[0], new_size[1] / original_size[1])
+    new_size = torch.tensor(new_size, dtype=torch.float32, device=boxes.device)
+    original_size = torch.tensor(original_size, dtype=torch.float32, device=boxes.device)
+    gain = torch.min(new_size[0] / original_size[0], new_size[1] / original_size[1])
     # wh padding
     pad = (new_size[1] - original_size[1] * gain) / 2, (new_size[0] - original_size[0] * gain) / 2
     xmin, ymin, xmax, ymax = boxes.unbind(1)
 
-    xmin = xmin - pad[0]
-    xmax = xmax - pad[0]
-    ymin = ymin - pad[1]
-    ymax = ymax - pad[1]
+    xmin = (xmin - pad[0]) / gain
+    xmax = (xmax - pad[0]) / gain
+    ymin = (ymin - pad[1]) / gain
+    ymax = (ymax - pad[1]) / gain
 
-    return torch.stack((xmin, ymin, xmax, ymax), dim=1) / gain
+    return torch.stack((xmin, ymin, xmax, ymax), dim=1)
 
 
 def normalize_boxes(boxes: Tensor, original_size: List[int]) -> Tensor:
