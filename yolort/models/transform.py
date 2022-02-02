@@ -175,7 +175,7 @@ class YOLOTransform(nn.Module):
         max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
 
         # work around for
-        # pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
+        # batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
         # which is not yet supported in onnx
         padded_imgs = []
         for img in images:
@@ -222,8 +222,8 @@ class YOLOTransform(nn.Module):
 
         batch_shape = [len(images)] + max_size
         batched_imgs = images[0].new_full(batch_shape, self.fill_color)
-        for img, pad_img in zip(images, batched_imgs):
-
+        for i in range(batched_imgs.shape[0]):
+            img = images[i]
             channel, img_h, img_w = img.shape
             # divide padding into 2 sides below
             dh = ((self.new_shape[0] - img_h) % self.size_divisible) / 2
@@ -232,7 +232,7 @@ class YOLOTransform(nn.Module):
             dw = ((self.new_shape[1] - img_w) % self.size_divisible) / 2
             dw = int(round(dw - 0.1))
 
-            pad_img[:channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
+            batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
 
         return batched_imgs
 
