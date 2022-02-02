@@ -167,12 +167,12 @@ class YOLOTransform(nn.Module):
     @torch.jit.unused
     def _onnx_batch_images(self, images: List[Tensor]) -> Tensor:
         max_size = []
-        for i in range(images[0].dim()):
+        for i in range(1, images[0].dim()):
             max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32))
             max_size.append(max_size_i.to(torch.int64))
         stride = self.size_divisible
+        max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int64)
         max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
-        max_size[2] = (torch.ceil((max_size[2].to(torch.float32)) / stride) * stride).to(torch.int64)
 
         # work around for
         # pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
@@ -182,13 +182,8 @@ class YOLOTransform(nn.Module):
 
             img_h, img_w = img.shape[-2:]
 
-            dh = max_size[2] - img_w
-            dh = dh % stride
-            dh = dh / 2  # divide padding into 2 sides
-
-            dw = max_size[1] - img_h
-            dw = dw % stride
-            dw = dw / 2
+            dh = ((max_size[1] - img_w) % stride) / 2
+            dw = ((max_size[0] - img_h) % stride) / 2
 
             padding = (
                 int(torch.round(dh - 0.1)),
@@ -230,13 +225,12 @@ class YOLOTransform(nn.Module):
         for img, pad_img in zip(images, batched_imgs):
 
             channel, img_h, img_w = img.shape
-            dh = self.new_shape[0] - img_h
-            dh = dh % self.size_divisible
-            dh = int(round(dh / 2 - 0.1))  # divide padding into 2 sides
+            # divide padding into 2 sides below
+            dh = ((self.new_shape[0] - img_h) % self.size_divisible) / 2
+            dh = int(round(dh - 0.1))
 
-            dw = self.new_shape[1] - img_w
-            dw = dw % self.size_divisible
-            dw = int(round(dw / 2 - 0.1))
+            dw = ((self.new_shape[1] - img_w) % self.size_divisible) / 2
+            dw = int(round(dw - 0.1))
 
             pad_img[:channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
 

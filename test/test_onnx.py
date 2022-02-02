@@ -119,7 +119,6 @@ class TestONNXExporter:
 
         model = models.__dict__[arch](
             upstream_version=upstream_version,
-            export_friendly=True,
             pretrained=True,
             size=(640, 640),
             score_thresh=0.45,
