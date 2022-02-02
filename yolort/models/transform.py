@@ -169,10 +169,10 @@ class YOLOTransform(nn.Module):
         max_size = []
         for i in range(1, images[0].dim()):
             max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32))
-            max_size.append(max_size_i.to(torch.int64))
+            max_size.append(max_size_i.to(torch.int32))
         stride = self.size_divisible
-        max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int64)
-        max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
+        max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int32)
+        max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int32)
 
         # work around for
         # batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
