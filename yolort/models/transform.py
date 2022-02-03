@@ -182,8 +182,8 @@ class YOLOTransform(nn.Module):
 
             img_h, img_w = img.shape[-2:]
 
-            dh = ((max_size[1] - img_w) % stride) / 2
-            dw = ((max_size[0] - img_h) % stride) / 2
+            dh = (max_size[1] - img_w) / 2
+            dw = (max_size[0] - img_h) / 2
 
             padding = (
                 int(torch.round(dh - 0.1).to(dtype=torch.int32).item()),
@@ -214,8 +214,8 @@ class YOLOTransform(nn.Module):
             # call _onnx_batch_images() instead
             return self._onnx_batch_images(images)
 
-        max_size = self.max_by_axis([list(img.shape) for img in images])
         stride = float(self.size_divisible)
+        max_size = self.max_by_axis([list(img.shape) for img in images])
         max_size = list(max_size)
         max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
         max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
@@ -226,10 +226,10 @@ class YOLOTransform(nn.Module):
             img = images[i]
             channel, img_h, img_w = img.shape
             # divide padding into 2 sides below
-            dh = ((self.new_shape[0] - img_h) % stride) / 2
+            dh = (max_size[1] - img_h) / 2
             dh = int(round(dh - 0.1))
 
-            dw = ((self.new_shape[1] - img_w) % stride) / 2
+            dw = (max_size[2] - img_w) / 2
             dw = int(round(dw - 0.1))
 
             batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
