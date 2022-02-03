@@ -36,6 +36,24 @@ class NestedTensor:
         return str(self.tensors)
 
 
+@torch.jit.unused
+def _get_shape_onnx(image: Tensor) -> Tensor:
+    from torch.onnx import operators
+
+    return operators.shape_as_tensor(image)[-2:]
+
+
+@torch.jit.unused
+def _tracing_item_onnx(v: Tensor) -> int:
+    """
+    ONNX requires a tensor type for Tensor.item() in tracing mode, so we cast
+    its type to int here.
+    """
+    from typing import cast
+
+    return cast(int, v)
+
+
 class YOLOTransform(nn.Module):
     """
     Performs input / target transformation before feeding the data to a YOLO model. It plays
@@ -186,10 +204,10 @@ class YOLOTransform(nn.Module):
             dw = (max_size[0] - img_h) / 2
 
             padding = (
-                int(torch.round(dh - 0.1).to(dtype=torch.int32).item()),
-                int(torch.round(dh + 0.1).to(dtype=torch.int32).item()),
-                int(torch.round(dw - 0.1).to(dtype=torch.int32).item()),
-                int(torch.round(dw + 0.1).to(dtype=torch.int32).item()),
+                _tracing_item_onnx(torch.round(dh - 0.1).to(dtype=torch.int32)),
+                _tracing_item_onnx(torch.round(dh + 0.1).to(dtype=torch.int32)),
+                _tracing_item_onnx(torch.round(dw - 0.1).to(dtype=torch.int32)),
+                _tracing_item_onnx(torch.round(dw + 0.1).to(dtype=torch.int32)),
             )
             padded_img = F.pad(img, padding, value=self.fill_color)
 
@@ -258,13 +276,6 @@ class YOLOTransform(nn.Module):
         return format_string
 
 
-@torch.jit.unused
-def _get_shape_onnx(image: Tensor) -> Tensor:
-    from torch.onnx import operators
-
-    return operators.shape_as_tensor(image)[-2:]
-
-
 def _resize_image_and_masks(
     image: Tensor,
     new_shape: Tuple[int, int],
@@ -280,7 +291,10 @@ def _resize_image_and_masks(
     ratio_h = torch.round(im_shape[0] * ratio).to(dtype=torch.int32)
     ratio_w = torch.round(im_shape[1] * ratio).to(dtype=torch.int32)
 
-    new_unpad = (int(ratio_h.item()), int(ratio_w.item()))
+    if torchvision._is_tracing():
+        new_unpad = _tracing_item_onnx(ratio_h), _tracing_item_onnx(ratio_w)
+    else:
+        new_unpad = int(ratio_h.item()), int(ratio_w.item())
 
     image = F.interpolate(image[None], size=new_unpad, mode="bilinear", align_corners=False)[0]
 
