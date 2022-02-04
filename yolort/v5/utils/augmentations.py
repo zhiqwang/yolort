@@ -6,6 +6,7 @@ Image augmentation functions
 import logging
 import math
 import random
+from typing import Tuple
 
 import numpy as np
 
@@ -94,13 +95,13 @@ def replicate(im, labels):
 
 
 def letterbox(
-    im,
-    new_shape=(640, 640),
-    color=(114, 114, 114),
-    auto=True,
-    scale_fill=False,
-    scaleup=True,
-    stride=32,
+    im: np.ndarray,
+    new_shape: Tuple[int, int] = (640, 640),
+    color: Tuple[int, int, int] = (114, 114, 114),
+    auto: bool = True,
+    scale_fill: bool = False,
+    scaleup: bool = True,
+    stride: int = 32,
 ):
     # Resize and pad image while meeting stride-multiple constraints
     shape = im.shape[:2]  # current shape [height, width]
