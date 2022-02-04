@@ -57,7 +57,6 @@ def _tracing_item_onnx(v: Tensor) -> int:
 def _resize_image_and_masks(
     image: Tensor,
     new_shape: Tuple[int, int],
-    *,
     target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
     if torchvision._is_tracing():
