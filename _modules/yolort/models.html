@@ -415,7 +415,7 @@
 <span class="sd">            Default: False.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">upstream_version</span> <span class="o">==</span> <span class="s2">"r6.0"</span><span class="p">:</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">"yolov5_darknet_pan_n6_r60"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">"yolov5_darknet_pan_n6_r60"</span><span class="p">,</span> <span class="n">size_divisible</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Currently only supports r6.0 version"</span><span class="p">)</span>
 
@@ -434,7 +434,7 @@
 <span class="sd">            Default: False.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">upstream_version</span> <span class="o">==</span> <span class="s2">"r6.0"</span><span class="p">:</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">"yolov5_darknet_pan_s6_r60"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">"yolov5_darknet_pan_s6_r60"</span><span class="p">,</span> <span class="n">size_divisible</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Currently only supports r5.0 and r6.0 versions"</span><span class="p">)</span>
 
@@ -453,7 +453,7 @@
 <span class="sd">            Default: False.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">upstream_version</span> <span class="o">==</span> <span class="s2">"r6.0"</span><span class="p">:</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">"yolov5_darknet_pan_m6_r60"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="s2">"yolov5_darknet_pan_m6_r60"</span><span class="p">,</span> <span class="n">size_divisible</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Currently only supports r5.0 and r6.0 versions"</span><span class="p">)</span>
 

@@ -295,13 +295,14 @@
           <article class="md-content__inner md-typeset" role="main">
             
   <h1 id="modules-yolort-models-yolo-module--page-root">Source code for yolort.models.yolo_module</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.</span>
+<span></span><span class="c1"># Copyright (c) 2021, yolort team. All rights reserved.</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PosixPath</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
 <span class="kn">from</span> <span class="nn">pytorch_lightning</span> <span class="kn">import</span> <span class="n">LightningModule</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torchvision.io</span> <span class="kn">import</span> <span class="n">read_image</span>
@@ -309,7 +310,7 @@
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">yolo</span>
 <span class="kn">from</span> <span class="nn">._utils</span> <span class="kn">import</span> <span class="n">_evaluate_iou</span>
-<span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">YOLOTransform</span>
+<span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">YOLOTransform</span><span class="p">,</span> <span class="n">_get_shape_onnx</span>
 <span class="kn">from</span> <span class="nn">.yolo</span> <span class="kn">import</span> <span class="n">YOLO</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"YOLOv5"</span><span class="p">]</span>
@@ -317,7 +318,26 @@
 
 <div class="viewcode-block" id="YOLOv5"><a class="viewcode-back" href="../../../models.html#yolort.models.YOLOv5">[docs]</a><span class="k">class</span> <span class="nc">YOLOv5</span><span class="p">(</span><span class="n">LightningModule</span><span class="p">):</span>
     <span class="sd">"""</span>
-<span class="sd">    PyTorch Lightning wrapper of `YOLO`</span>
+<span class="sd">    Wrapping the pre-processing into YOLO models, we use the `torch.nn.functional.interpolate`</span>
+<span class="sd">    and `torch.nn.functional.pad` ops to implement the letterbox to make it scriptable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lr (float): The initial learning rate</span>
+<span class="sd">        arch (string): YOLO model architecture. Default: None</span>
+<span class="sd">        model (nn.Module): YOLO model. Default: None</span>
+<span class="sd">        num_classes (int): number of output classes of the model (doesn't including</span>
+<span class="sd">            background). Default: 80.</span>
+<span class="sd">        pretrained (bool): If true, returns a model pre-trained on COCO train2017</span>
+<span class="sd">        progress (bool): If True, displays a progress bar of the download to stderr</span>
+<span class="sd">        size: (Tuple[int, int]): the height and width to which images will be rescaled</span>
+<span class="sd">            before feeding them to the backbone. Default: (640, 640).</span>
+<span class="sd">        size_divisible (int): stride of the models. Default: 32</span>
+<span class="sd">        auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded</span>
+<span class="sd">            to a minimum rectangle. If set to `False`, the image will be padded to a square.</span>
+<span class="sd">            Default: True</span>
+<span class="sd">        fill_color (int): fill value for padding. Default: 114</span>
+<span class="sd">        annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file</span>
+<span class="sd">            Default: None.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -325,27 +345,17 @@
         <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
         <span class="n">arch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">,</span>
         <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span>
-        <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">,</span>
+        <span class="n">size_divisible</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="n">auto_rectangle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">fill_color</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">114</span><span class="p">,</span>
         <span class="n">annotation_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PosixPath</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="sd">"""</span>
-<span class="sd">        Args:</span>
-<span class="sd">            lr (float): The initial learning rate</span>
-<span class="sd">            arch (str): YOLO model architecture. Default: None</span>
-<span class="sd">            model (nn.Module): YOLO model. Default: None</span>
-<span class="sd">            pretrained (bool): If true, returns a model pre-trained on COCO train2017</span>
-<span class="sd">            progress (bool): If True, displays a progress bar of the download to stderr</span>
-<span class="sd">            size: (Tuple[int, int]): the width and height to which images will be rescaled</span>
-<span class="sd">                before feeding them to the backbone. Default: (640, 640).</span>
-<span class="sd">            num_classes (int): number of output classes of the model (doesn't including</span>
-<span class="sd">                background). Default: 80.</span>
-<span class="sd">            annotation_path (Optional[Union[str, PosixPath]]): Path of the COCO annotation file</span>
-<span class="sd">                Default: None.</span>
-<span class="sd">        """</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span>
@@ -361,7 +371,13 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">YOLOTransform</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">size</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">size</span><span class="p">),</span> <span class="n">fixed_size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">YOLOTransform</span><span class="p">(</span>
+            <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">size_divisible</span><span class="o">=</span><span class="n">size_divisible</span><span class="p">,</span>
+            <span class="n">auto_rectangle</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">,</span>
+            <span class="n">fill_color</span><span class="o">=</span><span class="n">fill_color</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="c1"># metrics</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="kc">None</span>
@@ -417,7 +433,12 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">outputs</span>
 
-            <span class="n">detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">postprocess</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">samples</span><span class="o">.</span><span class="n">image_sizes</span><span class="p">,</span> <span class="n">original_image_sizes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">_is_tracing</span><span class="p">():</span>
+                <span class="n">im_shape</span> <span class="o">=</span> <span class="n">_get_shape_onnx</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">tensors</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">im_shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span>
+
+            <span class="n">detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">postprocess</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">im_shape</span><span class="p">,</span> <span class="n">original_image_sizes</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">is_scripting</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_warned</span><span class="p">:</span>
@@ -589,8 +610,12 @@
     <span class="k">def</span> <span class="nf">load_from_yolov5</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span>
+        <span class="n">size_divisible</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="n">auto_rectangle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">fill_color</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">114</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">"""</span>
@@ -599,11 +624,23 @@
 <span class="sd">        Args:</span>
 <span class="sd">            checkpoint_path (str): Path of the YOLOv5 checkpoint model.</span>
 <span class="sd">            lr (float): The initial learning rate</span>
-<span class="sd">            size: (Tuple[int, int]): the width and height to which images will be rescaled</span>
+<span class="sd">            size: (Tuple[int, int]): the height and width to which images will be rescaled</span>
 <span class="sd">                before feeding them to the backbone. Default: (640, 640).</span>
+<span class="sd">            size_divisible (int): stride of the models. Default: 32</span>
+<span class="sd">            auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded</span>
+<span class="sd">                to a minimum rectangle. If set to `False`, the image will be padded to a square.</span>
+<span class="sd">                Default: True</span>
+<span class="sd">            fill_color (int): fill value for padding. Default: 114</span>
 <span class="sd">        """</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">YOLO</span><span class="o">.</span><span class="n">load_from_yolov5</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">yolov5</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">yolov5</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+            <span class="n">size_divisible</span><span class="o">=</span><span class="n">size_divisible</span><span class="p">,</span>
+            <span class="n">auto_rectangle</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">,</span>
+            <span class="n">fill_color</span><span class="o">=</span><span class="n">fill_color</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">yolov5</span></div></div>
 </pre></div>
 
