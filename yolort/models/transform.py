@@ -1,7 +1,7 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
+
 import math
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -12,10 +12,11 @@ from torchvision.ops import box_convert
 
 class NestedTensor:
     """
-    Structure that holds a list of images (of possibly
-    varying sizes) as a single tensor.
-    This works by padding the images to the same size,
-    and storing in a field the original sizes of each image
+    Structure that holds a list of images (of possibly varying sizes) as
+    a single tensor.
+
+    This works by padding the images to the same size, and storing in a
+    field the original sizes of each image.
     """
 
     def __init__(self, tensors: Tensor, image_sizes: List[Tuple[int, int]]):
@@ -35,40 +36,95 @@ class NestedTensor:
         return str(self.tensors)
 
 
+@torch.jit.unused
+def _get_shape_onnx(image: Tensor) -> Tensor:
+    from torch.onnx import operators
+
+    return operators.shape_as_tensor(image)[-2:]
+
+
+@torch.jit.unused
+def _tracing_item_onnx(v: Tensor) -> int:
+    """
+    ONNX requires a tensor type for Tensor.item() in tracing mode, so we cast
+    its type to int here.
+    """
+    from typing import cast
+
+    return cast(int, v)
+
+
+def _resize_image_and_masks(
+    image: Tensor,
+    new_shape: Tuple[int, int],
+    target: Optional[Dict[str, Tensor]] = None,
+) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+    if torchvision._is_tracing():
+        im_shape = _get_shape_onnx(image)
+    else:
+        im_shape = torch.tensor(image.shape[-2:])
+
+    ratio = torch.min(new_shape[0] / im_shape[0], new_shape[1] / im_shape[1])
+
+    ratio_h = torch.round(im_shape[0] * ratio).to(dtype=torch.int32)
+    ratio_w = torch.round(im_shape[1] * ratio).to(dtype=torch.int32)
+
+    if torchvision._is_tracing():
+        new_unpad = _tracing_item_onnx(ratio_h), _tracing_item_onnx(ratio_w)
+    else:
+        new_unpad = int(ratio_h.item()), int(ratio_w.item())
+
+    image = F.interpolate(image[None], size=new_unpad, mode="bilinear", align_corners=False)[0]
+
+    if target is None:
+        return image, target
+
+    if "masks" in target:
+        mask = target["masks"]
+        mask = F.interpolate(mask[:, None].float(), size=new_unpad, align_corners=False)[:, 0].byte()
+        target["masks"] = mask
+    return image, target
+
+
 class YOLOTransform(nn.Module):
     """
-    Performs input / target transformation before feeding the data to a GeneralizedRCNN
-    model.
+    Performs input / target transformation before feeding the data to a YOLO model. It plays
+    the same role of `LetterBox`, and YOLOv5 adopt (0, 1, RGB) as the default mean, std and
+    channel mode. We do not normalize below, the inputs need to be scaled down to float [0-1]
+    from int[0-255] and transpose the image channel to RGB before being fed to this transformation.
 
     The transformations it perform are:
-        - input normalization
-            YOLOv5 use (0, 1) as the default mean and std, so we just need to rescale
-            the image manually from uint8_t [0, 255] to float [0, 1] here.
-        - input / target resizing to match min_size / max_size
-            When fixed_size is set, Different images can have different sizes but
-            they will be resized to a fixed size before passing it to the backbone.
+        - input / target resizing to get a rectangle within shape `(height, width)` that
+            can be divided by `size_divisible`
 
-    It returns a NestedTensor for the inputs, and a List[Dict[Tensor]] for the targets
+    It returns a `NestedTensor` for the inputs, and a List[Dict[Tensor]] for the targets.
+
+    Args:
+        height (int) : expected height of the image to be rescaled
+        width (int) : expected width of the image to be rescaled
+        size_divisible (int): stride of the models. Default: 32
+        auto_rectangle (bool): The padding mode. If set to `True`, the image will be
+            padded to a minimum rectangle within shape `(height, width)` and each of its
+            edges is divisible by `size_divisible`. If set to `False`, the image will
+            be padded to shape `(height, width)`. Default: True
+        fill_color (int): fill value for padding. Default: 114
     """
 
     def __init__(
         self,
-        min_size: int,
-        max_size: int,
-        fixed_size: Optional[Tuple[int, int]] = None,
+        height: int,
+        width: int,
+        *,
+        size_divisible: int = 32,
+        auto_rectangle: bool = True,
+        fill_color: int = 114,
     ) -> None:
-        """
-        Args:
-            min_size (int) : minimum size of the image to be rescaled.
-            max_size (int) : maximum size of the image to be rescaled.
-            fixed_size (Optional[Tuple[int, int]]): Whether to specify and use the input size.
-        """
+
         super().__init__()
-        if not isinstance(min_size, (list, tuple)):
-            min_size = (min_size,)
-        self.min_size = min_size
-        self.max_size = max_size
-        self.fixed_size = fixed_size
+        self.new_shape = (height, width)
+        self.size_divisible = size_divisible
+        self.auto_rectangle = auto_rectangle
+        self.fill_color = fill_color / 255
 
     def forward(
         self,
@@ -86,7 +142,7 @@ class YOLOTransform(nn.Module):
             for t in targets:
                 data: Dict[str, Tensor] = {}
                 for k, v in t.items():
-                    data[k] = v.to(device)
+                    data[k] = v.to(device=device)
                 targets_copy.append(data)
             targets = targets_copy
 
@@ -106,7 +162,7 @@ class YOLOTransform(nn.Module):
                 targets[i] = target_index
 
         image_sizes = [img.shape[-2:] for img in images]
-        images = nested_tensor_from_tensor_list(images)
+        images = self.batch_images(images)
         image_sizes_list: List[Tuple[int, int]] = []
         for image_size in image_sizes:
             assert len(image_size) == 2
@@ -145,13 +201,7 @@ class YOLOTransform(nn.Module):
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
         h, w = image.shape[-2:]
-        if self.training:
-            size = float(self.torch_choice(self.min_size))
-        else:
-            # FIXME assume for now that testing uses the largest scale
-            size = float(self.min_size[-1])
-
-        image, target = _resize_image_and_masks(image, size, float(self.max_size), self.fixed_size, target)
+        image, target = _resize_image_and_masks(image, self.new_shape, target)
 
         if target is None:
             return image, target
@@ -162,164 +212,115 @@ class YOLOTransform(nn.Module):
 
         return image, target
 
-    def postprocess(
-        self,
-        result: List[Dict[str, Tensor]],
-        image_shapes: List[Tuple[int, int]],
-        original_image_sizes: List[Tuple[int, int]],
-    ) -> List[Dict[str, Tensor]]:
+    # _onnx_batch_images() is an implementation of
+    # batch_images() that is supported by ONNX tracing.
+    @torch.jit.unused
+    def _onnx_batch_images(self, images: List[Tensor]) -> Tensor:
+        max_size = []
+        for i in range(1, images[0].dim()):
+            max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32))
+            max_size.append(max_size_i.to(torch.int32))
+        stride = self.size_divisible
+        max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int32)
+        max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int32)
 
-        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
-            boxes = pred["boxes"]
-            boxes = resize_boxes(boxes, im_s, o_im_s)
-            result[i]["boxes"] = boxes
+        # work around for
+        # batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
+        # which is not yet supported in onnx
+        padded_imgs = []
+        for img in images:
 
-        return result
+            img_h, img_w = img.shape[-2:]
 
+            dh = (max_size[1] - img_w) / 2
+            dw = (max_size[0] - img_h) / 2
 
-def nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32):
-    # TODO make this more general
-    if tensor_list[0].ndim == 3:
+            padding = (
+                _tracing_item_onnx(torch.round(dh - 0.1).to(dtype=torch.int32)),
+                _tracing_item_onnx(torch.round(dh + 0.1).to(dtype=torch.int32)),
+                _tracing_item_onnx(torch.round(dw - 0.1).to(dtype=torch.int32)),
+                _tracing_item_onnx(torch.round(dw + 0.1).to(dtype=torch.int32)),
+            )
+            padded_img = F.pad(img, padding, value=self.fill_color)
+
+            padded_imgs.append(padded_img)
+
+        return torch.stack(padded_imgs)
+
+    def max_by_axis(self, the_list: List[List[int]]) -> List[int]:
+        maxes = the_list[0]
+        for sublist in the_list[1:]:
+            for index, item in enumerate(sublist):
+                maxes[index] = max(maxes[index], item)
+        return maxes
+
+    def batch_images(self, images: List[Tensor]) -> Tensor:
+        """
+        Nest a list of tensors. It plays the same role of the lettebox function.
+        """
+
         if torchvision._is_tracing():
-            # nested_tensor_from_tensor_list() does not export well to ONNX
-            # call _onnx_nested_tensor_from_tensor_list() instead
-            return _onnx_nested_tensor_from_tensor_list(tensor_list, size_divisible)
+            # batch_images() does not export well to ONNX
+            # call _onnx_batch_images() instead
+            return self._onnx_batch_images(images)
 
-        max_size = _max_by_axis([list(img.shape) for img in tensor_list])
-        stride = float(size_divisible)
+        stride = float(self.size_divisible)
+        max_size = self.max_by_axis([list(img.shape) for img in images])
         max_size = list(max_size)
         max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
         max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
 
-        batch_shape = [len(tensor_list)] + max_size
-        tensor_batched = tensor_list[0].new_full(batch_shape, 0)
-        for img, pad_img in zip(tensor_list, tensor_batched):
-            pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
-    else:
-        raise ValueError("not supported")
-    return tensor_batched
+        batch_shape = [len(images)] + max_size
+        batched_imgs = images[0].new_full(batch_shape, self.fill_color)
+        for i in range(batched_imgs.shape[0]):
+            img = images[i]
+            channel, img_h, img_w = img.shape
+            # divide padding into 2 sides below
+            dh = (max_size[1] - img_h) / 2
+            dh = int(round(dh - 0.1))
+
+            dw = (max_size[2] - img_w) / 2
+            dw = int(round(dw - 0.1))
+
+            batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
+
+        return batched_imgs
+
+    def postprocess(
+        self,
+        result: List[Dict[str, Tensor]],
+        image_shapes: Tensor,
+        original_image_sizes: List[Tuple[int, int]],
+    ) -> List[Dict[str, Tensor]]:
+
+        for i, (pred, o_im_s) in enumerate(zip(result, original_image_sizes)):
+            boxes = pred["boxes"]
+            boxes = scale_coords(boxes, image_shapes, o_im_s)
+            result[i]["boxes"] = boxes
+
+        return result
+
+    def __repr__(self):
+        format_string = self.__class__.__name__ + "("
+        _indent = "\n    "
+        format_string += f"{_indent}Resize(height={self.new_shape[0]}, width={self.new_shape[1]})"
+        format_string += "\n)"
+        return format_string
 
 
-def _max_by_axis(the_list: List[List[int]]) -> List[int]:
-    maxes = the_list[0]
-    for sublist in the_list[1:]:
-        for index, item in enumerate(sublist):
-            maxes[index] = max(maxes[index], item)
-    return maxes
-
-
-# _onnx_nested_tensor_from_tensor_list() is an implementation of
-# nested_tensor_from_tensor_list() that is supported by ONNX tracing.
-@torch.jit.unused
-def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor], size_divisible: int = 32) -> Tensor:
-    max_size = []
-    for i in range(tensor_list[0].dim()):
-        max_size_i = torch.max(torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)).to(
-            torch.int64
-        )
-        max_size.append(max_size_i)
-    stride = size_divisible
-    max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
-    max_size[2] = (torch.ceil((max_size[2].to(torch.float32)) / stride) * stride).to(torch.int64)
-    max_size = tuple(max_size)
-
-    # work around for
-    # pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
-    # m[: img.shape[1], :img.shape[2]] = False
-    # which is not yet supported in onnx
-    padded_imgs = []
-
-    for img in tensor_list:
-        padding = [(s1 - s2) for s1, s2 in zip(max_size, tuple(img.shape))]
-        padded_img = F.pad(img, (0, padding[2], 0, padding[1], 0, padding[0]))
-        padded_imgs.append(padded_img)
-
-    tensor = torch.stack(padded_imgs)
-
-    return tensor
-
-
-@torch.jit.unused
-def _get_shape_onnx(image: Tensor) -> Tensor:
-    from torch.onnx import operators
-
-    return operators.shape_as_tensor(image)[-2:]
-
-
-@torch.jit.unused
-def _fake_cast_onnx(v: Tensor) -> float:
-    # ONNX requires a tensor but here we fake its type for JIT.
-    return v
-
-
-def _resize_image_and_masks(
-    image: Tensor,
-    self_min_size: float,
-    self_max_size: float,
-    fixed_size: Optional[Tuple[int, int]] = None,
-    target: Optional[Dict[str, Tensor]] = None,
-) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+def scale_coords(boxes: Tensor, new_size: Tensor, original_size: Tuple[int, int]) -> Tensor:
     """
-    Resize the image and its targets
+    Rescale boxes (xyxy) from new_size to original_size
     """
-    if torchvision._is_tracing():
-        im_shape = _get_shape_onnx(image)
-    else:
-        im_shape = torch.tensor(image.shape[-2:])
-
-    size: Optional[List[int]] = None
-    scale_factor: Optional[float] = None
-    recompute_scale_factor: Optional[bool] = None
-    if fixed_size is not None:
-        size = [fixed_size[1], fixed_size[0]]
-    else:
-        min_size = torch.min(im_shape).to(dtype=torch.float32)
-        max_size = torch.max(im_shape).to(dtype=torch.float32)
-        scale = torch.min(self_min_size / min_size, self_max_size / max_size)
-
-        if torchvision._is_tracing():
-            scale_factor = _fake_cast_onnx(scale)
-        else:
-            scale_factor = scale.item()
-        recompute_scale_factor = True
-
-    image = F.interpolate(
-        image[None],
-        size=size,
-        scale_factor=scale_factor,
-        mode="bilinear",
-        recompute_scale_factor=recompute_scale_factor,
-        align_corners=False,
-    )[0]
-
-    if target is None:
-        return image, target
-
-    if "masks" in target:
-        mask = target["masks"]
-        mask = F.interpolate(
-            mask[:, None].float(),
-            size=size,
-            scale_factor=scale_factor,
-            recompute_scale_factor=recompute_scale_factor,
-        )[:, 0].byte()
-        target["masks"] = mask
-    return image, target
-
-
-def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -> Tensor:
-    ratios = [
-        torch.tensor(s, dtype=torch.float32, device=boxes.device)
-        / torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
-        for s, s_orig in zip(new_size, original_size)
-    ]
-    ratio_height, ratio_width = ratios
+    gain = torch.min(new_size[0] / original_size[0], new_size[1] / original_size[1])
+    pad = (new_size[1] - original_size[1] * gain) / 2, (new_size[0] - original_size[0] * gain) / 2
     xmin, ymin, xmax, ymax = boxes.unbind(1)
 
-    xmin = xmin * ratio_width
-    xmax = xmax * ratio_width
-    ymin = ymin * ratio_height
-    ymax = ymax * ratio_height
+    xmin = (xmin - pad[0]) / gain
+    xmax = (xmax - pad[0]) / gain
+    ymin = (ymin - pad[1]) / gain
+    ymax = (ymax - pad[1]) / gain
+
     return torch.stack((xmin, ymin, xmax, ymax), dim=1)
 
 

@@ -340,20 +340,15 @@ def test_torchscript(arch):
 
 
 @pytest.mark.parametrize(
-    "arch, version, upstream_version, hash_prefix",
+    "arch, size_divisible, version, upstream_version, hash_prefix",
     [
-        ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
-        ("yolov5n", "r6.0", "v6.0", "649e089f"),
-        ("yolov5s", "r6.0", "v6.0", "c3b140f3"),
-        ("yolov5n6", "r6.0", "v6.0", "beecbbae"),
+        ("yolov5s", 32, "r4.0", "v4.0", "9ca9a642"),
+        ("yolov5n", 32, "r6.0", "v6.0", "649e089f"),
+        ("yolov5s", 32, "r6.0", "v6.0", "c3b140f3"),
+        ("yolov5n6", 64, "r6.0", "v6.0", "beecbbae"),
     ],
 )
-def test_load_from_yolov5(
-    arch: str,
-    version: str,
-    upstream_version: str,
-    hash_prefix: str,
-):
+def test_load_from_yolov5(arch, size_divisible, version, upstream_version, hash_prefix):
     img_path = "test/assets/bus.jpg"
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
@@ -366,6 +361,7 @@ def test_load_from_yolov5(
         checkpoint_path,
         score_thresh=score_thresh,
         version=version,
+        size_divisible=size_divisible,
     )
     model_yolov5.eval()
     out_from_yolov5 = model_yolov5.predict(img_path)
@@ -388,20 +384,15 @@ def test_load_from_yolov5(
 
 
 @pytest.mark.parametrize(
-    "arch, version, upstream_version, hash_prefix",
+    "arch, size_divisible, version, upstream_version, hash_prefix",
     [
-        ("yolov5s", "r4.0", "v4.0", "9ca9a642"),
-        ("yolov5n", "r6.0", "v6.0", "649e089f"),
-        ("yolov5s", "r6.0", "v6.0", "c3b140f3"),
-        ("yolov5n6", "r6.0", "v6.0", "beecbbae"),
+        ("yolov5s", 32, "r4.0", "v4.0", "9ca9a642"),
+        ("yolov5n", 32, "r6.0", "v6.0", "649e089f"),
+        ("yolov5s", 32, "r6.0", "v6.0", "c3b140f3"),
+        ("yolov5n6", 64, "r6.0", "v6.0", "beecbbae"),
     ],
 )
-def test_load_from_yolov5_torchscript(
-    arch: str,
-    version: str,
-    upstream_version: str,
-    hash_prefix: str,
-):
+def test_load_from_yolov5_torchscript(arch, size_divisible, version, upstream_version, hash_prefix):
     import cv2
     from yolort.utils import read_image_to_tensor
     from yolort.v5 import letterbox
@@ -409,7 +400,7 @@ def test_load_from_yolov5_torchscript(
     # Loading and pre-processing the image
     img_path = "test/assets/zidane.jpg"
     img_raw = cv2.imread(img_path)
-    img = letterbox(img_raw, new_shape=(640, 640))[0]
+    img = letterbox(img_raw, new_shape=(640, 640), stride=size_divisible)[0]
     img = read_image_to_tensor(img)
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"

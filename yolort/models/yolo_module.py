@@ -1,10 +1,11 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
 import argparse
 import warnings
 from pathlib import PosixPath
 from typing import Any, List, Dict, Tuple, Optional, Union, Callable
 
 import torch
+import torchvision
 from pytorch_lightning import LightningModule
 from torch import nn, Tensor
 from torchvision.io import read_image
@@ -12,7 +13,7 @@ from yolort.data import COCOEvaluator, contains_any_tensor
 
 from . import yolo
 from ._utils import _evaluate_iou
-from .transform import YOLOTransform
+from .transform import YOLOTransform, _get_shape_onnx
 from .yolo import YOLO
 
 __all__ = ["YOLOv5"]
@@ -20,7 +21,26 @@ __all__ = ["YOLOv5"]
 
 class YOLOv5(LightningModule):
     """
-    PyTorch Lightning wrapper of `YOLO`
+    Wrapping the pre-processing into YOLO models, we use the `torch.nn.functional.interpolate`
+    and `torch.nn.functional.pad` ops to implement the letterbox to make it scriptable.
+
+    Args:
+        lr (float): The initial learning rate
+        arch (string): YOLO model architecture. Default: None
+        model (nn.Module): YOLO model. Default: None
+        num_classes (int): number of output classes of the model (doesn't including
+            background). Default: 80.
+        pretrained (bool): If true, returns a model pre-trained on COCO train2017
+        progress (bool): If True, displays a progress bar of the download to stderr
+        size: (Tuple[int, int]): the height and width to which images will be rescaled
+            before feeding them to the backbone. Default: (640, 640).
+        size_divisible (int): stride of the models. Default: 32
+        auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded
+            to a minimum rectangle. If set to `False`, the image will be padded to a square.
+            Default: True
+        fill_color (int): fill value for padding. Default: 114
+        annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file
+            Default: None.
     """
 
     def __init__(
@@ -28,27 +48,17 @@ class YOLOv5(LightningModule):
         lr: float = 0.01,
         arch: Optional[str] = None,
         model: Optional[nn.Module] = None,
+        num_classes: int = 80,
         pretrained: bool = False,
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
-        num_classes: int = 80,
+        size_divisible: int = 32,
+        auto_rectangle: bool = True,
+        fill_color: int = 114,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
-    ):
-        """
-        Args:
-            lr (float): The initial learning rate
-            arch (str): YOLO model architecture. Default: None
-            model (nn.Module): YOLO model. Default: None
-            pretrained (bool): If true, returns a model pre-trained on COCO train2017
-            progress (bool): If True, displays a progress bar of the download to stderr
-            size: (Tuple[int, int]): the width and height to which images will be rescaled
-                before feeding them to the backbone. Default: (640, 640).
-            num_classes (int): number of output classes of the model (doesn't including
-                background). Default: 80.
-            annotation_path (Optional[Union[str, PosixPath]]): Path of the COCO annotation file
-                Default: None.
-        """
+    ) -> None:
+
         super().__init__()
 
         self.lr = lr
@@ -64,7 +74,13 @@ class YOLOv5(LightningModule):
             )
         self.model = model
 
-        self.transform = YOLOTransform(min(size), max(size), fixed_size=size)
+        self.transform = YOLOTransform(
+            size[0],
+            size[1],
+            size_divisible=size_divisible,
+            auto_rectangle=auto_rectangle,
+            fill_color=fill_color,
+        )
 
         # metrics
         self.evaluator = None
@@ -120,7 +136,12 @@ class YOLOv5(LightningModule):
             else:
                 result = outputs
 
-            detections = self.transform.postprocess(result, samples.image_sizes, original_image_sizes)
+            if torchvision._is_tracing():
+                im_shape = _get_shape_onnx(samples.tensors)
+            else:
+                im_shape = torch.tensor(samples.tensors.shape[-2:])
+
+            detections = self.transform.postprocess(result, im_shape, original_image_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:
@@ -292,8 +313,12 @@ class YOLOv5(LightningModule):
     def load_from_yolov5(
         cls,
         checkpoint_path: str,
+        *,
         lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
+        size_divisible: int = 32,
+        auto_rectangle: bool = True,
+        fill_color: int = 114,
         **kwargs: Any,
     ):
         """
@@ -302,9 +327,21 @@ class YOLOv5(LightningModule):
         Args:
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
             lr (float): The initial learning rate
-            size: (Tuple[int, int]): the width and height to which images will be rescaled
+            size: (Tuple[int, int]): the height and width to which images will be rescaled
                 before feeding them to the backbone. Default: (640, 640).
+            size_divisible (int): stride of the models. Default: 32
+            auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded
+                to a minimum rectangle. If set to `False`, the image will be padded to a square.
+                Default: True
+            fill_color (int): fill value for padding. Default: 114
         """
         model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
-        yolov5 = cls(lr=lr, model=model, size=size)
+        yolov5 = cls(
+            lr=lr,
+            model=model,
+            size=size,
+            size_divisible=size_divisible,
+            auto_rectangle=auto_rectangle,
+            fill_color=fill_color,
+        )
         return yolov5

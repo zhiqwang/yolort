@@ -7,7 +7,7 @@ from torch import Tensor
 from torchvision.io import read_image
 from yolort.data import COCOEvaluator, DetectionDataModule, _helper as data_helper
 from yolort.models import yolov5s
-from yolort.models.transform import nested_tensor_from_tensor_list
+from yolort.models.transform import YOLOTransform
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
 
 
@@ -28,9 +28,10 @@ def test_train_with_vanilla_model():
     img_tensor = default_loader(img_name)
     assert img_tensor.ndim == 3
     # Add a dummy image to train
-    img_dummy = torch.rand((3, 416, 360), dtype=torch.float32)
+    img_dummy = torch.rand((3, 1080, 810), dtype=torch.float32)
 
-    images = nested_tensor_from_tensor_list([img_tensor, img_dummy])
+    yolo_transform = YOLOTransform(640, 640)
+    images = yolo_transform.batch_images([img_tensor, img_dummy])
     targets = torch.tensor(
         [
             [0, 7, 0.3790, 0.5487, 0.3220, 0.2047],
