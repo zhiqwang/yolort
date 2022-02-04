@@ -18,7 +18,6 @@ onnxruntime = pytest.importorskip("onnxruntime")
 
 
 class TestONNXExporter:
-
     def run_model(
         self,
         model,
