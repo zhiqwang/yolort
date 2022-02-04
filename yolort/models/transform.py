@@ -54,6 +54,39 @@ def _tracing_item_onnx(v: Tensor) -> int:
     return cast(int, v)
 
 
+def _resize_image_and_masks(
+    image: Tensor,
+    new_shape: Tuple[int, int],
+    *,
+    target: Optional[Dict[str, Tensor]] = None,
+) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+    if torchvision._is_tracing():
+        im_shape = _get_shape_onnx(image)
+    else:
+        im_shape = torch.tensor(image.shape[-2:])
+
+    ratio = torch.min(new_shape[0] / im_shape[0], new_shape[1] / im_shape[1])
+
+    ratio_h = torch.round(im_shape[0] * ratio).to(dtype=torch.int32)
+    ratio_w = torch.round(im_shape[1] * ratio).to(dtype=torch.int32)
+
+    if torchvision._is_tracing():
+        new_unpad = _tracing_item_onnx(ratio_h), _tracing_item_onnx(ratio_w)
+    else:
+        new_unpad = int(ratio_h.item()), int(ratio_w.item())
+
+    image = F.interpolate(image[None], size=new_unpad, mode="bilinear", align_corners=False)[0]
+
+    if target is None:
+        return image, target
+
+    if "masks" in target:
+        mask = target["masks"]
+        mask = F.interpolate(mask[:, None].float(), size=new_unpad, align_corners=False)[:, 0].byte()
+        target["masks"] = mask
+    return image, target
+
+
 class YOLOTransform(nn.Module):
     """
     Performs input / target transformation before feeding the data to a YOLO model. It plays
@@ -276,38 +309,6 @@ class YOLOTransform(nn.Module):
         return format_string
 
 
-def _resize_image_and_masks(
-    image: Tensor,
-    new_shape: Tuple[int, int],
-    target: Optional[Dict[str, Tensor]] = None,
-) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-    if torchvision._is_tracing():
-        im_shape = _get_shape_onnx(image)
-    else:
-        im_shape = torch.tensor(image.shape[-2:])
-
-    ratio = torch.min(new_shape[0] / im_shape[0], new_shape[1] / im_shape[1])
-
-    ratio_h = torch.round(im_shape[0] * ratio).to(dtype=torch.int32)
-    ratio_w = torch.round(im_shape[1] * ratio).to(dtype=torch.int32)
-
-    if torchvision._is_tracing():
-        new_unpad = _tracing_item_onnx(ratio_h), _tracing_item_onnx(ratio_w)
-    else:
-        new_unpad = int(ratio_h.item()), int(ratio_w.item())
-
-    image = F.interpolate(image[None], size=new_unpad, mode="bilinear", align_corners=False)[0]
-
-    if target is None:
-        return image, target
-
-    if "masks" in target:
-        mask = target["masks"]
-        mask = F.interpolate(mask[:, None].float(), size=new_unpad, align_corners=False)[:, 0].byte()
-        target["masks"] = mask
-    return image, target
-
-
 def scale_coords(boxes: Tensor, new_size: Tensor, original_size: Tuple[int, int]) -> Tensor:
     """
     Rescale boxes (xyxy) from new_size to original_size
@@ -336,38 +337,3 @@ def normalize_boxes(boxes: Tensor, original_size: List[int]) -> Tensor:
     boxes = torch.stack((xmin, ymin, xmax, ymax), dim=1)
     # Convert xyxy to cxcywh
     return box_convert(boxes, in_fmt="xyxy", out_fmt="cxcywh")
-
-
-def _letterbox(
-    image: Tensor,
-    new_shape: Tuple[int, int] = (640, 640),
-    color: int = 114,
-    auto: bool = True,
-    stride: int = 32,
-):
-
-    image = image.float()  # / 255
-    im_shape = list(image.shape[1:])
-    if isinstance(new_shape, int):
-        new_shape = (new_shape, new_shape)
-    r = min(new_shape[0] / im_shape[0], new_shape[1] / im_shape[1])
-
-    ratio = r, r  # width, height ratios
-    new_unpad = int(round(im_shape[0] * r)), int(round(im_shape[1] * r))
-    dh, dw = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]
-    if auto:
-        dw, dh = dw % stride, dh % stride
-
-    dw /= 2  # divide padding into 2 sides
-    dh /= 2
-    if im_shape[::-1] != new_unpad:
-        image = F.interpolate(
-            image[None],
-            size=new_unpad,
-            scale_factor=None,
-            mode="bilinear",
-            align_corners=False,
-        )
-    pad = int(round(dw - 0.1)), int(round(dw + 0.1)), int(round(dh - 0.1)), int(round(dh + 0.1))
-    image = F.pad(image, pad=pad, mode="constant", value=color)
-    return image / 255, ratio, (dw, dh)
