@@ -135,7 +135,8 @@ class YOLOv5(LightningModule):
             else:
                 result = outputs
 
-            detections = self.transform.postprocess(result, samples.image_sizes, original_image_sizes)
+            # detections = self.transform.postprocess(result, samples.image_sizes, original_image_sizes)
+            detections = result
 
         if torch.jit.is_scripting():
             if not self._has_warned:
