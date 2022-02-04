@@ -5,6 +5,7 @@ from pathlib import PosixPath
 from typing import Any, List, Dict, Tuple, Optional, Union, Callable
 
 import torch
+import torchvision
 from pytorch_lightning import LightningModule
 from torch import nn, Tensor
 from torchvision.io import read_image
@@ -12,7 +13,7 @@ from yolort.data import COCOEvaluator, contains_any_tensor
 
 from . import yolo
 from ._utils import _evaluate_iou
-from .transform import YOLOTransform
+from .transform import YOLOTransform, _get_shape_onnx
 from .yolo import YOLO
 
 __all__ = ["YOLOv5"]
@@ -135,8 +136,12 @@ class YOLOv5(LightningModule):
             else:
                 result = outputs
 
-            # detections = self.transform.postprocess(result, samples.image_sizes, original_image_sizes)
-            detections = result
+            if torchvision._is_tracing():
+                im_shape = _get_shape_onnx(samples.tensors)
+            else:
+                im_shape = torch.tensor(samples.tensors.shape[-2:])
+
+            detections = self.transform.postprocess(result, im_shape, original_image_sizes)
 
         if torch.jit.is_scripting():
             if not self._has_warned:

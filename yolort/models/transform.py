@@ -129,8 +129,8 @@ class YOLOTransform(nn.Module):
             if targets is not None and target_index is not None:
                 targets[i] = target_index
 
-        images = self.batch_images(images)
         image_sizes = [img.shape[-2:] for img in images]
+        images = self.batch_images(images)
         image_sizes_list: List[Tuple[int, int]] = []
         for image_size in image_sizes:
             assert len(image_size) == 2
@@ -257,13 +257,13 @@ class YOLOTransform(nn.Module):
     def postprocess(
         self,
         result: List[Dict[str, Tensor]],
-        image_shapes: List[Tuple[int, int]],
+        image_shapes: Tensor,
         original_image_sizes: List[Tuple[int, int]],
     ) -> List[Dict[str, Tensor]]:
 
-        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
+        for i, (pred, o_im_s) in enumerate(zip(result, original_image_sizes)):
             boxes = pred["boxes"]
-            boxes = scale_coords(boxes, im_s, o_im_s)
+            boxes = scale_coords(boxes, image_shapes, o_im_s)
             result[i]["boxes"] = boxes
 
         return result
@@ -308,14 +308,11 @@ def _resize_image_and_masks(
     return image, target
 
 
-def scale_coords(boxes: Tensor, new_size: Tuple[int, int], original_size: Tuple[int, int]) -> Tensor:
+def scale_coords(boxes: Tensor, new_size: Tensor, original_size: Tuple[int, int]) -> Tensor:
     """
     Rescale boxes (xyxy) from new_size to original_size
     """
-    new_size = torch.tensor(new_size, dtype=torch.float32, device=boxes.device)
-    original_size = torch.tensor(original_size, dtype=torch.float32, device=boxes.device)
     gain = torch.min(new_size[0] / original_size[0], new_size[1] / original_size[1])
-    # wh padding
     pad = (new_size[1] - original_size[1] * gain) / 2, (new_size[0] - original_size[0] * gain) / 2
     xmin, ymin, xmax, ymax = boxes.unbind(1)
 
