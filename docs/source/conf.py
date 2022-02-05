@@ -55,7 +55,7 @@ exclude_patterns = []
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 html_favicon = "_static/favicon.svg"
-html_logo = "_static/yolort_logo.png"
+html_logo = "_static/yolort_logo_icon.png"
 
 mathjax_path = "mathjax/tex-chtml.js"
 
