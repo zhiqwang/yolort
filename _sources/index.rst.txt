@@ -81,6 +81,7 @@ And we support loading the trained weights from YOLOv5:
    :caption: Tutorials
 
    notebooks/inference-pytorch-export-libtorch
+   notebooks/comparison-between-yolort-vs-yolov5
    notebooks/how-to-align-with-ultralytics-yolov5
    notebooks/anchor-label-assignment-visualization
    notebooks/model-graph-visualization

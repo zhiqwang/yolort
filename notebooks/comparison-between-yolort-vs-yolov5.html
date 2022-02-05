@@ -47,7 +47,7 @@
   
   
   
-    <title>How to align with ultralytics yolov5 &#8212; yolort  documentation</title>
+    <title>What is the difference between yolort and yolov5 &#8212; yolort  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -59,8 +59,8 @@
     <link rel="shortcut icon" href="../_static/favicon.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Visualize the anchor-target assignment" href="anchor-label-assignment-visualization.html" />
-    <link rel="prev" title="What is the difference between yolort and yolov5" href="comparison-between-yolort-vs-yolov5.html" />
+    <link rel="next" title="How to align with ultralytics yolov5" href="how-to-align-with-ultralytics-yolov5.html" />
+    <link rel="prev" title="Intuition for yolort" href="inference-pytorch-export-libtorch.html" />
   
    
 
@@ -79,7 +79,7 @@
   <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
   <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
   <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-  <a href="#notebooks/how-to-align-with-ultralytics-yolov5" tabindex="1" class="md-skip"> Skip to content </a>
+  <a href="#notebooks/comparison-between-yolort-vs-yolov5" tabindex="1" class="md-skip"> Skip to content </a>
   <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
     <div class="md-flex navheader">
@@ -98,7 +98,7 @@
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           <span class="md-header-nav__topic">YOLOv5 Runtime Stack</span>
-          <span class="md-header-nav__topic"> How to align with ultralytics yolov5 </span>
+          <span class="md-header-nav__topic"> What is the difference between yolort and yolov5 </span>
         </div>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -212,38 +212,36 @@
     <li class="md-nav__item">
     
     
-      <a href="comparison-between-yolort-vs-yolov5.html" class="md-nav__link">What is the difference between yolort and yolov5</a>
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <label class="md-nav__link md-nav__link--active" for="__toc"> What is the difference between yolort and yolov5 </label>
+    
+      <a href="#" class="md-nav__link md-nav__link--active">What is the difference between yolort and yolov5</a>
+      
+        
+<nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
+  <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#notebooks-comparison-between-yolort-vs-yolov5--page-root" class="md-nav__link">What is the difference between yolort and yolov5</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#Prepare-environment,-image-and-model-weights-to-test" class="md-nav__link">Prepare environment, image and model weights to test</a>
+        </li>
+        <li class="md-nav__item"><a href="#Load-model-as-ultralytics-and-inference" class="md-nav__link">Load model as ultralytics and inference</a>
+        </li>
+        <li class="md-nav__item"><a href="#Use-yolort’s-approach-to-inferencing" class="md-nav__link">Use yolort’s approach to inferencing</a>
+        </li>
+        <li class="md-nav__item"><a href="#Verify-the-detection-results-between-yolort-and-ultralytics" class="md-nav__link">Verify the detection results between yolort and ultralytics</a>
+        </li></ul>
+            </nav>
+        </li>
+  </ul>
+</nav>
       
     
     </li>
     <li class="md-nav__item">
     
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    <label class="md-nav__link md-nav__link--active" for="__toc"> How to align with ultralytics yolov5 </label>
-    
-      <a href="#" class="md-nav__link md-nav__link--active">How to align with ultralytics yolov5</a>
-      
-        
-<nav class="md-nav md-nav--secondary">
-    <label class="md-nav__title" for="__toc">Contents</label>
-  <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#notebooks-how-to-align-with-ultralytics-yolov5--page-root" class="md-nav__link">How to align with ultralytics yolov5</a><nav class="md-nav">
-              <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#Prepare-image-and-model-weights-to-test" class="md-nav__link">Prepare image and model weights to test</a>
-        </li>
-        <li class="md-nav__item"><a href="#Load-model-as-ultralytics-and-inference" class="md-nav__link">Load model as ultralytics and inference</a>
-        </li>
-        <li class="md-nav__item"><a href="#Updating-model-weights-from-ultralytics-to-yolort-and-inference" class="md-nav__link">Updating model weights from ultralytics to yolort and inference</a>
-        </li>
-        <li class="md-nav__item"><a href="#Verify-the-detection-results-between-yolort-and-ultralytics" class="md-nav__link">Verify the detection results between yolort and ultralytics</a>
-        </li>
-        <li class="md-nav__item"><a href="#Detection-output-visualisation" class="md-nav__link">Detection output visualisation</a>
-        </li></ul>
-            </nav>
-        </li>
-  </ul>
-</nav>
+      <a href="how-to-align-with-ultralytics-yolov5.html" class="md-nav__link">How to align with ultralytics yolov5</a>
       
     
     </li>
@@ -320,17 +318,15 @@
 <nav class="md-nav md-nav--secondary">
     <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#notebooks-how-to-align-with-ultralytics-yolov5--page-root" class="md-nav__link">How to align with ultralytics yolov5</a><nav class="md-nav">
+        <li class="md-nav__item"><a href="#notebooks-comparison-between-yolort-vs-yolov5--page-root" class="md-nav__link">What is the difference between yolort and yolov5</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#Prepare-image-and-model-weights-to-test" class="md-nav__link">Prepare image and model weights to test</a>
+        <li class="md-nav__item"><a href="#Prepare-environment,-image-and-model-weights-to-test" class="md-nav__link">Prepare environment, image and model weights to test</a>
         </li>
         <li class="md-nav__item"><a href="#Load-model-as-ultralytics-and-inference" class="md-nav__link">Load model as ultralytics and inference</a>
         </li>
-        <li class="md-nav__item"><a href="#Updating-model-weights-from-ultralytics-to-yolort-and-inference" class="md-nav__link">Updating model weights from ultralytics to yolort and inference</a>
+        <li class="md-nav__item"><a href="#Use-yolort’s-approach-to-inferencing" class="md-nav__link">Use yolort’s approach to inferencing</a>
         </li>
         <li class="md-nav__item"><a href="#Verify-the-detection-results-between-yolort-and-ultralytics" class="md-nav__link">Verify the detection results between yolort and ultralytics</a>
-        </li>
-        <li class="md-nav__item"><a href="#Detection-output-visualisation" class="md-nav__link">Detection output visualisation</a>
         </li></ul>
             </nav>
         </li>
@@ -596,15 +592,19 @@ div.rendered_html tbody tr:hover {
     .nboutput .prompt {
         display: none;
     }
-</style><section id="How-to-align-with-ultralytics-yolov5">
-<h1 id="notebooks-how-to-align-with-ultralytics-yolov5--page-root">How to align with ultralytics yolov5<a class="headerlink" href="#notebooks-how-to-align-with-ultralytics-yolov5--page-root" title="Permalink to this headline">¶</a></h1>
+</style><section id="What-is-the-difference-between-yolort-and-yolov5">
+<h1 id="notebooks-comparison-between-yolort-vs-yolov5--page-root">What is the difference between yolort and yolov5<a class="headerlink" href="#notebooks-comparison-between-yolort-vs-yolov5--page-root" title="Permalink to this headline">¶</a></h1>
+<p>Now <code class="docutils literal notranslate"><span class="pre">yolort</span></code> adopts the same model structure as the official <code class="docutils literal notranslate"><span class="pre">yolov5</span></code>. The main difference between yolort and YOLOv5 is the strategy in pre-processing and post-processing. The main reason we have adopted a different strategy from the official one is to enable the pre-processing and post-processing modules to be jit traceable and scriptable. From this we can gain an end-to-end Graph for inferencing on <code class="docutils literal notranslate"><span class="pre">LibTorch</span></code>, <code class="docutils literal notranslate"><span class="pre">ONNX</span> <span class="pre">Runtime</span></code> and <code class="docutils literal notranslate"><span class="pre">TVM</span></code>.</p>
+<p>For pre-processing, YOLOv5 uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Letterboxing_(filming)">letterboxing (padding)</a> resizing that maintains the aspect ratio. The error arises from the <code class="docutils literal notranslate"><span class="pre">interpolate</span></code> operator used in resizing. YOLOv5 uses the <a class="reference external" href="https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html#ga47a974309e9102f5f08231edc7e7529d">cv2.resize</a> operator on the input <code class="docutils literal notranslate"><span class="pre">uint8</span> <span class="pre">[0-255]</span></code> images, the operators in OpenCV are not traceable or scriptable, so we use
+<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.functional.interpolate.html#torch-nn-functional-interpolate">torch.nn.functional.interpolate</a> in yolort. Fortunately, the <code class="docutils literal notranslate"><span class="pre">interpolation</span></code> operator of PyTorch is aligned with that of OpenCV, however PyTorch’s <code class="docutils literal notranslate"><span class="pre">interpolate</span></code> <a class="reference external" href="https://github.com/pytorch/pytorch/issues/5580">only supports</a> the float data type now, we can only operate with images cast to float types, and therefore there will introduce some errors.</p>
+<p>YOLOv5 provides a very powerful function to do the post-processing, of which we implement only a non-agnostic version, but the accuracy here should be able to be consistent with the original version. See our <a class="reference external" href="https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html">doc</a> for more details.</p>
+<section id="Prepare-environment,-image-and-model-weights-to-test">
+<h2 id="Prepare-environment,-image-and-model-weights-to-test">Prepare environment, image and model weights to test<a class="headerlink" href="#Prepare-environment,-image-and-model-weights-to-test" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">cv2</span>
-
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"CUDA_DEVICE_ORDER"</span><span class="p">]</span><span class="o">=</span><span class="s2">"PCI_BUS_ID"</span>
@@ -618,60 +618,118 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.models.yolo</span> <span class="kn">import</span> <span class="n">YOLO</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">torchvision.io</span> <span class="kn">import</span> <span class="n">read_image</span>
+<span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
 <span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">cv2_imshow</span><span class="p">,</span> <span class="n">get_image_from_url</span><span class="p">,</span> <span class="n">read_image_to_tensor</span>
-<span class="kn">from</span> <span class="nn">yolort.utils.image_utils</span> <span class="kn">import</span> <span class="n">plot_one_box</span><span class="p">,</span> <span class="n">color_list</span>
+<span class="kn">from</span> <span class="nn">yolort.utils.image_utils</span> <span class="kn">import</span> <span class="n">color_list</span><span class="p">,</span> <span class="n">plot_one_box</span><span class="p">,</span> <span class="n">parse_single_image</span>
 <span class="kn">from</span> <span class="nn">yolort.v5</span> <span class="kn">import</span> <span class="n">load_yolov5_model</span><span class="p">,</span> <span class="n">letterbox</span><span class="p">,</span> <span class="n">non_max_suppression</span><span class="p">,</span> <span class="n">scale_coords</span><span class="p">,</span> <span class="n">attempt_download</span>
+<span class="kn">from</span> <span class="nn">yolort.v5.utils.downloads</span> <span class="kn">import</span> <span class="n">safe_download</span>
 </pre></div>
 </div>
 </div>
-<section id="Prepare-image-and-model-weights-to-test">
-<h2 id="Prepare-image-and-model-weights-to-test">Prepare image and model weights to test<a class="headerlink" href="#Prepare-image-and-model-weights-to-test" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">img_source</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg"</span>
-<span class="c1"># img_source = "https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jpg"</span>
-<span class="n">img_raw</span> <span class="o">=</span> <span class="n">get_image_from_url</span><span class="p">(</span><span class="n">img_source</span><span class="p">)</span>
-
-<span class="c1"># yolov5s6.pt is downloaded from 'https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt'</span>
-<span class="n">model_path</span> <span class="o">=</span> <span class="s1">'yolov5n6.pt'</span>
-<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">attempt_download</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">img_size</span> <span class="o">=</span> <span class="mi">640</span>
 <span class="n">stride</span> <span class="o">=</span> <span class="mi">64</span>
 <span class="n">score_thresh</span> <span class="o">=</span> <span class="mf">0.35</span>
 <span class="n">iou</span> <span class="o">=</span> <span class="mf">0.45</span>
+<span class="n">auto_rectangle</span> <span class="o">=</span> <span class="kc">True</span>
 </pre></div>
 </div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># img_source = "https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jpg"</span>
+<span class="n">img_source</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg"</span>
+<span class="n">img_path</span> <span class="o">=</span> <span class="s2">"bus.jpg"</span>
+<span class="n">safe_download</span><span class="p">(</span><span class="n">img_path</span><span class="p">,</span> <span class="n">img_source</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg to bus.jpg...
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "22752394269a4623a2349ad6ae440996", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Preprocess</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">letterbox</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">new_shape</span><span class="o">=</span><span class="p">(</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">read_image_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># yolov5n6.pt is downloaded from 'https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt'</span>
+<span class="n">model_path</span> <span class="o">=</span> <span class="s1">'yolov5n6.pt'</span>
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">attempt_download</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Load-model-as-ultralytics-and-inference">
 <h2 id="Load-model-as-ultralytics-and-inference">Load model as ultralytics and inference<a class="headerlink" href="#Load-model-as-ultralytics-and-inference" title="Permalink to this headline">¶</a></h2>
-<div class="nbinput docutils container">
+<p>YOLOv5 provides an input-robust model wrapper named <code class="docutils literal notranslate"><span class="pre">AutoShape</span></code> for passing cv2/np/PIL/torch inputs, which includes pre-processing, inference and post-processing (NMS). This wrapper is currently only valid for pytorch inference. To peel back the essence of what’s inside, we use a vanilla interface to call yolov5. We do the pre-processing part first.</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_yolov5</span> <span class="o">=</span> <span class="n">load_yolov5_model</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">autoshape</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Preprocess</span>
+<span class="n">img_raw</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
+
+<span class="n">image</span> <span class="o">=</span> <span class="n">letterbox</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">new_shape</span><span class="o">=</span><span class="p">(</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">read_image_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">vis</span> <span class="o">=</span> <span class="n">parse_single_image</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<p>Let’s visualize the letterboxed image by the way.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cv2_imshow</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span> <span class="n">imshow_scale</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">convert_bgr_to_rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_comparison-between-yolort-vs-yolov5_10_0.png" src="../_images/notebooks_comparison-between-yolort-vs-yolov5_10_0.png"/>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_yolov5</span> <span class="o">=</span> <span class="n">load_yolov5_model</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">autoshape</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">model_yolov5</span> <span class="o">=</span> <span class="n">model_yolov5</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 <span class="n">model_yolov5</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">score_thresh</span>  <span class="c1"># confidence threshold (0-1)</span>
 <span class="n">model_yolov5</span><span class="o">.</span><span class="n">iou</span> <span class="o">=</span> <span class="n">iou</span>  <span class="c1"># NMS IoU threshold (0-1)</span>
@@ -727,47 +785,86 @@ Model Summary: 355 layers, 3246940 parameters, 3246940 gradients, 4.6 GFLOPs
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-    <span class="n">ultralytics_dets</span> <span class="o">=</span> <span class="n">model_yolov5</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">ultralytics_dets</span> <span class="o">=</span> <span class="n">non_max_suppression</span><span class="p">(</span><span class="n">ultralytics_dets</span><span class="p">,</span> <span class="n">score_thresh</span><span class="p">,</span> <span class="n">iou</span><span class="p">,</span> <span class="n">agnostic</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dets_yolov5</span> <span class="o">=</span> <span class="n">model_yolov5</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dets_yolov5</span> <span class="o">=</span> <span class="n">non_max_suppression</span><span class="p">(</span><span class="n">dets_yolov5</span><span class="p">,</span> <span class="n">score_thresh</span><span class="p">,</span> <span class="n">iou</span><span class="p">,</span> <span class="n">agnostic</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>Then restore the coordinates to the original scale of the image.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">boxes_yolov5</span> <span class="o">=</span> <span class="n">scale_coords</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">dets_yolov5</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="n">img_raw</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">labels_yolov5</span> <span class="o">=</span> <span class="n">dets_yolov5</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+<span class="n">scores_yolov5</span> <span class="o">=</span> <span class="n">dets_yolov5</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>Now we can visualize the inference results after completing the post-processing.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get label names</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">label_path</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.names"</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label_path</span><span class="p">)</span>
+<span class="n">names</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+
+<span class="n">LABELS</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">):</span>
+    <span class="n">LABELS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+<span class="n">COLORS</span> <span class="o">=</span> <span class="n">color_list</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">boxes_yolov5</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">labels_yolov5</span><span class="o">.</span><span class="n">tolist</span><span class="p">()):</span>
+    <span class="n">img_raw</span> <span class="o">=</span> <span class="n">plot_one_box</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">img_raw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="n">label</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">COLORS</span><span class="p">)],</span> <span class="n">label</span><span class="o">=</span><span class="n">LABELS</span><span class="p">[</span><span class="n">label</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ultralytics_dets</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cv2_imshow</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">imshow_scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-tensor([[ 35.26947, 133.40977, 496.86469, 439.13141,   0.88235,   5.00000],
-        [ 45.87330, 229.64430, 159.15872, 531.91492,   0.84495,   0.00000],
-        [145.77780, 228.77318, 220.91098, 514.98694,   0.72589,   0.00000],
-        [417.83066, 221.98871, 495.86893, 518.30176,   0.70359,   0.00000]], device='cuda:0')
-</pre></div></div>
+<img alt="../_images/notebooks_comparison-between-yolort-vs-yolov5_18_0.png" src="../_images/notebooks_comparison-between-yolort-vs-yolov5_18_0.png"/>
 </div>
+</div>
+<p>At that moment we have completed the whole inference process of yolov5.</p>
 </section>
-<section id="Updating-model-weights-from-ultralytics-to-yolort-and-inference">
-<h2 id="Updating-model-weights-from-ultralytics-to-yolort-and-inference">Updating model weights from ultralytics to yolort and inference<a class="headerlink" href="#Updating-model-weights-from-ultralytics-to-yolort-and-inference" title="Permalink to this headline">¶</a></h2>
+<section id="Use-yolort’s-approach-to-inferencing">
+<h2 id="Use-yolort’s-approach-to-inferencing">Use yolort’s approach to inferencing<a class="headerlink" href="#Use-yolort’s-approach-to-inferencing" title="Permalink to this headline">¶</a></h2>
+<p>yolort now supports loading models trained by yolov5. Here is also an end-to-end inference pipeline, and this pipeline supports both jit tracing and scripting modes. This model can be used to export ONNX and torchscript graph and to inference on ONNX Runtime, LibTorch and TVM VirtualMachine backends.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_yolort</span> <span class="o">=</span> <span class="n">YOLO</span><span class="o">.</span><span class="n">load_from_yolov5</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_yolort</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="o">.</span><span class="n">load_from_yolov5</span><span class="p">(</span>
     <span class="n">checkpoint_path</span><span class="p">,</span>
     <span class="n">score_thresh</span><span class="o">=</span><span class="n">score_thresh</span><span class="p">,</span>
     <span class="n">nms_thresh</span><span class="o">=</span><span class="n">iou</span><span class="p">,</span>
-    <span class="n">version</span><span class="o">=</span><span class="s2">"r6.0"</span><span class="p">,</span>
+    <span class="n">size_divisible</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+    <span class="n">auto_rectangle</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">model_yolort</span> <span class="o">=</span> <span class="n">model_yolort</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
@@ -820,20 +917,36 @@ Model Summary: 355 layers, 3246940 parameters, 3246940 gradients, 4.6 GFLOPs
 
 </pre></div></div>
 </div>
+<p>Its interface is also very easy to use.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-    <span class="n">yolort_dets</span> <span class="o">=</span> <span class="n">model_yolort</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="n">dets_yolort</span> <span class="o">=</span> <span class="n">model_yolort</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">boxes_yolort</span> <span class="o">=</span> <span class="n">dets_yolort</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'boxes'</span><span class="p">]</span>
+<span class="n">labels_yolort</span> <span class="o">=</span> <span class="n">dets_yolort</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'labels'</span><span class="p">]</span>
+<span class="n">scores_yolort</span> <span class="o">=</span> <span class="n">dets_yolort</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'scores'</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Verify-the-detection-results-between-yolort-and-ultralytics">
+<h2 id="Verify-the-detection-results-between-yolort-and-ultralytics">Verify the detection results between yolort and ultralytics<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-ultralytics" title="Permalink to this headline">¶</a></h2>
+<p>We print out the results of both inferencing.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection boxes with yolort:</span><span class="se">\n</span><span class="si">{</span><span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'boxes'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection boxes with yolov5:</span><span class="se">\n</span><span class="si">{</span><span class="n">boxes_yolov5</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection boxes with yolort:</span><span class="se">\n</span><span class="si">{</span><span class="n">boxes_yolort</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -842,18 +955,25 @@ Model Summary: 355 layers, 3246940 parameters, 3246940 gradients, 4.6 GFLOPs
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
+Detection boxes with yolov5:
+tensor([[ 32.51723, 225.12900, 810.00000, 741.03424],
+        [ 50.41119, 387.52475, 241.58034, 897.60645],
+        [219.00005, 386.05475, 345.78729, 869.04047],
+        [678.08923, 374.60596, 809.77881, 874.63422]], device='cuda:0')
+
 Detection boxes with yolort:
-tensor([[ 35.26947, 133.40977, 496.86469, 439.13141],
-        [ 45.87330, 229.64430, 159.15872, 531.91492],
-        [145.77780, 228.77318, 220.91098, 514.98694],
-        [417.83066, 221.98871, 495.86893, 518.30176]], device='cuda:0')
+tensor([[ 32.27846, 225.15259, 811.47729, 740.91077],
+        [ 50.42178, 387.48911, 241.54393, 897.61035],
+        [219.03334, 386.14346, 345.77686, 869.02582],
+        [678.05023, 374.65341, 809.80341, 874.80621]], device='cuda:0')
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection scores with yolort:</span><span class="se">\n</span><span class="si">{</span><span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'scores'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection scores with yolov5:</span><span class="se">\n</span><span class="si">{</span><span class="n">scores_yolov5</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection scores with yolort:</span><span class="se">\n</span><span class="si">{</span><span class="n">scores_yolort</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -862,15 +982,19 @@ tensor([[ 35.26947, 133.40977, 496.86469, 439.13141],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Detection scores with yolort:
+Detection scores with yolov5:
 tensor([0.88235, 0.84495, 0.72589, 0.70359], device='cuda:0')
+
+Detection scores with yolort:
+tensor([0.88238, 0.84486, 0.72629, 0.70077], device='cuda:0')
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection labels with yolort:</span><span class="se">\n</span><span class="si">{</span><span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'labels'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection labels with yolort:</span><span class="se">\n</span><span class="si">{</span><span class="n">labels_yolov5</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Detection labels with yolort:</span><span class="se">\n</span><span class="si">{</span><span class="n">labels_yolort</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -881,21 +1005,21 @@ tensor([0.88235, 0.84495, 0.72589, 0.70359], device='cuda:0')
 <div class="highlight"><pre>
 Detection labels with yolort:
 tensor([5, 0, 0, 0], device='cuda:0')
+
+Detection labels with yolort:
+tensor([5, 0, 0, 0], device='cuda:0')
 </pre></div></div>
 </div>
-</section>
-<section id="Verify-the-detection-results-between-yolort-and-ultralytics">
-<h2 id="Verify-the-detection-results-between-yolort-and-ultralytics">Verify the detection results between yolort and ultralytics<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-ultralytics" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Testing boxes</span>
-<span class="n">torch</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'boxes'</span><span class="p">],</span> <span class="n">ultralytics_dets</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">boxes_yolort</span><span class="p">,</span> <span class="n">boxes_yolov5</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
 <span class="c1"># Testing scores</span>
-<span class="n">torch</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'scores'</span><span class="p">],</span> <span class="n">ultralytics_dets</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">scores_yolort</span><span class="p">,</span> <span class="n">scores_yolov5</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
 <span class="c1"># Testing labels</span>
-<span class="n">torch</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'labels'</span><span class="p">],</span> <span class="n">ultralytics_dets</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">labels_yolort</span><span class="p">,</span> <span class="n">labels_yolov5</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Exported model has been tested, and the result looks good!"</span><span class="p">)</span>
 </pre></div>
@@ -909,67 +1033,11 @@ tensor([5, 0, 0, 0], device='cuda:0')
 Exported model has been tested, and the result looks good!
 </pre></div></div>
 </div>
-</section>
-<section id="Detection-output-visualisation">
-<h2 id="Detection-output-visualisation">Detection output visualisation<a class="headerlink" href="#Detection-output-visualisation" title="Permalink to this headline">¶</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get label names</span>
-<span class="kn">import</span> <span class="nn">requests</span>
-
-<span class="c1"># label_path = "https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/main/notebooks/assets/coco.names"</span>
-<span class="n">label_path</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.names"</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label_path</span><span class="p">)</span>
-<span class="n">names</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
-
-<span class="n">LABELS</span> <span class="o">=</span> <span class="p">[]</span>
-
-<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">):</span>
-    <span class="n">LABELS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-
-<span class="n">COLORS</span> <span class="o">=</span> <span class="n">color_list</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<p>The labels can also be obtained by</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.utils.image_utils</span> <span class="kn">import</span> <span class="n">load_names</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="n">load_names</span><span class="p">(</span><span class="s1">'./assets/coco.names'</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Hah, that’s the trick to rescale the box correctly</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">boxes</span> <span class="o">=</span> <span class="n">scale_coords</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'boxes'</span><span class="p">],</span> <span class="n">img_raw</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="n">yolort_dets</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'labels'</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">()):</span>
-    <span class="n">img_raw</span> <span class="o">=</span> <span class="n">plot_one_box</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">img_raw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="n">label</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">COLORS</span><span class="p">)],</span> <span class="n">label</span><span class="o">=</span><span class="n">LABELS</span><span class="p">[</span><span class="n">label</span><span class="p">])</span>
-
-<span class="n">cv2_imshow</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">imshow_scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_how-to-align-with-ultralytics-yolov5_24_0.png" src="../_images/notebooks_how-to-align-with-ultralytics-yolov5_24_0.png"/>
-</div>
-</div>
+<p>As you can see from this result, there are still some differences in the boxes, but the scores and labels are relatively accurate.</p>
 </section>
 </section>
 <p>View this document as a notebook:
-<a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/how-to-align-with-ultralytics-yolov5.ipynb">https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/how-to-align-with-ultralytics-yolov5.ipynb</a></p>
+<a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/comparison-between-yolort-vs-yolov5.ipynb">https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/comparison-between-yolort-vs-yolov5.ipynb</a></p>
 <hr class="docutils"/>
 
 
@@ -982,7 +1050,7 @@ Exported model has been tested, and the result looks good!
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
           
-            <a href="comparison-between-yolort-vs-yolov5.html" title="What is the difference between yolort and yolov5"
+            <a href="inference-pytorch-export-libtorch.html" title="Intuition for yolort"
                class="md-flex md-footer-nav__link md-footer-nav__link--prev"
                rel="prev">
               <div class="md-flex__cell md-flex__cell--shrink">
@@ -991,17 +1059,17 @@ Exported model has been tested, and the result looks good!
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> What is the difference between yolort and yolov5 </span>
+                      class="md-footer-nav__direction"> Previous </span> Intuition for yolort </span>
               </div>
             </a>
           
           
-            <a href="anchor-label-assignment-visualization.html" title="Visualize the anchor-target assignment"
+            <a href="how-to-align-with-ultralytics-yolov5.html" title="How to align with ultralytics yolov5"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> Visualize the anchor-target assignment </span>
+                class="md-footer-nav__direction"> Next </span> How to align with ultralytics yolov5 </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
