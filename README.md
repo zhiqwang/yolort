@@ -8,7 +8,7 @@ ______________________________________________________________________
 
 [Documentation](https://zhiqwang.com/yolov5-rt-stack/) •
 [Installation Instructions](https://zhiqwang.com/yolov5-rt-stack/installation.html) •
-[Deployment](#rocket-deployment) •
+[Deployment](#-deployment) •
 [Contributing](.github/CONTRIBUTING.md) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
 
@@ -86,7 +86,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
   pip install -U 'git+https://github.com/ppwwyyxx/cocoapi.git#subdirectory=PythonAPI'
   ```
 
-- To read a source of image(s) and detect its objects :fire:
+- To read a source of image(s) and detect its objects 🔥
 
   ```python
   from yolort.models import yolov5s
@@ -125,7 +125,7 @@ img_path = "test/assets/bus.jpg"
 predictions = model.predict(img_path)
 ```
 
-## :rocket: Deployment
+## 🚀 Deployment
 
 ### Inference on LibTorch backend
 
