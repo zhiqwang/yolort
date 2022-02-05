@@ -22,7 +22,7 @@ ______________________________________________________________________
 [![Python Version](https://img.shields.io/pypi/pyversions/yolort?color=dfd)](https://pypi.org/project/yolort/)
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml)
-[![Build & deploy docs](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml)
+[![Build & deploy docs](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml/badge.svg)](https://zhiqwang.com/yolov5-rt-stack/)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/main.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/main)
 [![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/main/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
 
@@ -165,4 +165,6 @@ If you use yolort in your publication, please cite it by using the following Bib
 
 ## 👋 Contributing
 
-See the [CONTRIBUTING](.github/CONTRIBUTING.md) file for how to help out. BTW, leave a :star2: if you liked it, and this is the easiest way to support us :)
+We love your input! We want to make contributing to yolort as easy and transparent as possible. Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started. Thank you to all our contributors!
+
+[![Contributors](https://opencollective.com/yolort/contributors.svg?width=590)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
