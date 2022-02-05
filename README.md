@@ -165,6 +165,6 @@ If you use yolort in your publication, please cite it by using the following Bib
 
 ## 👋 Contributing
 
-We love your input! We want to make contributing to yolort as easy and transparent as possible. Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started. Thank you to all our contributors!
+We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors!
 
-[![Contributors](https://opencollective.com/yolort/contributors.svg?width=590)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
+[![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
