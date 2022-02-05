@@ -89,13 +89,15 @@ def _resize_image_and_masks(
 class YOLOTransform(nn.Module):
     """
     Performs input / target transformation before feeding the data to a YOLO model. It plays
-    the same role of `LetterBox`, and YOLOv5 adopt (0, 1, RGB) as the default mean, std and
-    channel mode. We do not normalize below, the inputs need to be scaled down to float [0-1]
-    from int[0-255] and transpose the image channel to RGB before being fed to this transformation.
+    the same role of `LetterBox` in YOLOv5. YOLOv5 use (0, 1, RGB) as the default mean, std and
+    color channel mode. We do not normalize below, the inputs need to be scaled down to float
+    in [0-1] from uint8 in [0-255] and transpose the color channel to RGB before being fed to
+    this transformation. We use the `torch.nn.functional.interpolate` and `torch.nn.functional.pad`
+    ops to implement the `LetterBox` to make it jit traceable and scriptable.
 
     The transformations it perform are:
-        - input / target resizing to get a rectangle within shape `(height, width)` that
-            can be divided by `size_divisible`
+        - resizing input / target that maintains the aspect ratio within shape `(height, width)`
+        - letterboxing padding the input / target that can be divided by `size_divisible`
 
     It returns a `NestedTensor` for the inputs, and a List[Dict[Tensor]] for the targets.
 
