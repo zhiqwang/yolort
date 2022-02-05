@@ -21,8 +21,7 @@ __all__ = ["YOLOv5"]
 
 class YOLOv5(LightningModule):
     """
-    Wrapping the pre-processing into YOLO models, we use the `torch.nn.functional.interpolate`
-    and `torch.nn.functional.pad` ops to implement the letterbox to make it scriptable.
+    Wrapping the pre-processing (`LetterBox`) into the YOLO models.
 
     Args:
         lr (float): The initial learning rate
