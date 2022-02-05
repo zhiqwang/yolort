@@ -34,7 +34,7 @@ ______________________________________________________________________
 
 ## 🤗 Introduction
 
-**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNXRuntime`, `TVM` and so on.
+**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNX Runtime`, `TVM` , `TensorRT`and so on.
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
@@ -48,10 +48,10 @@ ______________________________________________________________________
 
 - *Dec. 27, 2021*. Add `TensorRT` C++ interface example. Thanks to [Shiquan](https://github.com/ShiquanYu).
 - *Dec. 25, 2021*. Support exporting to `TensorRT`, and inferencing with `TensorRT` Python interface.
-- *Sep. 24, 2021*. Add `ONNXRuntime` C++ interface example. Thanks to [Fidan](https://github.com/itsnine).
+- *Sep. 24, 2021*. Add `ONNX Runtime` C++ interface example. Thanks to [Fidan](https://github.com/itsnine).
 - *Feb. 5, 2021*. Add `TVM` compile and inference notebooks.
 - *Nov. 21, 2020*. Add graph visualization tools.
-- *Nov. 17, 2020*. Support exporting to `ONNX`, and inferencing with `ONNXRuntime` Python interface.
+- *Nov. 17, 2020*. Support exporting to `ONNX`, and inferencing with `ONNX Runtime` Python interface.
 - *Nov. 16, 2020*. Refactor YOLO modules and support *dynamic shape/batch* inference.
 - *Nov. 4, 2020*. Add `LibTorch` C++ inference example.
 - *Oct. 8, 2020*. Support exporting to `TorchScript` model.
@@ -133,9 +133,9 @@ predictions = model.predict(img_path)
 
 We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
 
-### Inference on ONNXRuntime backend
+### Inference on ONNX Runtime backend
 
-On the `ONNXRuntime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNXRuntime`.
+On the `ONNX Runtime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNX Runtime`.
 
 ### Inference on TensorRT backend
 
