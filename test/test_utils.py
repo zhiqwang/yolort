@@ -109,7 +109,7 @@ def test_read_image_to_tensor():
 
 
 def test_get_image_from_url():
-    url = "https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/master/test/assets/zidane.jpg"
+    url = "https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jpg"
     img = get_image_from_url(url)
     assert isinstance(img, np.ndarray)
     assert tuple(img.shape) == (720, 1280, 3)
