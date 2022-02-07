@@ -270,7 +270,7 @@ class YOLOTransform(nn.Module):
             return self._onnx_batch_images(images)
 
         if self.fixed_shape:
-            max_size = list(self.new_shape)
+            max_size = [3, *(self.new_shape)]
         else:
             stride = float(self.size_divisible)
             max_size = self.max_by_axis([list(img.shape) for img in images])
