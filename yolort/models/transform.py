@@ -105,10 +105,10 @@ class YOLOTransform(nn.Module):
         height (int) : expected height of the image to be rescaled
         width (int) : expected width of the image to be rescaled
         size_divisible (int): stride of the models. Default: 32
-        auto_rectangle (bool): The padding mode. If set to `True`, the image will be
-            padded to a minimum rectangle within shape `(height, width)` and each of its
-            edges is divisible by `size_divisible`. If set to `False`, the image will
-            be padded to shape `(height, width)`. Default: True
+        fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will be
+            padded to fixed shape `(height, width)`. If set to `False`, the image will be padded
+            to a minimum rectangle within shape `(height, width)` and each of its edges is divisible
+            by `size_divisible`. Default: False
         fill_color (int): fill value for padding. Default: 114
     """
 
@@ -118,14 +118,14 @@ class YOLOTransform(nn.Module):
         width: int,
         *,
         size_divisible: int = 32,
-        auto_rectangle: bool = True,
+        fixed_shape: bool = False,
         fill_color: int = 114,
     ) -> None:
 
         super().__init__()
         self.new_shape = (height, width)
         self.size_divisible = size_divisible
-        self.auto_rectangle = auto_rectangle
+        self.fixed_shape = fixed_shape
         self.fill_color = fill_color / 255
 
     def forward(
@@ -218,13 +218,16 @@ class YOLOTransform(nn.Module):
     # batch_images() that is supported by ONNX tracing.
     @torch.jit.unused
     def _onnx_batch_images(self, images: List[Tensor]) -> Tensor:
-        max_size = []
-        for i in range(1, images[0].dim()):
-            max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32))
-            max_size.append(max_size_i.to(torch.int32))
-        stride = self.size_divisible
-        max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int32)
-        max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int32)
+        if self.fixed_shape:
+            max_size = list(self.new_shape)
+        else:
+            max_size = []
+            for i in range(1, images[0].dim()):
+                max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32))
+                max_size.append(max_size_i.to(torch.int32))
+            stride = self.size_divisible
+            max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int32)
+            max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int32)
 
         # work around for
         # batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
@@ -266,11 +269,14 @@ class YOLOTransform(nn.Module):
             # call _onnx_batch_images() instead
             return self._onnx_batch_images(images)
 
-        stride = float(self.size_divisible)
-        max_size = self.max_by_axis([list(img.shape) for img in images])
-        max_size = list(max_size)
-        max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
-        max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
+        if self.fixed_shape:
+            max_size = [3, *(self.new_shape)]
+        else:
+            stride = float(self.size_divisible)
+            max_size = self.max_by_axis([list(img.shape) for img in images])
+            max_size = list(max_size)
+            max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
+            max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
 
         batch_shape = [len(images)] + max_size
         batched_imgs = images[0].new_full(batch_shape, self.fill_color)
