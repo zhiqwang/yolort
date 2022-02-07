@@ -119,34 +119,35 @@ class YOLOTransform(nn.Module):
     ops to implement the `LetterBox` to make it jit traceable and scriptable.
 
     The transformations it perform are:
-        - resizing input / target that maintains the aspect ratio within shape `(height, width)`
+        - resizing input / target that maintains the aspect ratio to match `min_size / max_size`
         - letterboxing padding the input / target that can be divided by `size_divisible`
 
     It returns a `NestedTensor` for the inputs, and a List[Dict[Tensor]] for the targets.
 
     Args:
-        height (int) : expected height of the image to be rescaled
-        width (int) : expected width of the image to be rescaled
+        min_size (int) : minimum size of the image to be rescaled.
+        max_size (int) : maximum size of the image to be rescaled.
         size_divisible (int): stride of the models. Default: 32
-        fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will be
-            padded to fixed shape `(height, width)`. If set to `False`, the image will be padded
-            to a minimum rectangle within shape `(height, width)` and each of its edges is divisible
-            by `size_divisible`. Default: False
+        fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
+            the image will be padded to shape `fixed_shape` if specified. Instead the image will
+            be padded to a minimum rectangle to match `min_size / max_size` and each of its edges
+            is divisible by `size_divisible` if it is not specified. Default: None
         fill_color (int): fill value for padding. Default: 114
     """
 
     def __init__(
         self,
-        height: int,
-        width: int,
+        min_size: int,
+        max_size: int,
         *,
         size_divisible: int = 32,
-        fixed_shape: bool = False,
+        fixed_shape: Optional[Tuple[int, int]] = None,
         fill_color: int = 114,
     ) -> None:
 
         super().__init__()
-        self.new_shape = (height, width)
+        self.min_size = min_size
+        self.max_size = max_size
         self.size_divisible = size_divisible
         self.fixed_shape = fixed_shape
         self.fill_color = fill_color / 255
@@ -226,8 +227,8 @@ class YOLOTransform(nn.Module):
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
         h, w = image.shape[-2:]
-        min_size = float(self.new_shape[0])
-        max_size = float(self.new_shape[1])
+        min_size = float(self.min_size)
+        max_size = float(self.max_size)
         image, target = _resize_image_and_masks(image, min_size, max_size, target)
 
         if target is None:
@@ -243,8 +244,8 @@ class YOLOTransform(nn.Module):
     # batch_images() that is supported by ONNX tracing.
     @torch.jit.unused
     def _onnx_batch_images(self, images: List[Tensor]) -> Tensor:
-        if self.fixed_shape:
-            max_size = torch.tensor(self.new_shape)
+        if self.fixed_shape is not None:
+            max_size = torch.tensor(self.fixed_shape)
         else:
             max_size = []
             for i in range(1, images[0].dim()):
@@ -294,8 +295,8 @@ class YOLOTransform(nn.Module):
             # call _onnx_batch_images() instead
             return self._onnx_batch_images(images)
 
-        if self.fixed_shape:
-            max_size = [3, *(self.new_shape)]
+        if self.fixed_shape is not None:
+            max_size = [3, *(self.fixed_shape)]
         else:
             stride = float(self.size_divisible)
             max_size = self.max_by_axis([list(img.shape) for img in images])
@@ -336,7 +337,7 @@ class YOLOTransform(nn.Module):
     def __repr__(self):
         format_string = self.__class__.__name__ + "("
         _indent = "\n    "
-        format_string += f"{_indent}Resize(height={self.new_shape[0]}, width={self.new_shape[1]})"
+        format_string += f"{_indent}Resize(min_size={self.min_size}, max_size={self.max_size})"
         format_string += "\n)"
         return format_string
 

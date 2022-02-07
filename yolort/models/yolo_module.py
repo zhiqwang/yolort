@@ -34,10 +34,10 @@ class YOLOv5(LightningModule):
         size: (Tuple[int, int]): the height and width to which images will be rescaled
             before feeding them to the backbone. Default: (640, 640).
         size_divisible (int): stride of the models. Default: 32
-        fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will be
-            padded to fixed shape `(height, width)`. If set to `False`, the image will be padded
-            to a minimum rectangle within shape `(height, width)` and each of its edges is divisible
-            by `size_divisible`. Default: False
+        fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
+            the image will be padded to shape `fixed_shape` if specified. Instead the image will
+            be padded to a minimum rectangle to match `min_size / max_size` and each of its edges
+            is divisible by `size_divisible` if it is not specified. Default: None
         fill_color (int): fill value for padding. Default: 114
         annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file
             Default: None.
@@ -53,7 +53,7 @@ class YOLOv5(LightningModule):
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
-        fixed_shape: bool = False,
+        fixed_shape: Optional[Tuple[int, int]] = None,
         fill_color: int = 114,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
@@ -317,7 +317,7 @@ class YOLOv5(LightningModule):
         lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
-        fixed_shape: bool = False,
+        fixed_shape: Optional[Tuple[int, int]] = None,
         fill_color: int = 114,
         **kwargs: Any,
     ):
@@ -330,10 +330,10 @@ class YOLOv5(LightningModule):
             size: (Tuple[int, int]): the height and width to which images will be rescaled
                 before feeding them to the backbone. Default: (640, 640).
             size_divisible (int): stride of the models. Default: 32
-            fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will
-                be padded to fixed shape `(height, width)`. If set to `False`, the image will be
-                padded to a minimum rectangle within shape `(height, width)` and each of its edges
-                is divisible by `size_divisible`. Default: False
+            fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
+                the image will be padded to shape `fixed_shape` if specified. Instead the image will
+                be padded to a minimum rectangle to match `min_size / max_size` and each of its edges
+                is divisible by `size_divisible` if it is not specified. Default: None
             fill_color (int): fill value for padding. Default: 114
         """
         model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
