@@ -317,7 +317,7 @@ class YOLOv5(LightningModule):
         lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
-        fixed_shape: bool = True,
+        fixed_shape: bool = False,
         fill_color: int = 114,
         **kwargs: Any,
     ):
@@ -330,9 +330,10 @@ class YOLOv5(LightningModule):
             size: (Tuple[int, int]): the height and width to which images will be rescaled
                 before feeding them to the backbone. Default: (640, 640).
             size_divisible (int): stride of the models. Default: 32
-            fixed_shape (bool): The padding mode. If set to `True`, the image will be padded
-                to a minimum rectangle. If set to `False`, the image will be padded to a square.
-                Default: True
+            fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will
+                be padded to fixed shape `(height, width)`. If set to `False`, the image will be
+                padded to a minimum rectangle within shape `(height, width)` and each of its edges
+                is divisible by `size_divisible`. Default: False
             fill_color (int): fill value for padding. Default: 114
         """
         model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
