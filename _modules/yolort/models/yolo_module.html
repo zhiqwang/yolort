@@ -338,9 +338,10 @@
 <span class="sd">        size: (Tuple[int, int]): the height and width to which images will be rescaled</span>
 <span class="sd">            before feeding them to the backbone. Default: (640, 640).</span>
 <span class="sd">        size_divisible (int): stride of the models. Default: 32</span>
-<span class="sd">        auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded</span>
-<span class="sd">            to a minimum rectangle. If set to `False`, the image will be padded to a square.</span>
-<span class="sd">            Default: True</span>
+<span class="sd">        fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will be</span>
+<span class="sd">            padded to fixed shape `(height, width)`. If set to `False`, the image will be padded</span>
+<span class="sd">            to a minimum rectangle within shape `(height, width)` and each of its edges is divisible</span>
+<span class="sd">            by `size_divisible`. Default: False</span>
 <span class="sd">        fill_color (int): fill value for padding. Default: 114</span>
 <span class="sd">        annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file</span>
 <span class="sd">            Default: None.</span>
@@ -356,7 +357,7 @@
         <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span>
         <span class="n">size_divisible</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
-        <span class="n">auto_rectangle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">fixed_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">fill_color</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">114</span><span class="p">,</span>
         <span class="n">annotation_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PosixPath</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -381,7 +382,7 @@
             <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
             <span class="n">size_divisible</span><span class="o">=</span><span class="n">size_divisible</span><span class="p">,</span>
-            <span class="n">auto_rectangle</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">,</span>
+            <span class="n">fixed_shape</span><span class="o">=</span><span class="n">fixed_shape</span><span class="p">,</span>
             <span class="n">fill_color</span><span class="o">=</span><span class="n">fill_color</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -620,7 +621,7 @@
         <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span>
         <span class="n">size_divisible</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
-        <span class="n">auto_rectangle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">fixed_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">fill_color</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">114</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">):</span>
@@ -633,9 +634,10 @@
 <span class="sd">            size: (Tuple[int, int]): the height and width to which images will be rescaled</span>
 <span class="sd">                before feeding them to the backbone. Default: (640, 640).</span>
 <span class="sd">            size_divisible (int): stride of the models. Default: 32</span>
-<span class="sd">            auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded</span>
-<span class="sd">                to a minimum rectangle. If set to `False`, the image will be padded to a square.</span>
-<span class="sd">                Default: True</span>
+<span class="sd">            fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will</span>
+<span class="sd">                be padded to fixed shape `(height, width)`. If set to `False`, the image will be</span>
+<span class="sd">                padded to a minimum rectangle within shape `(height, width)` and each of its edges</span>
+<span class="sd">                is divisible by `size_divisible`. Default: False</span>
 <span class="sd">            fill_color (int): fill value for padding. Default: 114</span>
 <span class="sd">        """</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">YOLO</span><span class="o">.</span><span class="n">load_from_yolov5</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -644,7 +646,7 @@
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
             <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
             <span class="n">size_divisible</span><span class="o">=</span><span class="n">size_divisible</span><span class="p">,</span>
-            <span class="n">auto_rectangle</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">,</span>
+            <span class="n">fixed_shape</span><span class="o">=</span><span class="n">fixed_shape</span><span class="p">,</span>
             <span class="n">fill_color</span><span class="o">=</span><span class="n">fill_color</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">yolov5</span></div></div>

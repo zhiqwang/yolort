@@ -619,9 +619,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">from</span> <span class="nn">torchvision.io</span> <span class="kn">import</span> <span class="n">read_image</span>
 <span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
-<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">cv2_imshow</span><span class="p">,</span> <span class="n">get_image_from_url</span><span class="p">,</span> <span class="n">read_image_to_tensor</span>
+<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">cv2_imshow</span><span class="p">,</span> <span class="n">read_image_to_tensor</span>
 <span class="kn">from</span> <span class="nn">yolort.utils.image_utils</span> <span class="kn">import</span> <span class="n">color_list</span><span class="p">,</span> <span class="n">plot_one_box</span><span class="p">,</span> <span class="n">parse_single_image</span>
 <span class="kn">from</span> <span class="nn">yolort.v5</span> <span class="kn">import</span> <span class="n">load_yolov5_model</span><span class="p">,</span> <span class="n">letterbox</span><span class="p">,</span> <span class="n">non_max_suppression</span><span class="p">,</span> <span class="n">scale_coords</span><span class="p">,</span> <span class="n">attempt_download</span>
 <span class="kn">from</span> <span class="nn">yolort.v5.utils.downloads</span> <span class="kn">import</span> <span class="n">safe_download</span>
@@ -636,7 +635,7 @@ div.rendered_html tbody tr:hover {
 <span class="n">stride</span> <span class="o">=</span> <span class="mi">64</span>
 <span class="n">score_thresh</span> <span class="o">=</span> <span class="mf">0.35</span>
 <span class="n">iou</span> <span class="o">=</span> <span class="mf">0.45</span>
-<span class="n">auto_rectangle</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">fixed_shape</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 </div>
 </div>
@@ -694,7 +693,12 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg t
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Preprocess</span>
 <span class="n">img_raw</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
 
-<span class="n">image</span> <span class="o">=</span> <span class="n">letterbox</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">new_shape</span><span class="o">=</span><span class="p">(</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">letterbox</span><span class="p">(</span>
+    <span class="n">img_raw</span><span class="p">,</span>
+    <span class="n">new_shape</span><span class="o">=</span><span class="p">(</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">),</span>
+    <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+    <span class="n">auto</span><span class="o">=</span><span class="ow">not</span> <span class="n">fixed_shape</span><span class="p">,</span>
+<span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">read_image_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
@@ -864,7 +868,7 @@ Model Summary: 355 layers, 3246940 parameters, 3246940 gradients, 4.6 GFLOPs
     <span class="n">score_thresh</span><span class="o">=</span><span class="n">score_thresh</span><span class="p">,</span>
     <span class="n">nms_thresh</span><span class="o">=</span><span class="n">iou</span><span class="p">,</span>
     <span class="n">size_divisible</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
-    <span class="n">auto_rectangle</span><span class="o">=</span><span class="n">auto_rectangle</span><span class="p">,</span>
+    <span class="n">fixed_shape</span><span class="o">=</span><span class="n">fixed_shape</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">model_yolort</span> <span class="o">=</span> <span class="n">model_yolort</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
