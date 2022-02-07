@@ -26,7 +26,7 @@ def test_yolo_transform():
 
 @pytest.mark.parametrize("img_h", [300, 500, 720, 800, 1080, 1280])
 @pytest.mark.parametrize("img_w", [300, 500, 720, 800, 1080, 1280])
-@pytest.mark.parametrize("fixed_shape", [False])
+@pytest.mark.parametrize("fixed_shape", [True, False])
 @pytest.mark.parametrize("stride", [32, 64])
 def test_letterbox(img_h, img_w, fixed_shape, stride):
 
