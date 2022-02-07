@@ -219,7 +219,7 @@ class YOLOTransform(nn.Module):
     @torch.jit.unused
     def _onnx_batch_images(self, images: List[Tensor]) -> Tensor:
         if self.fixed_shape:
-            max_size = list(self.new_shape)
+            max_size = torch.tensor(self.new_shape)
         else:
             max_size = []
             for i in range(1, images[0].dim()):
@@ -235,7 +235,7 @@ class YOLOTransform(nn.Module):
         padded_imgs = []
         for img in images:
 
-            img_h, img_w = img.shape[-2:]
+            img_h, img_w = _get_shape_onnx(img)
 
             dh = (max_size[1] - img_w) / 2
             dw = (max_size[0] - img_h) / 2
