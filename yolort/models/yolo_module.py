@@ -34,9 +34,10 @@ class YOLOv5(LightningModule):
         size: (Tuple[int, int]): the height and width to which images will be rescaled
             before feeding them to the backbone. Default: (640, 640).
         size_divisible (int): stride of the models. Default: 32
-        auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded
-            to a minimum rectangle. If set to `False`, the image will be padded to a square.
-            Default: True
+        fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will be
+            padded to fixed shape `(height, width)`. If set to `False`, the image will be padded
+            to a minimum rectangle within shape `(height, width)` and each of its edges is divisible
+            by `size_divisible`. Default: False
         fill_color (int): fill value for padding. Default: 114
         annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file
             Default: None.
@@ -52,7 +53,7 @@ class YOLOv5(LightningModule):
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
-        auto_rectangle: bool = True,
+        fixed_shape: bool = True,
         fill_color: int = 114,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
@@ -77,7 +78,7 @@ class YOLOv5(LightningModule):
             size[0],
             size[1],
             size_divisible=size_divisible,
-            auto_rectangle=auto_rectangle,
+            fixed_shape=fixed_shape,
             fill_color=fill_color,
         )
 
@@ -316,7 +317,7 @@ class YOLOv5(LightningModule):
         lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
-        auto_rectangle: bool = True,
+        fixed_shape: bool = True,
         fill_color: int = 114,
         **kwargs: Any,
     ):
@@ -329,7 +330,7 @@ class YOLOv5(LightningModule):
             size: (Tuple[int, int]): the height and width to which images will be rescaled
                 before feeding them to the backbone. Default: (640, 640).
             size_divisible (int): stride of the models. Default: 32
-            auto_rectangle (bool): The padding mode. If set to `True`, the image will be padded
+            fixed_shape (bool): The padding mode. If set to `True`, the image will be padded
                 to a minimum rectangle. If set to `False`, the image will be padded to a square.
                 Default: True
             fill_color (int): fill value for padding. Default: 114
@@ -340,7 +341,7 @@ class YOLOv5(LightningModule):
             model=model,
             size=size,
             size_divisible=size_divisible,
-            auto_rectangle=auto_rectangle,
+            fixed_shape=fixed_shape,
             fill_color=fill_color,
         )
         return yolov5

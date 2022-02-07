@@ -105,10 +105,10 @@ class YOLOTransform(nn.Module):
         height (int) : expected height of the image to be rescaled
         width (int) : expected width of the image to be rescaled
         size_divisible (int): stride of the models. Default: 32
-        auto_rectangle (bool): The padding mode. If set to `True`, the image will be
-            padded to a minimum rectangle within shape `(height, width)` and each of its
-            edges is divisible by `size_divisible`. If set to `False`, the image will
-            be padded to shape `(height, width)`. Default: True
+        fixed_shape (bool): Padding mode for letterboxing. If set to `True`, the image will be
+            padded to fixed shape `(height, width)`. If set to `False`, the image will be padded
+            to a minimum rectangle within shape `(height, width)` and each of its edges is divisible
+            by `size_divisible`. Default: False
         fill_color (int): fill value for padding. Default: 114
     """
 
@@ -118,14 +118,14 @@ class YOLOTransform(nn.Module):
         width: int,
         *,
         size_divisible: int = 32,
-        auto_rectangle: bool = True,
+        fixed_shape: bool = True,
         fill_color: int = 114,
     ) -> None:
 
         super().__init__()
         self.new_shape = (height, width)
         self.size_divisible = size_divisible
-        self.auto_rectangle = auto_rectangle
+        self.fixed_shape = fixed_shape
         self.fill_color = fill_color / 255
 
     def forward(
