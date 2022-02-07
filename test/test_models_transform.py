@@ -24,18 +24,17 @@ def test_yolo_transform():
     torch.testing.assert_close(annotations[1]["boxes"], annotations_copy[1]["boxes"], rtol=0, atol=0)
 
 
-@pytest.mark.parametrize("img_h", [300, 500, 720, 800, 1080, 1280])
-@pytest.mark.parametrize("img_w", [300, 500, 720, 800, 1080, 1280])
+@pytest.mark.parametrize("img_shape", [(500, 500), (500, 1080), (900, 720), (900, 900), (900, 720)])
 @pytest.mark.parametrize("fixed_shape", [True, False])
 @pytest.mark.parametrize("stride", [32, 64])
-def test_letterbox(img_h, img_w, fixed_shape, stride):
+def test_letterbox(img_shape, fixed_shape, stride):
 
     from yolort.models.transform import _resize_image_and_masks
     from yolort.v5 import letterbox
 
     new_shape = (640, 640)  # height, width
 
-    img_tensor = torch.randint(0, 255, (3, img_h, img_w))
+    img_tensor = torch.randint(0, 255, (3, *(img_shape)))
     img_numpy = img_tensor.permute(1, 2, 0).numpy().astype("uint8")
 
     yolo_transform = YOLOTransform(
@@ -46,7 +45,7 @@ def test_letterbox(img_h, img_w, fixed_shape, stride):
     )
 
     im3 = img_tensor / 255
-    im3, _ = _resize_image_and_masks(im3.float(), new_shape)
+    im3, _ = _resize_image_and_masks(im3.float(), float(new_shape[0]), float(new_shape[1]))
     out1 = yolo_transform.batch_images([im3])
 
     out2 = letterbox(img_numpy, new_shape=new_shape, auto=not fixed_shape, stride=stride)

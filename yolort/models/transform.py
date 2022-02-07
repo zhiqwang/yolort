@@ -1,7 +1,7 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, cast
 
 import torch
 import torch.nn.functional as F
@@ -44,19 +44,28 @@ def _get_shape_onnx(image: Tensor) -> Tensor:
 
 
 @torch.jit.unused
-def _tracing_item_onnx(v: Tensor) -> int:
+def _tracing_int_onnx(v: Tensor) -> int:
     """
     ONNX requires a tensor type for Tensor.item() in tracing mode, so we cast
     its type to int here.
     """
-    from typing import cast
 
     return cast(int, v)
 
 
+@torch.jit.unused
+def _tracing_float_onnx(v: Tensor) -> float:
+    """
+    ONNX requires a tensor type for Tensor.item() in tracing mode, so we cast
+    its type to float here.
+    """
+    return cast(float, v)
+
+
 def _resize_image_and_masks(
     image: Tensor,
-    new_shape: Tuple[int, int],
+    self_min_size: float,
+    self_max_size: float,
     target: Optional[Dict[str, Tensor]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
     if torchvision._is_tracing():
@@ -64,26 +73,41 @@ def _resize_image_and_masks(
     else:
         im_shape = torch.tensor(image.shape[-2:])
 
-    ratio = torch.min(new_shape[0] / im_shape[0], new_shape[1] / im_shape[1])
+    scale_factor: Optional[float] = None
 
-    ratio_h = torch.round(im_shape[0] * ratio).to(dtype=torch.int32)
-    ratio_w = torch.round(im_shape[1] * ratio).to(dtype=torch.int32)
+    min_size = torch.min(im_shape).to(dtype=torch.float32)
+    max_size = torch.max(im_shape).to(dtype=torch.float32)
+    scale = torch.min(self_min_size / min_size, self_max_size / max_size)
 
     if torchvision._is_tracing():
-        new_unpad = _tracing_item_onnx(ratio_h), _tracing_item_onnx(ratio_w)
+        scale_factor = _tracing_float_onnx(scale)
     else:
-        new_unpad = int(ratio_h.item()), int(ratio_w.item())
+        scale_factor = scale.item()
+    recompute_scale_factor = True
 
-    image = F.interpolate(image[None], size=new_unpad, mode="bilinear", align_corners=False)[0]
+    image = F.interpolate(
+        image[None],
+        size=None,
+        scale_factor=scale_factor,
+        mode="bilinear",
+        recompute_scale_factor=recompute_scale_factor,
+        align_corners=False,
+    )[0]
 
     if target is None:
         return image, target
 
     if "masks" in target:
         mask = target["masks"]
-        mask = F.interpolate(mask[:, None].float(), size=new_unpad, align_corners=False)[:, 0].byte()
+        mask = F.interpolate(
+            mask[:, None].float(),
+            size=None,
+            scale_factor=scale_factor,
+            recompute_scale_factor=recompute_scale_factor,
+        )[:, 0].byte()
         target["masks"] = mask
     return image, target
+
 
 
 class YOLOTransform(nn.Module):
@@ -203,7 +227,9 @@ class YOLOTransform(nn.Module):
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
 
         h, w = image.shape[-2:]
-        image, target = _resize_image_and_masks(image, self.new_shape, target)
+        min_size = float(self.new_shape[0])
+        max_size = float(self.new_shape[1])
+        image, target = _resize_image_and_masks(image, min_size, max_size, target)
 
         if target is None:
             return image, target
@@ -241,10 +267,10 @@ class YOLOTransform(nn.Module):
             dw = (max_size[0] - img_h) / 2
 
             padding = (
-                _tracing_item_onnx(torch.round(dh - 0.1).to(dtype=torch.int32)),
-                _tracing_item_onnx(torch.round(dh + 0.1).to(dtype=torch.int32)),
-                _tracing_item_onnx(torch.round(dw - 0.1).to(dtype=torch.int32)),
-                _tracing_item_onnx(torch.round(dw + 0.1).to(dtype=torch.int32)),
+                _tracing_int_onnx(torch.round(dh - 0.1).to(dtype=torch.int32)),
+                _tracing_int_onnx(torch.round(dh + 0.1).to(dtype=torch.int32)),
+                _tracing_int_onnx(torch.round(dw - 0.1).to(dtype=torch.int32)),
+                _tracing_int_onnx(torch.round(dw + 0.1).to(dtype=torch.int32)),
             )
             padded_img = F.pad(img, padding, value=self.fill_color)
 
