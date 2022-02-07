@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
 import math
 from typing import Tuple, List, Dict
 
@@ -396,7 +396,7 @@ class PostProcess(nn.Module):
             grids (List[Tensor]): Anchor grids.
             shifts (List[Tensor]): Anchor shifts.
         """
-        batch_size = len(head_outputs[0])
+        batch_size = head_outputs[0].shape[0]
         device = head_outputs[0].device
         dtype = head_outputs[0].dtype
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
