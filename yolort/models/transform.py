@@ -125,8 +125,8 @@ class YOLOTransform(nn.Module):
     It returns a `NestedTensor` for the inputs, and a List[Dict[Tensor]] for the targets.
 
     Args:
-        min_size (int) : minimum size of the image to be rescaled.
-        max_size (int) : maximum size of the image to be rescaled.
+        min_size (int): minimum size of the image to be rescaled
+        max_size (int): maximum size of the image to be rescaled
         size_divisible (int): stride of the models. Default: 32
         fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
             the image will be padded to shape `fixed_shape` if specified. Instead the image will

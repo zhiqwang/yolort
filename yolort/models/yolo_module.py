@@ -28,11 +28,11 @@ class YOLOv5(LightningModule):
         arch (string): YOLO model architecture. Default: None
         model (nn.Module): YOLO model. Default: None
         num_classes (int): number of output classes of the model (doesn't including
-            background). Default: 80.
+            background). Default: 80
         pretrained (bool): If true, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
-        size: (Tuple[int, int]): the height and width to which images will be rescaled
-            before feeding them to the backbone. Default: (640, 640).
+        size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
+            Default: (640, 640)
         size_divisible (int): stride of the models. Default: 32
         fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
             the image will be padded to shape `fixed_shape` if specified. Instead the image will
@@ -327,8 +327,8 @@ class YOLOv5(LightningModule):
         Args:
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
             lr (float): The initial learning rate
-            size: (Tuple[int, int]): the height and width to which images will be rescaled
-                before feeding them to the backbone. Default: (640, 640).
+            size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
+                Default: (640, 640)
             size_divisible (int): stride of the models. Default: 32
             fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
                 the image will be padded to shape `fixed_shape` if specified. Instead the image will
