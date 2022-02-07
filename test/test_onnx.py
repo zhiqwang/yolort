@@ -86,7 +86,7 @@ class TestONNXExporter:
         return [self.get_image("bus.jpg")], [self.get_image("zidane.jpg")]
 
     @pytest.mark.parametrize(
-        "arch, fixed_shape, upstream_version",
+        "arch, fixed_size, upstream_version",
         [
             ("yolov5s", False, "r3.1"),
             ("yolov5m", True, "r4.0"),
@@ -97,7 +97,7 @@ class TestONNXExporter:
             ("yolov5n6", False, "r6.0"),
         ],
     )
-    def test_yolort_export_onnx(self, arch, fixed_shape, upstream_version):
+    def test_yolort_onnx_export(self, arch, fixed_size, upstream_version):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 1080, 720) * 0.3]
 
@@ -105,7 +105,7 @@ class TestONNXExporter:
             upstream_version=upstream_version,
             pretrained=True,
             size=(640, 640),
-            fixed_shape=fixed_shape,
+            fixed_shape=(640, 640) if fixed_size else None,
             score_thresh=0.45,
         )
         model = model.eval()
