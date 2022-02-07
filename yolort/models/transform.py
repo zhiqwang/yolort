@@ -109,7 +109,6 @@ def _resize_image_and_masks(
     return image, target
 
 
-
 class YOLOTransform(nn.Module):
     """
     Performs input / target transformation before feeding the data to a YOLO model. It plays
