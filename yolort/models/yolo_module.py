@@ -53,7 +53,7 @@ class YOLOv5(LightningModule):
         progress: bool = True,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
-        fixed_shape: bool = True,
+        fixed_shape: bool = False,
         fill_color: int = 114,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,

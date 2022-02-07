@@ -118,7 +118,7 @@ class YOLOTransform(nn.Module):
         width: int,
         *,
         size_divisible: int = 32,
-        fixed_shape: bool = True,
+        fixed_shape: bool = False,
         fill_color: int = 114,
     ) -> None:
 
@@ -218,13 +218,16 @@ class YOLOTransform(nn.Module):
     # batch_images() that is supported by ONNX tracing.
     @torch.jit.unused
     def _onnx_batch_images(self, images: List[Tensor]) -> Tensor:
-        max_size = []
-        for i in range(1, images[0].dim()):
-            max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32))
-            max_size.append(max_size_i.to(torch.int32))
-        stride = self.size_divisible
-        max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int32)
-        max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int32)
+        if self.fixed_shape:
+            max_size = list(self.new_shape)
+        else:
+            max_size = []
+            for i in range(1, images[0].dim()):
+                max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32))
+                max_size.append(max_size_i.to(torch.int32))
+            stride = self.size_divisible
+            max_size[0] = (torch.ceil((max_size[0].to(torch.float32)) / stride) * stride).to(torch.int32)
+            max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int32)
 
         # work around for
         # batched_imgs[i, :channel, dh : dh + img_h, dw : dw + img_w].copy_(img)
@@ -266,11 +269,14 @@ class YOLOTransform(nn.Module):
             # call _onnx_batch_images() instead
             return self._onnx_batch_images(images)
 
-        stride = float(self.size_divisible)
-        max_size = self.max_by_axis([list(img.shape) for img in images])
-        max_size = list(max_size)
-        max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
-        max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
+        if self.fixed_shape:
+            max_size = list(self.new_shape)
+        else:
+            stride = float(self.size_divisible)
+            max_size = self.max_by_axis([list(img.shape) for img in images])
+            max_size = list(max_size)
+            max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)
+            max_size[2] = int(math.ceil(float(max_size[2]) / stride) * stride)
 
         batch_shape = [len(images)] + max_size
         batched_imgs = images[0].new_full(batch_shape, self.fill_color)
