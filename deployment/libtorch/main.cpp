@@ -1,4 +1,5 @@
 #ifdef _WIN32 // or _MSC_VER, as you wish
+#define NOMINMAX
 #include <windows.h>
 #endif
 
@@ -7,15 +8,13 @@
 #include <memory>
 #include "cmdline.h"
 
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <io/image/image.h>
 
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include <torchvision/ops/nms.h>
-#include <torchvision/vision.h>
+#include <ops/nms.h>
+#include <vision.h>
 
 std::vector<std::string> LoadNames(const std::string& path) {
   // load class names
@@ -36,66 +35,13 @@ std::vector<std::string> LoadNames(const std::string& path) {
 }
 
 torch::Tensor ReadImage(const std::string& loc) {
-  // Read Image from the location of image
-  cv::Mat img = cv::imread(loc);
-  cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
-  img.convertTo(img, CV_32FC3, 1.0f / 255.0f); // normalization 1/255
-
   // Convert image to tensor
-  torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, 3});
-  img_tensor = img_tensor.permute({2, 0, 1}); // Reshape to C x H x W
+  torch::Tensor img_tensor = vision::image::read_file(loc);
+  img_tensor = vision::image::decode_png(img_tensor, vision::image::IMAGE_READ_MODE_UNCHANGED);
+  img_tensor = img_tensor / 255.0f;
 
   return img_tensor.clone();
 };
-
-struct Detection {
-  cv::Rect bbox;
-  float score;
-  int class_idx;
-};
-
-void OverlayBoxes(
-    cv::Mat& img,
-    const std::vector<Detection>& detections,
-    const std::vector<std::string>& class_names,
-    const std::string& img_name,
-    bool label = true) {
-  for (const auto& detection : detections) {
-    const auto& box = detection.bbox;
-    float score = detection.score;
-    int class_idx = detection.class_idx;
-
-    cv::rectangle(img, box, cv::Scalar(0, 0, 255), 2);
-
-    if (label) {
-      std::stringstream ss;
-      ss << std::fixed << std::setprecision(2) << score;
-      std::string s = class_names[class_idx] + " " + ss.str();
-
-      auto font_face = cv::FONT_HERSHEY_DUPLEX;
-      auto font_scale = 1.0;
-      int thickness = 1;
-      int baseline = 0;
-      auto s_size = cv::getTextSize(s, font_face, font_scale, thickness, &baseline);
-      cv::rectangle(
-          img,
-          cv::Point(box.tl().x, box.tl().y - s_size.height - 5),
-          cv::Point(box.tl().x + s_size.width, box.tl().y),
-          cv::Scalar(0, 0, 255),
-          -1);
-      cv::putText(
-          img,
-          s,
-          cv::Point(box.tl().x, box.tl().y - 5),
-          font_face,
-          font_scale,
-          cv::Scalar(255, 255, 255),
-          thickness);
-    }
-  }
-
-  cv::imwrite(img_name, img);
-}
 
 int main(int argc, char* argv[]) {
   cmdline::parser cmd;
@@ -197,7 +143,9 @@ int main(int argc, char* argv[]) {
   std::cout << "Pre-process takes : " << duration.count() << " ms" << std::endl;
 
   // Run once to warm up
-  output = module.forward(inputs);
+  for (int i = 0; i < 5; i++) {
+    output = module.forward(inputs);
+  }
 
   /*** Inference ***/
   // TODO: add synchronize point
