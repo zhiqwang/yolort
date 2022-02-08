@@ -14,28 +14,30 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
 ## Usage
 
-1. First, Setup the environment variables.
+1. First, Setup the LibTorch Environment variables.
 
    ```bash
    export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
-   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/
    ```
 
-1. Don't forget to compile `TorchVision` using the following scripts.
+1. Don't forget to compile `LibTorchVision` using the following scripts.
 
    ```bash
    git clone https://github.com/pytorch/vision.git
    cd vision
    git checkout release/0.9  # Double check the version of TorchVision currently in use
    mkdir build && cd build
-   cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch  # Set `-DWITH_CUDA=ON` if you're using GPU
-   make -j4
-   sudo make install
+   # Add `-DWITH_CUDA=on` below if you're using GPU
+   cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch -DCMAKE_INSTALL_PREFIX=./install
+   cmake --build .
+   cmake --install .
+   # Setup the LibTorchVision Environment variables
+   export TORCHVISION_PATH=$PWD/install
    ```
 
 1. Generate `TorchScript` model
 
-   Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/8ee9fd1/export.py) `torch.jit.trace` mechanism, We're using `torch.jit.script` to trace the YOLOv5 models which containing the whole pre-processing (especially with the [`letterbox`](https://github.com/ultralytics/yolov5/blob/8ee9fd1/utils/augmentations.py#L85-L115) ops) and post-processing (especially with the `nms` ops) procedures, as such you don't need to rewrite manually the C++ codes of pre-processing and post-processing.
+   Unlike [ultralytics's](https://github.com/ultralytics/yolov5/blob/8ee9fd1/export.py) `torch.jit.trace` mechanism, We're using `torch.jit.script` to trace the YOLOv5 models which containing the whole pre-processing (especially with the [`letterbox`](https://github.com/ultralytics/yolov5/blob/8ee9fd1/utils/augmentations.py#L85-L115) ops) and post-processing (especially with the `nms` ops) procedures, as such you don't need to rewrite manually the C++ codes for pre-processing and post-processing.
 
    ```python
    from yolort.models import yolov5n
@@ -52,7 +54,7 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
    ```bash
    cd deployment/libtorch
    mkdir build && cd build
-   cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch
+   cmake .. -DTorch_DIR=$TORCH_PATH/share/cmake/Torch -DTorchVision_DIR=$TORCHVISION_PATH/share/cmake/TorchVision
    make
    ```
 

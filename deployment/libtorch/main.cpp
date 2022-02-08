@@ -1,4 +1,5 @@
 #ifdef _WIN32 // or _MSC_VER, as you wish
+#define NOMINMAX
 #include <windows.h>
 #endif
 
@@ -196,8 +197,10 @@ int main(int argc, char* argv[]) {
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   std::cout << "Pre-process takes : " << duration.count() << " ms" << std::endl;
 
-  // Run once to warm up
-  output = module.forward(inputs);
+  // Run third times to warm up
+  for (int i = 0; i < 3; i++) {
+    output = module.forward(inputs);
+  }
 
   /*** Inference ***/
   // TODO: add synchronize point
