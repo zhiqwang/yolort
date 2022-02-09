@@ -82,7 +82,7 @@ void visualizeDetection(
   }
 }
 
-float letter_box(
+float letterbox(
     const cv::Mat& src,
     cv::Mat& dst,
     int dst_size,
@@ -358,7 +358,7 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   int32_t input_w = engine->getBindingDimensions(0).d[3];
   cv::Mat tmp;
   /* Fixed shape, need to set h/w scale */
-  float scale = letter_box(
+  float scale = letterbox(
       image,
       tmp,
       std::max(input_w, input_h),
