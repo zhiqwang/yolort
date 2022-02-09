@@ -151,11 +151,6 @@ We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md)
 
 [![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
 
-## 🎓 Acknowledgement
-
-- The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
-- This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
-
 ## 📖 Citing yolort
 
 If you use yolort in your publication, please cite it by using the following BibTeX entry.
@@ -168,3 +163,8 @@ If you use yolort in your publication, please cite it by using the following Bib
   year =         {2021}
 }
 ```
+
+## 🎓 Acknowledgement
+
+- The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
+- This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
