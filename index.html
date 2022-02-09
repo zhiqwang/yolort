@@ -298,7 +298,16 @@
               <div class="md-sidebar__inner">
                 
 <nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#index--page-root" class="md-nav__link">Welcome to yolort’s documentation!</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#quick-get-stated" class="md-nav__link">Quick get stated</a>
+        </li>
+        <li class="md-nav__item"><a href="#use-cases-and-solutions" class="md-nav__link">Use Cases and Solutions</a>
+        </li></ul>
+            </nav>
+        </li>
   </ul>
 </nav>
               </div>
@@ -310,7 +319,7 @@
             
   <section id="welcome-to-yolort-s-documentation">
 <h1 id="index--page-root">Welcome to yolort’s documentation!<a class="headerlink" href="#index--page-root" title="Permalink to this headline">¶</a></h1>
-<p id="what-is-yolort"><strong>What is yolort?</strong></p>
+<p><strong>What is yolort?</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">yolort</span></code> focus on making the training and inference of the object detection task
 integrate more seamlessly together. <code class="docutils literal notranslate"><span class="pre">yolort</span></code> now adopts the same model
 structure as the official <code class="docutils literal notranslate"><span class="pre">YOLOv5</span></code>. The significant difference is that we adopt
@@ -327,7 +336,8 @@ not require complex libraries for training and inference.</p>
 </div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">yolort</span></code> is very simple to implement and experiment with. You like the implementation
 of torchvision’s faster-rcnn, retinanet or detr? You like yolov5? You love yolort!</p>
-<p id="quick-get-stated"><strong>Introduction to yolort</strong></p>
+<section id="quick-get-stated">
+<h2 id="quick-get-stated">Quick get stated<a class="headerlink" href="#quick-get-stated" title="Permalink to this headline">¶</a></h2>
 <p>Read a source of image(s) and detect its objects:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">yolov5s</span>
 
@@ -342,7 +352,8 @@ of torchvision’s faster-rcnn, retinanet or detr? You like yolov5? You love yol
 </pre></div>
 </div>
 <p><strong>Loading checkpoint from official yolov5</strong></p>
-<p>And we support loading the trained weights from YOLOv5:</p>
+<p>And we support loading the trained weights from YOLOv5. Please see our documents on what
+we <a class="reference external" href="https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html">share</a> and how we <a class="reference external" href="https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html">differ</a> from yolov5 for more details.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
 <span class="kn">from</span> <span class="nn">yolort.v5</span> <span class="kn">import</span> <span class="n">attempt_download</span>
 
@@ -357,7 +368,9 @@ of torchvision’s faster-rcnn, retinanet or detr? You like yolov5? You love yol
 <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Use Cases and Solutions</strong></p>
+</section>
+<section id="use-cases-and-solutions">
+<h2 id="use-cases-and-solutions">Use Cases and Solutions<a class="headerlink" href="#use-cases-and-solutions" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
@@ -389,6 +402,7 @@ of torchvision’s faster-rcnn, retinanet or detr? You like yolov5? You love yol
 <li class="toctree-l1"><a class="reference internal" href="yolov5.html">Modules and utils for YOLOv5</a></li>
 </ul>
 </div>
+</section>
 </section>
 
 
