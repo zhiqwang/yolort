@@ -90,7 +90,7 @@ float letter_box(
     cv::Scalar fill,
     const float dst_hw_scale = -1.f,
     bool simple_mode = false) {
-#define ALIGN_UP(val, alignment) (((val) + (alignment) - 1) & (-alignment))
+#define ALIGN_UP(val, alignment) (((val) + (alignment)-1) & (-alignment))
   float scale = -1.f;
   int input_h = -1;
   int input_w = -1;
