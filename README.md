@@ -147,7 +147,7 @@ Now, `yolort` can draw the model graph directly, checkout our [tutorial](https:/
 
 ## 👋 Contributing
 
-We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors!
+We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors! If you like this project please consider ⭐ this repo, as it is the simplest and best way to support us.
 
 [![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
 
