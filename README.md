@@ -111,12 +111,12 @@ model = torch.hub.load("zhiqwang/yolov5-rt-stack:main", "yolov5s", pretrained=Tr
 
 ### Loading checkpoint from official yolov5
 
-The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. See our [how-to-align-with-ultralytics-yolov5](notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
+The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. Please see our document on what we [share](https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html) and how we [differ](https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html) from yolov5 for more details.
 
 ```python
 from yolort.models import YOLOv5
 
-# 'yolov5s.pt' is downloaded from https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s.pt
+# Download checkpoint from https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5s.pt
 ckpt_path_from_ultralytics = "yolov5s.pt"
 model = YOLOv5.load_from_yolov5(ckpt_path_from_ultralytics, score_thresh=0.25)
 
@@ -129,21 +129,27 @@ predictions = model.predict(img_path)
 
 ### Inference on LibTorch backend
 
-We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
+We provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model.
 
 ### Inference on ONNX Runtime backend
 
-On the `ONNX Runtime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNX Runtime`.
+On the `ONNX Runtime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/export-onnx-inference-onnxruntime.html) for using the `ONNX Runtime`.
 
 ### Inference on TensorRT backend
 
-On the `TensorRT` front you can use the [C++ example](deployment/tensorrt), and we also provide a tutorial [onnx-graphsurgeon-inference-tensorrt](notebooks/onnx-graphsurgeon-inference-tensorrt.ipynb) for using the `TensorRT`.
+On the `TensorRT` front you can use the [C++ example](deployment/tensorrt), and we also provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) for using the `TensorRT`.
 
 ## 🎨 Model Graph Visualization
 
-Now, `yolort` can draw the model graph directly, checkout our [model-graph-visualization](notebooks/model-graph-visualization.ipynb) notebook to see how to use and visualize the model graph.
+Now, `yolort` can draw the model graph directly, checkout our [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/model-graph-visualization.html) to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5_graph_visualize.svg"><img src="notebooks/assets/yolov5_graph_visualize.svg" alt="YOLO model visualize" width="500"/></a>
+
+## 👋 Contributing
+
+We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors!
+
+[![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
 
 ## 🎓 Acknowledgement
 
@@ -162,9 +168,3 @@ If you use yolort in your publication, please cite it by using the following Bib
   year =         {2021}
 }
 ```
-
-## 👋 Contributing
-
-We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors!
-
-[![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
