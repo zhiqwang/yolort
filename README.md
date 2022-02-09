@@ -111,7 +111,7 @@ model = torch.hub.load("zhiqwang/yolov5-rt-stack:main", "yolov5s", pretrained=Tr
 
 ### Loading checkpoint from official yolov5
 
-The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. Please see our document on what we [share](https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html) and how we [differ](https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html) from yolov5 for more details.
+The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. Please see our documents on what we [share](https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html) and how we [differ](https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html) from yolov5 for more details.
 
 ```python
 from yolort.models import YOLOv5
