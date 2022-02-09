@@ -1,7 +1,6 @@
+##################################
 Welcome to yolort's documentation!
-==================================
-
-.. _what-is-yolort:
+##################################
 
 **What is yolort?**
 
@@ -28,9 +27,8 @@ Follow the design principle of `detr <https://github.com/facebookresearch/detr>`
 ``yolort`` is very simple to implement and experiment with. You like the implementation
 of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love yolort!
 
-.. _quick-get-stated:
-
-**Introduction to yolort**
+Quick get stated
+================
 
 Read a source of image(s) and detect its objects:
 
@@ -49,7 +47,11 @@ Read a source of image(s) and detect its objects:
 
 **Loading checkpoint from official yolov5**
 
-And we support loading the trained weights from YOLOv5:
+And we support loading the trained weights from YOLOv5. Please see our documents on what
+we `share`_ and how we `differ`_ from yolov5 for more details.
+
+.. _share: https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html
+.. _differ: https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html
 
 .. code:: python
 
@@ -66,7 +68,8 @@ And we support loading the trained weights from YOLOv5:
    img_path = "bus.jpg"
    predictions = model.predict(img_path)
 
-**Use Cases and Solutions**
+Use Cases and Solutions
+=======================
 
 .. toctree::
    :maxdepth: 2
