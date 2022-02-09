@@ -320,7 +320,7 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   int32_t num_detections = 0;
   std::vector<float> detection_boxes;
   std::vector<float> detection_scores;
-  std::vector<float> detection_labels;
+  std::vector<int> detection_labels;
 
   Dims dim = engine->getBindingDimensions(0);
   dim.d[0] = batch_size;
