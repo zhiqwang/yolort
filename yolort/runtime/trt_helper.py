@@ -10,7 +10,7 @@
 #
 
 import logging
-from pathlib import Path
+from pathlib import Path, PosixPath
 from typing import Optional, Tuple, Union
 
 try:
@@ -41,13 +41,13 @@ class YOLOTRTModule(nn.Module):
 
     Remove the ``torchvision::nms`` in this warpper, due to the fact that some third-party
     inference frameworks currently do not support this operator very well.
+
+    Args:
+        checkpoint_path (string): Path of the trained YOLOv5 checkpoint.
+        version (string): Upstream YOLOv5 version. Default: 'r6.0'
     """
 
-    def __init__(
-        self,
-        checkpoint_path: str,
-        version: str = "r6.0",
-    ):
+    def __init__(self, checkpoint_path: str, version: str = "r6.0"):
         super().__init__()
         model_info = load_from_ultralytics(checkpoint_path, version=version)
 
@@ -90,7 +90,7 @@ class YOLOTRTModule(nn.Module):
     @torch.no_grad()
     def to_onnx(
         self,
-        file_path: Union[str, Path],
+        file_path: Union[str, PosixPath],
         input_sample: Optional[Tensor] = None,
         opset_version: int = 11,
         enable_dynamic: bool = True,
@@ -100,10 +100,11 @@ class YOLOTRTModule(nn.Module):
         Saves the model in ONNX format.
 
         Args:
-            file_path: The path of the file the onnx model should be saved to.
-            input_sample: An input for tracing. Default: None.
-            opset_version: Opset version we export the model to the onnx submodule. Default: 11.
-            enable_dynamic: Whether to specify axes of tensors as dynamic. Default: True.
+            file_path (Union[string, PosixPath]): The path of the file the onnx model should
+                be saved to.
+            input_sample (Tensor, Optional): An input for tracing. Default: None.
+            opset_version (int): Opset version we export the model to the onnx submodule. Default: 11.
+            enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: True.
             **kwargs: Will be passed to torch.onnx.export function.
         """
         if input_sample is None:
@@ -140,12 +141,33 @@ class EngineBuilder:
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
 
-    def __init__(self, verbose=False, workspace=4):
+    def __init__(
+        self,
+        verbose: bool = False,
+        workspace: int = 4,
+        precision: str = "fp32",
+        enable_dynamic: bool = False,
+        max_batch_size: int = 16,
+        calib_input: Optional[str] = None,
+        calib_cache: Optional[str] = None,
+        calib_num_images: int = 5000,
+        calib_batch_size: int = 8,
+    ):
         """
         Args:
-            verbose: If enabled, a higher verbosity level will be
-                set on the TensorRT logger.
-            workspace: Max memory workspace to allow, in Gb.
+            verbose (bool): If enabled, a higher verbosity level will be
+                set on the TensorRT logger. Default: False
+            workspace (int): Max memory workspace to allow, in Gb.
+            precision (string): The datatype to use for the engine inference, either 'fp32',
+                'fp16' or 'int8'. Default: 'fp32'
+            enable_dynamic (bool): Whether to enable dynamic shapes. Default: False
+            max_batch_size (int): Maximum batch size reserved for dynamic shape inference. Default: 16
+            calib_input (string, optinal): The path to a directory holding the calibration images.
+                Default: None
+            calib_cache (string, optinal): The path where to write the calibration cache to,
+                or if it already exists, load it from. Default: None
+            calib_num_images (int): The maximum number of images to use for calibration. Default: 5000
+            calib_batch_size (int): The batch size to use for the calibration process. Default: 8
         """
         self.logger = trt.Logger(trt.Logger.INFO)
         if verbose:
@@ -160,6 +182,16 @@ class EngineBuilder:
         self.batch_size = None
         self.network = None
         self.parser = None
+
+        # Leaving some interfaces and parameters for subsequent use, but we have not yet
+        # implemented the following functionality
+        self.precision = precision
+        self.enable_dynamic = enable_dynamic
+        self.max_batch_size = max_batch_size
+        self.calib_input = calib_input
+        self.calib_cache = calib_cache
+        self.calib_num_images = calib_num_images
+        self.calib_batch_size = calib_batch_size
 
     def create_network(self, onnx_path: str):
         """
@@ -185,31 +217,17 @@ class EngineBuilder:
         for output in outputs:
             logger.info(f"Output '{output.name}' with shape {output.shape} and dtype {output.dtype}")
 
-    def create_engine(
-        self,
-        engine_path: str,
-        *,
-        precision: str = "fp32",
-        max_batch_size: int = 32,
-        calib_input: Optional[str] = None,
-        calib_cache: Optional[str] = None,
-        calib_num_images: int = 5000,
-        calib_batch_size: int = 8,
-    ):
+    def create_engine(self, engine_path: str):
         """
         Build the TensorRT engine and serialize it to disk.
 
         Args:
             engine_path: The path where to serialize the engine to.
-            precision: The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
-            calib_input: The path to a directory holding the calibration images.
-            calib_cache: The path where to write the calibration cache to, or if it already
-                exists, load it from.
-            calib_num_images: The maximum number of images to use for calibration.
-            calib_batch_size: The batch size to use for the calibration process.
         """
         engine_path = Path(engine_path)
         engine_path.parent.mkdir(parents=True, exist_ok=True)
+
+        precision = self.precision
         logger.info(f"Building {precision} Engine in {engine_path}")
 
         # Process the batch size and profile
