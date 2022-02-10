@@ -671,7 +671,7 @@ div.rendered_html tbody tr:hover {
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"CUDA_DEVICE_ORDER"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"PCI_BUS_ID"</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"CUDA_VISIBLE_DEVICES"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"1"</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"CUDA_VISIBLE_DEVICES"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0"</span>
 
 <span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span>
 <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">'cuda'</span><span class="p">)</span>
@@ -685,7 +685,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-We're using: cuda:1.
+We're using: cuda:0.
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -711,10 +711,11 @@ We're using: cuda:1.
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define some parameters</span>
 <span class="n">img_size</span> <span class="o">=</span> <span class="mi">640</span>
 <span class="n">stride</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">fixed_shape</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">score_thresh</span> <span class="o">=</span> <span class="mf">0.35</span>
 <span class="n">iou_thresh</span> <span class="o">=</span> <span class="mf">0.45</span>
 <span class="n">detections_per_img</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">half</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">precision</span> <span class="o">=</span> <span class="s2">"fp32"</span>  <span class="c1"># Currently only supports fp32</span>
 </pre></div>
 </div>
 </div>
@@ -748,7 +749,8 @@ We're using: cuda:1.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Preprocess</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">letterbox</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">new_shape</span><span class="o">=</span><span class="p">(</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">auto</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">fixed_shape</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">letterbox</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">new_shape</span><span class="o">=</span><span class="p">(</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="n">auto</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">read_image_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
@@ -770,7 +772,7 @@ We're using: cuda:1.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-torch.Size([1, 3, 640, 512])
+torch.Size([1, 3, 640, 640])
 </pre></div></div>
 </div>
 </section>
@@ -844,9 +846,7 @@ Loaded saved model from yolov5n6.pt
   anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).to(dtype=dtype)
 /coding/yolov5-rt-stack/yolort/models/anchor_utils.py:46: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
-/coding/yolov5-rt-stack/yolort/runtime/trt_helper.py:69: TracerWarning: Using len to get tensor shape might cause the trace to be incorrect. Recommended usage would be tensor.shape[0]. Passing a tensor of different shape might lead to errors or silently give incorrect results.
-  batch_size = len(head_outputs[0])
-/coding/yolov5-rt-stack/yolort/runtime/trt_helper.py:72: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/coding/yolov5-rt-stack/yolort/runtime/logits_decoder.py:44: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
 /coding/yolov5-rt-stack/yolort/models/box_head.py:333: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   for head_output, grid, shift, stride in zip(head_outputs, grids, shifts, strides):
@@ -913,7 +913,7 @@ Saved ONNX model to yolov5n6.onnx
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine_builder</span> <span class="o">=</span> <span class="n">EngineBuilder</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">workspace</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine_builder</span> <span class="o">=</span> <span class="n">EngineBuilder</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">workspace</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -922,7 +922,7 @@ Saved ONNX model to yolov5n6.onnx
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[01/25/2022-02:11:51] [TRT] [I] [MemUsageChange] Init CUDA: CPU +170, GPU +0, now: CPU 2557, GPU 1188 (MiB)
+[02/10/2022-17:29:07] [TRT] [I] [MemUsageChange] Init CUDA: CPU +170, GPU +0, now: CPU 2442, GPU 6840 (MiB)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -939,7 +939,7 @@ Saved ONNX model to yolov5n6.onnx
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 Network Description
-Input 'images' with shape (1, 3, 640, 512) and dtype DataType.FLOAT
+Input 'images' with shape (1, 3, 640, 640) and dtype DataType.FLOAT
 Output 'num_detections' with shape (1, 1) and dtype DataType.INT32
 Output 'detection_boxes' with shape (1, 100, 4) and dtype DataType.FLOAT
 Output 'detection_scores' with shape (1, 100) and dtype DataType.FLOAT
@@ -951,32 +951,32 @@ Output 'detection_classes' with shape (1, 100) and dtype DataType.INT32
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[01/25/2022-02:11:52] [TRT] [I] ----------------------------------------------------------------
-[01/25/2022-02:11:52] [TRT] [I] Input filename:   yolov5n6.onnx
-[01/25/2022-02:11:52] [TRT] [I] ONNX IR version:  0.0.8
-[01/25/2022-02:11:52] [TRT] [I] Opset version:    11
-[01/25/2022-02:11:52] [TRT] [I] Producer name:
-[01/25/2022-02:11:52] [TRT] [I] Producer version:
-[01/25/2022-02:11:52] [TRT] [I] Domain:
-[01/25/2022-02:11:52] [TRT] [I] Model version:    0
-[01/25/2022-02:11:52] [TRT] [I] Doc string:
-[01/25/2022-02:11:52] [TRT] [I] ----------------------------------------------------------------
-[01/25/2022-02:11:52] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:364: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
-[01/25/2022-02:11:52] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
-[01/25/2022-02:11:52] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
-[01/25/2022-02:11:52] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
-[01/25/2022-02:11:52] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
-[01/25/2022-02:11:52] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
-[01/25/2022-02:11:52] [TRT] [I] No importer registered for op: EfficientNMS_TRT. Attempting to import as plugin.
-[01/25/2022-02:11:52] [TRT] [I] Searching for plugin: EfficientNMS_TRT, plugin_version: 1, plugin_namespace:
-[01/25/2022-02:11:52] [TRT] [I] Successfully created plugin: EfficientNMS_TRT
+[02/10/2022-17:29:08] [TRT] [I] ----------------------------------------------------------------
+[02/10/2022-17:29:08] [TRT] [I] Input filename:   yolov5n6.onnx
+[02/10/2022-17:29:08] [TRT] [I] ONNX IR version:  0.0.8
+[02/10/2022-17:29:08] [TRT] [I] Opset version:    11
+[02/10/2022-17:29:08] [TRT] [I] Producer name:
+[02/10/2022-17:29:08] [TRT] [I] Producer version:
+[02/10/2022-17:29:08] [TRT] [I] Domain:
+[02/10/2022-17:29:08] [TRT] [I] Model version:    0
+[02/10/2022-17:29:08] [TRT] [I] Doc string:
+[02/10/2022-17:29:08] [TRT] [I] ----------------------------------------------------------------
+[02/10/2022-17:29:08] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:364: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
+[02/10/2022-17:29:08] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
+[02/10/2022-17:29:08] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
+[02/10/2022-17:29:08] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
+[02/10/2022-17:29:08] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
+[02/10/2022-17:29:08] [TRT] [W] parsers/onnx/onnx2trt_utils.cpp:392: One or more weights outside the range of INT32 was clamped
+[02/10/2022-17:29:08] [TRT] [I] No importer registered for op: EfficientNMS_TRT. Attempting to import as plugin.
+[02/10/2022-17:29:08] [TRT] [I] Searching for plugin: EfficientNMS_TRT, plugin_version: 1, plugin_namespace:
+[02/10/2022-17:29:08] [TRT] [I] Successfully created plugin: EfficientNMS_TRT
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine_builder</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="n">engine_path</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s2">"fp32"</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine_builder</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="n">engine_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -994,23 +994,23 @@ Using fp32 mode.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[01/25/2022-02:11:52] [TRT] [I] [MemUsageSnapshot] Builder begin: CPU 2629 MiB, GPU 1188 MiB
-[01/25/2022-02:11:53] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
-[01/25/2022-02:11:53] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +74, GPU +94, now: CPU 2705, GPU 1282 (MiB)
-[01/25/2022-02:11:53] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +130, GPU +84, now: CPU 2835, GPU 1366 (MiB)
-[01/25/2022-02:11:53] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
-[01/25/2022-02:12:36] [TRT] [I] [BlockAssignment] Algorithm Linear took 0.098483ms to assign 149 blocks to 149 nodes requiring 12984504320 bytes.
-[01/25/2022-02:12:36] [TRT] [I] Total Activation Memory: 99602432
-[01/25/2022-02:12:36] [TRT] [I] Detected 1 inputs and 4 output network tensors.
-[01/25/2022-02:12:36] [TRT] [I] Total Host Persistent Memory: 170336
-[01/25/2022-02:12:36] [TRT] [I] Total Device Persistent Memory: 9686528
-[01/25/2022-02:12:36] [TRT] [I] Total Scratch Memory: 39168768
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 3 MiB, GPU 2094 MiB
-[01/25/2022-02:12:36] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 29.1874ms to assign 8 blocks to 150 nodes requiring 53377024 bytes.
-[01/25/2022-02:12:36] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +1, GPU +8, now: CPU 2904, GPU 1458 (MiB)
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +8, now: CPU 2904, GPU 1466 (MiB)
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageSnapshot] Builder end: CPU 2903 MiB, GPU 1432 MiB
+[02/10/2022-17:29:08] [TRT] [I] [MemUsageSnapshot] Builder begin: CPU 2514 MiB, GPU 6840 MiB
+[02/10/2022-17:29:09] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
+[02/10/2022-17:29:09] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +75, GPU +94, now: CPU 2591, GPU 6934 (MiB)
+[02/10/2022-17:29:09] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +129, GPU +84, now: CPU 2720, GPU 7018 (MiB)
+[02/10/2022-17:29:09] [TRT] [I] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[02/10/2022-17:29:53] [TRT] [I] [BlockAssignment] Algorithm Linear took 0.046554ms to assign 150 blocks to 150 nodes requiring 13011862528 bytes.
+[02/10/2022-17:29:53] [TRT] [I] Total Activation Memory: 126960640
+[02/10/2022-17:29:53] [TRT] [I] Detected 1 inputs and 4 output network tensors.
+[02/10/2022-17:29:53] [TRT] [I] Total Host Persistent Memory: 167856
+[02/10/2022-17:29:53] [TRT] [I] Total Device Persistent Memory: 11788800
+[02/10/2022-17:29:53] [TRT] [I] Total Scratch Memory: 48960768
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 3 MiB, GPU 2096 MiB
+[02/10/2022-17:29:53] [TRT] [I] [BlockAssignment] Algorithm ShiftNTopDown took 29.1561ms to assign 8 blocks to 151 nodes requiring 66721280 bytes.
+[02/10/2022-17:29:53] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU +8, now: CPU 2789, GPU 7126 (MiB)
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +8, now: CPU 2789, GPU 7134 (MiB)
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageSnapshot] Builder end: CPU 2788 MiB, GPU 7100 MiB
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1038,7 +1038,7 @@ Serialize engine success, saved as yolov5n6.engine
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span> <span class="o">=</span> <span class="n">PredictorTRT</span><span class="p">(</span><span class="n">engine_path</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span> <span class="o">=</span> <span class="n">PredictorTRT</span><span class="p">(</span><span class="n">engine_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1055,27 +1055,27 @@ Loading yolov5n6.engine for TensorRT inference...
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[01/25/2022-02:12:36] [TRT] [I] The logger passed into createInferRuntime differs from one already provided for an existing builder, runtime, or refitter. Uses of the global logger, returned by nvinfer1::getLogger(), will return the existing value.
+[02/10/2022-17:29:53] [TRT] [I] The logger passed into createInferRuntime differs from one already provided for an existing builder, runtime, or refitter. Uses of the global logger, returned by nvinfer1::getLogger(), will return the existing value.
 
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageChange] Init CUDA: CPU +0, GPU +0, now: CPU 2889, GPU 1414 (MiB)
-[01/25/2022-02:12:36] [TRT] [I] Loaded engine size: 17 MiB
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageSnapshot] deserializeCudaEngine begin: CPU 2906 MiB, GPU 1414 MiB
-[01/25/2022-02:12:36] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU +10, now: CPU 2918, GPU 1442 (MiB)
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +8, now: CPU 2918, GPU 1450 (MiB)
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageSnapshot] deserializeCudaEngine end: CPU 2918 MiB, GPU 1432 MiB
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageSnapshot] ExecutionContext creation begin: CPU 2901 MiB, GPU 1434 MiB
-[01/25/2022-02:12:36] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU +10, now: CPU 2901, GPU 1444 (MiB)
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +8, now: CPU 2901, GPU 1452 (MiB)
-[01/25/2022-02:12:36] [TRT] [I] [MemUsageSnapshot] ExecutionContext creation end: CPU 2902 MiB, GPU 1522 MiB
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageChange] Init CUDA: CPU +0, GPU +0, now: CPU 2774, GPU 7066 (MiB)
+[02/10/2022-17:29:53] [TRT] [I] Loaded engine size: 18 MiB
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageSnapshot] deserializeCudaEngine begin: CPU 2793 MiB, GPU 7066 MiB
+[02/10/2022-17:29:53] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU +10, now: CPU 2805, GPU 7096 (MiB)
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +8, now: CPU 2805, GPU 7104 (MiB)
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageSnapshot] deserializeCudaEngine end: CPU 2805 MiB, GPU 7086 MiB
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageSnapshot] ExecutionContext creation begin: CPU 2787 MiB, GPU 7088 MiB
+[02/10/2022-17:29:53] [TRT] [W] TensorRT was linked against cuBLAS/cuBLAS LT 11.6.1 but loaded cuBLAS/cuBLAS LT 11.5.1
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU +10, now: CPU 2787, GPU 7098 (MiB)
+[02/10/2022-17:29:53] [TRT] [I] [MemUsageChange] Init cuDNN: CPU +0, GPU +8, now: CPU 2787, GPU 7106 (MiB)
+[02/10/2022-17:29:54] [TRT] [I] [MemUsageSnapshot] ExecutionContext creation end: CPU 2788 MiB, GPU 7190 MiB
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">img_size</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">half</span><span class="o">=</span><span class="n">half</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">img_size</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1097,7 +1097,7 @@ Loading yolov5n6.engine for TensorRT inference...
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-inference: 2.722ms
+inference: 3.178ms
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1114,12 +1114,12 @@ inference: 2.722ms
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[{'scores': tensor([0.88235, 0.84495, 0.72589, 0.70359], device='cuda:0'),
+[{'scores': tensor([0.88507, 0.84574, 0.78696, 0.72554], device='cuda:0'),
   'labels': tensor([5, 0, 0, 0], device='cuda:0', dtype=torch.int32),
-  'boxes': tensor([[ 35.26947, 133.40974, 496.86469, 439.13141],
-          [ 45.87330, 229.64430, 159.15875, 531.91492],
-          [145.77779, 228.77316, 220.91096, 514.98694],
-          [417.83066, 221.98868, 495.86893, 518.30176]], device='cuda:0')}]
+  'boxes': tensor([[101.38788, 133.96561, 559.35742, 438.39151],
+          [109.85501, 229.63588, 222.71661, 532.39490],
+          [481.72922, 225.32666, 559.88379, 519.29541],
+          [213.31516, 231.87244, 286.16660, 513.25690]], device='cuda:0')}]
 </pre></div></div>
 </div>
 </section>
