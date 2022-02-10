@@ -50,6 +50,7 @@ class YOLOGraphSurgeon:
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: False.
         device (torch.device): The device to be used for importing ONNX. Default: torch.device("cpu").
+        precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
     """
 
     def __init__(
@@ -60,6 +61,7 @@ class YOLOGraphSurgeon:
         version: str = "r6.0",
         enable_dynamic: bool = False,
         device: torch.device = torch.device("cpu"),
+        precision: str = "fp32",
     ):
         checkpoint_path = Path(checkpoint_path)
         assert checkpoint_path.exists()
@@ -82,6 +84,7 @@ class YOLOGraphSurgeon:
         self.graph.fold_constants()
         self.num_classes = model.num_classes
         self.batch_size = 1
+        self.precision = precision
 
     def infer(self):
         """
@@ -165,6 +168,13 @@ class YOLOGraphSurgeon:
             "box_coding": 0,
         }
 
+        if self.precision == "fp32":
+            dtype_output = np.float32
+        elif self.precision == "fp16":
+            dtype_output = np.float16
+        else:
+            raise NotImplementedError(f"Currently not supports precision: {self.precision}")
+
         # NMS Outputs
         output_num_detections = gs.Variable(
             name="num_detections",
@@ -173,12 +183,12 @@ class YOLOGraphSurgeon:
         )  # A scalar indicating the number of valid detections per batch image.
         output_boxes = gs.Variable(
             name="detection_boxes",
-            dtype=np.float32,
+            dtype=dtype_output,
             shape=[self.batch_size, detections_per_img, 4],
         )
         output_scores = gs.Variable(
             name="detection_scores",
-            dtype=np.float32,
+            dtype=dtype_output,
             shape=[self.batch_size, detections_per_img],
         )
         output_labels = gs.Variable(

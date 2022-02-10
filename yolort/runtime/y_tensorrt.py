@@ -28,8 +28,9 @@ class PredictorTRT:
     single device for a single input image.
 
     Args:
-        engine_path (str): Path of the ONNX checkpoint.
+        engine_path (string): Path of the ONNX checkpoint.
         device (torch.device): The CUDA device to be used for inferencing.
+        precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
 
     Examples:
         >>> import cv2
@@ -55,6 +56,7 @@ class PredictorTRT:
         self,
         engine_path: str,
         device: torch.device = torch.device("cuda"),
+        precision: str = "fp32",
     ) -> None:
         self.engine_path = engine_path
         self.device = device
@@ -64,7 +66,13 @@ class PredictorTRT:
 
         self.engine = self._build_engine()
         self._set_context()
-        self.half = False
+
+        if precision == "fp32":
+            self.half = False
+        elif precision == "fp16":
+            self.half = True
+        else:
+            raise NotImplementedError(f"Currently not supports precision: {precision}")
 
     def _build_engine(self):
         logger.info(f"Loading {self.engine_path} for TensorRT inference...")
@@ -136,11 +144,11 @@ class PredictorTRT:
 
         return detections
 
-    def warmup(self, img_size=(1, 3, 320, 320), half=False):
+    def warmup(self, img_size=(1, 3, 320, 320)):
         # Warmup model by running inference once
         # only warmup GPU models
         if isinstance(self.device, torch.device) and self.device.type != "cpu":
-            image = torch.zeros(*img_size).to(self.device).type(torch.half if half else torch.float)
+            image = torch.zeros(*img_size).to(self.device).type(torch.half if self.half else torch.float)
             self(image)
 
     def run_wo_postprocessing(self, image: Tensor):
