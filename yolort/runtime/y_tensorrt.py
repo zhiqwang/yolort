@@ -39,6 +39,22 @@ class PredictorTRT:
             be padded to a minimum rectangle to match `min_size / max_size` and each of its edges
             is divisible by `size_divisible` if it is not specified. Default: None
         fill_color (int): fill value for padding. Default: 114
+
+    Example:
+
+        Demo pipeline for deploying TensorRT.
+
+        .. code-block:: python
+            import torch
+            from yolort.runtime import PredictorTRT
+
+            # Load the exported TensorRT engine
+            engine_path = 'yolov5n6.engine'
+            device = torch.device('cuda')
+            y_runtime = PredictorTRT(engine_path, device=device)
+
+            # Perform inference on an image file
+            predictions = y_runtime.predict('bus.jpg')
     """
 
     def __init__(
