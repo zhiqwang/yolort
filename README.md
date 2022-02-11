@@ -137,6 +137,21 @@ On the `ONNX Runtime` front you can use the [C++ example](deployment/onnxruntime
 
 ### Inference on TensorRT backend
 
+The pipeline for TensorRT deployment is also very easy to use.
+
+```python
+import torch
+from yolort.runtime import PredictorTRT
+
+# Load the exported TensorRT engine
+engine_path = "yolov5n6.engine"
+device = torch.device("cuda")
+y_runtime = PredictorTRT(engine_path, device=device)
+
+# Perform inference on an image file
+predictions = y_runtime.predict("bus.jpg")
+```
+
 On the `TensorRT` front you can use the [C++ example](deployment/tensorrt), and we also provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) for using the `TensorRT`.
 
 ## 🎨 Model Graph Visualization

@@ -2,7 +2,7 @@
 import argparse
 import warnings
 from pathlib import PosixPath
-from typing import Any, List, Dict, Tuple, Optional, Union, Callable
+from typing import Any, Dict, List, Callable, Optional, Tuple, Union
 
 import torch
 import torchvision
@@ -218,11 +218,7 @@ class YOLOv5(LightningModule):
         )
 
     @torch.no_grad()
-    def predict(
-        self,
-        x: Any,
-        image_loader: Optional[Callable] = None,
-    ) -> List[Dict[str, Tensor]]:
+    def predict(self, x: Any, image_loader: Optional[Callable] = None) -> List[Dict[str, Tensor]]:
         """
         Predict function for raw data or processed data
         Args:
@@ -234,8 +230,7 @@ class YOLOv5(LightningModule):
         """
         image_loader = image_loader or self.default_loader
         images = self.collate_images(x, image_loader)
-        outputs = self.forward(images)
-        return outputs
+        return self.forward(images)
 
     def default_loader(self, img_path: str) -> Tensor:
         """
