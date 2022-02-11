@@ -76,6 +76,7 @@ class PredictorTRT:
         self._size_divisible = size_divisible
         self._fixed_shape = fixed_shape
         self._fill_color = fill_color
+        self._img_size = None
         self.transform = None
         self._set_preprocessing()
 
@@ -107,8 +108,9 @@ class PredictorTRT:
             raise NotImplementedError("Currently only supports static shape inference in TensorRT.")
 
         export_onnx_shape = self.bindings["images"].shape
-        size = export_onnx_shape[-2:]
+        self._img_size = export_onnx_shape
 
+        size = export_onnx_shape[-2:]
         self.transform = YOLOTransform(
             size[0],
             size[1],
@@ -119,8 +121,7 @@ class PredictorTRT:
 
     def preprocessing(self, image):
         image = torch.from_numpy(image).to(device=self._device)
-        image = image.to(torch.float16 if self._half else torch.float32)
-        image = image.half() if self._half else image.float()  # uint8 to fp16/32
+        image = image.to(torch.float16 if self._half else torch.float32)  # uint8 to fp16/32
         image /= 255  # 0 - 255 to 0.0 - 1.0
         if len(image.shape) == 3:
             image = image[None]  # expand for batch dim
@@ -165,14 +166,6 @@ class PredictorTRT:
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
 
         return detections
-
-    def warmup(self, img_size=(1, 3, 320, 320)):
-        # Warmup model by running inference once
-        # only warmup GPU models
-        if isinstance(self._device, torch.device) and self._device.type != "cpu":
-            image = torch.zeros(*img_size).to(device=self._device)
-            image = image.to(torch.float16 if self._half else torch.float32)
-            self(image)
 
     def run_wo_postprocessing(self, image: Tensor):
         """
@@ -247,3 +240,10 @@ class PredictorTRT:
             f"The type of the sample is {type(samples)}, we currently don't support it now, the "
             "samples should be either a tensor, list of tensors, a image path or list of image paths."
         )
+
+    def warmup(self):
+        # Warmup model by running inference once and only warmup GPU models
+        if isinstance(self._device, torch.device) and self._device.type != "cpu":
+            image = torch.zeros(*self._img_size).to(device=self._device)
+            image = image.to(torch.float16 if self._half else torch.float32)
+            self(image)
