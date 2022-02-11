@@ -62,7 +62,8 @@ def get_trace_module(
     model = TraceWrapper(model_func)
     model.eval()
 
-    dummy_input = torch.rand(1, 3, *input_shape)
+    dummy_input = torch.rand(10, 3, *input_shape)
+    dummy_input = dummy_input.to('cuda')
     trace_module = torch.jit.trace(model, dummy_input)
     trace_module.eval()
 
