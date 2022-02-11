@@ -74,7 +74,7 @@ class PredictorTRT:
         self._dtype = torch.float16 if self._half else torch.float32
 
         # Set pre-processing transform for TensorRT inference
-        self.enable_dynamic = enable_dynamic
+        self._enable_dynamic = enable_dynamic
         self._size = size
         self._size_divisible = size_divisible
         self._fixed_shape = fixed_shape
@@ -112,7 +112,7 @@ class PredictorTRT:
         self.context = self.engine.create_execution_context()
 
     def _set_preprocessing(self):
-        if self.enable_dynamic:
+        if self._enable_dynamic:
             raise NotImplementedError("Currently only supports static shape inference in TensorRT.")
 
         export_onnx_shape = self.bindings["images"].shape
@@ -127,13 +127,11 @@ class PredictorTRT:
             fill_color=self._fill_color,
         )
 
-    def preprocessing(self, image):
-        # uint8 to fp16/32
-        image = torch.from_numpy(image).to(dtype=self._dtype, device=self._device)
-        image /= 255  # 0 - 255 to 0.0 - 1.0
-        if len(image.shape) == 3:
-            image = image[None]  # expand for batch dim
-        return image
+    def warmup(self):
+        # Warmup model by running inference once and only warmup GPU models
+        if isinstance(self._device, torch.device) and self._device.type != "cpu":
+            image = torch.zeros(*self._img_size).to(dtype=self._dtype, device=self._device)
+            self(image)
 
     def __call__(self, image: Tensor):
         """
@@ -152,26 +150,41 @@ class PredictorTRT:
         labels = self.bindings["detection_classes"].data
         return boxes, scores, labels, num_dets
 
-    def run_on_image(self, image: Tensor):
-        """
-        Run the TensorRT engine for one image only.
-
-        Args:
-            image (Tensor): an image of shape (N, C, H, W).
-        """
-        boxes, scores, labels, num_dets = self(image)
-
-        detections = self.postprocessing(boxes, scores, labels, num_dets)
-        return detections
-
     @staticmethod
-    def postprocessing(all_boxes, all_scores, all_labels, all_num_dets):
+    def parse_output(all_boxes, all_scores, all_labels, all_num_dets):
         detections: List[Dict[str, Tensor]] = []
 
         for boxes, scores, labels, num_dets in zip(all_boxes, all_scores, all_labels, all_num_dets):
             keep = num_dets.item()
             boxes, scores, labels = boxes[:keep], scores[:keep], labels[:keep]
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
+
+        return detections
+
+    def forward(self, inputs: List[Tensor]):
+        """
+        Wrapper the TensorRT inference engine with Pre-Processing Module.
+
+        Args:
+            inputs (list[Tensor]): images to be processed
+        """
+        # get the original image sizes
+        original_image_sizes: List[Tuple[int, int]] = []
+
+        for img in inputs:
+            val = img.shape[-2:]
+            assert len(val) == 2
+            original_image_sizes.append((val[0], val[1]))
+
+        # Pre-Processing
+        samples, _ = self.transform(inputs)
+        # Inference on TensorRT
+        boxes, scores, labels, num_dets = self(samples.tensors)
+        results = self.parse_output(boxes, scores, labels, num_dets)
+
+        # Rescale coordinate
+        im_shape = torch.tensor(samples.tensors.shape[-2:])
+        detections = self.transform.postprocess(results, im_shape, original_image_sizes)
 
         return detections
 
@@ -187,7 +200,7 @@ class PredictorTRT:
         """
         image_loader = image_loader or self.default_loader
         images = self.collate_images(x, image_loader)
-        return self(images)
+        return self.forward(images)
 
     def default_loader(self, img_path: str) -> Tensor:
         """
@@ -233,9 +246,3 @@ class PredictorTRT:
             f"The type of the sample is {type(samples)}, we currently don't support it now, the "
             "samples should be either a tensor, list of tensors, a image path or list of image paths."
         )
-
-    def warmup(self):
-        # Warmup model by running inference once and only warmup GPU models
-        if isinstance(self._device, torch.device) and self._device.type != "cpu":
-            image = torch.zeros(*self._img_size).to(dtype=self._dtype, device=self._device)
-            self(image)
