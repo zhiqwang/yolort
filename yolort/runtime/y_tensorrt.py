@@ -52,6 +52,7 @@ class PredictorTRT:
         fixed_shape: Optional[Tuple[int, int]] = None,
         fill_color: int = 114,
     ) -> None:
+
         self._engine_path = engine_path
         self._device = device
 
@@ -70,6 +71,8 @@ class PredictorTRT:
         else:
             raise NotImplementedError(f"Currently not supports precision: {precision}")
 
+        self._dtype = torch.float16 if self._half else torch.float32
+
         # Set pre-processing transform for TensorRT inference
         self.enable_dynamic = enable_dynamic
         self._size = size
@@ -85,7 +88,12 @@ class PredictorTRT:
 
     def _build_engine(self):
         logger.info(f"Loading {self._engine_path} for TensorRT inference...")
-        trt_logger = trt.Logger(trt.Logger.INFO)
+        if trt is not None:
+            trt_logger = trt.Logger(trt.Logger.INFO)
+        else:
+            trt_logger = None
+            raise ImportError("TensorRT is not installed, please install trt firstly.")
+
         trt.init_libnvinfer_plugins(trt_logger, namespace="")
         with open(self._engine_path, "rb") as f, trt.Runtime(trt_logger) as runtime:
             engine = runtime.deserialize_cuda_engine(f.read())
@@ -120,8 +128,8 @@ class PredictorTRT:
         )
 
     def preprocessing(self, image):
-        image = torch.from_numpy(image).to(device=self._device)
-        image = image.to(torch.float16 if self._half else torch.float32)  # uint8 to fp16/32
+        # uint8 to fp16/32
+        image = torch.from_numpy(image).to(dtype=self._dtype, device=self._device)
         image /= 255  # 0 - 255 to 0.0 - 1.0
         if len(image.shape) == 3:
             image = image[None]  # expand for batch dim
@@ -167,20 +175,6 @@ class PredictorTRT:
 
         return detections
 
-    def run_wo_postprocessing(self, image: Tensor):
-        """
-        Run the TensorRT engine for one image only.
-
-        Args:
-            image (Tensor): an image of shape (N, C, H, W).
-        """
-        assert image.shape == self.bindings["images"].shape, (image.shape, self.bindings["images"].shape)
-        self.binding_addrs["images"] = int(image.data_ptr())
-        self.context.execute_v2(list(self.binding_addrs.values()))
-        boxes = self.bindings["boxes"].data
-        scores = self.bindings["scores"].data
-        return boxes, scores
-
     def predict(self, x: Any, image_loader: Optional[Callable] = None) -> List[Dict[str, Tensor]]:
         """
         Predict function for raw data or processed data
@@ -219,12 +213,11 @@ class PredictorTRT:
         Returns:
             List[Tensor], The processed image samples.
         """
-        p = next(self.parameters())  # for device and type
         if isinstance(samples, Tensor):
-            return [samples.to(p.device).type_as(p)]
+            return [samples.to(dtype=self._dtype, device=self._device)]
 
         if contains_any_tensor(samples):
-            return [sample.to(p.device).type_as(p) for sample in samples]
+            return [sample.to(dtype=self._dtype, device=self._device) for sample in samples]
 
         if isinstance(samples, str):
             samples = [samples]
@@ -232,7 +225,7 @@ class PredictorTRT:
         if isinstance(samples, (list, tuple)) and all(isinstance(p, str) for p in samples):
             outputs = []
             for sample in samples:
-                output = image_loader(sample).to(p.device).type_as(p)
+                output = image_loader(sample).to(dtype=self._dtype, device=self._device)
                 outputs.append(output)
             return outputs
 
@@ -244,6 +237,5 @@ class PredictorTRT:
     def warmup(self):
         # Warmup model by running inference once and only warmup GPU models
         if isinstance(self._device, torch.device) and self._device.type != "cpu":
-            image = torch.zeros(*self._img_size).to(device=self._device)
-            image = image.to(torch.float16 if self._half else torch.float32)
+            image = torch.zeros(*self._img_size).to(dtype=self._dtype, device=self._device)
             self(image)
