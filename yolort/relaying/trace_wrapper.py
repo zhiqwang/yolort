@@ -63,7 +63,7 @@ def get_trace_module(
     model.eval()
 
     dummy_input = torch.rand(10, 3, *input_shape)
-    dummy_input = dummy_input.to('cuda')
+    dummy_input = dummy_input.to("cuda")
     trace_module = torch.jit.trace(model, dummy_input)
     trace_module.eval()
 
