@@ -7,8 +7,8 @@ import torch
 from torch import Tensor
 from torch.jit._trace import TopLevelTracedModule
 from yolort.models import yolov5s
-from yolort.relaying import get_trace_module, YOLOTRTGraphSurgeon
-from yolort.relaying.yolo_inference import YOLOInference
+from yolort.relaying import get_trace_module, YOLOInference
+from yolort.relaying.trt_graphsurgeon import YOLOTRTGraphSurgeon
 from yolort.v5 import attempt_download
 
 

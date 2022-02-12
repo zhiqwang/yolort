@@ -13,17 +13,79 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+import torch
+from torch import Tensor
+
 try:
     import tensorrt as trt
 except ImportError:
     trt = None
+
+from yolort.relaying.trt_graphsurgeon import YOLOTRTGraphSurgeon
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("TRTHelper").setLevel(logging.INFO)
 logger = logging.getLogger("TRTHelper")
 
 
-__all__ = ["EngineBuilder"]
+def export_tensorrt_engine(
+    checkpoint_path,
+    score_thresh: float = 0.25,
+    nms_thresh: float = 0.45,
+    version: str = "r6.0",
+    onnx_path: Optional[str] = None,
+    engine_path: Optional[str] = None,
+    input_sample: Optional[Tensor] = None,
+    detections_per_img: int = 100,
+    precision: str = "fp32",
+    verbose: bool = False,
+    workspace: int = 12,
+) -> None:
+    """
+    Export ONNX models and trt engines that can be used for TensorRT inferencing.
+
+    Args:
+        checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+        score_thresh (float): Score threshold used for postprocessing the detections. Default: 0.25
+        nms_thresh (float): NMS threshold used for postprocessing the detections. Default: 0.45
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+        onnx_path (string, optional): The path to the ONNX graph to load. Default: None
+        engine_path (string, optional): The path where to serialize the engine to. Default: None
+        input_sample (Tensor, optional): Specify the input shape to export ONNX, and the
+            default shape for the sample is (1, 3, 640, 640).
+        detections_per_img (int): Number of best detections to keep after NMS. Default: 100
+        precision (string): The datatype to use for the engine inference, either 'fp32', 'fp16' or
+            'int8'. Default: 'fp32'
+        verbose (bool): If enabled, a higher verbosity level will be set on the TensorRT
+            logger. Default: False
+        workspace (int): Max memory workspace to allow, in Gb. Default: 12
+    """
+
+    if input_sample is None:
+        input_sample = torch.rand(1, 3, 640, 640)
+
+    yolo_gs = YOLOTRTGraphSurgeon(checkpoint_path, version=version, input_sample=input_sample)
+
+    # Register the `EfficientNMS_TRT` into the graph.
+    yolo_gs.register_nms(
+        score_thresh=score_thresh,
+        nms_thresh=nms_thresh,
+        detections_per_img=detections_per_img,
+    )
+
+    # Set the path of ONNX and Tensorrt Engine to export
+    checkpoint_path = Path(checkpoint_path)
+    onnx_path = onnx_path or str(checkpoint_path.with_suffix(".onnx"))
+    engine_path = engine_path or str(checkpoint_path.with_suffix(".engine"))
+
+    # Save the exported ONNX models.
+    yolo_gs.save(onnx_path)
+
+    # Build and export the TensorRT engine.
+    engine_builder = EngineBuilder(verbose=verbose, workspace=workspace, precision=precision)
+    engine_builder.create_network(onnx_path)
+    engine_builder.create_engine(engine_path)
 
 
 class EngineBuilder:
@@ -45,13 +107,14 @@ class EngineBuilder:
     ):
         """
         Args:
-            verbose (bool): If enabled, a higher verbosity level will be
-                set on the TensorRT logger. Default: False
-            workspace (int): Max memory workspace to allow, in Gb.
+            verbose (bool): If enabled, a higher verbosity level will be set on the TensorRT
+                logger. Default: False
+            workspace (int): Max memory workspace to allow, in Gb. Default: 4
             precision (string): The datatype to use for the engine inference, either 'fp32',
                 'fp16' or 'int8'. Default: 'fp32'
             enable_dynamic (bool): Whether to enable dynamic shapes. Default: False
-            max_batch_size (int): Maximum batch size reserved for dynamic shape inference. Default: 16
+            max_batch_size (int): Maximum batch size reserved for dynamic shape inference.
+                Default: 16
             calib_input (string, optinal): The path to a directory holding the calibration images.
                 Default: None
             calib_cache (string, optinal): The path where to write the calibration cache to,
@@ -88,7 +151,7 @@ class EngineBuilder:
         Parse the ONNX graph and create the corresponding TensorRT network definition.
 
         Args:
-            onnx_path: The path to the ONNX graph to load.
+            onnx_path (string): The path to the ONNX graph to load.
         """
 
         flag = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
@@ -112,7 +175,7 @@ class EngineBuilder:
         Build the TensorRT engine and serialize it to disk.
 
         Args:
-            engine_path: The path where to serialize the engine to.
+            engine_path (string): The path where to serialize the engine to.
         """
         engine_path = Path(engine_path)
         engine_path.parent.mkdir(parents=True, exist_ok=True)
