@@ -1,4 +1,6 @@
-# Copyright (c) 2021, yolort team. All Rights Reserved.
-from .trace_wrapper import get_trace_module
+# Copyright (c) 2021, yolort team. All rights reserved.
 
-__all__ = ["get_trace_module"]
+from .trace_wrapper import get_trace_module
+from .yolo_inference import YOLOInference
+
+__all__ = ["get_trace_module", "YOLOInference"]

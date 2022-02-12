@@ -1,13 +1,4 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
-#
-# This source code is licensed under the GPL-3.0 license found in the
-# LICENSE file in the root directory of this source tree.
-#
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
-#
-# This source code is licensed under the Apache-2.0 license found in the
-# LICENSE file in the root directory of TensorRT source tree.
-#
 
 import logging
 from pathlib import Path
@@ -24,16 +15,18 @@ try:
 except ImportError:
     gs = None
 
-from .trt_helper import YOLOTRTModule
+from .yolo_inference import YOLOInference
 
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("YOLOGraphSurgeon").setLevel(logging.INFO)
-logger = logging.getLogger("YOLOGraphSurgeon")
+logging.getLogger("YOLOTRTGraphSurgeon").setLevel(logging.INFO)
+logger = logging.getLogger("YOLOTRTGraphSurgeon")
+
+__all__ = ["YOLOTRTGraphSurgeon"]
 
 
-class YOLOGraphSurgeon:
+class YOLOTRTGraphSurgeon:
     """
-    Constructor of the YOLOv5 Graph Surgeon object.
+    YOLOv5 Graph Surgeon for TensorRT inference.
 
     Because TensorRT treat the ``torchvision::ops::nms`` as plugin, we use the a simple post-processing
     module named ``LogitsDecoder`` to connect to ``EfficientNMS_TRT`` plugin in TensorRT.
@@ -66,8 +59,8 @@ class YOLOGraphSurgeon:
         checkpoint_path = Path(checkpoint_path)
         assert checkpoint_path.exists()
 
-        # Use YOLOTRTModule to convert saved model to an initial ONNX graph.
-        model = YOLOTRTModule(checkpoint_path, version=version)
+        # Use YOLOInference to convert saved model to an initial ONNX graph.
+        model = YOLOInference(checkpoint_path, version=version)
         model = model.eval()
         model = model.to(device=device)
         logger.info(f"Loaded saved model from {checkpoint_path}")
