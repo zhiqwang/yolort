@@ -1,14 +1,8 @@
 import argparse
 from pathlib import Path
 
-import onnx
 import torch
 from torchvision.ops._register_onnx_ops import _onnx_opset_version as DEFAULT_OPSET
-
-try:
-    import onnxsim
-except ImportError:
-    onnxsim = None
 
 from yolort.models import YOLO, YOLOv5
 
@@ -62,12 +56,11 @@ def get_parser():
 def export_onnx(
     model,
     inputs,
-    export_onnx_path,
+    onnx_path,
     dynamic_axes,
-    input_names=["images_tensors"],
+    input_names=["images"],
     output_names=["scores", "labels", "boxes"],
     opset_version=11,
-    enable_simplify=False,
 ):
     """
     Export the yolort models.
@@ -75,51 +68,24 @@ def export_onnx(
     Args:
         model (nn.Module): The model to be exported.
         inputs (Tuple[torch.Tensor]): The inputs to the model.
-        export_onnx_path (str): A string containing a file name. A binary Protobuf
-            will be written to this file.
+        onnx_path (str): A string containing a file name. A binary Protobuf will be written
+            to this file.
         dynamic_axes (dict): A dictionary of dynamic axes.
         input_names (str): A names list of input names.
         output_names (str): A names list of output names.
-        opset_version (int, default is 11): By default we export the model to the
-            opset version of the onnx submodule.
-        enable_simplify (bool, default is False): Whether to enable simplification
-            of the ONNX model.
+        opset_version (int, default is 11): By default we export the model to the opset
+            version of the onnx submodule.
     """
     torch.onnx.export(
         model,
         inputs,
-        export_onnx_path,
+        onnx_path,
         do_constant_folding=True,
         opset_version=opset_version,
         input_names=input_names,
         output_names=output_names,
         dynamic_axes=dynamic_axes,
     )
-
-    if enable_simplify:
-        input_shapes = {input_names[0]: list(inputs[0][0].shape)}
-        simplify_onnx(export_onnx_path, input_shapes)
-
-
-def simplify_onnx(onnx_path, input_shapes):
-    if onnxsim is None:
-        raise ImportError("onnx-simplifier not found and is required by yolort.")
-
-    print(f"Simplifying with onnx-simplifier {onnxsim.__version__}...")
-
-    # Load onnx mode
-    onnx_model = onnx.load(onnx_path)
-
-    # Simplify the ONNX model
-    model_sim, check = onnxsim.simplify(
-        onnx_model,
-        input_shapes=input_shapes,
-        dynamic_input_shape=True,
-    )
-
-    assert check, "There is something error when simplifying ONNX model"
-    export_onnx_sim_path = onnx_path.with_suffix(".sim.onnx")
-    onnx.save(model_sim, export_onnx_sim_path)
 
 
 def cli_main():
@@ -136,12 +102,12 @@ def cli_main():
         # input data
         inputs = torch.rand(args.batch_size, 3, *image_size)
         dynamic_axes = {
-            "images_tensors": {0: "batch", 2: "height", 3: "width"},
+            "images": {0: "batch", 2: "height", 3: "width"},
             "boxes": {0: "batch", 1: "num_objects"},
             "labels": {0: "batch", 1: "num_objects"},
             "scores": {0: "batch", 1: "num_objects"},
         }
-        input_names = ["images_tensors"]
+        input_names = ["images"]
         output_names = ["scores", "labels", "boxes"]
         model = YOLO.load_from_yolov5(
             checkpoint_path,
@@ -154,12 +120,12 @@ def cli_main():
         images = [torch.rand(3, *image_size)]
         inputs = (images,)
         dynamic_axes = {
-            "images_tensors": {1: "height", 2: "width"},
+            "images": {1: "height", 2: "width"},
             "boxes": {0: "num_objects"},
             "labels": {0: "num_objects"},
             "scores": {0: "num_objects"},
         }
-        input_names = ["images_tensors"]
+        input_names = ["images"]
         output_names = ["scores", "labels", "boxes"]
         model = YOLOv5.load_from_yolov5(
             checkpoint_path,
@@ -170,17 +136,16 @@ def cli_main():
         model.eval()
 
     # export ONNX models
-    export_onnx_path = checkpoint_path.with_suffix(".onnx")
+    onnx_path = checkpoint_path.with_suffix(".onnx")
 
     export_onnx(
         model,
         inputs,
-        export_onnx_path,
+        onnx_path,
         dynamic_axes,
         input_names=input_names,
         output_names=output_names,
         opset_version=args.opset,
-        enable_simplify=args.simplify,
     )
 
 
