@@ -1,14 +1,13 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
+from pathlib import Path
+
 import pytest
 import torch
-
-from pathlib import Path
 from torch import Tensor
 from torch.jit._trace import TopLevelTracedModule
 from yolort.models import yolov5s
 from yolort.relaying import get_trace_module, YOLOTRTGraphSurgeon
-
 from yolort.relaying.yolo_inference import YOLOInference
 from yolort.v5 import attempt_download
 
