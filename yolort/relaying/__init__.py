@@ -1,4 +1,6 @@
-# Copyright (c) 2021, yolort team. All Rights Reserved.
-from .trace_wrapper import get_trace_module
+# Copyright (c) 2021, yolort team. All rights reserved.
 
-__all__ = ["get_trace_module"]
+from .trace_wrapper import get_trace_module
+from .trt_graphsurgeon import YOLOTRTGraphSurgeon
+
+__all__ = ["get_trace_module", "YOLOTRTGraphSurgeon"]

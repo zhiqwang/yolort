@@ -1,6 +1,6 @@
-# Copyright (c) 2021, yolort team. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
+
 from .y_onnxruntime import PredictorORT
 from .y_tensorrt import PredictorTRT
-from .yolo_graphsurgeon import YOLOGraphSurgeon
 
-__all__ = ["PredictorORT", "PredictorTRT", "YOLOGraphSurgeon"]
+__all__ = ["PredictorORT", "PredictorTRT"]
