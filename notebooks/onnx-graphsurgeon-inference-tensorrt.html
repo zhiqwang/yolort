@@ -632,6 +632,12 @@ div.rendered_html tbody tr:hover {
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python3 -m pip install onnx_graphsurgeon --index-url https://pypi.ngc.nvidia.com
 </pre></div>
 </div>
+<p>For us to unfold the subsequent story, TensorRT should be installed. Check out the installation instructions of TensorRT at <a class="reference external" href="https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html">https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html</a>. You can use the Python wheels provided by TensorRT if you only want to use the Python interface:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pip install -U nvidia-tensorrt --index-url https://pypi.ngc.nvidia.com
+</pre></div>
+</div>
+<p>These wheels only works on Ubuntu 18.04+ or CentOS 7+ with Python versions 3.6 to 3.9 and CUDA 11.x. Check out the details at <a class="reference external" href="https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html#installing-pip">https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html#installing-pip</a>.</p>
+<p>One option to use the C++ interface of TensorRT is via docker. We’ve tested the docker published by Meta (Facebook) containing the TensorRT and PyTorch at Nvidia ngc: <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch">https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch</a>.</p>
 <p>The detailed results:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[I] === Performance summary w/o EfficientNMS_TRT plugin ===
 [I] Throughput: 383.298 qps
