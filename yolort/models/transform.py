@@ -158,7 +158,7 @@ class YOLOTransform(nn.Module):
         targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Tuple[NestedTensor, Optional[Tensor]]:
         device = images[0].device
-
+        images = [img for img in images]
         if targets is not None:
             # make a copy of targets to avoid modifying it in-place
             # once torchscript supports dict comprehension
