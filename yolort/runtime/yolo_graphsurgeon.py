@@ -43,11 +43,11 @@ class YOLOGraphSurgeon:
 
     Args:
         checkpoint_path (string): The path pointing to the PyTorch saved model to load.
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         input_sample (Tensor, optional): Specify the input shape to export ONNX, and the
             default shape for the sample is (1, 3, 640, 640).
         score_thresh (float): Score threshold used for postprocessing the detections.
-        version (str): upstream version released by the ultralytics/yolov5, Possible
-            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: False.
         device (torch.device): The device to be used for importing ONNX. Default: torch.device("cpu").
         precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
@@ -57,8 +57,8 @@ class YOLOGraphSurgeon:
         self,
         checkpoint_path: str,
         *,
-        input_sample: Optional[Tensor] = None,
         version: str = "r6.0",
+        input_sample: Optional[Tensor] = None,
         enable_dynamic: bool = False,
         device: torch.device = torch.device("cpu"),
         precision: str = "fp32",
