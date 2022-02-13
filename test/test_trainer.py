@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import pytorch_lightning as pl
 from yolort.data import DetectionDataModule, _helper as data_helper
-from yolort.runner import DefaultTask
+from yolort.trainer import DefaultTask
 
 
 @pytest.mark.parametrize("arch", ["yolov5n", "yolov5s"])
