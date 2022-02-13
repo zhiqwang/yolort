@@ -1,5 +1,5 @@
 from yolort.models import yolov5s
-from yolort.relaying.trace_wrapper import get_trace_module
+from yolort.relay import get_trace_module
 
 
 if __name__ == "__main__":

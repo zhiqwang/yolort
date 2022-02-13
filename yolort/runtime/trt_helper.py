@@ -21,7 +21,7 @@ try:
 except ImportError:
     trt = None
 
-from yolort.relaying.trt_graphsurgeon import YOLOTRTGraphSurgeon
+from yolort.relay.trt_graphsurgeon import YOLOTRTGraphSurgeon
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("TRTHelper").setLevel(logging.INFO)

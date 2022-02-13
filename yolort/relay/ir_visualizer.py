@@ -11,7 +11,10 @@ blog post) with the attribution notice.
 """
 from collections import OrderedDict
 
-from graphviz import Digraph
+try:
+    from graphviz import Digraph
+except ImportError:
+    Digraph = None
 
 
 class TorchScriptVisualizer:
@@ -55,10 +58,15 @@ class TorchScriptVisualizer:
 
         model_input = next(self.module.graph.inputs())
         model_type = self.get_node_names(model_input)[-1]
-        dot = Digraph(
-            format=format,
-            graph_attr={"label": model_type, "labelloc": labelloc},
-        )
+        if Digraph is not None:
+            dot = Digraph(
+                format=format,
+                graph_attr={"label": model_type, "labelloc": labelloc},
+            )
+        else:
+            dot = None
+            raise ImportError("Graphviz is not installed, please install graphviz firstly.")
+
         self.make_graph(self.module, dot=dot, classes_to_visit=classes_to_visit)
 
         dot.attr(size=attr_size)
