@@ -20,6 +20,22 @@ class YOLOv5(nn.Module):
     """
     Wrapping the pre-processing (`LetterBox`) into the YOLO models.
 
+    Example:
+
+        Demo pipeline for YOLOv5 Inference.
+
+        .. code-block:: python
+            from yolort.models import YOLOv5
+
+            # Load model
+            model = YOLOv5(arch="yolov5_darknet_pan_n_r60", pretrained=True, score_thresh=0.35)
+            model = model.eval()
+
+            # Perform inference on an image file
+            predictions = model.predict("bus.jpg")
+            # Perform inference on a list of image files
+            predictions2 = model.predict(["bus.jpg", "zidane.jpg"])
+
     Args:
         arch (string): YOLO model architecture. Default: None
         model (nn.Module): YOLO model. Default: None
@@ -90,7 +106,7 @@ class YOLOv5(nn.Module):
             result (list[BoxList] or dict[Tensor]): the output from the model.
                 During training, it returns a dict[Tensor] which contains the losses.
                 During testing, it returns list[BoxList] contains additional fields
-                like `scores`, `labels` and `mask` (for Mask R-CNN models).
+                like `scores`, `labels` and `boxes`.
         """
         # get the original image sizes
         original_image_sizes: List[Tuple[int, int]] = []
