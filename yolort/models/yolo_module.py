@@ -1,44 +1,36 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
+
 import argparse
-import warnings
 from pathlib import PosixPath
-from typing import Any, Dict, List, Callable, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
-import torchvision
 from pytorch_lightning import LightningModule
-from torch import nn, Tensor
-from torchvision.io import read_image
-from yolort.data import COCOEvaluator, contains_any_tensor
-
-from . import yolo
-from ._utils import _evaluate_iou
-from .transform import YOLOTransform, _get_shape_onnx
-from .yolo import YOLO
-
-__all__ = ["YOLOv5"]
+from torch import Tensor
+from torchvision.ops import box_iou
+from yolort.data import COCOEvaluator
 
 
-class YOLOv5(LightningModule):
+__all__ = ["YOLOv5Module"]
+
+
+def _evaluate_iou(target, pred):
     """
-    Wrapping the pre-processing (`LetterBox`) into the YOLO models.
+    Evaluate intersection over union (IOU) for target from dataset and
+    output prediction from model
+    """
+    if pred["boxes"].shape[0] == 0:
+        # no box detected, 0 IOU
+        return torch.tensor(0.0, device=pred["boxes"].device)
+    return box_iou(target["boxes"], pred["boxes"]).diag().mean()
+
+
+class YOLOv5Module(LightningModule):
+    """
+    Wrapping the trainer into the YOLOv5 Module.
 
     Args:
         lr (float): The initial learning rate
-        arch (string): YOLO model architecture. Default: None
-        model (nn.Module): YOLO model. Default: None
-        num_classes (int): number of output classes of the model (doesn't including
-            background). Default: 80
-        pretrained (bool): If true, returns a model pre-trained on COCO train2017
-        progress (bool): If True, displays a progress bar of the download to stderr
-        size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
-            Default: (640, 640)
-        size_divisible (int): stride of the models. Default: 32
-        fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
-            the image will be padded to shape `fixed_shape` if specified. Instead the image will
-            be padded to a minimum rectangle to match `min_size / max_size` and each of its edges
-            is divisible by `size_divisible` if it is not specified. Default: None
-        fill_color (int): fill value for padding. Default: 114
         annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file
             Default: None.
     """
@@ -46,15 +38,6 @@ class YOLOv5(LightningModule):
     def __init__(
         self,
         lr: float = 0.01,
-        arch: Optional[str] = None,
-        model: Optional[nn.Module] = None,
-        num_classes: int = 80,
-        pretrained: bool = False,
-        progress: bool = True,
-        size: Tuple[int, int] = (640, 640),
-        size_divisible: int = 32,
-        fixed_shape: Optional[Tuple[int, int]] = None,
-        fill_color: int = 114,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
     ) -> None:
@@ -62,25 +45,6 @@ class YOLOv5(LightningModule):
         super().__init__()
 
         self.lr = lr
-        self.arch = arch
-        self.num_classes = num_classes
-
-        if model is None:
-            model = yolo.__dict__[arch](
-                pretrained=pretrained,
-                progress=progress,
-                num_classes=num_classes,
-                **kwargs,
-            )
-        self.model = model
-
-        self.transform = YOLOTransform(
-            size[0],
-            size[1],
-            size_divisible=size_divisible,
-            fixed_shape=fixed_shape,
-            fill_color=fill_color,
-        )
 
         # metrics
         self.evaluator = None
@@ -89,78 +53,6 @@ class YOLOv5(LightningModule):
 
         # used only on torchscript mode
         self._has_warned = False
-
-    def _forward_impl(
-        self,
-        inputs: List[Tensor],
-        targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
-        """
-        Args:
-            inputs (list[Tensor]): images to be processed
-            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
-
-        Returns:
-            result (list[BoxList] or dict[Tensor]): the output from the model.
-                During training, it returns a dict[Tensor] which contains the losses.
-                During testing, it returns list[BoxList] contains additional fields
-                like `scores`, `labels` and `mask` (for Mask R-CNN models).
-        """
-        # get the original image sizes
-        original_image_sizes: List[Tuple[int, int]] = []
-
-        if not self.training:
-            for img in inputs:
-                val = img.shape[-2:]
-                assert len(val) == 2
-                original_image_sizes.append((val[0], val[1]))
-
-        # Transform the input
-        samples, targets = self.transform(inputs, targets)
-        # Compute the detections
-        outputs = self.model(samples.tensors, targets=targets)
-
-        losses = {}
-        detections: List[Dict[str, Tensor]] = []
-
-        if self.training:
-            # compute the losses
-            if torch.jit.is_scripting():
-                losses = outputs[0]
-            else:
-                losses = outputs
-        else:
-            # Rescale coordinate
-            if torch.jit.is_scripting():
-                result = outputs[1]
-            else:
-                result = outputs
-
-            if torchvision._is_tracing():
-                im_shape = _get_shape_onnx(samples.tensors)
-            else:
-                im_shape = torch.tensor(samples.tensors.shape[-2:])
-
-            detections = self.transform.postprocess(result, im_shape, original_image_sizes)
-
-        if torch.jit.is_scripting():
-            if not self._has_warned:
-                warnings.warn("YOLOv5 always returns a (Losses, Detections) tuple in scripting.")
-                self._has_warned = True
-            return losses, detections
-        else:
-            return self.eager_outputs(losses, detections)
-
-    @torch.jit.unused
-    def eager_outputs(
-        self,
-        losses: Dict[str, Tensor],
-        detections: List[Dict[str, Tensor]],
-    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
-        if self.training:
-            return losses
-
-        return detections
 
     def forward(
         self,
@@ -217,67 +109,6 @@ class YOLOv5(LightningModule):
             weight_decay=5e-4,
         )
 
-    @torch.no_grad()
-    def predict(self, x: Any, image_loader: Optional[Callable] = None) -> List[Dict[str, Tensor]]:
-        """
-        Predict function for raw data or processed data
-        Args:
-            x: Input to predict. Can be raw data or processed data.
-            image_loader: Utility function to convert raw data to Tensor.
-
-        Returns:
-            The post-processed model predictions.
-        """
-        image_loader = image_loader or self.default_loader
-        images = self.collate_images(x, image_loader)
-        return self.forward(images)
-
-    def default_loader(self, img_path: str) -> Tensor:
-        """
-        Default loader of read a image path.
-
-        Args:
-            img_path (str): a image path
-
-        Returns:
-            Tensor, processed tensor for prediction.
-        """
-        return read_image(img_path) / 255.0
-
-    def collate_images(self, samples: Any, image_loader: Callable) -> List[Tensor]:
-        """
-        Prepare source samples for inference.
-
-        Args:
-            samples (Any): samples source, support the following various types:
-                - str or List[str]: a image path or list of image paths.
-                - Tensor or List[Tensor]: a tensor or list of tensors.
-
-        Returns:
-            List[Tensor], The processed image samples.
-        """
-        p = next(self.parameters())  # for device and type
-        if isinstance(samples, Tensor):
-            return [samples.to(p.device).type_as(p)]
-
-        if contains_any_tensor(samples):
-            return [sample.to(p.device).type_as(p) for sample in samples]
-
-        if isinstance(samples, str):
-            samples = [samples]
-
-        if isinstance(samples, (list, tuple)) and all(isinstance(p, str) for p in samples):
-            outputs = []
-            for sample in samples:
-                output = image_loader(sample).to(p.device).type_as(p)
-                outputs.append(output)
-            return outputs
-
-        raise NotImplementedError(
-            f"The type of the sample is {type(samples)}, we currently don't support it now, the "
-            "samples should be either a tensor, list of tensors, a image path or list of image paths."
-        )
-
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
@@ -303,41 +134,3 @@ class YOLOv5(LightningModule):
             help="weight decay (default: 5e-4)",
         )
         return parser
-
-    @classmethod
-    def load_from_yolov5(
-        cls,
-        checkpoint_path: str,
-        *,
-        lr: float = 0.01,
-        size: Tuple[int, int] = (640, 640),
-        size_divisible: int = 32,
-        fixed_shape: Optional[Tuple[int, int]] = None,
-        fill_color: int = 114,
-        **kwargs: Any,
-    ):
-        """
-        Load model state from the checkpoint trained by YOLOv5.
-
-        Args:
-            checkpoint_path (str): Path of the YOLOv5 checkpoint model.
-            lr (float): The initial learning rate
-            size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
-                Default: (640, 640)
-            size_divisible (int): stride of the models. Default: 32
-            fixed_shape (Tuple[int, int], optional): Padding mode for letterboxing. If set to `True`,
-                the image will be padded to shape `fixed_shape` if specified. Instead the image will
-                be padded to a minimum rectangle to match `min_size / max_size` and each of its edges
-                is divisible by `size_divisible` if it is not specified. Default: None
-            fill_color (int): fill value for padding. Default: 114
-        """
-        model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
-        yolov5 = cls(
-            lr=lr,
-            model=model,
-            size=size,
-            size_divisible=size_divisible,
-            fixed_shape=fixed_shape,
-            fill_color=fill_color,
-        )
-        return yolov5
