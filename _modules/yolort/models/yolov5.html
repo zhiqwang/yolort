@@ -268,8 +268,22 @@
     <li class="md-nav__item">
     
     
-      <a href="../../../models.html" class="md-nav__link">Models and pre-trained weights</a>
+      <a href="../../../models.html" class="md-nav__link">yolort.models</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../models.html#models-structure" class="md-nav__link">Models structure</a>
       
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../models.html#pre-trained-weights" class="md-nav__link">Pre-trained weights</a>
+      
+    
+    </li></ul>
     
     </li>
     <li class="md-nav__item">
@@ -324,11 +338,36 @@
     <span class="sd">"""</span>
 <span class="sd">    Wrapping the pre-processing (`LetterBox`) into the YOLO models.</span>
 
+<span class="sd">    The input to the model is expected to be a list of tensors, each of shape [C, H, W], one for each</span>
+<span class="sd">    image, and should be in 0-1 range. Different images can have different sizes but they will be resized</span>
+<span class="sd">    to a fixed size that maintains the aspect ratio before passing it to the backbone.</span>
+
+<span class="sd">    The behavior of the model changes depending if it is in training or evaluation mode.</span>
+
+<span class="sd">    During training, the model expects both the input tensors, as well as a targets (list of dictionary),</span>
+<span class="sd">    containing:</span>
+<span class="sd">        - boxes (``FloatTensor[N, 4]``): the ground-truth boxes in ``[x1, y1, x2, y2]`` format, with</span>
+<span class="sd">          ``0 &lt;= x1 &lt; x2 &lt;= W`` and ``0 &lt;= y1 &lt; y2 &lt;= H``.</span>
+<span class="sd">        - labels (Int64Tensor[N]): the class label for each ground-truth box</span>
+
+<span class="sd">    The model returns a Dict[Tensor] during training, containing the classification and regression</span>
+<span class="sd">    losses.</span>
+
+<span class="sd">    During inference, the model requires only the input tensors, and returns the post-processed</span>
+<span class="sd">    predictions as a List[Dict[Tensor]], one for each input image. The fields of the Dict are as</span>
+<span class="sd">    follows, where ``N`` is the number of detections:</span>
+
+<span class="sd">        - boxes (``FloatTensor[N, 4]``): the predicted boxes in ``[x1, y1, x2, y2]`` format, with</span>
+<span class="sd">          ``0 &lt;= x1 &lt; x2 &lt;= W`` and ``0 &lt;= y1 &lt; y2 &lt;= H``.</span>
+<span class="sd">        - labels (Int64Tensor[N]): the predicted labels for each detection</span>
+<span class="sd">        - scores (Tensor[N]): the scores for each detection</span>
+
 <span class="sd">    Example:</span>
 
 <span class="sd">        Demo pipeline for YOLOv5 Inference.</span>
 
 <span class="sd">        .. code-block:: python</span>
+
 <span class="sd">            from yolort.models import YOLOv5</span>
 
 <span class="sd">            # Load the yolov5s version 6.0 models</span>
@@ -344,6 +383,7 @@
 <span class="sd">        We also support loading the custom checkpoints trained from ultralytics/yolov5</span>
 
 <span class="sd">        .. code-block:: python</span>
+
 <span class="sd">            from yolort.models import YOLOv5</span>
 
 <span class="sd">            # Your trained checkpoint from ultralytics</span>
@@ -410,22 +450,12 @@
         <span class="c1"># used only on torchscript mode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_has_warned</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_forward_impl</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]:</span>
-        <span class="sd">"""</span>
-<span class="sd">        Args:</span>
-<span class="sd">            inputs (list[Tensor]): images to be processed</span>
-<span class="sd">            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            result (list[BoxList] or dict[Tensor]): the output from the model.</span>
-<span class="sd">                During training, it returns a dict[Tensor] which contains the losses.</span>
-<span class="sd">                During testing, it returns list[BoxList] contains additional fields</span>
-<span class="sd">                like `scores`, `labels` and `boxes`.</span>
-<span class="sd">        """</span>
         <span class="c1"># get the original image sizes</span>
         <span class="n">original_image_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -471,7 +501,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager_outputs</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">detections</span><span class="p">)</span>
 
-<div class="viewcode-block" id="YOLOv5.eager_outputs"><a class="viewcode-back" href="../../../models.html#yolort.models.YOLOv5.eager_outputs">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">unused</span>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">unused</span>
     <span class="k">def</span> <span class="nf">eager_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">losses</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
@@ -480,23 +510,13 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">losses</span>
 
-        <span class="k">return</span> <span class="n">detections</span></div>
+        <span class="k">return</span> <span class="n">detections</span>
 
-<div class="viewcode-block" id="YOLOv5.forward"><a class="viewcode-back" href="../../../models.html#yolort.models.YOLOv5.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]]:</span>
-        <span class="sd">"""</span>
-<span class="sd">        This exists since PyTorchLightning forward are used for inference only (separate from</span>
-<span class="sd">        ``training_step``). We keep ``targets`` here for Backward Compatible.</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_impl</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="YOLOv5.predict"><a class="viewcode-back" href="../../../models.html#yolort.models.YOLOv5.predict">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">image_loader</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
         <span class="sd">"""</span>
 <span class="sd">        Predict function for raw data or processed data</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            x: Input to predict. Can be raw data or processed data.</span>
 <span class="sd">            image_loader: Utility function to convert raw data to Tensor.</span>
@@ -506,9 +526,9 @@
 <span class="sd">        """</span>
         <span class="n">image_loader</span> <span class="o">=</span> <span class="n">image_loader</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_loader</span>
         <span class="n">images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_images</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">image_loader</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">images</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 
-<div class="viewcode-block" id="YOLOv5.default_loader"><a class="viewcode-back" href="../../../models.html#yolort.models.YOLOv5.default_loader">[docs]</a>    <span class="k">def</span> <span class="nf">default_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">default_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sd">"""</span>
 <span class="sd">        Default loader of read a image path.</span>
 
@@ -518,9 +538,9 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Tensor, processed tensor for prediction.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">read_image</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span></div>
+        <span class="k">return</span> <span class="n">read_image</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
 
-<div class="viewcode-block" id="YOLOv5.collate_images"><a class="viewcode-back" href="../../../models.html#yolort.models.YOLOv5.collate_images">[docs]</a>    <span class="k">def</span> <span class="nf">collate_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">image_loader</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">collate_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">image_loader</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
         <span class="sd">"""</span>
 <span class="sd">        Prepare source samples for inference.</span>
 
@@ -552,9 +572,9 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"The type of the sample is </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span><span class="si">}</span><span class="s2">, we currently don't support it now, the "</span>
             <span class="s2">"samples should be either a tensor, list of tensors, a image path or list of image paths."</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-<div class="viewcode-block" id="YOLOv5.load_from_yolov5"><a class="viewcode-back" href="../../../models.html#yolort.models.YOLOv5.load_from_yolov5">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load_from_yolov5</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -567,7 +587,7 @@
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        Load model state from the checkpoint trained by YOLOv5.</span>
+<span class="sd">        Load custom checkpoints trained from YOLOv5.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            checkpoint_path (str): Path of the YOLOv5 checkpoint model.</span>
@@ -590,7 +610,7 @@
             <span class="n">fixed_shape</span><span class="o">=</span><span class="n">fixed_shape</span><span class="p">,</span>
             <span class="n">fill_color</span><span class="o">=</span><span class="n">fill_color</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">yolov5</span></div></div>
+        <span class="k">return</span> <span class="n">yolov5</span></div>
 </pre></div>
 
           </article>

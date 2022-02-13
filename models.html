@@ -47,7 +47,7 @@
   
   
   
-    <title>Models and pre-trained weights &#8212; yolort  documentation</title>
+    <title>yolort.models &#8212; yolort  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/material.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -96,7 +96,7 @@
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           <span class="md-header-nav__topic">YOLOv5 Runtime Stack</span>
-          <span class="md-header-nav__topic"> Models and pre-trained weights </span>
+          <span class="md-header-nav__topic"> yolort.models </span>
         </div>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -270,16 +270,39 @@
     
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    <label class="md-nav__link md-nav__link--active" for="__toc"> Models and pre-trained weights </label>
+    <label class="md-nav__link md-nav__link--active" for="__toc"> yolort.models </label>
     
-      <a href="#" class="md-nav__link md-nav__link--active">Models and pre-trained weights</a>
+      <a href="#" class="md-nav__link md-nav__link--active">yolort.models</a>
       
         
 <nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#models--page-root" class="md-nav__link">yolort.models</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#models-structure" class="md-nav__link">Models structure</a>
+        </li>
+        <li class="md-nav__item"><a href="#pre-trained-weights" class="md-nav__link">Pre-trained weights</a>
+        </li></ul>
+            </nav>
+        </li>
   </ul>
 </nav>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="#models-structure" class="md-nav__link">Models structure</a>
       
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="#pre-trained-weights" class="md-nav__link">Pre-trained weights</a>
+      
+    
+    </li></ul>
     
     </li>
     <li class="md-nav__item">
@@ -301,7 +324,16 @@
               <div class="md-sidebar__inner">
                 
 <nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#models--page-root" class="md-nav__link">yolort.models</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#models-structure" class="md-nav__link">Models structure</a>
+        </li>
+        <li class="md-nav__item"><a href="#pre-trained-weights" class="md-nav__link">Pre-trained weights</a>
+        </li></ul>
+            </nav>
+        </li>
   </ul>
 </nav>
               </div>
@@ -311,90 +343,70 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  <section id="module-yolort.models">
-<span id="models-and-pre-trained-weights"></span><h1 id="models--page-root">Models and pre-trained weights<a class="headerlink" href="#models--page-root" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="yolort.models.YOLO">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">YOLO</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_grids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_generator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.nn.modules.module.Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.nn.modules.module.Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_thresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nms_thresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_per_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_process</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.nn.modules.module.Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models/yolo.html#YOLO"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLO" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements YOLO series model.</p>
-<p>The input to the model is expected to be a batched tensors, of shape <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>, one for each
-image, and should be in <code class="docutils literal notranslate"><span class="pre">0-1</span></code> range. Different images can have different sizes.</p>
+  <section id="yolort-models">
+<span id="models"></span><h1 id="models--page-root">yolort.models<a class="headerlink" href="#models--page-root" title="Permalink to this headline">¶</a></h1>
+<section id="models-structure">
+<h2 id="models-structure">Models structure<a class="headerlink" href="#models-structure" title="Permalink to this headline">¶</a></h2>
+<p>The models expect a list of <code class="docutils literal notranslate"><span class="pre">Tensor[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>, in the range <code class="docutils literal notranslate"><span class="pre">0-1</span></code>.
+The models internally resize the images but the behaviour varies depending
+on the model. Check the constructor of the models for more information.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.models.YOLOv5">
+<span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">YOLOv5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.nn.modules.module.Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(640,</span> <span class="pre">640)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_divisible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">114</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapping the pre-processing (<cite>LetterBox</cite>) into the YOLO models.</p>
+<p>The input to the model is expected to be a list of tensors, each of shape [C, H, W], one for each
+image, and should be in 0-1 range. Different images can have different sizes but they will be resized
+to a fixed size that maintains the aspect ratio before passing it to the backbone.</p>
 <p>The behavior of the model changes depending if it is in training or evaluation mode.</p>
 <p>During training, the model expects both the input tensors, as well as a targets (list of dictionary),
 containing:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>boxes (<code class="docutils literal notranslate"><span class="pre">FloatTensor[N,</span> <span class="pre">4]</span></code>): the ground-truth boxes in <code class="docutils literal notranslate"><span class="pre">[x1,</span> <span class="pre">y1,</span> <span class="pre">x2,</span> <span class="pre">y2]</span></code> format, with values
-between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">H</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">W</span></code></p></li>
-<li><p>labels (<code class="docutils literal notranslate"><span class="pre">Int64Tensor[N]</span></code>): the class label for each ground-truth box</p></li>
+<li><p>boxes (<code class="docutils literal notranslate"><span class="pre">FloatTensor[N,</span> <span class="pre">4]</span></code>): the ground-truth boxes in <code class="docutils literal notranslate"><span class="pre">[x1,</span> <span class="pre">y1,</span> <span class="pre">x2,</span> <span class="pre">y2]</span></code> format, with
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">x1</span> <span class="pre">&lt;</span> <span class="pre">x2</span> <span class="pre">&lt;=</span> <span class="pre">W</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">y1</span> <span class="pre">&lt;</span> <span class="pre">y2</span> <span class="pre">&lt;=</span> <span class="pre">H</span></code>.</p></li>
+<li><p>labels (Int64Tensor[N]): the class label for each ground-truth box</p></li>
 </ul>
 </div></blockquote>
-<p>The model returns a <code class="docutils literal notranslate"><span class="pre">Dict[Tensor]</span></code> during training, containing the classification and regression
+<p>The model returns a Dict[Tensor] during training, containing the classification and regression
 losses.</p>
 <p>During inference, the model requires only the input tensors, and returns the post-processed
-predictions as a <code class="docutils literal notranslate"><span class="pre">List[Dict[Tensor]]</span></code>, one for each input image. The fields of the <code class="docutils literal notranslate"><span class="pre">Dict</span></code> are as
-follows:</p>
+predictions as a List[Dict[Tensor]], one for each input image. The fields of the Dict are as
+follows, where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of detections:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>boxes (<code class="docutils literal notranslate"><span class="pre">FloatTensor[N,</span> <span class="pre">4]</span></code>): the predicted boxes in <code class="docutils literal notranslate"><span class="pre">[x1,</span> <span class="pre">y1,</span> <span class="pre">x2,</span> <span class="pre">y2]</span></code> format, with values
-between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">H</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">W</span></code></p></li>
-<li><p>labels (<code class="docutils literal notranslate"><span class="pre">Int64Tensor[N]</span></code>): the predicted labels for each image</p></li>
-<li><p>scores (<code class="docutils literal notranslate"><span class="pre">Tensor[N]</span></code>): the scores or each prediction</p></li>
+<li><p>boxes (<code class="docutils literal notranslate"><span class="pre">FloatTensor[N,</span> <span class="pre">4]</span></code>): the predicted boxes in <code class="docutils literal notranslate"><span class="pre">[x1,</span> <span class="pre">y1,</span> <span class="pre">x2,</span> <span class="pre">y2]</span></code> format, with
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">x1</span> <span class="pre">&lt;</span> <span class="pre">x2</span> <span class="pre">&lt;=</span> <span class="pre">W</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">y1</span> <span class="pre">&lt;</span> <span class="pre">y2</span> <span class="pre">&lt;=</span> <span class="pre">H</span></code>.</p></li>
+<li><p>labels (Int64Tensor[N]): the predicted labels for each detection</p></li>
+<li><p>scores (Tensor[N]): the scores for each detection</p></li>
 </ul>
 </div></blockquote>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLO.eager_outputs">
-<span class="sig-name descname"><span class="pre">eager_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">losses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/yolort/models/yolo.html#YOLO.eager_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLO.eager_outputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLO.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/yolort/models/yolo.html#YOLO.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLO.forward" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>samples</strong> (<em>NestedTensor</em>) – Expects a NestedTensor, which consists of:
-- samples.tensor: batched images, of shape [batch_size x 3 x H x W]</p></li>
-<li><p><strong>targets</strong> (<em>list</em><em>[</em><em>Dict</em><em>[</em><em>Tensor</em><em>]</em><em>]</em>) – ground-truth boxes present in the image (optional)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>the output from the model.</dt><dd><p>During training, it returns a dict[Tensor] which contains the losses.
-During testing, it returns list[BoxList] contains additional fields
-like <cite>scores</cite>, <cite>labels</cite> and <cite>mask</cite> (for Mask R-CNN models).</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>result (list[BoxList] or dict[Tensor])</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLO.load_from_yolov5">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_yolov5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_thresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nms_thresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_process</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.nn.modules.module.Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models/yolo.html#YOLO.load_from_yolov5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLO.load_from_yolov5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load model state from the checkpoint trained by YOLOv5.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>checkpoint_path</strong> (<em>str</em>) – Path of the YOLOv5 checkpoint model.</p></li>
-<li><p><strong>score_thresh</strong> (<em>float</em>) – Score threshold used for postprocessing the detections.</p></li>
-<li><p><strong>nms_thresh</strong> (<em>float</em>) – NMS threshold used for postprocessing the detections.</p></li>
-<li><p><strong>version</strong> (<em>str</em>) – upstream version released by the ultralytics/yolov5, Possible
-values are [“r3.1”, “r4.0”, “r6.0”]. Default: “r6.0”.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-</dd></dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="yolort.models.YOLOv5">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">YOLOv5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.nn.modules.module.Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(640,</span> <span class="pre">640)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_divisible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">114</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapping the pre-processing (<cite>LetterBox</cite>) into the YOLO models.</p>
 <p class="rubric">Example</p>
 <p>Demo pipeline for YOLOv5 Inference.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
+
+<span class="c1"># Load the yolov5s version 6.0 models</span>
+<span class="n">arch</span> <span class="o">=</span> <span class="s1">'yolov5_darknet_pan_s_r60'</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="n">arch</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">score_thresh</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+<span class="c1"># Perform inference on an image file</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">'bus.jpg'</span><span class="p">)</span>
+<span class="c1"># Perform inference on a list of image files</span>
+<span class="n">predictions2</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="s1">'bus.jpg'</span><span class="p">,</span> <span class="s1">'zidane.jpg'</span><span class="p">])</span>
+</pre></div>
+</div>
 <p>We also support loading the custom checkpoints trained from ultralytics/yolov5</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
+
+<span class="c1"># Your trained checkpoint from ultralytics</span>
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="s1">'yolov5n.pt'</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="o">.</span><span class="n">load_from_yolov5</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">score_thresh</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+<span class="c1"># Perform inference on an image file</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">'bus.jpg'</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -415,120 +427,29 @@ is divisible by <cite>size_divisible</cite> if it is not specified. Default: Non
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLOv5.collate_images">
-<span class="sig-name descname"><span class="pre">collate_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_loader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5.collate_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5.collate_images" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prepare source samples for inference.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>samples</strong> (<em>Any</em>) – samples source, support the following various types:
-- str or List[str]: a image path or list of image paths.
-- Tensor or List[Tensor]: a tensor or list of tensors.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List[Tensor], The processed image samples.</p>
-</dd>
-</dl>
 </dd></dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLOv5.default_loader">
-<span class="sig-name descname"><span class="pre">default_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5.default_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5.default_loader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default loader of read a image path.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>img_path</strong> (<em>str</em>) – a image path</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tensor, processed tensor for prediction.</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLOv5.eager_outputs">
-<span class="sig-name descname"><span class="pre">eager_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">losses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5.eager_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5.eager_outputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLOv5.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>This exists since PyTorchLightning forward are used for inference only (separate from
-<code class="docutils literal notranslate"><span class="pre">training_step</span></code>). We keep <code class="docutils literal notranslate"><span class="pre">targets</span></code> here for Backward Compatible.</p>
-</dd></dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLOv5.load_from_yolov5">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_yolov5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(640,</span> <span class="pre">640)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_divisible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">114</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5.load_from_yolov5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5.load_from_yolov5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load model state from the checkpoint trained by YOLOv5.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>checkpoint_path</strong> (<em>str</em>) – Path of the YOLOv5 checkpoint model.</p></li>
-<li><p><strong>lr</strong> (<em>float</em>) – The initial learning rate</p></li>
-<li><p><strong>size</strong> – (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
-Default: (640, 640)</p></li>
-<li><p><strong>size_divisible</strong> (<em>int</em>) – stride of the models. Default: 32</p></li>
-<li><p><strong>fixed_shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Padding mode for letterboxing. If set to <cite>True</cite>,
-the image will be padded to shape <cite>fixed_shape</cite> if specified. Instead the image will
-be padded to a minimum rectangle to match <cite>min_size / max_size</cite> and each of its edges
-is divisible by <cite>size_divisible</cite> if it is not specified. Default: None</p></li>
-<li><p><strong>fill_color</strong> (<em>int</em>) – fill value for padding. Default: 114</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="yolort.models.YOLOv5.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_loader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/yolort/models/yolov5.html#YOLOv5.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.YOLOv5.predict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Predict function for raw data or processed data
-:param x: Input to predict. Can be raw data or processed data.
-:param image_loader: Utility function to convert raw data to Tensor.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The post-processed model predictions.</p>
-</dd>
-</dl>
-</dd></dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="yolort.models.yolov5l">
-<span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5l</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5l"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5l" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>upstream_version</strong> (<em>str</em>) – model released by the upstream YOLOv5. Possible values
-are [“r3.1”, “r4.0”, “r6.0”]. Default: “r6.0”.</p></li>
-<li><p><strong>export_friendly</strong> (<em>bool</em>) – Deciding whether to use (ONNX/TVM) export friendly mode.
-Default: False.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="yolort.models.yolov5m">
-<span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5m"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5m" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>upstream_version</strong> (<em>str</em>) – model released by the upstream YOLOv5. Possible values
-are [“r3.1”, “r4.0”, “r6.0”]. Default: “r6.0”.</p></li>
-<li><p><strong>export_friendly</strong> (<em>bool</em>) – Deciding whether to use (ONNX/TVM) export friendly mode.
-Default: False.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="yolort.models.yolov5m6">
-<span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5m6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5m6"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5m6" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>upstream_version</strong> (<em>str</em>) – model released by the upstream YOLOv5. Possible values
-are [“r6.0”]. Default: “r6.0”.</p></li>
-<li><p><strong>export_friendly</strong> (<em>bool</em>) – Deciding whether to use (ONNX/TVM) export friendly mode.
-Default: False.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+</section>
+<section id="pre-trained-weights">
+<h2 id="pre-trained-weights">Pre-trained weights<a class="headerlink" href="#pre-trained-weights" title="Permalink to this headline">¶</a></h2>
+<p>The pre-trained models return the predictions of the following classes:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">COCO_INSTANCE_CATEGORY_NAMES</span> <span class="o">=</span> <span class="p">[</span>
+   <span class="s1">'person'</span><span class="p">,</span> <span class="s1">'bicycle'</span><span class="p">,</span> <span class="s1">'car'</span><span class="p">,</span> <span class="s1">'motorcycle'</span><span class="p">,</span> <span class="s1">'airplane'</span><span class="p">,</span> <span class="s1">'bus'</span><span class="p">,</span>
+   <span class="s1">'train'</span><span class="p">,</span> <span class="s1">'truck'</span><span class="p">,</span> <span class="s1">'boat'</span><span class="p">,</span> <span class="s1">'traffic light'</span><span class="p">,</span> <span class="s1">'fire hydrant'</span><span class="p">,</span> <span class="s1">'stop sign'</span><span class="p">,</span>
+   <span class="s1">'parking meter'</span><span class="p">,</span> <span class="s1">'bench'</span><span class="p">,</span> <span class="s1">'bird'</span><span class="p">,</span> <span class="s1">'cat'</span><span class="p">,</span> <span class="s1">'dog'</span><span class="p">,</span> <span class="s1">'horse'</span><span class="p">,</span> <span class="s1">'sheep'</span><span class="p">,</span> <span class="s1">'cow'</span><span class="p">,</span>
+   <span class="s1">'elephant'</span><span class="p">,</span> <span class="s1">'bear'</span><span class="p">,</span> <span class="s1">'zebra'</span><span class="p">,</span> <span class="s1">'giraffe'</span><span class="p">,</span> <span class="s1">'backpack'</span><span class="p">,</span> <span class="s1">'umbrella'</span><span class="p">,</span>
+   <span class="s1">'handbag'</span><span class="p">,</span> <span class="s1">'tie'</span><span class="p">,</span> <span class="s1">'suitcase'</span><span class="p">,</span> <span class="s1">'frisbee'</span><span class="p">,</span> <span class="s1">'skis'</span><span class="p">,</span> <span class="s1">'snowboard'</span><span class="p">,</span> <span class="s1">'sports ball'</span><span class="p">,</span>
+   <span class="s1">'kite'</span><span class="p">,</span> <span class="s1">'baseball bat'</span><span class="p">,</span> <span class="s1">'baseball glove'</span><span class="p">,</span> <span class="s1">'skateboard'</span><span class="p">,</span> <span class="s1">'surfboard'</span><span class="p">,</span>
+   <span class="s1">'tennis racket'</span><span class="p">,</span> <span class="s1">'bottle'</span><span class="p">,</span> <span class="s1">'wine glass'</span><span class="p">,</span> <span class="s1">'cup'</span><span class="p">,</span> <span class="s1">'fork'</span><span class="p">,</span> <span class="s1">'knife'</span><span class="p">,</span> <span class="s1">'spoon'</span><span class="p">,</span> <span class="s1">'bowl'</span><span class="p">,</span>
+   <span class="s1">'banana'</span><span class="p">,</span> <span class="s1">'apple'</span><span class="p">,</span> <span class="s1">'sandwich'</span><span class="p">,</span> <span class="s1">'orange'</span><span class="p">,</span> <span class="s1">'broccoli'</span><span class="p">,</span> <span class="s1">'carrot'</span><span class="p">,</span> <span class="s1">'hot dog'</span><span class="p">,</span> <span class="s1">'pizza'</span><span class="p">,</span>
+   <span class="s1">'donut'</span><span class="p">,</span> <span class="s1">'cake'</span><span class="p">,</span> <span class="s1">'chair'</span><span class="p">,</span> <span class="s1">'couch'</span><span class="p">,</span> <span class="s1">'potted plant'</span><span class="p">,</span> <span class="s1">'bed'</span><span class="p">,</span> <span class="s1">'dining table'</span><span class="p">,</span>
+   <span class="s1">'toilet'</span><span class="p">,</span> <span class="s1">'tv'</span><span class="p">,</span> <span class="s1">'laptop'</span><span class="p">,</span> <span class="s1">'mouse'</span><span class="p">,</span> <span class="s1">'remote'</span><span class="p">,</span> <span class="s1">'keyboard'</span><span class="p">,</span> <span class="s1">'cell phone'</span><span class="p">,</span>
+   <span class="s1">'microwave'</span><span class="p">,</span> <span class="s1">'oven'</span><span class="p">,</span> <span class="s1">'toaster'</span><span class="p">,</span> <span class="s1">'sink'</span><span class="p">,</span> <span class="s1">'refrigerator'</span><span class="p">,</span> <span class="s1">'book'</span><span class="p">,</span> <span class="s1">'clock'</span><span class="p">,</span> <span class="s1">'vase'</span><span class="p">,</span>
+   <span class="s1">'scissors'</span><span class="p">,</span> <span class="s1">'teddy bear'</span><span class="p">,</span> <span class="s1">'hair drier'</span><span class="p">,</span> <span class="s1">'toothbrush'</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
 <dl class="py function">
 <dt class="sig sig-object py" id="yolort.models.yolov5n">
 <span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5n"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5n" title="Permalink to this definition">¶</a></dt>
@@ -586,6 +507,48 @@ Default: False.</p></li>
 </dl>
 </dd></dl>
 <dl class="py function">
+<dt class="sig sig-object py" id="yolort.models.yolov5m">
+<span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5m"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5m" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>upstream_version</strong> (<em>str</em>) – model released by the upstream YOLOv5. Possible values
+are [“r3.1”, “r4.0”, “r6.0”]. Default: “r6.0”.</p></li>
+<li><p><strong>export_friendly</strong> (<em>bool</em>) – Deciding whether to use (ONNX/TVM) export friendly mode.
+Default: False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.models.yolov5m6">
+<span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5m6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5m6"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5m6" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>upstream_version</strong> (<em>str</em>) – model released by the upstream YOLOv5. Possible values
+are [“r6.0”]. Default: “r6.0”.</p></li>
+<li><p><strong>export_friendly</strong> (<em>bool</em>) – Deciding whether to use (ONNX/TVM) export friendly mode.
+Default: False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="yolort.models.yolov5l">
+<span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5l</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r6.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5l"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5l" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>upstream_version</strong> (<em>str</em>) – model released by the upstream YOLOv5. Possible values
+are [“r3.1”, “r4.0”, “r6.0”]. Default: “r6.0”.</p></li>
+<li><p><strong>export_friendly</strong> (<em>bool</em>) – Deciding whether to use (ONNX/TVM) export friendly mode.
+Default: False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
 <dt class="sig sig-object py" id="yolort.models.yolov5ts">
 <span class="sig-prename descclassname"><span class="pre">yolort.models.</span></span><span class="sig-name descname"><span class="pre">yolov5ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upstream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r4.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_friendly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/models.html#yolov5ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.models.yolov5ts" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -599,6 +562,7 @@ Default: False.</p></li>
 </dd>
 </dl>
 </dd></dl>
+</section>
 </section>
 
 
