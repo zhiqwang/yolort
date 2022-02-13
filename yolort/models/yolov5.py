@@ -27,14 +27,28 @@ class YOLOv5(nn.Module):
         .. code-block:: python
             from yolort.models import YOLOv5
 
-            # Load model
-            model = YOLOv5(arch="yolov5_darknet_pan_n_r60", pretrained=True, score_thresh=0.35)
+            # Load the yolov5s version 6.0 models
+            arch = 'yolov5_darknet_pan_s_r60'
+            model = YOLOv5(arch=arch, pretrained=True, score_thresh=0.35)
             model = model.eval()
 
             # Perform inference on an image file
-            predictions = model.predict("bus.jpg")
+            predictions = model.predict('bus.jpg')
             # Perform inference on a list of image files
-            predictions2 = model.predict(["bus.jpg", "zidane.jpg"])
+            predictions2 = model.predict(['bus.jpg', 'zidane.jpg'])
+
+        We also support loading the custom checkpoints trained from ultralytics/yolov5
+
+        .. code-block:: python
+            from yolort.models import YOLOv5
+
+            # Your trained checkpoint from ultralytics
+            checkpoint_path = 'yolov5n.pt'
+            model = YOLOv5.load_from_yolov5(checkpoint_path, score_thresh=0.35)
+            model = model.eval()
+
+            # Perform inference on an image file
+            predictions = model.predict('bus.jpg')
 
     Args:
         arch (string): YOLO model architecture. Default: None
