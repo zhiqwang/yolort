@@ -8,16 +8,15 @@ from yolort.data import DetectionDataModule, _helper as data_helper
 from yolort.trainer import DefaultTask
 
 
-@pytest.mark.parametrize("arch", ["yolov5n", "yolov5s"])
-def test_training_step(arch):
+def test_training_step():
     # Setup the DataModule
     data_path = "data-bin"
     train_dataset = data_helper.get_dataset(data_root=data_path, mode="train")
     val_dataset = data_helper.get_dataset(data_root=data_path, mode="val")
-    data_module = DetectionDataModule(train_dataset, val_dataset, batch_size=16)
+    data_module = DetectionDataModule(train_dataset, val_dataset, batch_size=8)
     # Load model
-    model = DefaultTask(arch=arch)
-    model.train()
+    model = DefaultTask(arch="yolov5n")
+    model = model.train()
     # Trainer
     trainer = pl.Trainer(max_epochs=1)
     trainer.fit(model, data_module)
