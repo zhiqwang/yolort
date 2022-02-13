@@ -1,5 +1,6 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
+import pytest
 import torch
 from torch import Tensor
 from torchvision.io import read_image
@@ -73,21 +74,22 @@ def test_train_with_vanilla_module():
     assert isinstance(out["objectness"], Tensor)
 
 
-def test_vanilla_coco_evaluator():
+@pytest.mark.parametrize("version, map5095, map50", [("r4.0", 42.5, 65.3)])
+def test_vanilla_coco_evaluator(version, map5095, map50):
     # Acquire the images and labels from the coco128 dataset
     val_dataloader = data_helper.get_dataloader(data_root="data-bin", mode="val")
     coco = data_helper.get_coco_api_from_dataset(val_dataloader.dataset)
     coco_evaluator = COCOEvaluator(coco)
     # Load model
-    model = yolov5s(upstream_version="r4.0", pretrained=True)
-    model.eval()
+    model = yolov5s(upstream_version=version, pretrained=True)
+    model = model.eval()
     for images, targets in val_dataloader:
         preds = model(images)
         coco_evaluator.update(preds, targets)
 
     results = coco_evaluator.compute()
-    assert results["AP"] > 37.8
-    assert results["AP50"] > 59.6
+    assert results["AP"] > map5095
+    assert results["AP50"] > map50
 
 
 def test_predict_with_vanilla_model():

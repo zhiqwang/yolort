@@ -23,7 +23,7 @@ def test_training_step(arch):
     trainer.fit(model, data_module)
 
 
-@pytest.mark.parametrize("arch, version, map5095, map50", [("yolov5s", "r4.0", 37.8, 59.6)])
+@pytest.mark.parametrize("arch, version, map5095, map50", [("yolov5s", "r4.0", 42.5, 65.3)])
 def test_test_epoch_end(arch, version, map5095, map50):
     # Acquire the annotation file
     data_path = Path("data-bin")
