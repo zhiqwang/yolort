@@ -34,7 +34,7 @@ def test_test_epoch_end(arch, version, map5095, map50):
     val_dataloader = data_helper.get_dataloader(data_root=data_path, mode="val")
 
     # Load model
-    model = DefaultTask(arch=arch, version=version, annotation_path=annotation_file)
+    model = DefaultTask(arch=arch, version=version, pretrained=True, annotation_path=annotation_file)
 
     # test step
     trainer = pl.Trainer(max_epochs=1)
