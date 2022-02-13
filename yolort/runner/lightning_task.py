@@ -5,13 +5,14 @@ from pathlib import PosixPath
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
+import yolort.models
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torchvision.ops import box_iou
 from yolort.data import COCOEvaluator
 
 
-__all__ = ["YOLOv5Module"]
+__all__ = ["DefaultTask"]
 
 
 def _evaluate_iou(target, pred):
@@ -25,11 +26,14 @@ def _evaluate_iou(target, pred):
     return box_iou(target["boxes"], pred["boxes"]).diag().mean()
 
 
-class YOLOv5Module(LightningModule):
+class DefaultTask(LightningModule):
     """
     Wrapping the trainer into the YOLOv5 Module.
 
     Args:
+        arch (string): YOLOv5 model architecture. Default: 'yolov5s'
+        version (str): model released by the upstream YOLOv5. Possible values
+            are ['r6.0']. Default: 'r6.0'.
         lr (float): The initial learning rate
         annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file
             Default: None.
@@ -37,6 +41,8 @@ class YOLOv5Module(LightningModule):
 
     def __init__(
         self,
+        arch: str,
+        version: str = "r6.0",
         lr: float = 0.01,
         annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
@@ -44,9 +50,10 @@ class YOLOv5Module(LightningModule):
 
         super().__init__()
 
+        self.model = yolort.models.__dict__[arch](upstream_version=version, **kwargs)
         self.lr = lr
 
-        # metrics
+        # evaluators for validation datasets
         self.evaluator = None
         if annotation_path is not None:
             self.evaluator = COCOEvaluator(annotation_path, iou_type="bbox")
@@ -63,13 +70,13 @@ class YOLOv5Module(LightningModule):
         This exists since PyTorchLightning forward are used for inference only (separate from
         ``training_step``). We keep ``targets`` here for Backward Compatible.
         """
-        return self._forward_impl(inputs, targets)
+        return self.model(inputs, targets)
 
     def training_step(self, batch, batch_idx):
         """
         The training step.
         """
-        loss_dict = self._forward_impl(*batch)
+        loss_dict = self.model(*batch)
         loss = sum(loss_dict.values())
         self.log_dict(loss_dict, on_step=True, on_epoch=True, prog_bar=True)
         return loss
@@ -77,7 +84,7 @@ class YOLOv5Module(LightningModule):
     def validation_step(self, batch, batch_idx):
         images, targets = batch
         # fasterrcnn takes only images for eval() mode
-        preds = self._forward_impl(images)
+        preds = self.model(images)
         iou = torch.stack([_evaluate_iou(t, o) for t, o in zip(targets, preds)]).mean()
         outs = {"val_iou": iou}
         self.log_dict(outs, on_step=True, on_epoch=True, prog_bar=True)
@@ -93,7 +100,7 @@ class YOLOv5Module(LightningModule):
         """
         images, targets = batch
         images = list(image.to(next(self.parameters()).device) for image in images)
-        preds = self._forward_impl(images)
+        preds = self.model(images)
         results = self.evaluator(preds, targets)
         # log step metric
         self.log("eval_step", results, prog_bar=True, on_step=True)
