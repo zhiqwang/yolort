@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Callable, Optional, Tuple
 
 import torch
 import torchvision
-
 from torch import nn, Tensor
 from torchvision.io import read_image
 from yolort.data import contains_any_tensor
