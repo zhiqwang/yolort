@@ -20,11 +20,36 @@ class YOLOv5(nn.Module):
     """
     Wrapping the pre-processing (`LetterBox`) into the YOLO models.
 
+    The input to the model is expected to be a list of tensors, each of shape [C, H, W], one for each
+    image, and should be in 0-1 range. Different images can have different sizes but they will be resized
+    to a fixed size that maintains the aspect ratio before passing it to the backbone.
+
+    The behavior of the model changes depending if it is in training or evaluation mode.
+
+    During training, the model expects both the input tensors, as well as a targets (list of dictionary),
+    containing:
+        - boxes (``FloatTensor[N, 4]``): the ground-truth boxes in ``[x1, y1, x2, y2]`` format, with
+          ``0 <= x1 < x2 <= W`` and ``0 <= y1 < y2 <= H``.
+        - labels (Int64Tensor[N]): the class label for each ground-truth box
+
+    The model returns a Dict[Tensor] during training, containing the classification and regression
+    losses.
+
+    During inference, the model requires only the input tensors, and returns the post-processed
+    predictions as a List[Dict[Tensor]], one for each input image. The fields of the Dict are as
+    follows, where ``N`` is the number of detections:
+
+        - boxes (``FloatTensor[N, 4]``): the predicted boxes in ``[x1, y1, x2, y2]`` format, with
+          ``0 <= x1 < x2 <= W`` and ``0 <= y1 < y2 <= H``.
+        - labels (Int64Tensor[N]): the predicted labels for each detection
+        - scores (Tensor[N]): the scores for each detection
+
     Example:
 
         Demo pipeline for YOLOv5 Inference.
 
         .. code-block:: python
+
             from yolort.models import YOLOv5
 
             # Load the yolov5s version 6.0 models
@@ -40,6 +65,7 @@ class YOLOv5(nn.Module):
         We also support loading the custom checkpoints trained from ultralytics/yolov5
 
         .. code-block:: python
+
             from yolort.models import YOLOv5
 
             # Your trained checkpoint from ultralytics
@@ -106,22 +132,12 @@ class YOLOv5(nn.Module):
         # used only on torchscript mode
         self._has_warned = False
 
-    def _forward_impl(
+    def forward(
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
-        """
-        Args:
-            inputs (list[Tensor]): images to be processed
-            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
 
-        Returns:
-            result (list[BoxList] or dict[Tensor]): the output from the model.
-                During training, it returns a dict[Tensor] which contains the losses.
-                During testing, it returns list[BoxList] contains additional fields
-                like `scores`, `labels` and `boxes`.
-        """
         # get the original image sizes
         original_image_sizes: List[Tuple[int, int]] = []
 
@@ -178,21 +194,11 @@ class YOLOv5(nn.Module):
 
         return detections
 
-    def forward(
-        self,
-        inputs: List[Tensor],
-        targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
-        """
-        This exists since PyTorchLightning forward are used for inference only (separate from
-        ``training_step``). We keep ``targets`` here for Backward Compatible.
-        """
-        return self._forward_impl(inputs, targets)
-
     @torch.no_grad()
     def predict(self, x: Any, image_loader: Optional[Callable] = None) -> List[Dict[str, Tensor]]:
         """
         Predict function for raw data or processed data
+
         Args:
             x: Input to predict. Can be raw data or processed data.
             image_loader: Utility function to convert raw data to Tensor.
@@ -263,7 +269,7 @@ class YOLOv5(nn.Module):
         **kwargs: Any,
     ):
         """
-        Load model state from the checkpoint trained by YOLOv5.
+        Load custom checkpoints trained from YOLOv5.
 
         Args:
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
