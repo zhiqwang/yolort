@@ -25,6 +25,7 @@ class YOLOv5(nn.Module):
         Demo pipeline for YOLOv5 Inference.
 
         .. code-block:: python
+
             from yolort.models import YOLOv5
 
             # Load the yolov5s version 6.0 models
@@ -40,6 +41,7 @@ class YOLOv5(nn.Module):
         We also support loading the custom checkpoints trained from ultralytics/yolov5
 
         .. code-block:: python
+
             from yolort.models import YOLOv5
 
             # Your trained checkpoint from ultralytics
