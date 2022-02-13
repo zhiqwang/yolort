@@ -1,11 +1,9 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from pathlib import Path
+# Copyright (c) 2021, yolort team. All rights reserved.
 
-import pytorch_lightning as pl
 import torch
 from torch import Tensor
 from torchvision.io import read_image
-from yolort.data import COCOEvaluator, DetectionDataModule, _helper as data_helper
+from yolort.data import COCOEvaluator, _helper as data_helper
 from yolort.models import yolov5s
 from yolort.models.transform import YOLOTransform
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
@@ -75,20 +73,6 @@ def test_train_with_vanilla_module():
     assert isinstance(out["objectness"], Tensor)
 
 
-def test_training_step():
-    # Setup the DataModule
-    data_path = "data-bin"
-    train_dataset = data_helper.get_dataset(data_root=data_path, mode="train")
-    val_dataset = data_helper.get_dataset(data_root=data_path, mode="val")
-    data_module = DetectionDataModule(train_dataset, val_dataset, batch_size=16)
-    # Load model
-    model = yolov5s()
-    model.train()
-    # Trainer
-    trainer = pl.Trainer(max_epochs=1)
-    trainer.fit(model, data_module)
-
-
 def test_vanilla_coco_evaluator():
     # Acquire the images and labels from the coco128 dataset
     val_dataloader = data_helper.get_dataloader(data_root="data-bin", mode="val")
@@ -102,28 +86,6 @@ def test_vanilla_coco_evaluator():
         coco_evaluator.update(preds, targets)
 
     results = coco_evaluator.compute()
-    assert results["AP"] > 37.8
-    assert results["AP50"] > 59.6
-
-
-def test_test_epoch_end():
-    # Acquire the annotation file
-    data_path = Path("data-bin")
-    coco128_dirname = "coco128"
-    data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
-    annotation_file = data_path / coco128_dirname / "annotations" / "instances_train2017.json"
-
-    # Get dataloader to test
-    val_dataloader = data_helper.get_dataloader(data_root=data_path, mode="val")
-
-    # Load model
-    model = yolov5s(upstream_version="r4.0", pretrained=True, annotation_path=annotation_file)
-
-    # test step
-    trainer = pl.Trainer(max_epochs=1)
-    trainer.test(model, test_dataloaders=val_dataloader)
-    # test epoch end
-    results = model.evaluator.compute()
     assert results["AP"] > 37.8
     assert results["AP50"] > 59.6
 

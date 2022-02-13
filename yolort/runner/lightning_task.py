@@ -5,7 +5,7 @@ from pathlib import PosixPath
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
-import yolort.models
+import yolort.models as models
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torchvision.ops import box_iou
@@ -41,7 +41,7 @@ class DefaultTask(LightningModule):
 
     def __init__(
         self,
-        arch: str,
+        arch: str = "yolov5s",
         version: str = "r6.0",
         lr: float = 0.01,
         annotation_path: Optional[Union[str, PosixPath]] = None,
@@ -50,7 +50,7 @@ class DefaultTask(LightningModule):
 
         super().__init__()
 
-        self.model = yolort.models.__dict__[arch](upstream_version=version, **kwargs)
+        self.model = models.__dict__[arch](upstream_version=version, **kwargs)
         self.lr = lr
 
         # evaluators for validation datasets
