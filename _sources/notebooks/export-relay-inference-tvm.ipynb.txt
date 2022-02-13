@@ -82,7 +82,7 @@
    "outputs": [],
    "source": [
     "from yolort.models import yolov5n\n",
-    "from yolort.relaying import get_trace_module"
+    "from yolort.relay import get_trace_module"
    ]
   },
   {
@@ -102,11 +102,11 @@
       "  item = getattr(mod, name)\n",
       "/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/yolo_module.py:113: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).\n",
       "  for img in inputs:\n",
-      "/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/transform.py:160: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).\n",
+      "/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/transform.py:179: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).\n",
       "  images = [img for img in images]\n",
       "/Users/zhiqiang/miniconda3/envs/tvm/lib/python3.8/site-packages/torch/nn/functional.py:3701: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).\n",
       "  (torch.floor((input.size(i + 2).float() * torch.tensor(scale_factors[i], dtype=torch.float32)).float()))\n",
-      "/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/transform.py:263: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).\n",
+      "/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/transform.py:282: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).\n",
       "  img_h, img_w = _get_shape_onnx(img)\n",
       "/Users/zhiqiang/miniconda3/envs/tvm/lib/python3.8/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)\n",
       "  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]\n",
@@ -134,7 +134,7 @@
     {
      "data": {
       "text/plain": [
-       "graph(%self.1 : __torch__.yolort.relaying.trace_wrapper.TraceWrapper,\n",
+       "graph(%self.1 : __torch__.yolort.relay.trace_wrapper.TraceWrapper,\n",
        "      %x : Float(1, 3, 640, 640, strides=[1228800, 409600, 640, 1], requires_grad=0, device=cpu)):\n",
        "  %model : __torch__.yolort.models.yolo_module.YOLOv5 = prim::GetAttr[name=\"model\"](%self.1)\n",
        "  %4973 : (Tensor, Tensor, Tensor) = prim::CallMethod[name=\"forward\"](%model, %x)\n",
@@ -1553,7 +1553,7 @@
       "Using injective.cpu for arange based on highest priority (10)\n",
       "Using injective.cpu for expand_dims based on highest priority (10)\n",
       "Using nms.generic for vision.non_max_suppression based on highest priority (10)\n",
-      "[22:14:38] /Users/zhiqiang/Coding/tvm/src/te/schedule/bound.cc:119: not in feed graph consumer = hybrid(hybrid_nms, 0x60000b7e9a40)\n",
+      "[12:46:54] /Users/zhiqiang/Coding/tvm/src/te/schedule/bound.cc:119: not in feed graph consumer = hybrid(hybrid_nms, 0x60000a817250)\n",
       "Using injective.cpu for squeeze based on highest priority (10)\n",
       "Using injective.cpu for shape_of based on highest priority (10)\n",
       "Using injective.cpu for slice_like based on highest priority (10)\n",
@@ -1581,8 +1581,8 @@
       "Using injective.cpu for stack based on highest priority (10)\n",
       "Using injective.cpu for adv_index based on highest priority (10)\n",
       "Using injective.cpu for adv_index based on highest priority (10)\n",
+      "[12:46:54] /Users/zhiqiang/Coding/tvm/src/relay/transforms/let_list.h:54: Warning: letlist not used\n",
       "Using injective.cpu for add based on highest priority (10)\n",
-      "[22:14:38] /Users/zhiqiang/Coding/tvm/src/relay/transforms/let_list.h:54: Warning: letlist not used\n",
       "Using injective.cpu for divide based on highest priority (10)\n",
       "Using injective.cpu for add based on highest priority (10)\n",
       "Using injective.cpu for divide based on highest priority (10)\n",
@@ -1635,8 +1635,8 @@
       "Using reduce.cpu for prod based on highest priority (10)\n",
       "Using injective.cpu for multiply based on highest priority (10)\n",
       "Using reduce.cpu for prod based on highest priority (10)\n",
-      "[22:14:39] /Users/zhiqiang/Coding/tvm/src/relay/transforms/let_list.h:54: Warning: letlist not used\n",
-      "[22:14:39] /Users/zhiqiang/Coding/tvm/src/relay/transforms/let_list.h:54: Warning: letlist not used\n"
+      "[12:46:55] /Users/zhiqiang/Coding/tvm/src/relay/transforms/let_list.h:54: Warning: letlist not used\n",
+      "[12:46:55] /Users/zhiqiang/Coding/tvm/src/relay/transforms/let_list.h:54: Warning: letlist not used\n"
      ]
     }
    ],
@@ -1688,7 +1688,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "64.6 ms ± 1.23 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)\n"
+      "65.2 ms ± 1.31 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)\n"
      ]
     }
    ],
