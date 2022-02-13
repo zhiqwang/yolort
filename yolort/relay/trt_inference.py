@@ -12,10 +12,10 @@ from yolort.utils import load_from_ultralytics
 
 from .logits_decoder import LogitsDecoder
 
-__all__ = ["YOLOInference"]
+__all__ = ["YOLOTRTInference"]
 
 
-class YOLOInference(nn.Module):
+class YOLOTRTInference(nn.Module):
     """
     TensorRT deployment friendly wrapper for YOLO.
 

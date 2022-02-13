@@ -15,7 +15,7 @@ try:
 except ImportError:
     gs = None
 
-from .yolo_inference import YOLOInference
+from .trt_inference import YOLOTRTInference
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("YOLOTRTGraphSurgeon").setLevel(logging.INFO)
@@ -59,8 +59,8 @@ class YOLOTRTGraphSurgeon:
         checkpoint_path = Path(checkpoint_path)
         assert checkpoint_path.exists()
 
-        # Use YOLOInference to convert saved model to an initial ONNX graph.
-        model = YOLOInference(checkpoint_path, version=version)
+        # Use YOLOTRTInference to convert saved model to an initial ONNX graph.
+        model = YOLOTRTInference(checkpoint_path, version=version)
         model = model.eval()
         model = model.to(device=device)
         logger.info(f"Loaded saved model from {checkpoint_path}")
