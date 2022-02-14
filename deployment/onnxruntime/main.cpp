@@ -11,6 +11,38 @@ struct Detection {
   int classId{};
 };
 
+//遍历文件夹，dir最后要加/，filespec中没有*号，示例格式（"Package/", ".txt"）
+std::vector<std::string> getFiles(const char* dir, const char* filespec) {
+
+    //执行查询
+    if (1) {
+        char cmd[100];
+        system("md C:\\Temp");
+        sprintf(cmd, "dir \"%s\" /b | findstr %s >> C:\\Temp\\filelist.dat", dir, filespec);
+        system(cmd);
+    }
+
+    //获取结果
+    std::vector<std::string> retstrs;
+    {
+        std::ifstream fin("C:\\Temp\\filelist.dat", std::ios::in);
+        if (fin) {
+            std::string str;
+            while (getline(fin, str)) {
+                if (str != "") retstrs.push_back(dir + str);
+            }
+        }
+        fin.close();
+    }
+
+    //删除临时文件
+    system("del /f /q C:\\Temp\\filelist.dat");
+    system("rd /s /q C:\\Temp");
+
+    return retstrs;
+}
+
+
 namespace utils {
 std::wstring charToWstring(const char* str) {
   typedef std::codecvt_utf8<wchar_t> convert_type;
@@ -67,6 +99,7 @@ class YOLOv5Detector {
   YOLOv5Detector(const std::string& modelPath, const bool& isGPU);
 
   std::vector<Detection> detect(cv::Mat& image);
+  std::vector<Detection> detect_batch(std::string& batch_image_path);
 
  private:
   Ort::Env env{nullptr};
@@ -76,6 +109,10 @@ class YOLOv5Detector {
   static void preprocessing(cv::Mat& image, float* blob);
   static std::vector<Detection> postprocessing(
       cv::Mat& image,
+      std::vector<Ort::Value>& outputTensors);
+
+  static std::vector<Detection> batch_postprocessing(
+      std::vector<cv::Mat>& image,
       std::vector<Ort::Value>& outputTensors);
 
   std::vector<const char*> inputNames;
@@ -179,6 +216,8 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   std::vector<Ort::Value> outputTensors = this->session.Run(
       Ort::RunOptions{nullptr}, inputNames.data(), inputTensors.data(), 1, outputNames.data(), 3);
 
+  std::cout << "输出容器的元素数目为: " << outputTensors.size() << std::endl;
+
   std::vector<Detection> result = this->postprocessing(image, outputTensors);
 
   delete[] blob;
@@ -186,20 +225,126 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   return result;
 }
 
+
+
+/***---------------------------------------------------***/
+
+
+std::vector<Detection> YOLOv5Detector::batch_postprocessing(
+    std::vector<cv::Mat>& image,
+    std::vector<Ort::Value>& outputTensors) 
+{
+    const auto* scoresTensor = outputTensors[0].GetTensorData<float>();
+    const auto* classIdsTensor = outputTensors[1].GetTensorData<int64_t>();
+    const auto* boxesTensor = outputTensors[2].GetTensorData<float>();
+
+    size_t count = outputTensors[0].GetTensorTypeAndShapeInfo().GetElementCount();
+    std::vector<Detection> detections;
+    for (int i = 0; i < count; ++i) {
+        Detection det;
+        int x = (int)boxesTensor[i * 4];
+        int y = (int)boxesTensor[i * 4 + 1];
+        int width = (int)boxesTensor[i * 4 + 2] - x;
+        int height = (int)boxesTensor[i * 4 + 3] - y;
+
+        det.conf = scoresTensor[i];
+        det.classId = (int)classIdsTensor[i];
+        det.box = cv::Rect(x, y, width, height);
+        detections.push_back(det);
+    }
+
+    return detections;
+
+    
+}
+
+std::vector<Detection> YOLOv5Detector::detect_batch(std::string& batch_image_path) {
+    
+    std::vector<Ort::Value> inputTensors;
+    std::vector<float> inputTensorValues_global;
+    
+    std::vector<cv::Mat> image_list;
+
+    cv::Mat img;
+
+    //遍历文件夹
+    const char* tmp = batch_image_path.c_str();//string convert to const char*
+    auto files = getFiles(tmp, ".jpg");
+    std::cout << "find " << files.size() << " files." << std::endl;
+
+    for (int i = 0; i < files.size(); i++)
+    {
+        auto fi = files[i];
+        std::cout << "fi:" <<fi<< std::endl;
+        
+        img = cv::imread(fi);
+        size_t inputTensorSize = img.rows * img.cols * img.channels();
+
+        std::cout << "inputTensorSize is: " << inputTensorSize << std::endl;
+
+        std::vector<int64_t> imageShape{ img.channels(), img.rows, img.cols };
+        auto* blob = new float[inputTensorSize];
+
+        this->preprocessing(img, blob);
+
+        std::vector<float> inputTensorValues(blob, blob + inputTensorSize);
+        inputTensorValues_global.swap(inputTensorValues);
+
+        Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu(
+            OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
+
+        inputTensors.push_back(Ort::Value::CreateTensor<float>(
+            memoryInfo,
+            inputTensorValues_global.data(),
+            inputTensorValues_global.size(),
+            imageShape.data(),
+            imageShape.size()));
+
+        image_list.push_back(img);
+
+        delete[] blob;
+
+    }
+
+    std::cout << "inputTensors size is: "<<inputTensors.size() << std::endl;
+
+    std::cout<< "infer..." << std::endl;
+
+    if (inputTensors.data() == nullptr)
+    {
+        std::cout << "输入数据为空!" << std::endl;
+    }
+
+    std::vector<Ort::Value> outputTensors = this->session.Run(
+        Ort::RunOptions{ nullptr }, inputNames.data(), inputTensors.data(), 1, outputNames.data(), 3);
+
+    std::cout << "完成推理!" << std::endl;
+    std::cout <<"输出容器的元素数目为: " <<outputTensors.size() << std::endl;
+
+    //std::vector<Detection> result = this->batch_postprocessing(image_list, outputTensors);
+
+    //批推理的后处理暂未添加
+    std::vector<Detection> result;
+
+    return result;
+}
+
 int main(int argc, char* argv[]) {
   cmdline::parser cmd;
   cmd.add<std::string>("model_path", 'm', "Path to onnx model.", true, "yolov5.onnx");
-  cmd.add<std::string>("image", 'i', "Image source to be detected.", true, "bus.jpg");
+  cmd.add<std::string>("image", 'i', "image source to be detected,file for single, fold for batch.", true, "bus.jpg");
   cmd.add<std::string>("class_names", 'c', "Path of dataset labels.", true, "coco.names");
   cmd.add("gpu", '\0', "Enable cuda device or cpu.");
+  cmd.add("batch", '\0', "Enable batch infer or single infer.");
 
   cmd.parse_check(argc, argv);
 
   bool isGPU = cmd.exist("gpu");
   std::string classNamesPath = cmd.get<std::string>("class_names");
   std::vector<std::string> classNames = utils::loadNames(classNamesPath);
-  std::string imagePath = cmd.get<std::string>("image");
+  std::string image_path = cmd.get<std::string>("image");
   std::string modelPath = cmd.get<std::string>("model_path");
+
 
   if (classNames.empty()) {
     std::cout << "Empty class names file." << std::endl;
@@ -214,15 +359,32 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  cv::Mat image = cv::imread(imagePath);
 
-  std::vector<Detection> result = detector.detect(image);
+  bool infer_flag = cmd.exist("batch");
 
-  utils::visualizeDetection(image, result, classNames);
+  if (!infer_flag)
+  {
+      cv::Mat image = cv::imread(image_path);
 
-  cv::imshow("result", image);
-  // cv::imwrite("result.jpg", image);
-  cv::waitKey(0);
+      std::vector<Detection> result = detector.detect(image);
+
+      utils::visualizeDetection(image, result, classNames);
+
+      cv::imshow("result", image);
+      // cv::imwrite("result.jpg", image);
+      cv::waitKey(0);
+  }
+  else
+  {
+      
+      std::cout << "begin batch_infer..." << std::endl;
+
+      std::vector<Detection> result = detector.detect_batch(image_path);
+ 
+
+  }
+
+
 
   return 0;
 }
