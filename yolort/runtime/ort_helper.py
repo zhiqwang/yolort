@@ -29,7 +29,7 @@ def export_onnx(
         model (nn.Module): The defined PyTorch module to be exported. Default: None
         size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
             Default: (640, 640)
-        size_divisible (int): stride of the models. Default: 32
+        size_divisible (int): Stride in the preprocessing. Default: 32
         score_thresh (float): Score threshold used for postprocessing the detections.
             Default: 0.25
         nms_thresh (float): NMS threshold used for postprocessing the detections. Default: 0.45
@@ -63,7 +63,7 @@ class ONNXBuilder:
         model (nn.Module): The defined PyTorch module to be exported. Default: None
         size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
             Default: (640, 640)
-        size_divisible (int): stride of the models. Default: 32
+        size_divisible (int): Stride in the preprocessing. Default: 32
         score_thresh (float): Score threshold used for postprocessing the detections.
             Default: 0.25
         nms_thresh (float): NMS threshold used for postprocessing the detections. Default: 0.45

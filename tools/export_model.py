@@ -14,6 +14,12 @@ def get_parser():
         help="The path of checkpoint weights",
     )
     parser.add_argument(
+        "--onnx_path",
+        type=str,
+        default=None,
+        help="The path of the exported ONNX models",
+    )
+    parser.add_argument(
         "--skip_preprocess",
         action="store_true",
         help="Export the vanilla YOLO model.",
@@ -42,8 +48,9 @@ def get_parser():
         nargs="+",
         type=int,
         default=[640, 640],
-        help="Image size for evaluation (default: 640, 640).",
+        help="Image size for inferencing (default: 640, 640).",
     )
+    parser.add_argument("--size_divisible", type=int, default=32, help="Stride for the preprocessing.")
     parser.add_argument("--batch_size", default=1, type=int, help="Batch size for YOLOv5.")
     parser.add_argument("--opset", default=11, type=int, help="Opset version for exporing ONNX models")
     parser.add_argument("--simplify", action="store_true", help="ONNX: simplify model.")
@@ -58,12 +65,19 @@ def cli_main():
     checkpoint_path = Path(args.checkpoint_path)
     assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
 
+    # Save the ONNX model path in the same directory of the checkpoint if not determined
+    onnx_path = args.onnx_path
+    onnx_path = onnx_path or checkpoint_path.with_suffix(".onnx")
+
     export_onnx(
-        checkpoint_path,
+        onnx_path,
+        checkpoint_path=checkpoint_path,
+        size=tuple(args.image_size),
+        size_divisible=args.size_divisible,
         score_thresh=args.score_thresh,
         nms_thresh=args.nms_thresh,
         version=args.version,
-        onnx_path=args.onnx_path,
+        skip_preprocess=args.skip_preprocess,
         opset_version=args.opset,
     )
 
