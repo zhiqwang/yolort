@@ -13,11 +13,11 @@ The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
 
 ## Features
 
-The `ONNX` model exported with `yolort` differs from the official one in the following three ways.
+The ONNX model exported by yolort differs from other pipeline in the following three ways.
 
-- The exported `ONNX` graph now supports dynamic shapes, and we use `(3, H, W)` as the input shape (for example `(3, 640, 640)`).
-- We embed the pre-processing ([`letterbox`](https://github.com/ultralytics/yolov5/blob/9ef94940aa5e9618e7e804f0758f9a6cebfc63a9/utils/augmentations.py#L88-L118)) into the graph as well. We only require the input image to be in the `RGB` channel, and to be rescaled to `float32 [0-1]` from general `uint [0-255]`. The main logic we use to implement this mechanism is below. (And [this](https://github.com/zhiqwang/yolov5-rt-stack/blob/b9c67205a61fa0e9d7e6696372c133ea0d36d9db/yolort/models/transform.py#L210-L234) plays the same role of the official `letterbox`, but there will be a little difference in accuracy now.)
-- We embed the post-processing (`nms`) into the model graph, which performs the same task as [`non_max_suppression`](https://github.com/ultralytics/yolov5/blob/fad57c29cd27c0fcbc0038b7b7312b9b6ef922a8/utils/general.py#L532-L623) except for the format of the inputs. (And here the `ONNX` graph is required to be dynamic.)
+- We embed the pre-processing into the graph (mainly composed of `letterbox`). and the exported model expects a `Tensor[C, H, W]`, which is in `RGB` channel and is rescaled to range `float32 [0-1]`.
+- We embed the post-processing into the model graph with `torchvision.ops.batched_nms`. So the outputs of the exported model are straightforward `boxes`, `labels` and `scores` fields of this image.
+- We adopt the dynamic shape mechanism to export the ONNX models.
 
 ## Usage
 
@@ -39,10 +39,10 @@ The `ONNX` model exported with `yolort` differs from the official one in the fol
 1. Export your custom model to ONNX.
 
    ```bash
-   python tools/export_model.py [--checkpoint_path path/to/custom/best.pt]
+   python tools/export_model.py --checkpoint_path [path/to/your/best.pt]
    ```
 
-   And then, you can find that a new pair of ONNX models ("best.onnx" and "best.sim.onnx") has been generated in the directory of "best.pt".
+   And then, you can find that a ONNX model ("best.onnx") have been generated in the directory of "best.pt".
 
 1. \[Optional\] Quick test with the ONNXRuntime Python interface.
 
