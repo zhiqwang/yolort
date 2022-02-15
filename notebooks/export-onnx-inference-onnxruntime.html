@@ -256,19 +256,23 @@
   <ul class="md-nav__list" data-md-scrollfix="">
         <li class="md-nav__item"><a href="#notebooks-export-onnx-inference-onnxruntime--page-root" class="md-nav__link">Deploying yolort on ONNX Runtime</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#Model-Definition-and-Initialization" class="md-nav__link">Model Definition and Initialization</a><nav class="md-nav">
-              <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#Load-images-to-infer" class="md-nav__link">Load images to infer</a>
+        <li class="md-nav__item"><a href="#Set-up-environment-and-function-utilities" class="md-nav__link">Set up environment and function utilities</a>
         </li>
+        <li class="md-nav__item"><a href="#Load-the-model-trained-from-yolov5" class="md-nav__link">Load the model trained from yolov5</a><nav class="md-nav">
+              <ul class="md-nav__list">
         <li class="md-nav__item"><a href="#Inference-on-PyTorch-backend" class="md-nav__link">Inference on PyTorch backend</a>
         </li></ul>
             </nav>
         </li>
         <li class="md-nav__item"><a href="#Export-the-model-to-ONNX" class="md-nav__link">Export the model to ONNX</a>
         </li>
-        <li class="md-nav__item"><a href="#Simplify-the-exported-ONNX-model-(Optional)" class="md-nav__link">Simplify the exported ONNX model (Optional)</a>
+        <li class="md-nav__item"><a href="#Inference-on-ONNX-Runtime-backend" class="md-nav__link">Inference on ONNX Runtime backend</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#Verify-whether-the-inference-results-are-consistent-with-PyTorch’s" class="md-nav__link">Verify whether the inference results are consistent with PyTorch’s</a>
         </li>
-        <li class="md-nav__item"><a href="#Inference-on-ONNXRuntime-Backend" class="md-nav__link">Inference on ONNXRuntime Backend</a>
+        <li class="md-nav__item"><a href="#Verify-another-image" class="md-nav__link">Verify another image</a>
+        </li></ul>
+            </nav>
         </li></ul>
             </nav>
         </li>
@@ -340,19 +344,23 @@
   <ul class="md-nav__list" data-md-scrollfix="">
         <li class="md-nav__item"><a href="#notebooks-export-onnx-inference-onnxruntime--page-root" class="md-nav__link">Deploying yolort on ONNX Runtime</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#Model-Definition-and-Initialization" class="md-nav__link">Model Definition and Initialization</a><nav class="md-nav">
-              <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#Load-images-to-infer" class="md-nav__link">Load images to infer</a>
+        <li class="md-nav__item"><a href="#Set-up-environment-and-function-utilities" class="md-nav__link">Set up environment and function utilities</a>
         </li>
+        <li class="md-nav__item"><a href="#Load-the-model-trained-from-yolov5" class="md-nav__link">Load the model trained from yolov5</a><nav class="md-nav">
+              <ul class="md-nav__list">
         <li class="md-nav__item"><a href="#Inference-on-PyTorch-backend" class="md-nav__link">Inference on PyTorch backend</a>
         </li></ul>
             </nav>
         </li>
         <li class="md-nav__item"><a href="#Export-the-model-to-ONNX" class="md-nav__link">Export the model to ONNX</a>
         </li>
-        <li class="md-nav__item"><a href="#Simplify-the-exported-ONNX-model-(Optional)" class="md-nav__link">Simplify the exported ONNX model (Optional)</a>
+        <li class="md-nav__item"><a href="#Inference-on-ONNX-Runtime-backend" class="md-nav__link">Inference on ONNX Runtime backend</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#Verify-whether-the-inference-results-are-consistent-with-PyTorch’s" class="md-nav__link">Verify whether the inference results are consistent with PyTorch’s</a>
         </li>
-        <li class="md-nav__item"><a href="#Inference-on-ONNXRuntime-Backend" class="md-nav__link">Inference on ONNXRuntime Backend</a>
+        <li class="md-nav__item"><a href="#Verify-another-image" class="md-nav__link">Verify another image</a>
+        </li></ul>
+            </nav>
         </li></ul>
             </nav>
         </li>
@@ -620,27 +628,25 @@ div.rendered_html tbody tr:hover {
     }
 </style><section id="Deploying-yolort-on-ONNX-Runtime">
 <h1 id="notebooks-export-onnx-inference-onnxruntime--page-root">Deploying yolort on ONNX Runtime<a class="headerlink" href="#notebooks-export-onnx-inference-onnxruntime--page-root" title="Permalink to this headline">¶</a></h1>
+<p>The ONNX model exported by yolort differs from other pipeline in the following three ways.</p>
+<ul class="simple">
+<li><p>We embed the pre-processing into the graph (mainly composed of <code class="docutils literal notranslate"><span class="pre">letterbox</span></code>). and the exported model expects a <code class="docutils literal notranslate"><span class="pre">Tensor[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>, which is in <code class="docutils literal notranslate"><span class="pre">RGB</span></code> channel and is rescaled to range <code class="docutils literal notranslate"><span class="pre">float32</span> <span class="pre">[0-1]</span></code>.</p></li>
+<li><p>We embed the post-processing into the model graph with <code class="docutils literal notranslate"><span class="pre">torchvision.ops.batched_nms</span></code>. So the outputs of the exported model are straightforward <code class="docutils literal notranslate"><span class="pre">boxes</span></code>, <code class="docutils literal notranslate"><span class="pre">labels</span></code> and <code class="docutils literal notranslate"><span class="pre">scores</span></code> fields of this image.</p></li>
+<li><p>We adopt the dynamic shape mechanism to export the ONNX models.</p></li>
+</ul>
+<section id="Set-up-environment-and-function-utilities">
+<h2 id="Set-up-environment-and-function-utilities">Set up environment and function utilities<a class="headerlink" href="#Set-up-environment-and-function-utilities" title="Permalink to this headline">¶</a></h2>
+<p>First you should install ONNX Runtime first to run this tutorial. See the ONNX Runtime <a class="reference external" href="https://onnxruntime.ai">installation matrix</a> for recommended instructions for desired combinations of target operating system, hardware, accelerator, and language.</p>
+<p>A quick solution is to install via pip on X64:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install onnxruntime
+</pre></div>
+</div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
-
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">onnx</span>
-<span class="kn">import</span> <span class="nn">onnxruntime</span>
-
-<span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">yolov5s</span>
-
-<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">get_image_from_url</span><span class="p">,</span> <span class="n">read_image_to_tensor</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"CUDA_DEVICE_ORDER"</span><span class="p">]</span><span class="o">=</span><span class="s2">"PCI_BUS_ID"</span>
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"CUDA_VISIBLE_DEVICES"</span><span class="p">]</span><span class="o">=</span><span class="s2">"0"</span>
@@ -649,51 +655,82 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<section id="Model-Definition-and-Initialization">
-<h2 id="Model-Definition-and-Initialization">Model Definition and Initialization<a class="headerlink" href="#Model-Definition-and-Initialization" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">onnx</span>
+<span class="kn">import</span> <span class="nn">onnxruntime</span>
+
+<span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
+<span class="kn">from</span> <span class="nn">yolort.v5</span> <span class="kn">import</span> <span class="n">attempt_download</span>
+
+<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">get_image_from_url</span><span class="p">,</span> <span class="n">read_image_to_tensor</span>
+<span class="kn">from</span> <span class="nn">yolort.utils.image_utils</span> <span class="kn">import</span> <span class="n">to_numpy</span>
+</pre></div>
+</div>
+</div>
+<p>Define some parameters used for defining the model, exporting ONNX models and inferencing on ONNX Runtime.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">yolov5s</span><span class="p">(</span><span class="n">export_friendly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">score_thresh</span><span class="o">=</span><span class="mf">0.45</span><span class="p">)</span>
-
-<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">img_size</span> <span class="o">=</span> <span class="mi">640</span>
+<span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">img_size</span><span class="p">,</span> <span class="n">img_size</span><span class="p">)</span>  <span class="c1"># Used for pre-processing</span>
+<span class="n">size_divisible</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">score_thresh</span> <span class="o">=</span> <span class="mf">0.35</span>
+<span class="n">nms_thresh</span> <span class="o">=</span> <span class="mf">0.45</span>
+<span class="n">opset_version</span> <span class="o">=</span> <span class="mi">11</span>
 </pre></div>
 </div>
 </div>
-<section id="Load-images-to-infer">
-<h3 id="Load-images-to-infer">Load images to infer<a class="headerlink" href="#Load-images-to-infer" title="Permalink to this headline">¶</a></h3>
+<p>Get images for inferenceing.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">img_one</span> <span class="o">=</span> <span class="n">get_image_from_url</span><span class="p">(</span><span class="s2">"https://gitee.com/zhiqwang/yolov5-rt-stack/raw/master/test/assets/bus.jpg"</span><span class="p">)</span>
-<span class="c1"># img_one = cv2.imread('../test/assets/bus.jpg')</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">img_src1</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg"</span>
+<span class="n">img_one</span> <span class="o">=</span> <span class="n">get_image_from_url</span><span class="p">(</span><span class="n">img_src1</span><span class="p">)</span>
 <span class="n">img_one</span> <span class="o">=</span> <span class="n">read_image_to_tensor</span><span class="p">(</span><span class="n">img_one</span><span class="p">,</span> <span class="n">is_half</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">img_one</span> <span class="o">=</span> <span class="n">img_one</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
-<span class="n">img_two</span> <span class="o">=</span> <span class="n">get_image_from_url</span><span class="p">(</span><span class="s2">"https://gitee.com/zhiqwang/yolov5-rt-stack/raw/master/test/assets/zidane.jpg"</span><span class="p">)</span>
-<span class="c1"># img_two = cv2.imread('../test/assets/zidane.jpg')</span>
+<span class="n">img_src2</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jpg"</span>
+<span class="n">img_two</span> <span class="o">=</span> <span class="n">get_image_from_url</span><span class="p">(</span><span class="n">img_src2</span><span class="p">)</span>
 <span class="n">img_two</span> <span class="o">=</span> <span class="n">read_image_to_tensor</span><span class="p">(</span><span class="n">img_two</span><span class="p">,</span> <span class="n">is_half</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">img_two</span> <span class="o">=</span> <span class="n">img_two</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-
-<span class="c1"># images = [img_one, img_two]</span>
-<span class="c1"># Uncomment the above line and comment the next line if you want to</span>
-<span class="c1"># use the multi-batch inferencing on onnxruntime</span>
-<span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_one</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 </section>
-<section id="Inference-on-PyTorch-backend">
-<h3 id="Inference-on-PyTorch-backend">Inference on PyTorch backend<a class="headerlink" href="#Inference-on-PyTorch-backend" title="Permalink to this headline">¶</a></h3>
-<div class="nbinput docutils container">
+<section id="Load-the-model-trained-from-yolov5">
+<h2 id="Load-the-model-trained-from-yolov5">Load the model trained from yolov5<a class="headerlink" href="#Load-the-model-trained-from-yolov5" title="Permalink to this headline">¶</a></h2>
+<p>The model used below is officially released by yolov5 and trained on COCO 2017 datasets.</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-    <span class="n">model_out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># yolov5n6.pt is downloaded from 'https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt'</span>
+<span class="n">model_path</span> <span class="o">=</span> <span class="s2">"yolov5n6.pt"</span>
+<span class="n">onnx_path</span> <span class="o">=</span> <span class="s2">"yolov5n6.onnx"</span>
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">attempt_download</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">YOLOv5</span><span class="o">.</span><span class="n">load_from_yolov5</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+    <span class="n">size_divisible</span><span class="o">=</span><span class="n">size_divisible</span><span class="p">,</span>
+    <span class="n">score_thresh</span><span class="o">=</span><span class="n">score_thresh</span><span class="p">,</span>
+    <span class="n">nms_thresh</span><span class="o">=</span><span class="n">nms_thresh</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -702,12 +739,69 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/usr/local/lib/python3.6/dist-packages/torch/nn/functional.py:718: UserWarning: Named tensors and all their associated APIs are an experimental feature and subject to change. Please do not use them for anything important until they are released as stable. (Triggered internally at  /pytorch/c10/core/TensorImpl.h:1156.)
-  return torch.max_pool2d(input, kernel_size, stride, padding, dilation, ceil_mode)
+
+                 from  n    params  module                                  arguments
+  0                -1  1      1760  yolort.v5.models.common.Conv            [3, 16, 6, 2, 2]
+  1                -1  1      4672  yolort.v5.models.common.Conv            [16, 32, 3, 2]
+  2                -1  1      4800  yolort.v5.models.common.C3              [32, 32, 1]
+  3                -1  1     18560  yolort.v5.models.common.Conv            [32, 64, 3, 2]
+  4                -1  2     29184  yolort.v5.models.common.C3              [64, 64, 2]
+  5                -1  1     73984  yolort.v5.models.common.Conv            [64, 128, 3, 2]
+  6                -1  3    156928  yolort.v5.models.common.C3              [128, 128, 3]
+  7                -1  1    221568  yolort.v5.models.common.Conv            [128, 192, 3, 2]
+  8                -1  1    167040  yolort.v5.models.common.C3              [192, 192, 1]
+  9                -1  1    442880  yolort.v5.models.common.Conv            [192, 256, 3, 2]
+ 10                -1  1    296448  yolort.v5.models.common.C3              [256, 256, 1]
+ 11                -1  1    164608  yolort.v5.models.common.SPPF            [256, 256, 5]
+ 12                -1  1     49536  yolort.v5.models.common.Conv            [256, 192, 1, 1]
+ 13                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']
+ 14           [-1, 8]  1         0  yolort.v5.models.common.Concat          [1]
+ 15                -1  1    203904  yolort.v5.models.common.C3              [384, 192, 1, False]
+ 16                -1  1     24832  yolort.v5.models.common.Conv            [192, 128, 1, 1]
+ 17                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']
+ 18           [-1, 6]  1         0  yolort.v5.models.common.Concat          [1]
+ 19                -1  1     90880  yolort.v5.models.common.C3              [256, 128, 1, False]
+ 20                -1  1      8320  yolort.v5.models.common.Conv            [128, 64, 1, 1]
+ 21                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']
+ 22           [-1, 4]  1         0  yolort.v5.models.common.Concat          [1]
+ 23                -1  1     22912  yolort.v5.models.common.C3              [128, 64, 1, False]
+ 24                -1  1     36992  yolort.v5.models.common.Conv            [64, 64, 3, 2]
+ 25          [-1, 20]  1         0  yolort.v5.models.common.Concat          [1]
+ 26                -1  1     74496  yolort.v5.models.common.C3              [128, 128, 1, False]
+ 27                -1  1    147712  yolort.v5.models.common.Conv            [128, 128, 3, 2]
+ 28          [-1, 16]  1         0  yolort.v5.models.common.Concat          [1]
+ 29                -1  1    179328  yolort.v5.models.common.C3              [256, 192, 1, False]
+ 30                -1  1    332160  yolort.v5.models.common.Conv            [192, 192, 3, 2]
+ 31          [-1, 12]  1         0  yolort.v5.models.common.Concat          [1]
+ 32                -1  1    329216  yolort.v5.models.common.C3              [384, 256, 1, False]
+ 33  [23, 26, 29, 32]  1    164220  yolort.v5.models.yolo.Detect            [80, [[19, 27, 44, 40, 38, 94], [96, 68, 86, 152, 180, 137], [140, 301, 303, 264, 238, 542], [436, 615, 739, 380, 925, 792]], [64, 128, 192, 256]]
+/opt/conda/lib/python3.8/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Model Summary: 355 layers, 3246940 parameters, 3246940 gradients, 4.6 GFLOPs
+
 </pre></div></div>
 </div>
+<section id="Inference-on-PyTorch-backend">
+<h3 id="Inference-on-PyTorch-backend">Inference on PyTorch backend<a class="headerlink" href="#Inference-on-PyTorch-backend" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_one</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">model_out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
@@ -721,12 +815,12 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 3.44 s, sys: 20 ms, total: 3.46 s
-Wall time: 96.9 ms
+CPU times: user 44.1 s, sys: 160 ms, total: 44.3 s
+Wall time: 1.61 s
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_out</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'boxes'</span><span class="p">]</span>
@@ -734,19 +828,19 @@ Wall time: 96.9 ms
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-tensor([[669.26556, 391.30249, 809.86627, 885.23444],
-        [ 54.06350, 397.83176, 235.95316, 901.37323],
-        [222.88336, 406.81192, 341.55716, 854.77924],
-        [ 18.63205, 232.97676, 810.97394, 760.11700]])
+tensor([[ 32.27846, 225.15266, 811.47729, 740.91071],
+        [ 50.42178, 387.48898, 241.54399, 897.61041],
+        [219.03331, 386.14346, 345.77689, 869.02582],
+        [678.05023, 374.65326, 809.80334, 874.80621]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_out</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'scores'</span><span class="p">]</span>
@@ -754,16 +848,16 @@ tensor([[669.26556, 391.30249, 809.86627, 885.23444],
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-tensor([0.89005, 0.87333, 0.85366, 0.72340])
+tensor([0.88238, 0.84486, 0.72629, 0.70077])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_out</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'labels'</span><span class="p">]</span>
@@ -771,12 +865,12 @@ tensor([0.89005, 0.87333, 0.85366, 0.72340])
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-tensor([0, 0, 0, 5])
+tensor([5, 0, 0, 0])
 </pre></div></div>
 </div>
 </section>
@@ -784,20 +878,18 @@ tensor([0, 0, 0, 5])
 <section id="Export-the-model-to-ONNX">
 <h2 id="Export-the-model-to-ONNX">Export the model to ONNX<a class="headerlink" href="#Export-the-model-to-ONNX" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchvision.ops._register_onnx_ops</span> <span class="kn">import</span> <span class="n">_onnx_opset_version</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.runtime.ort_helper</span> <span class="kn">import</span> <span class="n">export_onnx</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">export_onnx_name</span> <span class="o">=</span> <span class="s1">'yolov5s.onnx'</span>  <span class="c1"># path of the exported ONNX models</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'We are using opset version: </span><span class="si">{</span><span class="n">_onnx_opset_version</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'We are using opset version: </span><span class="si">{</span><span class="n">opset_version</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -810,25 +902,10 @@ We are using opset version: 11
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Export to ONNX model</span>
-<span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="p">(</span><span class="n">images</span><span class="p">,),</span>
-    <span class="n">export_onnx_name</span><span class="p">,</span>
-    <span class="n">do_constant_folding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">opset_version</span><span class="o">=</span><span class="n">_onnx_opset_version</span><span class="p">,</span>
-    <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"images_tensors"</span><span class="p">],</span>
-    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"scores"</span><span class="p">,</span> <span class="s2">"labels"</span><span class="p">,</span> <span class="s2">"boxes"</span><span class="p">],</span>
-    <span class="n">dynamic_axes</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">"images_tensors"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-        <span class="s2">"boxes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-        <span class="s2">"labels"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="s2">"scores"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-    <span class="p">},</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">export_onnx</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">onnx_path</span><span class="o">=</span><span class="n">onnx_path</span><span class="p">,</span> <span class="n">opset_version</span><span class="o">=</span><span class="n">opset_version</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -837,98 +914,49 @@ We are using opset version: 11
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input images_tensors
-  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))
-/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input boxes
-  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))
-/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input labels
-  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))
-/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input scores
-  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))
-/data/wangzq/yolov5-rt-stack/yolort/models/anchor_utils.py:31: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
-  stride = torch.as_tensor([stride], dtype=dtype, device=device)
-/data/wangzq/yolov5-rt-stack/yolort/models/anchor_utils.py:50: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
-  anchor_grid = torch.as_tensor(anchor_grid, dtype=dtype, device=device)
-/data/wangzq/yolov5-rt-stack/yolort/models/anchor_utils.py:79: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
-  shifts = shifts - torch.tensor(0.5, dtype=shifts.dtype, device=device)
-/data/wangzq/yolov5-rt-stack/yolort/models/transform.py:298: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
-  for s, s_orig in zip(new_size, original_size)
-/data/wangzq/yolov5-rt-stack/yolort/models/transform.py:298: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
-  for s, s_orig in zip(new_size, original_size)
-/usr/local/lib/python3.6/dist-packages/torch/onnx/symbolic_opset9.py:2766: UserWarning: Exporting aten::index operator of advanced indexing in opset 11 is achieved by combination of multiple ONNX operators, including Reshape, Transpose, Concat, and Gather. If indices include negative values, the exported graph will produce incorrect results.
-  "If indices include negative values, the exported graph will produce incorrect results.")
-/usr/local/lib/python3.6/dist-packages/torch/onnx/symbolic_opset9.py:701: UserWarning: This model contains a squeeze operation on dimension 1 on an input with unknown shape. Note that if the size of dimension 1 of the input is not 1, the ONNX model will return an error. Opset version 11 supports squeezing on non-singleton dimensions, it is recommended to export this model using opset version 11 or higher.
-  "version 11 or higher.")
+/opt/conda/lib/python3.8/site-packages/torch/nn/functional.py:3701: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  (torch.floor((input.size(i + 2).float() * torch.tensor(scale_factors[i], dtype=torch.float32)).float()))
+/coding/yolov5-rt-stack/yolort/models/transform.py:282: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  img_h, img_w = _get_shape_onnx(img)
+/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:45: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).to(dtype=dtype)
+/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:46: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
+/coding/yolov5-rt-stack/yolort/models/box_head.py:402: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
+/coding/yolov5-rt-stack/yolort/models/box_head.py:333: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+  for head_output, grid, shift, stride in zip(head_outputs, grids, shifts, strides):
+/opt/conda/lib/python3.8/site-packages/torch/onnx/symbolic_opset9.py:2815: UserWarning: Exporting aten::index operator of advanced indexing in opset 11 is achieved by combination of multiple ONNX operators, including Reshape, Transpose, Concat, and Gather. If indices include negative values, the exported graph will produce incorrect results.
+  warnings.warn("Exporting aten::index operator of advanced indexing in opset " +
 </pre></div></div>
 </div>
-</section>
-<section id="Simplify-the-exported-ONNX-model-(Optional)">
-<h2 id="Simplify-the-exported-ONNX-model-(Optional)">Simplify the exported ONNX model (Optional)<a class="headerlink" href="#Simplify-the-exported-ONNX-model-(Optional)" title="Permalink to this headline">¶</a></h2>
-<p><em>ONNX</em> is great, but sometimes too complicated. And thanks to @daquexian for providing a powerful tool named <code class="docutils literal notranslate"><span class="pre">`onnxsim</span></code> &lt;<a class="reference external" href="https://github.com/daquexian/onnx-simplifier/">https://github.com/daquexian/onnx-simplifier/</a>&gt;`__ to eliminate some redundant operators.</p>
-<p>First of all, let’s install <code class="docutils literal notranslate"><span class="pre">onnx-simplifier</span></code> with following script.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -U onnx-simplifier
-</pre></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">onnxsim</span>
-
-<span class="c1"># onnx-simplifier version</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Starting simplifing with onnxsim </span><span class="si">{</span><span class="n">onnxsim</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Starting simplifing with onnxsim 0.3.6
-</pre></div></div>
-</div>
+<p>Check the exported ONNX model is well formed</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">onnx_simp_name</span> <span class="o">=</span> <span class="s1">'yolov5s.simp.onnx'</span>  <span class="c1"># path of the simplified ONNX models</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># load your predefined ONNX model</span>
-<span class="n">onnx_model</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">export_onnx_name</span><span class="p">)</span>
-
-<span class="c1"># convert model</span>
-<span class="n">model_simp</span><span class="p">,</span> <span class="n">check</span> <span class="o">=</span> <span class="n">onnxsim</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span>
-    <span class="n">onnx_model</span><span class="p">,</span>
-    <span class="n">input_shapes</span><span class="o">=</span><span class="p">{</span><span class="s2">"images_tensors"</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">]},</span>
-    <span class="n">dynamic_input_shape</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="k">assert</span> <span class="n">check</span><span class="p">,</span> <span class="s2">"Simplified ONNX model could not be validated"</span>
-
-<span class="c1"># use model_simp as a standard ONNX model object</span>
-<span class="n">onnx</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model_simp</span><span class="p">,</span> <span class="n">onnx_simp_name</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</section>
-<section id="Inference-on-ONNXRuntime-Backend">
-<h2 id="Inference-on-ONNXRuntime-Backend">Inference on ONNXRuntime Backend<a class="headerlink" href="#Inference-on-ONNXRuntime-Backend" title="Permalink to this headline">¶</a></h2>
-<p>Now, We begin to verify whether the inference results are consistent with PyTorch’s, similarly, install <code class="docutils literal notranslate"><span class="pre">onnxruntime</span></code> first.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -U onnxruntime
-</pre></div>
-</div>
-<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the ONNX model</span>
+<span class="n">onnx_model</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">onnx_path</span><span class="p">)</span>
+
+<span class="c1"># Check that the model is well formed</span>
+<span class="n">onnx</span><span class="o">.</span><span class="n">checker</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
+
+<span class="c1"># Print a human readable representation of the graph</span>
+<span class="c1"># print(onnx.helper.printable_graph(model.graph))</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Inference-on-ONNX-Runtime-backend">
+<h2 id="Inference-on-ONNX-Runtime-backend">Inference on ONNX Runtime backend<a class="headerlink" href="#Inference-on-ONNX-Runtime-backend" title="Permalink to this headline">¶</a></h2>
+<p>Load the exported ONNX model.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Starting with onnx </span><span class="si">{</span><span class="n">onnx</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s1">, onnxruntime </span><span class="si">{</span><span class="n">onnxruntime</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s1">...'</span><span class="p">)</span>
+
+<span class="n">ort_session</span> <span class="o">=</span> <span class="n">onnxruntime</span><span class="o">.</span><span class="n">InferenceSession</span><span class="p">(</span><span class="n">onnx_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -937,27 +965,16 @@ Starting simplifing with onnxsim 0.3.6
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Starting with onnx 1.9.0, onnxruntime 1.8.1...
+Starting with onnx 1.10.2, onnxruntime 1.10.0...
 </pre></div></div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">images</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">_flatten</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
-<span class="n">outputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">_flatten</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
+<p>Prepare the inputs for ONNX Runtime.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="n">tensor</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">tensor</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">tensor</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">_flatten</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">_flatten</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -965,36 +982,26 @@ Starting with onnx 1.9.0, onnxruntime 1.8.1...
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">,</span> <span class="n">images</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">,</span> <span class="n">inputs</span><span class="p">))</span>
 <span class="n">outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">,</span> <span class="n">outputs</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
+<p>Compute onnxruntime output prediction.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ort_session = onnxruntime.InferenceSession(export_onnx_name)</span>
-<span class="n">ort_session</span> <span class="o">=</span> <span class="n">onnxruntime</span><span class="o">.</span><span class="n">InferenceSession</span><span class="p">(</span><span class="n">onnx_simp_name</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># compute onnxruntime output prediction</span>
-<span class="n">ort_inputs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">ort_session</span><span class="o">.</span><span class="n">get_inputs</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">inpt</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ort_inputs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">ort_session</span><span class="o">.</span><span class="n">get_inputs</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">inpt</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
 <span class="n">ort_outs</span> <span class="o">=</span> <span class="n">ort_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ort_inputs</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
-<span class="c1"># compute onnxruntime output prediction</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>it
 <span class="n">ort_inputs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">ort_session</span><span class="o">.</span><span class="n">get_inputs</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">inpt</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
 <span class="n">ort_outs</span> <span class="o">=</span> <span class="n">ort_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ort_inputs</span><span class="p">)</span>
 </pre></div>
@@ -1005,12 +1012,13 @@ Starting with onnx 1.9.0, onnxruntime 1.8.1...
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 2.38 s, sys: 20 ms, total: 2.4 s
-Wall time: 65.1 ms
+48.7 ms ± 1.23 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 </pre></div></div>
 </div>
+<section id="Verify-whether-the-inference-results-are-consistent-with-PyTorch’s">
+<h3 id="Verify-whether-the-inference-results-are-consistent-with-PyTorch’s">Verify whether the inference results are consistent with PyTorch’s<a class="headerlink" href="#Verify-whether-the-inference-results-are-consistent-with-PyTorch’s" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)):</span>
@@ -1028,6 +1036,94 @@ Wall time: 65.1 ms
 Exported model has been tested with ONNXRuntime, and the result looks good!
 </pre></div></div>
 </div>
+</section>
+<section id="Verify-another-image">
+<h3 id="Verify-another-image">Verify another image<a class="headerlink" href="#Verify-another-image" title="Permalink to this headline">¶</a></h3>
+<p>When using dynamic shape inference in trace mode, the shape inference mechanism for some operators may not work, so we verify it once for another image with a different shape as well.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_two</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">out_pytorch</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">_flatten</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">_flatten</span><span class="p">(</span><span class="n">out_pytorch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">,</span> <span class="n">inputs</span><span class="p">))</span>
+<span class="n">outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">,</span> <span class="n">outputs</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<p>Compute onnxruntime output prediction.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_ort</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">ort_session</span><span class="o">.</span><span class="n">get_inputs</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">inpt</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+<span class="n">out_ort</span> <span class="o">=</span> <span class="n">ort_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_ort</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>it
+<span class="n">input_ort</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">ort_session</span><span class="o">.</span><span class="n">get_inputs</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">inpt</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+<span class="n">out_ort</span> <span class="o">=</span> <span class="n">ort_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_ort</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+37.4 ms ± 775 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</pre></div></div>
+</div>
+<p>Verify whether the inference results are consistent with PyTorch’s.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)):</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">out_ort</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-04</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-07</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Exported model has been tested with ONNXRuntime, and the result looks good!"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Exported model has been tested with ONNXRuntime, and the result looks good!
+</pre></div></div>
+</div>
+</section>
 </section>
 </section>
 <p>View this document as a notebook:

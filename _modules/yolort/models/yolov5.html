@@ -579,7 +579,6 @@
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span>
         <span class="n">size_divisible</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
         <span class="n">fixed_shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -591,7 +590,6 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            checkpoint_path (str): Path of the YOLOv5 checkpoint model.</span>
-<span class="sd">            lr (float): The initial learning rate</span>
 <span class="sd">            size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.</span>
 <span class="sd">                Default: (640, 640)</span>
 <span class="sd">            size_divisible (int): stride of the models. Default: 32</span>
@@ -603,7 +601,6 @@
 <span class="sd">        """</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">YOLO</span><span class="o">.</span><span class="n">load_from_yolov5</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">yolov5</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
             <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
             <span class="n">size_divisible</span><span class="o">=</span><span class="n">size_divisible</span><span class="p">,</span>

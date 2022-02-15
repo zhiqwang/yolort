@@ -4,7 +4,24 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "# Deploying yolort on ONNX Runtime"
+    "# Deploying yolort on ONNX Runtime\n",
+    "\n",
+    "\n",
+    "The ONNX model exported by yolort differs from other pipeline in the following three ways.\n",
+    "\n",
+    "- We embed the pre-processing into the graph (mainly composed of `letterbox`). and the exported model expects a `Tensor[C, H, W]`, which is in `RGB` channel and is rescaled to range `float32 [0-1]`.\n",
+    "- We embed the post-processing into the model graph with `torchvision.ops.batched_nms`. So the outputs of the exported model are straightforward `boxes`, `labels` and `scores` fields of this image.\n",
+    "- We adopt the dynamic shape mechanism to export the ONNX models.\n",
+    "\n",
+    "## Set up environment and function utilities\n",
+    "\n",
+    "First you should install ONNX Runtime first to run this tutorial. See the ONNX Runtime [installation matrix](https://onnxruntime.ai) for recommended instructions for desired combinations of target operating system, hardware, accelerator, and language.\n",
+    "\n",
+    "A quick solution is to install via pip on X64:\n",
+    "\n",
+    "```bash\n",
+    "pip install onnxruntime\n",
+    "```"
    ]
   },
   {
@@ -13,24 +30,8 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "import cv2\n",
-    "\n",
-    "import torch\n",
-    "import onnx\n",
-    "import onnxruntime\n",
-    "\n",
-    "from yolort.models import yolov5s\n",
-    "\n",
-    "from yolort.utils import get_image_from_url, read_image_to_tensor"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 2,
-   "metadata": {},
-   "outputs": [],
-   "source": [
     "import os\n",
+    "import torch\n",
     "\n",
     "os.environ[\"CUDA_DEVICE_ORDER\"]=\"PCI_BUS_ID\"\n",
     "os.environ[\"CUDA_VISIBLE_DEVICES\"]=\"0\"\n",
@@ -39,10 +40,27 @@
    ]
   },
   {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import cv2\n",
+    "import onnx\n",
+    "import onnxruntime\n",
+    "\n",
+    "from yolort.models import YOLOv5\n",
+    "from yolort.v5 import attempt_download\n",
+    "\n",
+    "from yolort.utils import get_image_from_url, read_image_to_tensor\n",
+    "from yolort.utils.image_utils import to_numpy"
+   ]
+  },
+  {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Model Definition and Initialization"
+    "Define some parameters used for defining the model, exporting ONNX models and inferencing on ONNX Runtime."
    ]
   },
   {
@@ -51,17 +69,19 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "model = yolov5s(export_friendly=True, pretrained=True, score_thresh=0.45)\n",
-    "\n",
-    "model = model.eval()\n",
-    "model = model.to(device)"
+    "img_size = 640\n",
+    "size = (img_size, img_size)  # Used for pre-processing\n",
+    "size_divisible = 64\n",
+    "score_thresh = 0.35\n",
+    "nms_thresh = 0.45\n",
+    "opset_version = 11"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "### Load images to infer"
+    "Get images for inferenceing."
    ]
   },
   {
@@ -70,20 +90,103 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "img_one = get_image_from_url(\"https://gitee.com/zhiqwang/yolov5-rt-stack/raw/master/test/assets/bus.jpg\")\n",
-    "# img_one = cv2.imread('../test/assets/bus.jpg')\n",
+    "img_src1 = \"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg\"\n",
+    "img_one = get_image_from_url(img_src1)\n",
     "img_one = read_image_to_tensor(img_one, is_half=False)\n",
     "img_one = img_one.to(device)\n",
     "\n",
-    "img_two = get_image_from_url(\"https://gitee.com/zhiqwang/yolov5-rt-stack/raw/master/test/assets/zidane.jpg\")\n",
-    "# img_two = cv2.imread('../test/assets/zidane.jpg')\n",
+    "img_src2 = \"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jpg\"\n",
+    "img_two = get_image_from_url(img_src2)\n",
     "img_two = read_image_to_tensor(img_two, is_half=False)\n",
-    "img_two = img_two.to(device)\n",
+    "img_two = img_two.to(device)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Load the model trained from yolov5\n",
     "\n",
-    "# images = [img_one, img_two]\n",
-    "# Uncomment the above line and comment the next line if you want to\n",
-    "# use the multi-batch inferencing on onnxruntime\n",
-    "images = [img_one]"
+    "The model used below is officially released by yolov5 and trained on COCO 2017 datasets."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# yolov5n6.pt is downloaded from 'https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt'\n",
+    "model_path = \"yolov5n6.pt\"\n",
+    "onnx_path = \"yolov5n6.onnx\"\n",
+    "checkpoint_path = attempt_download(model_path)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "                 from  n    params  module                                  arguments                     \n",
+      "  0                -1  1      1760  yolort.v5.models.common.Conv            [3, 16, 6, 2, 2]              \n",
+      "  1                -1  1      4672  yolort.v5.models.common.Conv            [16, 32, 3, 2]                \n",
+      "  2                -1  1      4800  yolort.v5.models.common.C3              [32, 32, 1]                   \n",
+      "  3                -1  1     18560  yolort.v5.models.common.Conv            [32, 64, 3, 2]                \n",
+      "  4                -1  2     29184  yolort.v5.models.common.C3              [64, 64, 2]                   \n",
+      "  5                -1  1     73984  yolort.v5.models.common.Conv            [64, 128, 3, 2]               \n",
+      "  6                -1  3    156928  yolort.v5.models.common.C3              [128, 128, 3]                 \n",
+      "  7                -1  1    221568  yolort.v5.models.common.Conv            [128, 192, 3, 2]              \n",
+      "  8                -1  1    167040  yolort.v5.models.common.C3              [192, 192, 1]                 \n",
+      "  9                -1  1    442880  yolort.v5.models.common.Conv            [192, 256, 3, 2]              \n",
+      " 10                -1  1    296448  yolort.v5.models.common.C3              [256, 256, 1]                 \n",
+      " 11                -1  1    164608  yolort.v5.models.common.SPPF            [256, 256, 5]                 \n",
+      " 12                -1  1     49536  yolort.v5.models.common.Conv            [256, 192, 1, 1]              \n",
+      " 13                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']          \n",
+      " 14           [-1, 8]  1         0  yolort.v5.models.common.Concat          [1]                           \n",
+      " 15                -1  1    203904  yolort.v5.models.common.C3              [384, 192, 1, False]          \n",
+      " 16                -1  1     24832  yolort.v5.models.common.Conv            [192, 128, 1, 1]              \n",
+      " 17                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']          \n",
+      " 18           [-1, 6]  1         0  yolort.v5.models.common.Concat          [1]                           \n",
+      " 19                -1  1     90880  yolort.v5.models.common.C3              [256, 128, 1, False]          \n",
+      " 20                -1  1      8320  yolort.v5.models.common.Conv            [128, 64, 1, 1]               \n",
+      " 21                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']          \n",
+      " 22           [-1, 4]  1         0  yolort.v5.models.common.Concat          [1]                           \n",
+      " 23                -1  1     22912  yolort.v5.models.common.C3              [128, 64, 1, False]           \n",
+      " 24                -1  1     36992  yolort.v5.models.common.Conv            [64, 64, 3, 2]                \n",
+      " 25          [-1, 20]  1         0  yolort.v5.models.common.Concat          [1]                           \n",
+      " 26                -1  1     74496  yolort.v5.models.common.C3              [128, 128, 1, False]          \n",
+      " 27                -1  1    147712  yolort.v5.models.common.Conv            [128, 128, 3, 2]              \n",
+      " 28          [-1, 16]  1         0  yolort.v5.models.common.Concat          [1]                           \n",
+      " 29                -1  1    179328  yolort.v5.models.common.C3              [256, 192, 1, False]          \n",
+      " 30                -1  1    332160  yolort.v5.models.common.Conv            [192, 192, 3, 2]              \n",
+      " 31          [-1, 12]  1         0  yolort.v5.models.common.Concat          [1]                           \n",
+      " 32                -1  1    329216  yolort.v5.models.common.C3              [384, 256, 1, False]          \n",
+      " 33  [23, 26, 29, 32]  1    164220  yolort.v5.models.yolo.Detect            [80, [[19, 27, 44, 40, 38, 94], [96, 68, 86, 152, 180, 137], [140, 301, 303, 264, 238, 542], [436, 615, 739, 380, 925, 792]], [64, 128, 192, 256]]\n",
+      "/opt/conda/lib/python3.8/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)\n",
+      "  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]\n",
+      "Model Summary: 355 layers, 3246940 parameters, 3246940 gradients, 4.6 GFLOPs\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "model = YOLOv5.load_from_yolov5(\n",
+    "    model_path,\n",
+    "    size=size,\n",
+    "    size_divisible=size_divisible,\n",
+    "    score_thresh=score_thresh,\n",
+    "    nms_thresh=nms_thresh,\n",
+    ")\n",
+    "\n",
+    "model = model.eval()\n",
+    "model = model.to(device)"
    ]
   },
   {
@@ -95,18 +198,18 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 5,
+   "execution_count": 7,
    "metadata": {},
-   "outputs": [
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/usr/local/lib/python3.6/dist-packages/torch/nn/functional.py:718: UserWarning: Named tensors and all their associated APIs are an experimental feature and subject to change. Please do not use them for anything important until they are released as stable. (Triggered internally at  /pytorch/c10/core/TensorImpl.h:1156.)\n",
-      "  return torch.max_pool2d(input, kernel_size, stride, padding, dilation, ceil_mode)\n"
-     ]
-    }
-   ],
+   "outputs": [],
+   "source": [
+    "images = [img_one]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "with torch.no_grad():\n",
     "    model_out = model(images)"
@@ -114,15 +217,15 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 6,
+   "execution_count": 9,
    "metadata": {},
    "outputs": [
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "CPU times: user 3.44 s, sys: 20 ms, total: 3.46 s\n",
-      "Wall time: 96.9 ms\n"
+      "CPU times: user 44.1 s, sys: 160 ms, total: 44.3 s\n",
+      "Wall time: 1.61 s\n"
      ]
     }
    ],
@@ -134,19 +237,19 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 7,
+   "execution_count": 10,
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "tensor([[669.26556, 391.30249, 809.86627, 885.23444],\n",
-       "        [ 54.06350, 397.83176, 235.95316, 901.37323],\n",
-       "        [222.88336, 406.81192, 341.55716, 854.77924],\n",
-       "        [ 18.63205, 232.97676, 810.97394, 760.11700]])"
+       "tensor([[ 32.27846, 225.15266, 811.47729, 740.91071],\n",
+       "        [ 50.42178, 387.48898, 241.54399, 897.61041],\n",
+       "        [219.03331, 386.14346, 345.77689, 869.02582],\n",
+       "        [678.05023, 374.65326, 809.80334, 874.80621]])"
       ]
      },
-     "execution_count": 7,
+     "execution_count": 10,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -157,16 +260,16 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 8,
+   "execution_count": 11,
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "tensor([0.89005, 0.87333, 0.85366, 0.72340])"
+       "tensor([0.88238, 0.84486, 0.72629, 0.70077])"
       ]
      },
-     "execution_count": 8,
+     "execution_count": 11,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -177,16 +280,16 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 9,
+   "execution_count": 12,
    "metadata": {},
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "tensor([0, 0, 0, 5])"
+       "tensor([5, 0, 0, 0])"
       ]
      },
-     "execution_count": 9,
+     "execution_count": 12,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -204,16 +307,16 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 10,
+   "execution_count": 13,
    "metadata": {},
    "outputs": [],
    "source": [
-    "from torchvision.ops._register_onnx_ops import _onnx_opset_version"
+    "from yolort.runtime.ort_helper import export_onnx"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 11,
+   "execution_count": 14,
    "metadata": {},
    "outputs": [
     {
@@ -225,178 +328,95 @@
     }
    ],
    "source": [
-    "export_onnx_name = 'yolov5s.onnx'  # path of the exported ONNX models\n",
-    "\n",
-    "print(f'We are using opset version: {_onnx_opset_version}')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 12,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input images_tensors\n",
-      "  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))\n",
-      "/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input boxes\n",
-      "  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))\n",
-      "/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input labels\n",
-      "  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))\n",
-      "/usr/local/lib/python3.6/dist-packages/torch/onnx/utils.py:1192: UserWarning: No names were found for specified dynamic axes of provided input.Automatically generated names will be applied to each dynamic axes of input scores\n",
-      "  'Automatically generated names will be applied to each dynamic axes of input {}'.format(key))\n",
-      "/data/wangzq/yolov5-rt-stack/yolort/models/anchor_utils.py:31: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.\n",
-      "  stride = torch.as_tensor([stride], dtype=dtype, device=device)\n",
-      "/data/wangzq/yolov5-rt-stack/yolort/models/anchor_utils.py:50: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.\n",
-      "  anchor_grid = torch.as_tensor(anchor_grid, dtype=dtype, device=device)\n",
-      "/data/wangzq/yolov5-rt-stack/yolort/models/anchor_utils.py:79: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.\n",
-      "  shifts = shifts - torch.tensor(0.5, dtype=shifts.dtype, device=device)\n",
-      "/data/wangzq/yolov5-rt-stack/yolort/models/transform.py:298: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.\n",
-      "  for s, s_orig in zip(new_size, original_size)\n",
-      "/data/wangzq/yolov5-rt-stack/yolort/models/transform.py:298: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).\n",
-      "  for s, s_orig in zip(new_size, original_size)\n",
-      "/usr/local/lib/python3.6/dist-packages/torch/onnx/symbolic_opset9.py:2766: UserWarning: Exporting aten::index operator of advanced indexing in opset 11 is achieved by combination of multiple ONNX operators, including Reshape, Transpose, Concat, and Gather. If indices include negative values, the exported graph will produce incorrect results.\n",
-      "  \"If indices include negative values, the exported graph will produce incorrect results.\")\n",
-      "/usr/local/lib/python3.6/dist-packages/torch/onnx/symbolic_opset9.py:701: UserWarning: This model contains a squeeze operation on dimension 1 on an input with unknown shape. Note that if the size of dimension 1 of the input is not 1, the ONNX model will return an error. Opset version 11 supports squeezing on non-singleton dimensions, it is recommended to export this model using opset version 11 or higher.\n",
-      "  \"version 11 or higher.\")\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Export to ONNX model\n",
-    "torch.onnx.export(\n",
-    "    model,\n",
-    "    (images,),\n",
-    "    export_onnx_name,\n",
-    "    do_constant_folding=True,\n",
-    "    opset_version=_onnx_opset_version, \n",
-    "    input_names=[\"images_tensors\"],\n",
-    "    output_names=[\"scores\", \"labels\", \"boxes\"],\n",
-    "    dynamic_axes={\n",
-    "        \"images_tensors\": [0, 1, 2],\n",
-    "        \"boxes\": [0, 1],\n",
-    "        \"labels\": [0],\n",
-    "        \"scores\": [0],\n",
-    "    },\n",
-    ")"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "## Simplify the exported ONNX model (Optional)\n",
-    "\n",
-    "*ONNX* is great, but sometimes too complicated. And thanks to @daquexian for providing a powerful tool named [`onnxsim`](https://github.com/daquexian/onnx-simplifier/) to eliminate some redundant operators.\n",
-    "\n",
-    "First of all, let's install `onnx-simplifier` with following script."
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "```shell\n",
-    "pip install -U onnx-simplifier\n",
-    "```"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 13,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Starting simplifing with onnxsim 0.3.6\n"
-     ]
-    }
-   ],
-   "source": [
-    "import onnxsim\n",
-    "\n",
-    "# onnx-simplifier version\n",
-    "print(f'Starting simplifing with onnxsim {onnxsim.__version__}')"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 14,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "onnx_simp_name = 'yolov5s.simp.onnx'  # path of the simplified ONNX models"
+    "print(f'We are using opset version: {opset_version}')"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 15,
    "metadata": {},
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.8/site-packages/torch/nn/functional.py:3701: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).\n",
+      "  (torch.floor((input.size(i + 2).float() * torch.tensor(scale_factors[i], dtype=torch.float32)).float()))\n",
+      "/coding/yolov5-rt-stack/yolort/models/transform.py:282: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).\n",
+      "  img_h, img_w = _get_shape_onnx(img)\n",
+      "/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:45: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.\n",
+      "  anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).to(dtype=dtype)\n",
+      "/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:46: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.\n",
+      "  strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)\n",
+      "/coding/yolov5-rt-stack/yolort/models/box_head.py:402: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.\n",
+      "  strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)\n",
+      "/coding/yolov5-rt-stack/yolort/models/box_head.py:333: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).\n",
+      "  for head_output, grid, shift, stride in zip(head_outputs, grids, shifts, strides):\n",
+      "/opt/conda/lib/python3.8/site-packages/torch/onnx/symbolic_opset9.py:2815: UserWarning: Exporting aten::index operator of advanced indexing in opset 11 is achieved by combination of multiple ONNX operators, including Reshape, Transpose, Concat, and Gather. If indices include negative values, the exported graph will produce incorrect results.\n",
+      "  warnings.warn(\"Exporting aten::index operator of advanced indexing in opset \" +\n"
+     ]
+    }
+   ],
    "source": [
-    "# load your predefined ONNX model\n",
-    "onnx_model = onnx.load(export_onnx_name)\n",
-    "\n",
-    "# convert model\n",
-    "model_simp, check = onnxsim.simplify(\n",
-    "    onnx_model,\n",
-    "    input_shapes={\"images_tensors\": [3, 640, 640]},\n",
-    "    dynamic_input_shape=True,\n",
-    ")\n",
-    "\n",
-    "assert check, \"Simplified ONNX model could not be validated\"\n",
-    "\n",
-    "# use model_simp as a standard ONNX model object\n",
-    "onnx.save(model_simp, onnx_simp_name)"
+    "export_onnx(model=model, onnx_path=onnx_path, opset_version=opset_version)"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Inference on ONNXRuntime Backend\n",
-    "\n",
-    "Now, We begin to verify whether the inference results are consistent with PyTorch's, similarly, install `onnxruntime` first."
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "```shell\n",
-    "pip install -U onnxruntime\n",
-    "```"
+    "Check the exported ONNX model is well formed"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 16,
    "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Starting with onnx 1.9.0, onnxruntime 1.8.1...\n"
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
-    "print(f'Starting with onnx {onnx.__version__}, onnxruntime {onnxruntime.__version__}...')"
+    "# Load the ONNX model\n",
+    "onnx_model = onnx.load(onnx_path)\n",
+    "\n",
+    "# Check that the model is well formed\n",
+    "onnx.checker.check_model(onnx_model)\n",
+    "\n",
+    "# Print a human readable representation of the graph\n",
+    "# print(onnx.helper.printable_graph(model.graph))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Inference on ONNX Runtime backend\n",
+    "\n",
+    "Load the exported ONNX model."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 17,
    "metadata": {},
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Starting with onnx 1.10.2, onnxruntime 1.10.0...\n"
+     ]
+    }
+   ],
    "source": [
-    "images, _ = torch.jit._flatten(images)\n",
-    "outputs, _ = torch.jit._flatten(model_out)"
+    "print(f'Starting with onnx {onnx.__version__}, onnxruntime {onnxruntime.__version__}...')\n",
+    "\n",
+    "ort_session = onnxruntime.InferenceSession(onnx_path)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Prepare the inputs for ONNX Runtime."
    ]
   },
   {
@@ -405,11 +425,8 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "def to_numpy(tensor):\n",
-    "    if tensor.requires_grad:\n",
-    "        return tensor.detach().cpu().numpy()\n",
-    "    else:\n",
-    "        return tensor.cpu().numpy()"
+    "inputs, _ = torch.jit._flatten(images)\n",
+    "outputs, _ = torch.jit._flatten(model_out)"
    ]
   },
   {
@@ -418,8 +435,15 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "inputs = list(map(to_numpy, images))\n",
+    "inputs = list(map(to_numpy, inputs))\n",
     "outputs = list(map(to_numpy, outputs))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Compute onnxruntime output prediction."
    ]
   },
   {
@@ -428,45 +452,39 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# ort_session = onnxruntime.InferenceSession(export_onnx_name)\n",
-    "ort_session = onnxruntime.InferenceSession(onnx_simp_name)"
+    "ort_inputs = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))\n",
+    "ort_outs = ort_session.run(None, ort_inputs)"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 21,
    "metadata": {},
-   "outputs": [],
-   "source": [
-    "# compute onnxruntime output prediction\n",
-    "ort_inputs = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))\n",
-    "ort_outs = ort_session.run(None, ort_inputs)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 22,
-   "metadata": {},
    "outputs": [
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "CPU times: user 2.38 s, sys: 20 ms, total: 2.4 s\n",
-      "Wall time: 65.1 ms\n"
+      "48.7 ms ± 1.23 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)\n"
      ]
     }
    ],
    "source": [
-    "%%time\n",
-    "# compute onnxruntime output prediction\n",
+    "%%timeit\n",
     "ort_inputs = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))\n",
     "ort_outs = ort_session.run(None, ort_inputs)"
    ]
   },
   {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Verify whether the inference results are consistent with PyTorch's"
+   ]
+  },
+  {
    "cell_type": "code",
-   "execution_count": 23,
+   "execution_count": 22,
    "metadata": {},
    "outputs": [
     {
@@ -483,6 +501,119 @@
     "\n",
     "print(\"Exported model has been tested with ONNXRuntime, and the result looks good!\")"
    ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "### Verify another image\n",
+    "\n",
+    "When using dynamic shape inference in trace mode, the shape inference mechanism for some operators may not work, so we verify it once for another image with a different shape as well."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "images = [img_two]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with torch.no_grad():\n",
+    "    out_pytorch = model(images)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "inputs, _ = torch.jit._flatten(images)\n",
+    "outputs, _ = torch.jit._flatten(out_pytorch)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "inputs = list(map(to_numpy, inputs))\n",
+    "outputs = list(map(to_numpy, outputs))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Compute onnxruntime output prediction."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "input_ort = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))\n",
+    "out_ort = ort_session.run(None, input_ort)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "37.4 ms ± 775 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "input_ort = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))\n",
+    "out_ort = ort_session.run(None, input_ort)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Verify whether the inference results are consistent with PyTorch's."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Exported model has been tested with ONNXRuntime, and the result looks good!\n"
+     ]
+    }
+   ],
+   "source": [
+    "for i in range(0, len(outputs)):\n",
+    "    torch.testing.assert_allclose(outputs[i], out_ort[i], rtol=1e-04, atol=1e-07)\n",
+    "\n",
+    "print(\"Exported model has been tested with ONNXRuntime, and the result looks good!\")"
+   ]
   }
  ],
  "metadata": {
@@ -495,7 +626,7 @@
    "toc_visible": true
   },
   "kernelspec": {
-   "display_name": "Python 3",
+   "display_name": "Python 3 (ipykernel)",
    "language": "python",
    "name": "python3"
   },
@@ -509,7 +640,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.9.7"
+   "version": "3.8.12"
   }
  },
  "nbformat": 4,
