@@ -261,7 +261,6 @@ class YOLOv5(nn.Module):
         cls,
         checkpoint_path: str,
         *,
-        lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
         fixed_shape: Optional[Tuple[int, int]] = None,
@@ -273,7 +272,6 @@ class YOLOv5(nn.Module):
 
         Args:
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
-            lr (float): The initial learning rate
             size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
                 Default: (640, 640)
             size_divisible (int): stride of the models. Default: 32
@@ -285,7 +283,6 @@ class YOLOv5(nn.Module):
         """
         model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
         yolov5 = cls(
-            lr=lr,
             model=model,
             size=size,
             size_divisible=size_divisible,
