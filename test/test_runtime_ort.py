@@ -10,6 +10,7 @@ from torch import Tensor
 from torchvision.io import read_image
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
 from yolort import models
+from yolort.runtime.ort_helper import export_onnx
 from yolort.utils.image_utils import to_numpy
 
 # In environments without onnxruntime we prefer to
@@ -18,15 +19,7 @@ onnxruntime = pytest.importorskip("onnxruntime")
 
 
 class TestONNXExporter:
-    def run_model(
-        self,
-        model,
-        inputs_list,
-        do_constant_folding=True,
-        input_names=None,
-        output_names=None,
-        dynamic_axes=None,
-    ):
+    def run_model(self, model, inputs_list):
         """
         The core part of exporting model to ONNX and inference with ONNX Runtime
         Copy-paste from <https://github.com/pytorch/vision/blob/07fb8ba/test/test_onnx.py#L34>
@@ -34,21 +27,10 @@ class TestONNXExporter:
         model = model.eval()
 
         onnx_io = io.BytesIO()
-        if isinstance(inputs_list[0][-1], dict):
-            torch_onnx_input = inputs_list[0] + ({},)
-        else:
-            torch_onnx_input = inputs_list[0]
-        # export to onnx with the first input
-        torch.onnx.export(
-            model,
-            torch_onnx_input,
-            onnx_io,
-            do_constant_folding=do_constant_folding,
-            opset_version=_onnx_opset_version,
-            input_names=input_names,
-            output_names=output_names,
-            dynamic_axes=dynamic_axes,
-        )
+
+        # export to onnx models
+        export_onnx(onnx_io, model=model, opset_version=_onnx_opset_version)
+
         # validate the exported model with onnx runtime
         for test_inputs in inputs_list:
             with torch.no_grad():
@@ -97,7 +79,7 @@ class TestONNXExporter:
             ("yolov5n6", False, "r6.0"),
         ],
     )
-    def test_yolort_onnx_export(self, arch, fixed_size, upstream_version):
+    def test_onnx_export(self, arch, fixed_size, upstream_version):
         images_one, images_two = self.get_test_images()
         images_dummy = [torch.ones(3, 1080, 720) * 0.3]
 
@@ -111,28 +93,7 @@ class TestONNXExporter:
         model = model.eval()
         model(images_one)
         # Test exported model on images of different size, or dummy input
-        self.run_model(
-            model,
-            [(images_one,), (images_two,), (images_dummy,)],
-            input_names=["images"],
-            output_names=["scores", "labels", "boxes"],
-            dynamic_axes={
-                "images": [1, 2],
-                "boxes": [0, 1],
-                "labels": [0],
-                "scores": [0],
-            },
-        )
+        self.run_model(model, [(images_one,), (images_two,), (images_dummy,)])
+
         # Test exported model for an image with no detections on other images
-        self.run_model(
-            model,
-            [(images_dummy,), (images_one,)],
-            input_names=["images"],
-            output_names=["scores", "labels", "boxes"],
-            dynamic_axes={
-                "images": [1, 2],
-                "boxes": [0, 1],
-                "labels": [0],
-                "scores": [0],
-            },
-        )
+        self.run_model(model, [(images_dummy,), (images_one,)])
