@@ -9,6 +9,7 @@ from yolort.models import YOLO, YOLOv5
 
 def export_onnx(
     onnx_path: str,
+    *,
     checkpoint_path: Optional[str] = None,
     model: Optional[nn.Module] = None,
     size: Tuple[int, int] = (640, 640),
@@ -18,6 +19,7 @@ def export_onnx(
     version: str = "r6.0",
     skip_preprocess: bool = False,
     opset_version: int = 11,
+    batch_size: int = 1,
 ) -> None:
     """
     Export to ONNX models that can be used for ONNX Runtime inferencing.
@@ -37,6 +39,9 @@ def export_onnx(
         skip_preprocess (bool): Skip the preprocessing transformation when exporting the ONNX
             models. Default: False
         opset_version (int): Opset version for exporting ONNX models. Default: 11
+        batch_size (int): Only used for models that include pre-processing, you need to specify
+            the batch sizes and ensure that the number of input images is the same as the batches
+            when inferring if you want to export multiple batches ONNX models. Default: 1
     """
 
     onnx_builder = ONNXBuilder(
@@ -49,6 +54,7 @@ def export_onnx(
         version=version,
         skip_preprocess=skip_preprocess,
         opset_version=opset_version,
+        batch_size=batch_size,
     )
 
     onnx_builder.to_onnx(onnx_path)
@@ -71,6 +77,9 @@ class ONNXBuilder:
         skip_preprocess (bool): Skip the preprocessing transformation when exporting the ONNX
             models. Default: False
         opset_version (int): Opset version for exporting ONNX models. Default: 11
+        batch_size (int): Only used for models that include pre-processing, you need to specify
+            the batch sizes and ensure that the number of input images is the same as the batches
+            when inferring if you want to export multiple batches ONNX models. Default: 1
     """
 
     def __init__(
@@ -84,6 +93,7 @@ class ONNXBuilder:
         version: str = "r6.0",
         skip_preprocess: bool = False,
         opset_version: int = 11,
+        batch_size: int = 1,
     ) -> None:
 
         super().__init__()
@@ -96,16 +106,18 @@ class ONNXBuilder:
         # For pre-processing
         self._size = size
         self._size_divisible = size_divisible
+        self._batch_size = batch_size
         # Define the module
         if model is None:
             model = self._build_model()
         self.model = model
 
-        self.opset_version = opset_version
-        self.input_names = ["images"]
-        self.output_names = ["scores", "labels", "boxes"]
-        self.input_sample = self._get_input_sample()
-        self.dynamic_axes = self._get_dynamic_axes()
+        # For exporting ONNX model
+        self._opset_version = opset_version
+        self.input_names = self._set_input_names()
+        self.output_names = self._set_output_names()
+        self.input_sample = self._set_input_sample()
+        self.dynamic_axes = self._set_dynamic_axes()
 
     def _build_model(self):
         if self._skip_preprocess:
@@ -128,7 +140,23 @@ class ONNXBuilder:
         model = model.eval()
         return model
 
-    def _get_dynamic_axes(self):
+    def _set_input_names(self):
+        if self._skip_preprocess:
+            return ["images"]
+        if self._batch_size == 1:
+            return ["image"]
+
+        return ["images1", "images2"]
+
+    def _set_output_names(self):
+        if self._skip_preprocess:
+            return ["scores", "labels", "boxes"]
+        if self._batch_size == 1:
+            return ["score", "label", "box"]
+
+        return ["scores1", "labels1", "boxes1", "scores2", "labels2", "boxes2"]
+
+    def _set_dynamic_axes(self):
         if self._skip_preprocess:
             return {
                 "images": {0: "batch", 2: "height", 3: "width"},
@@ -136,19 +164,30 @@ class ONNXBuilder:
                 "labels": {0: "batch", 1: "num_objects"},
                 "scores": {0: "batch", 1: "num_objects"},
             }
-        else:
+        if self._batch_size == 1:
             return {
-                "images": {1: "height", 2: "width"},
-                "boxes": {0: "num_objects"},
-                "labels": {0: "num_objects"},
-                "scores": {0: "num_objects"},
+                "image": {1: "height", 2: "width"},
+                "box": {0: "num_objects"},
+                "label": {0: "num_objects"},
+                "score": {0: "num_objects"},
             }
 
-    def _get_input_sample(self):
+        return {
+            "images1": {1: "height", 2: "width"},
+            "images2": {1: "height", 2: "width"},
+            "boxes1": {0: "num_objects"},
+            "labels1": {0: "num_objects"},
+            "scores1": {0: "num_objects"},
+            "boxes2": {0: "num_objects"},
+            "labels2": {0: "num_objects"},
+            "scores2": {0: "num_objects"},
+        }
+
+    def _set_input_sample(self):
         if self._skip_preprocess:
             return torch.rand(1, 3, 640, 640)
         else:
-            return [torch.rand(3, 640, 640)]
+            return [torch.rand(3, 640, 640)] * 2
 
     @torch.no_grad()
     def to_onnx(self, onnx_path: str, **kwargs):
@@ -165,7 +204,7 @@ class ONNXBuilder:
             self.input_sample,
             onnx_path,
             do_constant_folding=True,
-            opset_version=self.opset_version,
+            opset_version=self._opset_version,
             input_names=self.input_names,
             output_names=self.output_names,
             dynamic_axes=self.dynamic_axes,
