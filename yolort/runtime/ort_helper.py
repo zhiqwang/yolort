@@ -146,7 +146,10 @@ class ONNXBuilder:
         if self._batch_size == 1:
             return ["image"]
 
-        return ["images1", "images2"]
+        input_names = []
+        for i in range(self._batch_size):
+            input_names.append(f"image{i + 1}")
+        return input_names
 
     def _set_output_names(self):
         if self._skip_preprocess:
@@ -154,7 +157,10 @@ class ONNXBuilder:
         if self._batch_size == 1:
             return ["score", "label", "box"]
 
-        return ["scores1", "labels1", "boxes1", "scores2", "labels2", "boxes2"]
+        output_names = []
+        for i in range(self._batch_size):
+            output_names.extend([f"score{i + 1}", f"label{i + 1}", f"box{i + 1}"])
+        return output_names
 
     def _set_dynamic_axes(self):
         if self._skip_preprocess:
@@ -172,16 +178,13 @@ class ONNXBuilder:
                 "score": {0: "num_objects"},
             }
 
-        return {
-            "images1": {1: "height", 2: "width"},
-            "images2": {1: "height", 2: "width"},
-            "boxes1": {0: "num_objects"},
-            "labels1": {0: "num_objects"},
-            "scores1": {0: "num_objects"},
-            "boxes2": {0: "num_objects"},
-            "labels2": {0: "num_objects"},
-            "scores2": {0: "num_objects"},
-        }
+        dynamic_axes = {}
+        for i in range(self._batch_size):
+            dynamic_axes[f"image{i + 1}"] = {1: "height", 2: "width"}
+            dynamic_axes[f"box{i + 1}"] = {0: "num_objects"}
+            dynamic_axes[f"label{i + 1}"] = {0: "num_objects"}
+            dynamic_axes[f"score{i + 1}"] = {0: "num_objects"}
+        return dynamic_axes
 
     def _set_input_sample(self):
         if self._skip_preprocess:
