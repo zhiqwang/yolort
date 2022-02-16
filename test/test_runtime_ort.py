@@ -29,7 +29,8 @@ class TestONNXExporter:
         onnx_io = io.BytesIO()
 
         # export to onnx models
-        export_onnx(onnx_io, model=model, opset_version=_onnx_opset_version)
+        batch_size = len(inputs_list[0])
+        export_onnx(onnx_io, model=model, opset_version=_onnx_opset_version, batch_size=batch_size)
 
         # validate the exported model with onnx runtime
         for test_inputs in inputs_list:
@@ -65,35 +66,70 @@ class TestONNXExporter:
         return image
 
     def get_test_images(self):
-        return [self.get_image("bus.jpg")], [self.get_image("zidane.jpg")]
+        return self.get_image("bus.jpg"), self.get_image("zidane.jpg")
 
     @pytest.mark.parametrize(
         "arch, fixed_size, upstream_version",
         [
-            ("yolov5s", False, "r3.1"),
-            ("yolov5m", True, "r4.0"),
+            ("yolov5s", True, "r3.1"),
             ("yolov5m", False, "r4.0"),
             ("yolov5n", True, "r6.0"),
             ("yolov5n", False, "r6.0"),
-            ("yolov5n6", True, "r6.0"),
             ("yolov5n6", False, "r6.0"),
         ],
     )
-    def test_onnx_export(self, arch, fixed_size, upstream_version):
-        images_one, images_two = self.get_test_images()
-        images_dummy = [torch.ones(3, 1080, 720) * 0.3]
+    def test_onnx_export_single_image(self, arch, fixed_size, upstream_version):
+        img_one, img_two = self.get_test_images()
+        img_dummy = torch.ones(3, 1080, 720) * 0.3
 
+        size = (640, 640) if arch[-1] == "6" else (320, 320)
         model = models.__dict__[arch](
             upstream_version=upstream_version,
             pretrained=True,
-            size=(640, 640),
-            fixed_shape=(640, 640) if fixed_size else None,
+            size=size,
+            fixed_shape=size if fixed_size else None,
             score_thresh=0.45,
         )
         model = model.eval()
-        model(images_one)
+        model([img_one])
         # Test exported model on images of different size, or dummy input
-        self.run_model(model, [(images_one,), (images_two,), (images_dummy,)])
+        self.run_model(model, [[img_one], [img_two], [img_dummy]])
 
-        # Test exported model for an image with no detections on other images
-        self.run_model(model, [(images_dummy,), (images_one,)])
+    @pytest.mark.parametrize("arch", ["yolov5n6"])
+    def test_onnx_export_multi_batches(self, arch):
+        img_one, img_two = self.get_test_images()
+        img_dummy = torch.ones(3, 1080, 720) * 0.3
+
+        size = (640, 640) if arch[-1] == "6" else (320, 320)
+        model = models.__dict__[arch](pretrained=True, size=size, score_thresh=0.45)
+        model = model.eval()
+        model([img_one, img_two])
+
+        # Test exported model on images of different size, or dummy input
+        inputs_list = [
+            [img_one, img_two],
+            [img_two, img_one],
+            [img_dummy, img_one],
+            [img_one, img_one],
+            [img_two, img_dummy],
+            [img_dummy, img_two],
+        ]
+        self.run_model(model, inputs_list)
+
+    @pytest.mark.parametrize("arch", ["yolov5n"])
+    def test_onnx_export_misbatch(self, arch):
+        img_one, img_two = self.get_test_images()
+        img_dummy = torch.ones(3, 640, 480) * 0.3
+
+        size = (640, 640) if arch[-1] == "6" else (320, 320)
+        model = models.__dict__[arch](pretrained=True, size=size, score_thresh=0.45)
+        model = model.eval()
+        model([img_one, img_two])
+
+        # Test exported model on images of misbatch
+        with pytest.raises(IndexError, match="list index out of range"):
+            self.run_model(model, [[img_one, img_two], [img_two, img_one, img_dummy]])
+
+        # Test exported model on images of misbatch
+        with pytest.raises(ValueError, match="Model requires 3 inputs. Input Feed contains 2"):
+            self.run_model(model, [[img_two, img_one, img_dummy], [img_one, img_two]])

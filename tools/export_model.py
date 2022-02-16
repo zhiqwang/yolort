@@ -50,8 +50,8 @@ def get_parser():
         default=[640, 640],
         help="Image size for inferencing (default: 640, 640).",
     )
-    parser.add_argument("--size_divisible", type=int, default=32, help="Stride for the preprocessing.")
-    parser.add_argument("--batch_size", default=1, type=int, help="Batch size for YOLOv5.")
+    parser.add_argument("--size_divisible", type=int, default=32, help="Stride for pre-processing.")
+    parser.add_argument("--batch_size", default=1, type=int, help="Batch size for pre-processing.")
     parser.add_argument("--opset", default=11, type=int, help="Opset version for exporing ONNX models")
     parser.add_argument("--simplify", action="store_true", help="ONNX: simplify model.")
 
@@ -79,6 +79,7 @@ def cli_main():
         version=args.version,
         skip_preprocess=args.skip_preprocess,
         opset_version=args.opset,
+        batch_size=args.batch_size,
     )
 
 
