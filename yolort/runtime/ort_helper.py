@@ -186,8 +186,10 @@ class ONNXBuilder:
     def _set_input_sample(self):
         if self._skip_preprocess:
             return torch.rand(1, 3, 640, 640)
-        else:
-            return [torch.rand(3, 640, 640)] * 2
+        if self._batch_size == 1:
+            return [torch.rand(3, 640, 640)]
+
+        return [torch.rand(3, 640, 640)] * self._batch_size
 
     @torch.no_grad()
     def to_onnx(self, onnx_path: str, **kwargs):
