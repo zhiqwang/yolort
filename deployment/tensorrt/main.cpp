@@ -83,82 +83,48 @@ void visualizeDetection(
 }
 
 float letterbox(
-    const cv::Mat& src,
-    cv::Mat& dst,
-    int dst_size,
-    int align_size,
-    cv::Scalar fill,
-    const float dst_hw_scale = -1.f,
-    bool simple_mode = false) {
-#define ALIGN_UP(val, alignment) (((val) + (alignment)-1) & (-alignment))
-  float scale = -1.f;
-  int input_h = -1;
-  int input_w = -1;
-  int lb_input_h = -1;
-  int lb_input_w = -1;
-
-  if (src.empty()) {
-    std::cerr << "Assert source image empty!" << std::endl;
-    return scale;
+    const cv::Mat& image,
+    cv::Mat& out_image,
+    const cv::Size& new_shape = cv::Size(640, 640),
+    int stride = 32,
+    const cv::Scalar& color = cv::Scalar(114, 114, 114),
+    bool fixed_shape = false,
+    bool scale_up = true) {
+  cv::Size shape = image.size();
+  float r = std::min(
+      (float)new_shape.height / (float)shape.height, (float)new_shape.width / (float)shape.width);
+  if (!scale_up) {
+    r = std::min(r, 1.0f);
   }
 
-  if (dst_hw_scale > 0) {
-    if (dst_hw_scale > 1) {
-      lb_input_h = dst_size;
-      lb_input_w = dst_size / dst_hw_scale;
-      if (align_size > 0) {
-        lb_input_w = ALIGN_UP(lb_input_w, align_size);
-      }
-    } else {
-      lb_input_w = dst_size;
-      lb_input_h = dst_size * dst_hw_scale;
-      if (align_size > 0) {
-        lb_input_h = ALIGN_UP(lb_input_h, align_size);
-      }
-    }
-    float scale_h = float(src.rows) / lb_input_h;
-    float scale_w = float(src.cols) / lb_input_w;
-    if (scale_w > scale_h) {
-      input_w = lb_input_w;
-      scale = scale_w;
-      input_h = src.rows / scale;
-    } else {
-      input_h = lb_input_h;
-      scale = scale_h;
-      input_w = src.cols / scale;
-    }
+  int newUnpad[2]{
+      (int)std::round((float)shape.width * r), (int)std::round((float)shape.height * r)};
+
+  cv::Mat tmp;
+  if (shape.width != newUnpad[0] || shape.height != newUnpad[1]) {
+    cv::resize(image, tmp, cv::Size(newUnpad[0], newUnpad[1]));
   } else {
-    if (src.cols > src.rows) {
-      input_w = dst_size;
-      scale = float(src.cols) / dst_size;
-      input_h = src.rows / scale;
-      lb_input_w = dst_size;
-      lb_input_h = align_size > 0 ? ALIGN_UP(input_h, 64) : input_h;
-    } else {
-      input_h = dst_size;
-      scale = float(src.rows) / dst_size;
-      input_w = src.cols / scale;
-      lb_input_h = dst_size;
-      lb_input_w = align_size > 0 ? ALIGN_UP(input_w, 64) : input_w;
-    }
-  }
-  dst.create(lb_input_h, lb_input_w, CV_8UC3);
-  dst.setTo(fill);
-  {
-    cv::Mat rs_img{};
-    int start_x = 0;
-    int start_y = 0;
-    if (!simple_mode) {
-      start_x = (dst.cols - input_w) / 2;
-      start_y = (dst.rows - input_h) / 2;
-    }
-    cv::resize(src, rs_img, cv::Size(input_w, input_h));
-    cv::Rect roi_rect{start_x, start_y, rs_img.cols, rs_img.rows};
-    rs_img.copyTo(dst(roi_rect));
+    tmp = image.clone();
   }
 
-  return scale;
-#undef ALIGN_UP
+  float dw = new_shape.width - newUnpad[0];
+  float dh = new_shape.height - newUnpad[1];
+
+  if (!fixed_shape) {
+    dw = (float)((int)dw % stride);
+    dh = (float)((int)dh % stride);
+  }
+
+  dw /= 2.0f;
+  dh /= 2.0f;
+
+  int top = int(std::round(dh - 0.1f));
+  int bottom = int(std::round(dh + 0.1f));
+  int left = int(std::round(dw - 0.1f));
+  int right = int(std::round(dw + 0.1f));
+  cv::copyMakeBorder(tmp, out_image, top, bottom, left, right, cv::BORDER_CONSTANT, color);
+
+  return 1.0f / r;
 }
 
 std::vector<std::string> loadNames(const std::string& path) {
@@ -270,6 +236,44 @@ ICudaEngine* CreateCudaEngineFromOnnx(
   return runtime->deserializeCudaEngine(serializedModel->data(), serializedModel->size());
 }
 
+ICudaEngine* CreateCudaEngineFromSerializedModel(MyLogger& logger, const char* model_path) {
+  std::cout << "Loading engine from file: " << model_path << std::endl;
+  std::ifstream engineFile(model_path, std::ios::binary);
+  if (!engineFile.is_open()) {
+    std::cerr << "Open model file fail: " << model_path << std::endl;
+    return nullptr;
+  }
+  engineFile.seekg(0, std::ifstream::end);
+  int64_t fsize = engineFile.tellg();
+  engineFile.seekg(0, std::ifstream::beg);
+
+  std::vector<char> engineData(fsize);
+  engineFile.read(engineData.data(), fsize);
+
+  std::unique_ptr<IRuntime> runtime{createInferRuntime(logger)};
+  if (!runtime) {
+    std::cerr << "createInferRuntime fail!" << std::endl;
+    return nullptr;
+  }
+
+  // FIXME: This line will raise error: Error Code 1: Serialization
+  return runtime->deserializeCudaEngine(engineData.data(), fsize);
+}
+
+ICudaEngine* CreateCudaEngineFromFile(
+    MyLogger& logger,
+    const std::string& file_path,
+    const int max_batch_size,
+    bool enable_int8,
+    bool enable_fp16) {
+  if (file_path.find_last_of(".onnx") == (file_path.size() - 1)) {
+    return CreateCudaEngineFromOnnx(
+        logger, file_path.c_str(), max_batch_size, enable_int8, enable_fp16);
+  }
+  /* 其他后缀的模型（.trt .engine etc...）均视为 TensorRT 序列化后的模型 */
+  return CreateCudaEngineFromSerializedModel(logger, file_path.c_str());
+}
+
 class YOLOv5Detector {
  public:
   YOLOv5Detector(
@@ -297,7 +301,7 @@ YOLOv5Detector::YOLOv5Detector(
     bool enable_int8,
     bool enable_fp16)
     : engine(
-          {CreateCudaEngineFromOnnx(logger, model_path, max_batch_size, enable_int8, enable_fp16)}),
+          {CreateCudaEngineFromFile(logger, model_path, max_batch_size, enable_int8, enable_fp16)}),
       context({engine->createExecutionContext()}) {
   CHECK(cudaStreamCreate(&stream));
 }
@@ -357,14 +361,8 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   int32_t input_h = engine->getBindingDimensions(0).d[2];
   int32_t input_w = engine->getBindingDimensions(0).d[3];
   cv::Mat tmp;
-  /* Fixed shape, need to set h/w scale */
-  float scale = letterbox(
-      image,
-      tmp,
-      std::max(input_w, input_h),
-      -1,
-      cv::Scalar(114, 114, 114),
-      float(input_h) / input_w);
+  /* Fixed shape */
+  float scale = letterbox(image, tmp, {input_w, input_h}, 32, {114, 114, 114}, true);
   cv::cvtColor(tmp, tmp, cv::COLOR_BGR2RGB);
   tmp.convertTo(tmp, CV_32FC3, 1 / 255.0);
   {
