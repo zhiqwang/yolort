@@ -449,6 +449,10 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> classNames = loadNames(classNamesPath);
 
   cv::Mat image = cv::imread(imagePath);
+  if (image.empty()) {
+    std::cerr << "Read image file fail: " << imagePath << std::endl;
+    return -1;
+  }
   YOLOv5Detector yolo_detector(modelPath.c_str(), cmd.exist("int8"), cmd.exist("fp16"));
   std::vector<Detection> result = yolo_detector.detect(image);
 
