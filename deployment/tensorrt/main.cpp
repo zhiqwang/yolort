@@ -217,7 +217,7 @@ ICudaEngine* CreateCudaEngineFromOnnx(
   if (!config) {
     return nullptr;
   }
-  config->setMaxWorkspaceSize(40 * (1U << 20));
+  config->setMaxWorkspaceSize(100 * (1U << 20));
   config->setFlag(BuilderFlag::kGPU_FALLBACK);
   if (enable_int8) {
     if (builder->platformHasFastInt8()) {
@@ -365,6 +365,7 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
       -1,
       cv::Scalar(114, 114, 114),
       float(input_h) / input_w);
+  cv::cvtColor(tmp, tmp, cv::COLOR_BGR2RGB);
   tmp.convertTo(tmp, CV_32FC3, 1 / 255.0);
   {
     /* HWC ==> CHW */
@@ -378,7 +379,7 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
           split_image.total() * sizeof(float),
           cudaMemcpyHostToDevice,
           stream));
-      offset = split_image.total();
+      offset += split_image.total();
     }
   }
   context->enqueueV2(buffers.data(), stream, nullptr);
