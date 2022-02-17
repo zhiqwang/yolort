@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include "NvInfer.h"
+#include "NvInferPlugin.h"
 #include "NvOnnxParser.h"
 #include "cmdline.h"
 
@@ -256,7 +257,9 @@ ICudaEngine* CreateCudaEngineFromSerializedModel(MyLogger& logger, const char* m
     return nullptr;
   }
 
-  // FIXME: This line will raise error: Error Code 1: Serialization
+  /* Must initLibNvInferPlugins if you use any plugin */
+  initLibNvInferPlugins(&logger, "");
+
   return runtime->deserializeCudaEngine(engineData.data(), fsize);
 }
 

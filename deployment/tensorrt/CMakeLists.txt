@@ -20,4 +20,4 @@ include_directories(${TENSORRT_DIR}/include)
 link_directories(${TENSORRT_DIR}/lib)
 
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} nvinfer cudart nvonnxparser)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} nvinfer cudart nvonnxparser nvinfer_plugin)
