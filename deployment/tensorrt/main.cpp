@@ -1,7 +1,5 @@
 #include <cuda_runtime_api.h>
 #include <opencv2/opencv.hpp>
-#include <cassert>
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <memory>
