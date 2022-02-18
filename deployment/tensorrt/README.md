@@ -15,7 +15,7 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
    We provide a CLI tool to export the custom model checkpoint trained from yolov5 to TensorRT serialized engine.
 
    ```bash
-   python tools/export_model.py --checkpoint_path [path/to/your/best.pt] --include engine
+   python tools/export_model.py --checkpoint_path {path/to/your/best.pt} --include engine
    ```
 
    Note: This CLI will output a pair of ONNX model and TensorRT serialized engine if you have the full TensorRT's Python environment, otherwise it will only output an ONNX models with suffixes ".trt.onnx". And then you can also use the [`trtexct`](https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#trtexec) provided by TensorRT to export the serialized engine as below:
@@ -50,9 +50,9 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
 1. Now, you can infer your own images.
 
    ```bash
-   ./yolort_trt [--image ../../../test/assets/zidane.jpg]
-                [--model_path ../../../notebooks/best.engine]
-                [--class_names ../../../notebooks/assets/coco.names]
+   ./yolort_trt --image ../../../test/assets/zidane.jpg
+                --model_path ../../../notebooks/best.engine
+                --class_names ../../../notebooks/assets/coco.names
    ```
 
    The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.
