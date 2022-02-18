@@ -267,7 +267,7 @@ ICudaEngine* CreateCudaEngineFromFile(
     return CreateCudaEngineFromOnnx(
         logger, file_path.c_str(), max_batch_size, enable_int8, enable_fp16);
   }
-  /* 其他后缀的模型（.trt .engine etc...）均视为 TensorRT 序列化后的模型 */
+  /* All suffixes except .onnx will be treated as the TensorRT serialized engine. */
   return CreateCudaEngineFromSerializedModel(logger, file_path.c_str());
 }
 

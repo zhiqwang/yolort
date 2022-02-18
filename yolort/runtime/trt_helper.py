@@ -30,6 +30,7 @@ logger = logging.getLogger("TRTHelper")
 
 def export_tensorrt_engine(
     checkpoint_path,
+    *,
     score_thresh: float = 0.25,
     nms_thresh: float = 0.45,
     version: str = "r6.0",
@@ -42,7 +43,7 @@ def export_tensorrt_engine(
     workspace: int = 12,
 ) -> None:
     """
-    Export ONNX models and trt engines that can be used for TensorRT inferencing.
+    Export ONNX models and TensorRT serialized engines that can be used for TensorRT inferencing.
 
     Args:
         checkpoint_path (str): Path of the YOLOv5 checkpoint model.
