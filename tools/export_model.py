@@ -9,6 +9,9 @@ Usage:
 
 import argparse
 from pathlib import Path
+from typing import Tuple
+
+import torch
 
 
 def get_parser():
@@ -79,16 +82,17 @@ def get_parser():
 
 
 def export_onnxruntime(
-    onnx_path,
-    checkpoint_path,
-    size,
-    size_divisible,
-    score_thresh,
-    nms_thresh,
-    version,
-    skip_preprocess,
-    opset_version,
-    batch_size,
+    onnx_path: str,
+    checkpoint_path: str,
+    *,
+    size: Tuple[int, int] = (640, 640),
+    size_divisible: int = 32,
+    score_thresh: float = 0.25,
+    nms_thresh: float = 0.45,
+    version: str = "r6.0",
+    skip_preprocess: bool = False,
+    opset_version: int = 11,
+    batch_size: int = 1,
 ):
     from yolort.runtime.ort_helper import export_onnx
 
@@ -106,6 +110,32 @@ def export_onnxruntime(
     )
 
     return onnx_path
+
+
+def export_tensorrt(
+    checkpoint_path: str,
+    score_thresh: float,
+    nms_thresh: float,
+    onnx_path: str,
+    engine_path: str,
+    input_sample: torch.Tensor,
+    detections_per_img: int = 100,
+    workspace: int = 12,
+):
+    from yolort.runtime.trt_helper import export_tensorrt_engine
+
+    export_tensorrt_engine(
+        checkpoint_path,
+        score_thresh=score_thresh,
+        nms_thresh=nms_thresh,
+        onnx_path=onnx_path,
+        engine_path=engine_path,
+        input_sample=input_sample,
+        detections_per_img=detections_per_img,
+        workspace=workspace,
+    )
+
+    return engine_path
 
 
 def cli_main():
@@ -142,12 +172,18 @@ def cli_main():
         onnx_path = args.onnx_path or checkpoint_path.with_suffix(".trt.onnx")
         tensorrt_path = args.trt_path or checkpoint_path.with_suffix(".engine")
 
-        exported_paths[1] = tensorrt_path
+        input_sample = torch.rand(args.batch_size, 3, *args.image_size)
+        exported_paths[1] = export_tensorrt(
+            checkpoint_path,
+            score_thresh=args.score_thresh,
+            nms_thresh=args.nms_thresh,
+            onnx_path=str(onnx_path),
+            engine_path=str(tensorrt_path),
+            input_sample=input_sample,
+        )
 
     # Finish
     exported_paths = [str(x) for x in exported_paths if x]  # filter out '' and None
-
-    return exported_paths
 
 
 if __name__ == "__main__":

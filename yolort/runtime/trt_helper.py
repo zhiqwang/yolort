@@ -30,6 +30,7 @@ logger = logging.getLogger("TRTHelper")
 
 def export_tensorrt_engine(
     checkpoint_path,
+    *,
     score_thresh: float = 0.25,
     nms_thresh: float = 0.45,
     version: str = "r6.0",
