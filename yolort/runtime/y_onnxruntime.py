@@ -81,7 +81,7 @@ class PredictorORT:
             img_path (str): a image path
 
         Returns:
-            np.ndarray, processed tensor for prediction.
+            np.ndarray, processed ndarray for prediction.
         """
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -106,6 +106,7 @@ class PredictorORT:
     def predict(self, x: Any, image_loader: Optional[Callable] = None) -> List[Dict[str, np.ndarray]]:
         """
         Predict function for raw data or processed data
+
         Args:
             x: Input to predict. Can be raw data or processed data.
             image_loader: Utility function to convert raw data to Numpy ndarray.
@@ -124,7 +125,7 @@ class PredictorORT:
         Args:
             samples (Any): samples source, support the following various types:
                 - str or List[str]: a image path or list of image paths.
-                - np.ndarray or List[np.ndarray]: a tensor or list of tensors.
+                - np.ndarray or List[np.ndarray]: a ndarray or list of ndarray.
 
         Returns:
             List[np.ndarray], The processed image samples.
@@ -147,5 +148,5 @@ class PredictorORT:
 
         raise NotImplementedError(
             f"The type of the sample is {type(samples)}, we currently don't support it now, the "
-            "samples should be either a tensor, list of np.ndarray, a image path or list of image paths."
+            "samples should be either a ndarray, list of np.ndarray, a image path or list of image paths."
         )
