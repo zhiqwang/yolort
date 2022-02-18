@@ -24,6 +24,21 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
    trtexec --onnx=best.trt.onnx --saveEngine=best.engine --workspace=8192
    ```
 
+1. \[Optional\] Quick test with the TensorRT Python interface.
+
+   ```python
+   import torch
+   from yolort.runtime import PredictorTRT
+
+   # Load the exported TensorRT engine
+   engine_path = "best.engine"
+   device = torch.device("cuda")
+   y_runtime = PredictorTRT(engine_path, device=device)
+
+   # Perform inference on an image file
+   predictions = y_runtime.predict("bus.jpg")
+   ```
+
 1. Create build directory and build project.
 
    ```bash
