@@ -43,7 +43,7 @@ def export_tensorrt_engine(
     workspace: int = 12,
 ) -> None:
     """
-    Export ONNX models and trt engines that can be used for TensorRT inferencing.
+    Export ONNX models and TensorRT serialized engines that can be used for TensorRT inferencing.
 
     Args:
         checkpoint_path (str): Path of the YOLOv5 checkpoint model.

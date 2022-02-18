@@ -4,7 +4,7 @@ The TensorRT inference for `yolort`, support CUDA only.
 
 ## Dependencies
 
-- TensorRT 8.0 +
+- TensorRT 8.2 +
 
 ## Usage
 
@@ -18,62 +18,31 @@ The TensorRT inference for `yolort`, support CUDA only.
 1. Build project
 
    ```bash
-   cmake --build . -j4
+   cmake --build .
    ```
 
-1. Export your custom model to ONNX
+1. Export your custom model to TensorRT format
 
    Here is a small demo to surgeon the YOLOv5 ONNX model and then export to TensorRT engine. For details see out our [tutorial for deploying yolort on TensorRT](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html).
 
-   - Set the super parameters
+   We provide a CLI tool to export the custom model checkpoint trained from yolov5 to TensorRT serialized engine.
 
-     ```python
-     model_path = "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt"
-     checkpoint_path = attempt_download(model_path)
-     onnx_path = "yolov5n6.onnx"
-     engine_path = "yolov5n6.engine"
+   ```bash
+   python tools/export_model.py --checkpoint_path [path/to/your/best.pt] --include engine
+   ```
 
-     score_thresh = 0.4
-     iou_thresh = 0.45
-     detections_per_img = 100
-     ```
+   Note: This CLI will output a pair of ONNX model and TensorRT serialized engine if you have the full TensorRT's Python environment, otherwise it will only output an ONNX models. And you can also use the [`trtexct`](https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#trtexec) provided by TensorRT to export the serialized engine as below:
 
-   - Surgeon the yolov5 ONNX models
-
-     ```python
-     from yolort.runtime.yolo_graphsurgeon import YOLOGraphSurgeon
-
-     yolo_gs = YOLOGraphSurgeon(
-         checkpoint_path,
-         version="r6.0",
-         enable_dynamic=False,
-     )
-
-     yolo_gs.register_nms(
-         score_thresh=score_thresh,
-         nms_thresh=iou_thresh,
-         detections_per_img=detections_per_img,
-     )
-
-     # Export the ONNX model
-     yolo_gs.save(onnx_path)
-     ```
-
-   - Build the TensorRT engine
-
-     ```python
-     from yolort.runtime.trt_helper import EngineBuilder
-
-     engine_builder = EngineBuilder()
-     engine_builder.create_network(onnx_path)
-     engine_builder.create_engine(engine_path, precision="fp32")
-     ```
+   ```bash
+   trtexec --onnx=yolov5n6.trt.onnx --saveEngine=yolov5n6-trtexec.engine --workspace=8192
+   ```
 
 1. Now, you can infer your own images.
 
    ```bash
    ./yolort_trt [--image ../../../test/assets/zidane.jpg]
-                [--model_path ../../../notebooks/yolov5s.onnx]
+                [--model_path ../../../notebooks/yolov5s.trt.onnx]
                 [--class_names ../../../notebooks/assets/coco.names]
-                [--fp16]  # Enable it if your GPU support fp16 inference
    ```
+
+   The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.
