@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
 #include "NvInfer.h"
 #include "NvInferPlugin.h"
 #include "NvOnnxParser.h"
