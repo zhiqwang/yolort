@@ -10,6 +10,7 @@ from torch import Tensor
 from torchvision.io import read_image
 from torchvision.ops._register_onnx_ops import _onnx_opset_version
 from yolort import models
+from yolort.runtime import PredictorORT
 from yolort.runtime.ort_helper import export_onnx
 from yolort.utils.image_utils import to_numpy
 
@@ -50,10 +51,9 @@ class TestONNXExporter:
         inputs = list(map(to_numpy, inputs))
         outputs = list(map(to_numpy, outputs))
 
-        ort_session = onnxruntime.InferenceSession(onnx_io.getvalue())
+        ort_session = PredictorORT(onnx_io.getvalue())
         # Inference on ONNX Runtime
-        ort_inputs = dict((ort_session.get_inputs()[i].name, inpt) for i, inpt in enumerate(inputs))
-        ort_outs = ort_session.run(None, ort_inputs)
+        ort_outs = ort_session.predict(inputs)
 
         for i in range(0, len(outputs)):
             torch.testing.assert_allclose(outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05)

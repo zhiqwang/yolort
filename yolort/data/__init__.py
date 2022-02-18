@@ -1,4 +1,5 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
+
 from ._helper import contains_any_tensor
 from .coco_eval import COCOEvaluator
 from .data_module import (
@@ -7,7 +8,7 @@ from .data_module import (
     COCODetectionDataModule,
 )
 
-all = [
+__all__ = [
     "contains_any_tensor",
     "COCOEvaluator",
     "DetectionDataModule",
