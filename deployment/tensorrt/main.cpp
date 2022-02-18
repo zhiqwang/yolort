@@ -1,9 +1,9 @@
 #include <cuda_runtime_api.h>
 #include <opencv2/opencv.hpp>
-#include <memory>
 #include <fstream>
-#include <ostream>
 #include <iostream>
+#include <memory>
+#include <ostream>
 #include <sstream>
 #include "NvInfer.h"
 #include "NvInferPlugin.h"
