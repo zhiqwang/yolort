@@ -32,7 +32,7 @@ ______________________________________________________________________
 
 ## 🤗 Introduction
 
-**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNX Runtime`, `TVM` , `TensorRT`and so on.
+**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). yolort aims to make the training and inference of the object detection task integrate more seamlessly together. yolort now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (letterbox) and post-processing (nms) into the model graph, which simplifies the deployment strategy. In this sense, yolort makes it possible to deploy the object detection more easily and friendly on `LibTorch`, `ONNX Runtime`, `TVM`, `TensorRT` and so on.
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
@@ -62,7 +62,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 - Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
 
-- Installation via Pip
+- Installation via pip
 
   Simple installation from [PyPI](https://pypi.org/project/yolort/)
 
@@ -129,11 +129,24 @@ predictions = model.predict(img_path)
 
 ### Inference on LibTorch backend
 
-We provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model.
+We provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is converted into `torchscript`. And we provide a [C++ example](deployment/libtorch) of how to do inference with the serialized `torchscript` model.
 
 ### Inference on ONNX Runtime backend
 
-On the `ONNX Runtime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/export-onnx-inference-onnxruntime.html) for using the `ONNX Runtime`.
+We provide a pipeline for deploying yolort with ONNX Runtime.
+
+```python
+from yolort.runtime import PredictorORT
+
+# Load the serialized ONNX model
+engine_path = "yolov5n6.onnx"
+y_runtime = PredictorORT(engine_path, device="cpu")
+
+# Perform inference on an image file
+predictions = y_runtime.predict("bus.jpg")
+```
+
+Please check out this [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/export-onnx-inference-onnxruntime.html) to use yolort's ONNX model conversion and ONNX Runtime inferencing. And you can use the [example](deployment/onnxruntime) for ONNX Runtime C++ interface.
 
 ### Inference on TensorRT backend
 
@@ -143,7 +156,7 @@ The pipeline for TensorRT deployment is also very easy to use.
 import torch
 from yolort.runtime import PredictorTRT
 
-# Load the exported TensorRT engine
+# Load the serialized TensorRT engine
 engine_path = "yolov5n6.engine"
 device = torch.device("cuda")
 y_runtime = PredictorTRT(engine_path, device=device)
@@ -152,7 +165,7 @@ y_runtime = PredictorTRT(engine_path, device=device)
 predictions = y_runtime.predict("bus.jpg")
 ```
 
-On the `TensorRT` front you can use the [C++ example](deployment/tensorrt), and we also provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) for using the `TensorRT`.
+Besides, we provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) detailing yolort's model conversion to TensorRT and the use of the Python interface. Please check this [example](deployment/tensorrt) if you want to use the C++ interface.
 
 ## 🎨 Model Graph Visualization
 
@@ -172,7 +185,7 @@ If you use yolort in your publication, please cite it by using the following Bib
 
 ```bibtex
 @Misc{yolort2021,
-  author =       {Zhiqiang Wang, Shiquan Yu, Fidan Kharrasov},
+  author =       {Zhiqiang Wang and Shiquan Yu and Fidan Kharrasov},
   title =        {yolort: A runtime stack for object detection on specialized accelerators},
   howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
   year =         {2021}

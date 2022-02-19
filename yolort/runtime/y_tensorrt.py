@@ -1,4 +1,4 @@
-# Copyright (c) 2021, yolort team. All rights reserved.
+# Copyright (c) 2022, yolort team. All rights reserved.
 
 import logging
 from collections import OrderedDict, namedtuple
@@ -24,10 +24,10 @@ logger = logging.getLogger("PredictorTRT")
 class PredictorTRT:
     """
     Create a simple end-to-end predictor with the given checkpoint that runs on
-    single device for a single input image.
+    single device for input images with TensorRT.
 
     Args:
-        engine_path (string): Path of the ONNX checkpoint.
+        engine_path (string): Path of the serialized TensorRT engine.
         device (torch.device): The CUDA device to be used for inferencing.
         precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
         enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: False.
@@ -45,6 +45,7 @@ class PredictorTRT:
         Demo pipeline for deploying TensorRT.
 
         .. code-block:: python
+
             import torch
             from yolort.runtime import PredictorTRT
 

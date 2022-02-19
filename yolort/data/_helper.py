@@ -1,4 +1,5 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
+
 import logging
 from pathlib import Path, PosixPath
 from typing import Type, Any
