@@ -35,12 +35,12 @@ The ONNX model exported by yolort differs from other pipeline in the following t
    from yolort.runtime import PredictorORT
 
    # Load the serialized ONNX model
-   engine_path = 'yolov5n6.onnx'
-   device = 'cpu'
+   engine_path = "yolov5n6.onnx"
+   device = "cpu"
    y_runtime = PredictorORT(engine_path, device=device)
 
    # Perform inference on an image file
-   predictions = y_runtime.predict('bus.jpg')
+   predictions = y_runtime.predict("bus.jpg")
    ```
 
 1. Compile the source code.

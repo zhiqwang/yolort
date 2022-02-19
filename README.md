@@ -32,7 +32,7 @@ ______________________________________________________________________
 
 ## 🤗 Introduction
 
-**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNX Runtime`, `TVM`, `TensorRT`and so on.
+**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). yolort aims to make the training and inference of the object detection task integrate more seamlessly together. yolort now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (letterbox) and post-processing (nms) into the model graph, which simplifies the deployment strategy. In this sense, yolort makes it possible to deploy the object detection more easily and friendly on `LibTorch`, `ONNX Runtime`, `TVM`, `TensorRT` and so on.
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
@@ -62,7 +62,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 - Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
 
-- Installation via Pip
+- Installation via pip
 
   Simple installation from [PyPI](https://pypi.org/project/yolort/)
 
@@ -129,7 +129,7 @@ predictions = model.predict(img_path)
 
 ### Inference on LibTorch backend
 
-We provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model.
+We provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is converted into `torchscript`. And we provide a [C++ example](deployment/libtorch) of how to do inference with the serialized `torchscript` model.
 
 ### Inference on ONNX Runtime backend
 
