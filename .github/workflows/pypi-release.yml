@@ -4,11 +4,9 @@ name: PyPI release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [ main, "release/*" ]
   release:
-    types:
-      - created
+    types: [ published ]
 
 jobs:
   deploy:
