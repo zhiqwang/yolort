@@ -11,7 +11,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 PATH_ROOT = Path(__file__).parent.resolve()
 
@@ -86,9 +86,7 @@ if __name__ == "__main__":
             # Operation system
             "Operating System :: OS Independent",
             # How mature is this project? Common values are
-            #   3 - Alpha
-            #   4 - Beta
-            #   5 - Production/Stable
+            #   3 - Alpha, 4 - Beta, 5 - Production/Stable
             "Development Status :: 4 - Beta",
             # Indicate who your project is intended for
             "Intended Audience :: Developers",
@@ -99,8 +97,7 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Image Recognition",
             # Pick your license as you wish
             "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-            # Specify the Python versions you support here. In particular, ensure
-            # that you indicate whether you support Python 2, Python 3 or both.
+            # Specify the Python versions you support here.
             "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
@@ -119,7 +116,7 @@ if __name__ == "__main__":
         # 'Programming Language' classifiers above, 'pip install' will check this
         # and refuse to install the project if the version does not match. See
         # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-        python_requires=">=3.6, <4",
+        python_requires=">=3.6.2",
         # List additional URLs that are relevant to your project as a dict.
         #
         # This field corresponds to the "Project-URL" metadata fields:
