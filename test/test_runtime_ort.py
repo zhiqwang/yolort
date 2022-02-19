@@ -51,9 +51,9 @@ class TestONNXExporter:
         inputs = list(map(to_numpy, inputs))
         outputs = list(map(to_numpy, outputs))
 
-        ort_session = PredictorORT(onnx_io.getvalue())
+        y_runtime = PredictorORT(onnx_io.getvalue())
         # Inference on ONNX Runtime
-        ort_outs = ort_session.predict(inputs)
+        ort_outs = y_runtime.predict(inputs)
 
         for i in range(0, len(outputs)):
             torch.testing.assert_allclose(outputs[i], ort_outs[i], rtol=1e-03, atol=1e-05)

@@ -1,13 +1,13 @@
-# ONNXRuntime Inference
+# ONNX Runtime Inference
 
-The ONNXRuntime inference for `yolort`, both GPU and CPU are supported.
+The ONNX Runtime inference for `yolort`, both CPU and GPU are supported.
 
 ## Dependencies
 
 - Ubuntu 20.04 / Windows 10 / macOS
-- ONNXRuntime 1.7 +
+- ONNX Runtime 1.7 +
 - OpenCV 4.5 +
-- CUDA 11 \[Optional\]
+- CUDA \[Optional\]
 
 *We didn't impose too strong restrictions on the versions of dependencies.*
 
@@ -21,10 +21,26 @@ The ONNX model exported by yolort differs from other pipeline in the following t
 
 ## Usage
 
-1. First, Setup the environment variable.
+1. Export your custom model to ONNX.
 
    ```bash
-   export ORT_DIR=YOUR_ONNXRUNTIME_DIR
+   python tools/export_model.py --checkpoint_path {path/to/your/best.pt} --size_divisible 32/64
+   ```
+
+   And then, you can find that a ONNX model ("best.onnx") have been generated in the directory of "best.pt". Set the `size_divisible` here according to your model, 32 for P5 ("yolov5s.pt" for instance) and 64 for P6 ("yolov5s6.pt" for instance).
+
+1. \[Optional\] Quick test with the ONNX Runtime Python interface.
+
+   ```python
+   from yolort.runtime import PredictorORT
+
+   # Load the serialized ONNX model
+   engine_path = 'yolov5n6.onnx'
+   device = 'cpu'
+   y_runtime = PredictorORT(engine_path, device=device)
+
+   # Perform inference on an image file
+   predictions = y_runtime.predict('bus.jpg')
    ```
 
 1. Compile the source code.
@@ -32,33 +48,15 @@ The ONNX model exported by yolort differs from other pipeline in the following t
    ```bash
    cd deployment/onnxruntime
    mkdir build && cd build
-   cmake .. -DONNXRUNTIME_DIR=$ORT_DIR
+   cmake .. -DONNXRUNTIME_DIR={path/to/your/ONNXRUNTIME/install/director}
    cmake --build .
-   ```
-
-1. Export your custom model to ONNX.
-
-   ```bash
-   python tools/export_model.py --checkpoint_path [path/to/your/best.pt]
-   ```
-
-   And then, you can find that a ONNX model ("best.onnx") have been generated in the directory of "best.pt".
-
-1. \[Optional\] Quick test with the ONNXRuntime Python interface.
-
-   ```python
-   from yolort.runtime import PredictorORT
-
-   detector = PredictorORT("best.onnx")
-   img_path = "bus.jpg"
-   scores, class_ids, boxes = detector.run_on_image(img_path)
    ```
 
 1. Now, you can infer your own images.
 
    ```bash
-   ./yolort_onnx [--image ../../../test/assets/zidane.jpg]
-                 [--model_path ../../../notebooks/yolov5s.onnx]
-                 [--class_names ../../../notebooks/assets/coco.names]
+   ./yolort_onnx --image ../../../test/assets/zidane.jpg
+                 --model_path ../../../notebooks/best.onnx
+                 --class_names ../../../notebooks/assets/coco.names
                  [--gpu]  # GPU switch, which is optional, and set False as default
    ```

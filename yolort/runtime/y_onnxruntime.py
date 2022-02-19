@@ -3,7 +3,6 @@
 import logging
 from typing import Any, Dict, List, Callable, Optional
 
-import cv2
 import numpy as np
 from yolort.data import contains_any_tensor
 
@@ -30,10 +29,9 @@ class PredictorORT:
 
         .. code-block:: python
 
-            import torch
             from yolort.runtime import PredictorORT
 
-            # Load the exported ONNX model
+            # Load the serialized ONNX model
             engine_path = 'yolov5n6.onnx'
             device = 'cpu'
             y_runtime = PredictorORT(engine_path, device=device)
@@ -78,11 +76,13 @@ class PredictorORT:
         Default loader of read a image path.
 
         Args:
-            img_path (str): a image path
+            img_path (str): the path to the image
 
         Returns:
             np.ndarray, processed ndarray for prediction.
         """
+        import cv2
+
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = image.astype(np.float32) / 255.0
