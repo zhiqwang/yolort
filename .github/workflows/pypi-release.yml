@@ -5,6 +5,8 @@ name: PyPI release
 on:
   push:
     branches: [ main, "release/*" ]
+  pull_request:
+    branches: [ main ]
   release:
     types: [ published ]
 
