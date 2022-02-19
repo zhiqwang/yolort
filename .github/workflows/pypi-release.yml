@@ -5,15 +5,13 @@ name: Publish 🐍 to PyPI.org
 on:
   push:
     branches: [ main, "release/*" ]
-  pull_request:
-    branches: [ main ]
   release:
     types: [ published ]
 
 jobs:
-  release:
+  deploy:
     runs-on: ubuntu-latest
-    name: Build and publish Python 🐍 distributions 📦 to PyPI
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
