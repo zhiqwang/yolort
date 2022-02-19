@@ -14,10 +14,10 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 PATH_ROOT = Path(__file__).parent.resolve()
-VERSION = "0.6.0a0"
 
-PACKAGE_NAME = "yolort"
+version = "0.6.0a0"
 sha = "Unknown"
+package_name = "yolort"
 
 try:
     sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PATH_ROOT).decode("ascii").strip()
@@ -25,15 +25,15 @@ except Exception:
     pass
 
 if os.getenv("BUILD_VERSION"):
-    version_yolort = os.getenv("BUILD_VERSION")
+    version = os.getenv("BUILD_VERSION")
 elif sha != "Unknown":
-    version_yolort = f"{VERSION}+{sha[:7]}"
+    version += "+" + sha[:7]
 
 
 def write_version_file():
-    version_path = PATH_ROOT / PACKAGE_NAME / "version.py"
+    version_path = PATH_ROOT / package_name / "version.py"
     with open(version_path, "w") as f:
-        f.write(f"__version__ = '{version_yolort}'\n")
+        f.write(f"__version__ = '{version}'\n")
         f.write(f"git_version = {repr(sha)}\n")
         f.write("from torchvision.extension import _check_cuda_version\n")
         f.write("if _check_cuda_version() > 0:\n")
@@ -44,7 +44,7 @@ def get_long_description():
     # Get the long description from the README file
     description = (PATH_ROOT / "README.md").read_text(encoding="utf-8")
     # replace relative repository path to absolute link to the release
-    static_url = f"https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/v{VERSION}"
+    static_url = f"https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/v{version}"
     description = description.replace("docs/source/_static/", f"{static_url}/docs/source/_static/")
     description = description.replace("notebooks/assets/", f"{static_url}/notebooks/assets/")
     description = description.replace("_graph_visualize.svg", "_graph_visualize.png")
@@ -66,13 +66,13 @@ def load_requirements(path_dir=PATH_ROOT, file_name="requirements.txt", comment_
 
 
 if __name__ == "__main__":
-    print(f"Building wheel {PACKAGE_NAME}-{version_yolort}")
+    print(f"Building wheel {package_name}-{version}")
 
     write_version_file()
 
     setup(
-        name=PACKAGE_NAME,
-        version=version_yolort,
+        name=package_name,
+        version=version,
         description="yolort is a runtime stack for object detection on specialized accelerators.",
         author="Zhiqiang Wang",
         author_email="me@zhiqwang.com",
