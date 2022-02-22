@@ -8,7 +8,6 @@ import numpy as np
 import subprocess
 from yolort.relay import YOLOTRTInference
 import onnxruntime
-import os
 from pathlib import Path
 
 
