@@ -43,6 +43,8 @@ class OpenvinoExport:
             exec_net_ir = ie.load_network(network=net_ir, device_name=self.device.upper())
             out_ort = session.run(output_names=None, input_feed=test_inputs)
             out_ie = exec_net_ir.infer(inputs=test_inputs)
+            assert out_ie["boxes"].shape == out_ort[0].shape
+            assert out_ie["scores"].shape == out_ort[1].shape
             # np.testing.assert_allclose(out_ie["boxes"],out_ort[0])
             # np.testing.assert_allclose(out_ie["scores"],out_ort[1])
         logger.info(f"Check {onnx_path} and {openvino_path} run with {input_shape} {times} times ok")
