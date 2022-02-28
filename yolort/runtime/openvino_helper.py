@@ -39,7 +39,7 @@ class OpenvinoExport:
             test_inputs = {"images": np.random.randn(*input_shape).astype("float32")}
             session = onnxruntime.InferenceSession(onnx_path, providers=self.providers)
             ie = IECore()
-            net_ir = ie.read_network(model=(Path(openvino_path) / Path(onnx_path)).with_suffix(".xml"))
+            net_ir = ie.read_network(model=(Path(openvino_path) / Path(onnx_path).name).with_suffix(".xml"))
             exec_net_ir = ie.load_network(network=net_ir, device_name=self.device.upper())
             out_ort = session.run(output_names=None, input_feed=test_inputs)
             out_ie = exec_net_ir.infer(inputs=test_inputs)
@@ -52,8 +52,9 @@ class OpenvinoExport:
 
 
 if __name__ == "__main__":
-    onnx_path = "yolov5s.onnx"
-    openvino_path = "yolov5s_openvino/"
+    onnx_path = "../../yolov5s.onnx"
+    openvino_path = "../../yolov5s_openvino/"
     OE = OpenvinoExport("../../yolov5s.pt")
-    OE.export("yolov5s.onnx", "yolov5s_openvino")
+    # OE.export("../../yolov5s.onnx", openvino_path)
     OE.check_outputs(onnx_path, openvino_path)
+    print("finish")
