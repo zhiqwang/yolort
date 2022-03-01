@@ -19,7 +19,7 @@ repos:
     hooks:
       - id: ufmt
         additional_dependencies:
-          - black == 21.9b0
+          - black == 21.12b0
           - usort == 0.6.4
 
   - repo: https://github.com/executablebooks/mdformat
