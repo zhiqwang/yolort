@@ -308,6 +308,62 @@ def check_file(file, suffix=""):
     return files[0]  # return file
 
 
+def check_dataset(data, autodownload=True):
+    # Download and/or unzip dataset if not found locally
+    # Usage: https://github.com/ultralytics/yolov5/releases/download/v1.0/coco128_with_yaml.zip
+
+    # Download (optional)
+    extract_dir = ''
+    # todo:暂不自动下载
+    # if isinstance(data, (str, Path)) and str(data).endswith('.zip'):  # i.e. gs://bucket/dir/coco128.zip
+    #     download(data, dir=DATASETS_DIR, unzip=True, delete=False, curl=False, threads=1)
+    #     data = next((DATASETS_DIR / Path(data).stem).rglob('*.yaml'))
+    #     extract_dir, autodownload = data.parent, False
+
+    # Read yaml (optional)
+    if isinstance(data, (str, Path)):
+        with open(data, errors='ignore') as f:
+            data = yaml.safe_load(f)  # dictionary
+
+    # Resolve paths
+    path = Path(extract_dir or data.get('path') or '')  # optional 'path' default to '.'
+    if not path.is_absolute():
+        path = (ROOT / path).resolve()
+    for k in 'train', 'val', 'test':
+        if data.get(k):  # prepend path
+            data[k] = str(path / data[k]) if isinstance(data[k], str) else [str(path / x) for x in data[k]]
+
+    # Parse yaml
+    assert 'nc' in data, "Dataset 'nc' key missing."
+    if 'names' not in data:
+        data['names'] = [f'class{i}' for i in range(data['nc'])]  # assign class names if missing
+    train, val, test, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
+    if val:
+        val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
+        # todo:暂不自动下载
+        # if not all(x.exists() for x in val):
+        #     LOGGER.info('\nDataset not found, missing paths: %s' % [str(x) for x in val if not x.exists()])
+        #     if s and autodownload:  # download script
+        #         root = path.parent if 'path' in data else '..'  # unzip directory i.e. '../'
+        #         if s.startswith('http') and s.endswith('.zip'):  # URL
+        #             f = Path(s).name  # filename
+        #             LOGGER.info(f'Downloading {s} to {f}...')
+        #             torch.hub.download_url_to_file(s, f)
+        #             Path(root).mkdir(parents=True, exist_ok=True)  # create root
+        #             ZipFile(f).extractall(path=root)  # unzip
+        #             Path(f).unlink()  # remove zip
+        #             r = None  # success
+        #         elif s.startswith('bash '):  # bash script
+        #             LOGGER.info(f'Running {s} ...')
+        #             r = os.system(s)
+        #         else:  # python script
+        #             r = exec(s, {'yaml': data})  # return None
+        #         LOGGER.info(f"Dataset autodownload {f'success, saved to {root}' if r in (0, None) else 'failure'}\n")
+        #     else:
+        #         raise Exception('Dataset not found.')
+
+    return data  # dictionary
+
 def url2file(url):
     # Convert URL to filename, i.e. https://url.com/file.txt?auth -> file.txt
     url = str(Path(url)).replace(":/", "://")  # Pathlib turns :// -> :/
