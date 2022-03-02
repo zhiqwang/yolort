@@ -1,6 +1,6 @@
 # Copyright (c) 2022, yolort team. All rights reserved.
 
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -51,25 +51,40 @@ class Visualizer:
 
         self.cpu_device = torch.device("cpu")
         self.line_width = line_width or max(round(sum(self.img.shape) / 2 * 0.003), 2)
+        self.output = self.img
 
-    @torch.no_grad()
-    def draw_bounding_boxes(
-        self,
-        boxes: torch.Tensor,
-        labels: Optional[List[str]] = None,
-        colors: Optional[Union[List[Union[str, Tuple[int, int, int]]], str, Tuple[int, int, int]]] = None,
-        txt_colors: Tuple[int, int, int] = (255, 255, 255),
-    ) -> torch.Tensor:
+    def draw_instance_predictions(self, predictions: Dict):
         """
-        Draws bounding boxes on given image.
-        The values of the input image should be uint8 between 0 and 255.
-        If fill is True, Resulting Tensor should be saved as PNG image.
+        Draw instance-level prediction results on an image.
 
+        Args:
+            predictions (dict): the output of an instance detection model. Following
+                fields will be used to draw: "boxes", "labels", "scores".
+
+        Returns:
+            np.ndarray: image object with visualizations.
+        """
+        boxes = predictions.get("boxes", None)
+        scores = predictions.get("scores", None)
+        labels = predictions.get("labels", None)
+        labels = self._create_text_labels(labels, scores)
+
+        self.overlay_instances(boxes=boxes, labels=labels, assigned_colors=None)
+        return self.output
+
+    def overlay_instances(
+        self,
+        *,
+        boxes: Optional[Union[Tensor, np.ndarray]] = None,
+        labels: Optional[List[str]] = None,
+        assigned_colors: Optional[List[str]] = None,
+    ):
+        """
         Args:
             boxes (Tensor): Tensor of size (N, 4) containing bounding boxes in (xmin, ymin, xmax, ymax)
                 format. Note that the boxes are absolute coordinates with respect to the image. In other
                 words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`.
-            labels (List[str]): List containing the labels of bounding boxes.
+            labels (List[string]): List containing the labels of bounding boxes.
             colors (color or list of colors, optional): List containing the colors
                 of the boxes or single color for all boxes. The color can be represented as
                 PIL strings e.g. "red" or "#FF00FF", or as RGB tuples e.g. ``(240, 10, 157)``.
@@ -81,26 +96,170 @@ class Visualizer:
                 or `/Library/Fonts/`, `/System/Library/Fonts/` and `~/Library/Fonts/` on macOS.
             font_size (int): The requested font size in points.
 
-        Returns:
-            img (Tensor[C, H, W]): Image Tensor of dtype uint8 with bounding boxes plotted.
-        """
+        Args:
+            boxes (Tensor or ndarray): Tensor or numpy array of size (N, 4) containing
+                bounding boxes in (xmin, ymin, xmax, ymax) format for the N objects in
+                a single image. Note that the boxes are absolute coordinates with respect
+                to the image. In other words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`.
+            labels (List[string]): List containing the text to be displayed for each instance.
+            colors (color or list of colors, optional): List containing the colors
+                of the boxes or single color for all boxes. The color can be represented as
+                PIL strings e.g. "red" or "#FF00FF", or as RGB tuples e.g. ``(240, 10, 157)``.
+                By default, random colors are generated for boxes.
 
-        p1, p2 = (int(boxes[0]), int(boxes[1])), (int(boxes[2]), int(boxes[3]))
-        cv2.rectangle(self.img, p1, p2, colors, thickness=self.line_width, lineType=cv2.LINE_AA)
-        if labels:
-            tf = max(self.line_width - 1, 1)  # font thickness
-            w, h = cv2.getTextSize(labels, 0, fontScale=self.line_width / 3, thickness=tf)[0]
-            outside = p1[1] - h - 3 >= 0  # labels fits outside box
-            p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
-            cv2.rectangle(self.img, p1, p2, colors, -1, cv2.LINE_AA)  # filled
-            cv2.putText(
-                self.img,
-                labels,
-                (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
-                0,
-                self.line_width / 3,
-                txt_colors,
-                thickness=tf,
-                lineType=cv2.LINE_AA,
-            )
-        return self.img
+        Returns:
+            np.ndarray: image object with visualizations.
+        """
+        num_instances = 0
+        if boxes is not None:
+            boxes = self._convert_boxes(boxes)
+            num_instances = len(boxes)
+        if labels is not None:
+            assert len(labels) == num_instances
+        if num_instances == 0:
+            return self.output
+
+        # Display in largest to smallest order to reduce occlusion.
+        areas = None
+        if boxes is not None:
+            areas = np.prod(boxes[:, 2:] - boxes[:, :2], axis=1)
+
+        if areas is not None:
+            sorted_idxs = np.argsort(-areas).tolist()
+            # Re-order overlapped instances in descending order.
+            boxes = boxes[sorted_idxs] if boxes is not None else None
+            labels = [labels[k] for k in sorted_idxs] if labels is not None else None
+            assigned_colors = [assigned_colors[idx] for idx in sorted_idxs]
+
+        for i in range(num_instances):
+            color = assigned_colors[i]
+            if boxes is not None:
+                self.draw_box(boxes[i], edge_color=color)
+
+            if labels is not None:
+                # first get a box
+                if boxes is not None:
+                    x0, y0, x1, y1 = boxes[i]
+                    text_pos = (x0, y0)  # if drawing boxes, put text on the box corner.
+                    horiz_align = "left"
+                else:
+                    continue  # drawing the box confidence for keypoints isn't very useful.
+
+                lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
+                self.draw_text(labels[i], text_pos, color=lighter_color)
+
+        return self.output
+
+    def draw_box(self, box_coord, alpha=0.5, edge_color="g", line_style="-"):
+        """
+        Draws bounding boxes on given image.
+        The values of the input image should be uint8 between 0 and 255.
+
+        Args:
+            box_coord (tuple): a tuple containing x0, y0, x1, y1 coordinates, where x0 and y0
+                are the coordinates of the image's top left corner. x1 and y1 are the
+                coordinates of the image's bottom right corner.
+            alpha (float): blending efficient. Smaller values lead to more transparent masks.
+            edge_color: color of the outline of the box. Refer to `matplotlib.colors`
+                for full list of formats that are accepted.
+            line_style (string): the string to use to create the outline of the boxes.
+
+        Returns:
+            np.ndarray: image object with box drawn.
+        """
+        p1, p2 = (int(box_coord[0]), int(box_coord[1])), (int(box_coord[2]), int(box_coord[3]))
+        cv2.rectangle(self.output, p1, p2, edge_color, thickness=self.line_width, lineType=cv2.LINE_AA)
+        return self.output
+
+    def draw_text(
+        self,
+        text: str,
+        position: Tuple,
+        *,
+        font_size: Optional[int] = None,
+        color: str = "g",
+        txt_colors: Tuple[int, int, int] = (255, 255, 255),
+    ):
+        """
+        Args:
+            text (str): class label
+            position (tuple): a tuple of the x and y coordinates to place text on image.
+            font_size (int, optional): font of the text. If not provided, a font size
+                proportional to the image width is calculated and used.
+            color: color of the text. Refer to `matplotlib.colors` for full list
+                of formats that are accepted.
+
+        Returns:
+            np.ndarray: image object with text drawn.
+        """
+        p1, p2 = (int(position[0]), int(position[1])), (int(position[2]), int(position[3]))
+
+        if font_size is None:
+            font_size = max(self.line_width - 1, 1)  # font thickness
+        w, h = cv2.getTextSize(text, 0, fontScale=self.line_width / 3, thickness=font_size)[0]
+        outside = p1[1] - h - 3 >= 0  # text fits outside box
+        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+        cv2.rectangle(self.output, p1, p2, color, -1, cv2.LINE_AA)  # filled
+        cv2.putText(
+            self.output,
+            text,
+            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+            0,
+            self.line_width / 3,
+            txt_colors,
+            thickness=font_size,
+            lineType=cv2.LINE_AA,
+        )
+        return self.output
+
+    @staticmethod
+    def _create_text_labels(classes, scores, class_names, is_crowd=None):
+        """
+        Args:
+            classes (list[int] or None):
+            scores (list[float] or None):
+            class_names (list[string] or None):
+            is_crowd (list[bool] or None):
+
+        Returns:
+            list[string] or None
+        """
+        labels = None
+        if classes is not None:
+            if class_names is not None and len(class_names) > 0:
+                labels = [class_names[i] for i in classes]
+            else:
+                labels = [str(i) for i in classes]
+        if scores is not None:
+            if labels is None:
+                labels = ["{:.0f}%".format(s * 100) for s in scores]
+            else:
+                labels = ["{} {:.0f}%".format(l, s * 100) for l, s in zip(labels, scores)]
+        if labels is not None and is_crowd is not None:
+            labels = [l + ("|crowd" if crowd else "") for l, crowd in zip(labels, is_crowd)]
+        return labels
+
+    def _change_color_brightness(self, color, brightness_factor):
+        """
+        Depending on the brightness_factor, gives a lighter or darker color i.e. a color with
+        less or more saturation than the original color.
+
+        Args:
+            color: color of the polygon. Refer to `matplotlib.colors` for a full list of
+                formats that are accepted.
+            brightness_factor (float): a value in [-1.0, 1.0] range. A lightness factor of
+                0 will correspond to no change, a factor in [-1.0, 0) range will result in
+                a darker color and a factor in (0, 1.0] range will result in a lighter color.
+
+        Returns:
+            modified_color (tuple[double]): a tuple containing the RGB values of the
+                modified color. Each value in the tuple is in the [0.0, 1.0] range.
+        """
+        assert brightness_factor >= -1.0 and brightness_factor <= 1.0
+        return color
+
+    def _convert_boxes(self, boxes: Tensor):
+        """
+        Convert different format of boxes to an Nx4 array.
+        """
+        return boxes.cpu().detach().numpy()
