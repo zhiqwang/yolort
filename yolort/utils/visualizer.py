@@ -1,133 +1,16 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
 # Copyright (c) 2022, yolort team. All rights reserved.
 
-from enum import Enum, unique
 from typing import List, Optional, Tuple, Union
 
 import cv2
-import matplotlib.figure as mplfigure
 import numpy as np
 import torch
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 from torch import Tensor
-
-
-@unique
-class ColorMode(Enum):
-    """
-    Enum of different color modes to use for instance visualizations.
-    """
-
-    IMAGE = 0
-    """
-    Picks a random color for every instance and overlay segmentations with low opacity.
-    """
-    SEGMENTATION = 1
-    """
-    Let instances of the same category have similar colors
-    (from metadata.thing_colors), and overlay them with
-    high opacity. This provides more attention on the quality of segmentation.
-    """
-    IMAGE_BW = 2
-    """
-    Same as IMAGE, but convert all areas without masks to gray-scale.
-    Only available for drawing per-instance mask predictions.
-    """
-
-
-class VisImage:
-    def __init__(self, img: np.ndarray, scale: float = 1.0):
-        """
-        Args:
-            img (ndarray): an RGB image of shape (H, W, 3) in range [0, 255].
-            scale (float): scale the input image
-        """
-        self.img = img
-        self.scale = scale
-        self.width, self.height = img.shape[1], img.shape[0]
-        self._setup_figure(img)
-
-    def _setup_figure(self, img):
-        """
-        Args:
-            Same as in :meth:`__init__()`.
-
-        Returns:
-            fig (matplotlib.pyplot.figure): top level container for all the image plot elements.
-            ax (matplotlib.pyplot.Axes): contains figure elements and sets the coordinate system.
-        """
-        fig = mplfigure.Figure(frameon=False)
-        self.dpi = fig.get_dpi()
-        # add a small 1e-2 to avoid precision lost due to matplotlib's truncation
-        # (https://github.com/matplotlib/matplotlib/issues/15363)
-        fig.set_size_inches(
-            (self.width * self.scale + 1e-2) / self.dpi,
-            (self.height * self.scale + 1e-2) / self.dpi,
-        )
-        self.canvas = FigureCanvasAgg(fig)
-        # self.canvas = mpl.backends.backend_cairo.FigureCanvasCairo(fig)
-        ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
-        ax.axis("off")
-        self.fig = fig
-        self.ax = ax
-        self.reset_image(img)
-
-    def reset_image(self, img):
-        """
-        Args:
-            img: same as in __init__
-        """
-        img = img.astype("uint8")
-        self.ax.imshow(img, extent=(0, self.width, self.height, 0), interpolation="nearest")
-
-    def save(self, filepath):
-        """
-        Args:
-            filepath (str): a string that contains the absolute path, including the file name, where
-                the visualized image will be saved.
-        """
-        self.fig.savefig(filepath)
-
-    def get_image(self):
-        """
-        Returns:
-            ndarray:
-                the visualized image of shape (H, W, 3) (RGB) in uint8 type.
-                The shape is scaled w.r.t the input image using the given `scale` argument.
-        """
-        canvas = self.canvas
-        s, (width, height) = canvas.print_to_buffer()
-        # buf = io.BytesIO()  # works for cairo backend
-        # canvas.print_rgba(buf)
-        # width, height = self.width, self.height
-        # s = buf.getvalue()
-
-        buffer = np.frombuffer(s, dtype="uint8")
-
-        img_rgba = buffer.reshape(height, width, 4)
-        rgb, alpha = np.split(img_rgba, [3], axis=2)
-        return rgb.astype("uint8")
 
 
 class Visualizer:
     """
-    Visualizer that draws data about detection/segmentation on images.
-
-    It contains methods like `draw_{text,box,circle,line,binary_mask,polygon}`
-    that draw primitive objects to images, as well as high-level wrappers like
-    `draw_{instance_predictions,sem_seg,panoptic_seg_predictions,dataset_dict}`
-    that draw composite data in some pre-defined style.
-
-    Note that the exact visualization style for the high-level wrappers are subject to change.
-    Style such as color, opacity, label contents, visibility of labels, or even the visibility
-    of objects themselves (e.g. when the object is too small) may change according to different
-    heuristics, as long as the results still look visually reasonable.
-
-    To obtain a consistent style, you can implement custom drawing functions with the
-    abovementioned primitive methods instead. If you need more customized visualization
-    styles, you can process the data yourself following their format documented in
-    tutorials (:doc:`/tutorials/models`, :doc:`/tutorials/datasets`). This class does not
-    intend to satisfy everyone's preference on drawing styles.
+    Visualizer that draws data about detection on images.
 
     This visualizer focuses on high rendering quality rather than performance. It is not
     designed to be used for real-time applications.
@@ -166,7 +49,6 @@ class Visualizer:
         else:
             raise TypeError(f"Tensor or numpy.ndarray expected, got {type(image)}")
 
-        self.output = VisImage(self.img, scale=scale)
         self.cpu_device = torch.device("cpu")
         self.line_width = line_width or max(round(sum(self.img.shape) / 2 * 0.003), 2)
 
