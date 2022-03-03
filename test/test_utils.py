@@ -24,7 +24,6 @@ from yolort.v5 import (
 )
 
 
-
 @pytest.mark.parametrize("arch", ["yolov5n"])
 def test_visualizer(arch):
     model = models.__dict__[arch](pretrained=True, size=(320, 320), score_thresh=0.45)
