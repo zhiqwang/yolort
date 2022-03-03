@@ -133,7 +133,7 @@ class Visualizer:
             # Re-order overlapped instances in descending order.
             boxes = boxes[sorted_idxs] if boxes is not None else None
             labels = [labels[k] for k in sorted_idxs] if labels is not None else None
-            colors = [colors[k] for k in sorted_idxs ] if colors is not None else None
+            colors = [colors[k] for k in sorted_idxs] if colors is not None else None
 
         for i in range(num_instances):
             color = colors[i]
