@@ -8,6 +8,7 @@ except ImportError:
 from .hooks import FeatureExtractor
 from .image_utils import cv2_imshow, get_image_from_url, read_image_to_tensor
 from .update_module_state import convert_yolov5_to_yolort, load_from_ultralytics
+from .visualizer import Visualizer
 
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "load_from_ultralytics",
     "load_state_dict_from_url",
     "read_image_to_tensor",
+    "Visualizer",
 ]
 
 
