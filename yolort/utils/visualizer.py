@@ -27,6 +27,7 @@ class Visualizer:
     Args:
         image (torch.Tensor or numpy.ndarray): Tensor of shape (C x H x W) or ndarray of
             shape (H x W x C) with dtype uint8.
+        metalabels (string, optional): Concrete label names of different classes. Default: None
         instance_mode (int, optional): defines one of the pre-defined style for drawing
             instances on an image. Default: None
     """
@@ -34,9 +35,11 @@ class Visualizer:
     def __init__(
         self,
         image: Union[Tensor, np.ndarray],
+        *,
+        metalabels: Optional[str] = None,
         scale: float = 1.0,
         line_width: Optional[int] = None,
-    ):
+    ) -> None:
 
         if isinstance(image, torch.Tensor):
             if image.dtype != torch.uint8:
@@ -58,6 +61,12 @@ class Visualizer:
         else:
             raise TypeError(f"Tensor or numpy.ndarray expected, got {type(image)}")
 
+        # Set dataset metadata (e.g. class names)
+        self.metadata = None
+        if metalabels is not None:
+            self.metadata = np.loadtxt(metalabels, dtype='str', delimiter='\n')
+
+        self.scale = scale
         self.cpu_device = torch.device("cpu")
         self.line_width = line_width or max(round(sum(self.img.shape) / 2 * 0.003), 2)
         self.output = self.img
