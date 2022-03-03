@@ -64,7 +64,7 @@ class Visualizer:
         # Set dataset metadata (e.g. class names)
         self.metadata = None
         if metalabels is not None:
-            self.metadata = np.loadtxt(metalabels, dtype='str', delimiter='\n')
+            self.metadata = np.loadtxt(metalabels, dtype="str", delimiter="\n")
 
         self.scale = scale
         self.cpu_device = torch.device("cpu")
