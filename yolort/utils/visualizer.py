@@ -2,11 +2,15 @@
 
 from typing import Dict, List, Optional, Tuple, Union
 
-import cv2
 import numpy as np
 import torch
 from torch import Tensor
 from yolort.v5.utils.plots import Colors
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 
 class Visualizer:
@@ -86,6 +90,10 @@ class Visualizer:
         Returns:
             np.ndarray: image object with visualizations.
         """
+
+        if cv2 is None:
+            raise ImportError("OpenCV is not installed, please install it first.")
+
         boxes = self._convert_boxes(predictions["boxes"])
         labels = predictions["labels"].tolist()
         colors = self._create_colors(labels)
@@ -97,111 +105,110 @@ class Visualizer:
 
     def overlay_instances(
         self,
-        boxes: Optional[np.ndarray] = None,
-        labels: Optional[List[str]] = None,
-        colors: Optional[List[Tuple[int, int, int]]] = None,
-    ):
+        boxes: np.ndarray,
+        labels: List[str],
+        colors: List[Tuple[int, int, int]],
+    ) -> np.ndarray:
         """
         Overlay bounding boxes and labels on input image.
 
         Args:
-            boxes (ndarray, optional): Numpy array of size (N, 4) containing bounding boxes
+            boxes (np.ndarray): Numpy array of size (N, 4) containing bounding boxes
                 in (xmin, ymin, xmax, ymax) format for the N objects in a single image.
-                Note that the boxes are absolute coordinates with respect to the image. In
-                other words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`. Default: None
-            labels (List[string], optional): List containing the text to be displayed for each
-                instance. Default: None
+                Note that the boxes are absolute coordinates with respect to the image.
+                In other words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`.
+            labels (List[string]): List containing the text to be displayed for each
+                instance.
+            colors (List[Tuple[int, int, int]]): List containing the color of the label
+                to be painted.
 
         Returns:
             np.ndarray: image object with visualizations.
         """
-        num_instances = 0
-        if boxes is not None:
-            num_instances = len(boxes)
-        if labels is not None:
-            assert len(labels) == num_instances
+
+        num_instances = len(boxes)
+        assert len(labels) == num_instances
         if num_instances == 0:
             return self.output
 
         # Display in largest to smallest order to reduce occlusion.
-        areas = None
-        if boxes is not None:
-            areas = np.prod(boxes[:, 2:] - boxes[:, :2], axis=1)
+        areas = np.prod(boxes[:, 2:] - boxes[:, :2], axis=1)
 
-        if areas is not None:
-            sorted_idxs = np.argsort(-areas).tolist()
-            # Re-order overlapped instances in descending order.
-            boxes = boxes[sorted_idxs] if boxes is not None else None
-            labels = [labels[k] for k in sorted_idxs] if labels is not None else None
-            colors = [colors[k] for k in sorted_idxs] if colors is not None else None
+        sorted_idxs = np.argsort(-areas).tolist()
+        # Re-order overlapped instances in descending order.
+        boxes = boxes[sorted_idxs] if boxes is not None else None
+        labels = [labels[k] for k in sorted_idxs] if labels is not None else None
+        colors = [colors[k] for k in sorted_idxs] if colors is not None else None
 
-        for i in range(num_instances):
-            color = colors[i]
-            if boxes is not None:
-                self.draw_box(boxes[i], edge_color=color)
+        for box, label, color in zip(boxes, labels, colors):
+            pt1, pt2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
+            self.draw_box(pt1, pt2, color=color)
 
-            if labels is not None:
-                lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
-                self.draw_text(labels[i], boxes[i], color=lighter_color)
+            lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
+            self.draw_text(label, pt1, pt2, color=lighter_color)
 
         return self.output
 
-    def draw_box(self, box_coord: List[float], edge_color: Tuple[int, int, int] = (229, 160, 21)):
+    def draw_box(
+        self,
+        pt1: Tuple[int, int],
+        pt2: Tuple[int, int],
+        color: Tuple[int, int, int] = (229, 160, 21),
+    ) -> np.ndarray:
         """
         Draws bounding boxes on given image.
         The values of the input image should be uint8 between 0 and 255.
 
         Args:
-            box_coord (tuple): a tuple containing x0, y0, x1, y1 coordinates, where x0 and y0
-                are the coordinates of the image's top left corner. x1 and y1 are the
-                coordinates of the image's bottom right corner.
-            edge_color: color of the outline of the box.
+            pt1 (Tuple[int, int]): Vertex of the rectangle (top left corner).
+            pt2 (Tuple[int, int]): Vertex of the rectangle opposite to pt1 (bottom right corner).
+            color (Tuple[int, int, int]): color of the outline of the box.
 
         Returns:
             np.ndarray: image object with box drawn.
         """
-        p1, p2 = (int(box_coord[0]), int(box_coord[1])), (int(box_coord[2]), int(box_coord[3]))
-        cv2.rectangle(self.output, p1, p2, edge_color, thickness=self.line_width, lineType=cv2.LINE_AA)
+        cv2.rectangle(self.output, pt1, pt2, color, thickness=self.line_width, lineType=cv2.LINE_AA)
         return self.output
 
     def draw_text(
         self,
         text: str,
-        position: Tuple,
+        pt1: Tuple[int, int],
+        pt2: Tuple[int, int],
         *,
         font_size: Optional[int] = None,
         color: Tuple[int, int, int] = (229, 160, 21),
-        txt_colors: Tuple[int, int, int] = (255, 255, 255),
+        txt_color: Tuple[int, int, int] = (255, 255, 255),
     ):
         """
         Draws text on given image.
 
         Args:
             text (string): class label
-            position (tuple): a tuple of the x and y coordinates to place text on image.
+            pt1 (Tuple[int, int]): Vertex of the rectangle (top left corner).
+            pt2 (Tuple[int, int]): Vertex of the rectangle opposite to pt1 (bottom right corner).
             font_size (int, optional): font of the text. If not provided, a font size
                 proportional to the image width is calculated and used. Default: None
-            color: color of the text. Refer to `matplotlib.colors` for full list
-                of formats that are accepted.
+            color (Tuple[int, int, int]): color of the filled text.
+            txt_color (Tuple[int, int, int]): color of the text.
 
         Returns:
             np.ndarray: image object with text drawn.
         """
-        p1, p2 = (int(position[0]), int(position[1])), (int(position[2]), int(position[3]))
 
         if font_size is None:
             font_size = max(self.line_width - 1, 1)  # font thickness
         w, h = cv2.getTextSize(text, 0, fontScale=self.line_width / 3, thickness=font_size)[0]
-        outside = p1[1] - h - 3 >= 0  # text fits outside box
-        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
-        cv2.rectangle(self.output, p1, p2, color, -1, cv2.LINE_AA)  # filled
+        outside = pt1[1] - h - 3 >= 0  # text fits outside box
+        pt2 = pt1[0] + w, pt1[1] - h - 3 if outside else pt1[1] + h + 3
+        cv2.rectangle(self.output, pt1, pt2, color, -1, cv2.LINE_AA)  # filled
         cv2.putText(
             self.output,
             text,
-            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+            (pt1[0], pt1[1] - 2 if outside else pt1[1] + h + 2),
             0,
             self.line_width / 3,
-            txt_colors,
+            txt_color,
             thickness=font_size,
             lineType=cv2.LINE_AA,
         )
@@ -260,13 +267,13 @@ class Visualizer:
         less or more saturation than the original color.
 
         Args:
-            color: color of the polygon.
+            color (Tuple[int, int, int]): color of the polygon.
             brightness_factor (float): a value in [-1.0, 1.0] range. A lightness factor of
                 0 will correspond to no change, a factor in [-1.0, 0) range will result in
                 a darker color and a factor in (0, 1.0] range will result in a lighter color.
 
         Returns:
-            modified_color (tuple[int]): a tuple containing the RGB values of the
+            modified_color (Tuple[int, int, int]): a tuple containing the RGB/BGR values of the
                 modified color.
         """
         assert brightness_factor >= -1.0 and brightness_factor <= 1.0
