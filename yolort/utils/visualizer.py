@@ -71,7 +71,7 @@ class Visualizer:
         self.line_width = line_width or max(round(sum(self.img.shape) / 2 * 0.003), 2)
         self.output = self.img
 
-    def draw_instance_predictions(self, predictions: Dict):
+    def draw_instance_predictions(self, predictions: Dict[str, Tensor]):
         """
         Draw instance-level prediction results on an image.
 
@@ -82,10 +82,11 @@ class Visualizer:
         Returns:
             np.ndarray: image object with visualizations.
         """
-        boxes = predictions.get("boxes", None)
-        scores = predictions.get("scores", None)
-        labels = predictions.get("labels", None)
+        boxes = predictions["boxes"].round().tolist()
+        labels = predictions["labels"].tolist()
+        scores = predictions["scores"].tolist()
         labels = self._create_text_labels(labels, scores)
+        print(labels)
 
         self.overlay_instances(boxes=boxes, labels=labels, assigned_colors=None)
         return self.output
@@ -220,11 +221,10 @@ class Visualizer:
         )
         return self.output
 
-    @staticmethod
     def _create_text_labels(
+        self,
         classes: Optional[List[int]] = None,
         scores: Optional[List[float]] = None,
-        class_names: Optional[List[str]] = None,
         is_crowd: Optional[List[bool]] = None,
     ):
         """
@@ -233,17 +233,17 @@ class Visualizer:
         """
         labels = None
         if classes is not None:
-            if class_names is not None and len(class_names) > 0:
-                labels = [class_names[i] for i in classes]
+            if self.metadata is not None and len(self.metadata) > 0:
+                labels = [self.metadata[i] for i in classes]
             else:
                 labels = [str(i) for i in classes]
         if scores is not None:
             if labels is None:
-                labels = ["{:.0f}%".format(s * 100) for s in scores]
+                labels = [f"{score * 100:.0f}%" for score in scores]
             else:
-                labels = ["{} {:.0f}%".format(l, s * 100) for l, s in zip(labels, scores)]
+                labels = [f"{label} {score * 100:.0f}%" for label, score in zip(labels, scores)]
         if labels is not None and is_crowd is not None:
-            labels = [l + ("|crowd" if crowd else "") for l, crowd in zip(labels, is_crowd)]
+            labels = [label + ("|crowd" if crowd else "") for label, crowd in zip(labels, is_crowd)]
         return labels
 
     def _change_color_brightness(self, color: Tuple[int, int, int], brightness_factor: float):
