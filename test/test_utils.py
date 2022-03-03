@@ -4,13 +4,15 @@ import numpy as np
 import pytest
 import torch
 from torch import Tensor
+from torchvision.io import read_image
 from yolort import models
 from yolort.models import YOLO
 from yolort.utils import (
-    FeatureExtractor,
     get_image_from_url,
     load_from_ultralytics,
     read_image_to_tensor,
+    FeatureExtractor,
+    Visualizer,
 )
 from yolort.utils.image_utils import box_cxcywh_to_xyxy
 from yolort.v5 import (
@@ -20,6 +22,20 @@ from yolort.v5 import (
     non_max_suppression,
     attempt_download,
 )
+
+
+@pytest.mark.parametrize("arch", ["yolov5n"])
+def test_visualizer(arch):
+    model = models.__dict__[arch](pretrained=True, size=(320, 320), score_thresh=0.45)
+    model = model.eval()
+    img_path = "test/assets/zidane.jpg"
+    preds = model.predict(img_path)
+
+    metalabels_path = "notebooks/assets/coco.names"
+    image = read_image(img_path)
+    v = Visualizer(image, metalabels=metalabels_path)
+    output = v.draw_instance_predictions(preds[0])
+    assert isinstance(output, np.ndarray)
 
 
 @pytest.mark.parametrize(
