@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import torch
 from torch import Tensor
+from yolort.v5.utils.plots import Colors
 
 
 class Visualizer:
@@ -52,12 +53,14 @@ class Visualizer:
             if image.size(0) == 1:
                 image = torch.tile(image, (3, 1, 1))
             self.img = image.permute(1, 2, 0).cpu().numpy()
+            self.is_bgr = False
         elif isinstance(image, np.ndarray):
             if image.dtype != np.uint8:
                 raise ValueError(f"Numpy uint8 expected, got {image.dtype}")
             if image.ndim != 3:
-                raise ValueError("Currently only RGB images are supported")
+                raise ValueError("Currently only BGR images are supported")
             self.img = image
+            self.is_bgr = True
         else:
             raise TypeError(f"Tensor or numpy.ndarray expected, got {type(image)}")
 
@@ -69,6 +72,7 @@ class Visualizer:
         self.scale = scale
         self.cpu_device = torch.device("cpu")
         self.line_width = line_width or max(round(sum(self.img.shape) / 2 * 0.003), 2)
+        self.assigned_colors = Colors()
         self.output = self.img
 
     def draw_instance_predictions(self, predictions: Dict[str, Tensor]):
@@ -82,44 +86,37 @@ class Visualizer:
         Returns:
             np.ndarray: image object with visualizations.
         """
-        boxes = predictions["boxes"].round().tolist()
+        boxes = self._convert_boxes(predictions["boxes"])
         labels = predictions["labels"].tolist()
+        colors = self._create_colors(labels)
         scores = predictions["scores"].tolist()
         labels = self._create_text_labels(labels, scores)
-        print(labels)
 
-        self.overlay_instances(boxes=boxes, labels=labels, assigned_colors=None)
+        self.overlay_instances(boxes=boxes, labels=labels, colors=colors)
         return self.output
 
     def overlay_instances(
         self,
-        *,
-        boxes: Optional[Union[Tensor, np.ndarray]] = None,
+        boxes: Optional[np.ndarray] = None,
         labels: Optional[List[str]] = None,
-        assigned_colors: Optional[List[str]] = None,
+        colors: Optional[List[Tuple[int, int, int]]] = None,
     ):
         """
         Overlay bounding boxes and labels on input image.
 
         Args:
-            boxes (Tensor or ndarray, optional): Tensor or numpy array of size (N, 4) containing
-                bounding boxes in (xmin, ymin, xmax, ymax) format for the N objects in
-                a single image. Note that the boxes are absolute coordinates with respect
-                to the image. In other words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`.
-                Default: None
+            boxes (ndarray, optional): Numpy array of size (N, 4) containing bounding boxes
+                in (xmin, ymin, xmax, ymax) format for the N objects in a single image.
+                Note that the boxes are absolute coordinates with respect to the image. In
+                other words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`. Default: None
             labels (List[string], optional): List containing the text to be displayed for each
                 instance. Default: None
-            colors (color or list of colors, optional): List containing the colors
-                of the boxes or single color for all boxes. The color can be represented as
-                PIL strings e.g. "red" or "#FF00FF", or as RGB tuples e.g. ``(240, 10, 157)``.
-                By default, random colors are generated for boxes. Default: None
 
         Returns:
             np.ndarray: image object with visualizations.
         """
         num_instances = 0
         if boxes is not None:
-            boxes = self._convert_boxes(boxes)
             num_instances = len(boxes)
         if labels is not None:
             assert len(labels) == num_instances
@@ -136,28 +133,20 @@ class Visualizer:
             # Re-order overlapped instances in descending order.
             boxes = boxes[sorted_idxs] if boxes is not None else None
             labels = [labels[k] for k in sorted_idxs] if labels is not None else None
-            assigned_colors = [assigned_colors[idx] for idx in sorted_idxs]
+            colors = [colors[k] for k in sorted_idxs ] if colors is not None else None
 
         for i in range(num_instances):
-            color = assigned_colors[i]
+            color = colors[i]
             if boxes is not None:
                 self.draw_box(boxes[i], edge_color=color)
 
             if labels is not None:
-                # first get a box
-                if boxes is not None:
-                    x0, y0, x1, y1 = boxes[i]
-                    text_pos = (x0, y0)  # if drawing boxes, put text on the box corner.
-                    horiz_align = "left"
-                else:
-                    continue  # drawing the box confidence for keypoints isn't very useful.
-
                 lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
-                self.draw_text(labels[i], text_pos, color=lighter_color)
+                self.draw_text(labels[i], boxes[i], color=lighter_color)
 
         return self.output
 
-    def draw_box(self, box_coord, alpha=0.5, edge_color="g", line_style="-"):
+    def draw_box(self, box_coord: List[float], edge_color: Tuple[int, int, int] = (229, 160, 21)):
         """
         Draws bounding boxes on given image.
         The values of the input image should be uint8 between 0 and 255.
@@ -166,10 +155,7 @@ class Visualizer:
             box_coord (tuple): a tuple containing x0, y0, x1, y1 coordinates, where x0 and y0
                 are the coordinates of the image's top left corner. x1 and y1 are the
                 coordinates of the image's bottom right corner.
-            alpha (float): blending efficient. Smaller values lead to more transparent masks.
-            edge_color: color of the outline of the box. Refer to `matplotlib.colors`
-                for full list of formats that are accepted.
-            line_style (string): the string to use to create the outline of the boxes.
+            edge_color: color of the outline of the box.
 
         Returns:
             np.ndarray: image object with box drawn.
@@ -184,7 +170,7 @@ class Visualizer:
         position: Tuple,
         *,
         font_size: Optional[int] = None,
-        color: str = "g",
+        color: Tuple[int, int, int] = (229, 160, 21),
         txt_colors: Tuple[int, int, int] = (255, 255, 255),
     ):
         """
@@ -221,6 +207,15 @@ class Visualizer:
         )
         return self.output
 
+    def _convert_boxes(self, boxes: Union[Tensor, np.ndarray]):
+        """
+        Convert different format of boxes to an Nx4 array.
+        """
+        if isinstance(boxes, Tensor):
+            return boxes.cpu().detach().numpy()
+        else:
+            return boxes
+
     def _create_text_labels(
         self,
         classes: Optional[List[int]] = None,
@@ -246,27 +241,34 @@ class Visualizer:
             labels = [label + ("|crowd" if crowd else "") for label, crowd in zip(labels, is_crowd)]
         return labels
 
-    def _change_color_brightness(self, color: Tuple[int, int, int], brightness_factor: float):
+    def _create_colors(self, labels: Optional[List[int]] = None):
+        """
+        Generate colors that match the labels.
+        """
+        colors = None
+        if labels is not None:
+            colors = [self.assigned_colors(label, bgr=self.is_bgr) for label in labels]
+        return colors
+
+    def _change_color_brightness(
+        self,
+        color: Tuple[int, int, int],
+        brightness_factor: float,
+    ) -> Tuple[int, int, int]:
         """
         Depending on the brightness_factor, gives a lighter or darker color i.e. a color with
         less or more saturation than the original color.
 
         Args:
-            color: color of the polygon. Refer to `matplotlib.colors` for a full list of
-                formats that are accepted.
+            color: color of the polygon.
             brightness_factor (float): a value in [-1.0, 1.0] range. A lightness factor of
                 0 will correspond to no change, a factor in [-1.0, 0) range will result in
                 a darker color and a factor in (0, 1.0] range will result in a lighter color.
 
         Returns:
-            modified_color (tuple[double]): a tuple containing the RGB values of the
-                modified color. Each value in the tuple is in the [0.0, 1.0] range.
+            modified_color (tuple[int]): a tuple containing the RGB values of the
+                modified color.
         """
         assert brightness_factor >= -1.0 and brightness_factor <= 1.0
+        # TODO: Implement the details in a follow-up PR
         return color
-
-    def _convert_boxes(self, boxes: Tensor):
-        """
-        Convert different format of boxes to an Nx4 array.
-        """
-        return boxes.cpu().detach().numpy()
