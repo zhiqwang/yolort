@@ -12,14 +12,23 @@ class Visualizer:
     """
     Visualizer that draws data about detection on images.
 
+    It contains methods like `draw_{text,box}` that draw primitive objects to images, as well as
+    high-level wrappers like `draw_{instance_predictions,dataset_dict}` that draw composite data
+    in some pre-defined style.
+
     This visualizer focuses on high rendering quality rather than performance. It is not
     designed to be used for real-time applications.
 
+    Reference:
+        We have followed most of the interfaces of detectron2 here, but the implementation will be
+        a bit different. Check out the following for more details.
+        https://github.com/facebookresearch/detectron2/blob/9258799/detectron2/utils/visualizer.py
+
     Args:
-        image (Union[torch.Tensor, numpy.ndarray]): Tensor of shape (C x H x W) or ndarray of
+        image (torch.Tensor or numpy.ndarray): Tensor of shape (C x H x W) or ndarray of
             shape (H x W x C) with dtype uint8.
-        instance_mode (ColorMode): defines one of the pre-defined style for drawing
-            instances on an image.
+        instance_mode (int, optional): defines one of the pre-defined style for drawing
+            instances on an image. Default: None
     """
 
     def __init__(
@@ -80,32 +89,20 @@ class Visualizer:
         assigned_colors: Optional[List[str]] = None,
     ):
         """
-        Args:
-            boxes (Tensor): Tensor of size (N, 4) containing bounding boxes in (xmin, ymin, xmax, ymax)
-                format. Note that the boxes are absolute coordinates with respect to the image. In other
-                words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`.
-            labels (List[string]): List containing the labels of bounding boxes.
-            colors (color or list of colors, optional): List containing the colors
-                of the boxes or single color for all boxes. The color can be represented as
-                PIL strings e.g. "red" or "#FF00FF", or as RGB tuples e.g. ``(240, 10, 157)``.
-                By default, random colors are generated for boxes.
-            fill (bool): If `True` fills the bounding box with specified color.
-            width (int): Width of bounding box.
-            font (str): A filename containing a TrueType font. If the file is not found in this filename,
-                the loader may also search in other directories, such as the `fonts/` directory on Windows
-                or `/Library/Fonts/`, `/System/Library/Fonts/` and `~/Library/Fonts/` on macOS.
-            font_size (int): The requested font size in points.
+        Overlay bounding boxes and labels on input image.
 
         Args:
-            boxes (Tensor or ndarray): Tensor or numpy array of size (N, 4) containing
+            boxes (Tensor or ndarray, optional): Tensor or numpy array of size (N, 4) containing
                 bounding boxes in (xmin, ymin, xmax, ymax) format for the N objects in
                 a single image. Note that the boxes are absolute coordinates with respect
                 to the image. In other words: `0 <= xmin < xmax < W` and `0 <= ymin < ymax < H`.
-            labels (List[string]): List containing the text to be displayed for each instance.
+                Default: None
+            labels (List[string], optional): List containing the text to be displayed for each
+                instance. Default: None
             colors (color or list of colors, optional): List containing the colors
                 of the boxes or single color for all boxes. The color can be represented as
                 PIL strings e.g. "red" or "#FF00FF", or as RGB tuples e.g. ``(240, 10, 157)``.
-                By default, random colors are generated for boxes.
+                By default, random colors are generated for boxes. Default: None
 
         Returns:
             np.ndarray: image object with visualizations.
@@ -181,11 +178,13 @@ class Visualizer:
         txt_colors: Tuple[int, int, int] = (255, 255, 255),
     ):
         """
+        Draws text on given image.
+
         Args:
-            text (str): class label
+            text (string): class label
             position (tuple): a tuple of the x and y coordinates to place text on image.
             font_size (int, optional): font of the text. If not provided, a font size
-                proportional to the image width is calculated and used.
+                proportional to the image width is calculated and used. Default: None
             color: color of the text. Refer to `matplotlib.colors` for full list
                 of formats that are accepted.
 
@@ -213,16 +212,15 @@ class Visualizer:
         return self.output
 
     @staticmethod
-    def _create_text_labels(classes, scores, class_names, is_crowd=None):
+    def _create_text_labels(
+        classes: Optional[List[int]] = None,
+        scores: Optional[List[float]] = None,
+        class_names: Optional[List[str]] = None,
+        is_crowd: Optional[List[bool]] = None,
+    ):
         """
-        Args:
-            classes (list[int] or None):
-            scores (list[float] or None):
-            class_names (list[string] or None):
-            is_crowd (list[bool] or None):
-
-        Returns:
-            list[string] or None
+        Generate labels that classes and scores can match, and set class back to its original
+        name if concrete class names are provided.
         """
         labels = None
         if classes is not None:
@@ -239,7 +237,7 @@ class Visualizer:
             labels = [l + ("|crowd" if crowd else "") for l, crowd in zip(labels, is_crowd)]
         return labels
 
-    def _change_color_brightness(self, color, brightness_factor):
+    def _change_color_brightness(self, color: Tuple[int, int, int], brightness_factor: float):
         """
         Depending on the brightness_factor, gives a lighter or darker color i.e. a color with
         less or more saturation than the original color.
