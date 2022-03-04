@@ -1,18 +1,17 @@
-import torch
-
 from collections import OrderedDict
 from functools import partial
-from torch import nn, Tensor
 from typing import Any, Callable, Dict, List, Optional
 
-from torchvision.models.detection.backbone_utils import _validate_trainable_layers
+import torch
+from torch import nn, Tensor
 from torchvision.models import mobilenet
+from torchvision.models.detection.backbone_utils import _validate_trainable_layers
 from torchvision.ops.misc import ConvNormActivation
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.box_head import YOLOHead
 
 
-__all__ = ['yolov5lite']
+__all__ = ["yolov5lite"]
 
 
 class YOLOv5Lite(nn.Module):
@@ -86,16 +85,31 @@ def _extra_block(in_channels: int, out_channels: int, norm_layer: Callable[..., 
     intermediate_channels = out_channels // 2
     return nn.Sequential(
         # 1x1 projection to half output channels
-        ConvNormActivation(in_channels, intermediate_channels, kernel_size=1,
-                           norm_layer=norm_layer, activation_layer=activation),
-
+        ConvNormActivation(
+            in_channels,
+            intermediate_channels,
+            kernel_size=1,
+            norm_layer=norm_layer,
+            activation_layer=activation,
+        ),
         # 3x3 depthwise with stride 2 and padding 1
-        ConvNormActivation(intermediate_channels, intermediate_channels, kernel_size=3, stride=2,
-                           groups=intermediate_channels, norm_layer=norm_layer, activation_layer=activation),
-
+        ConvNormActivation(
+            intermediate_channels,
+            intermediate_channels,
+            kernel_size=3,
+            stride=2,
+            groups=intermediate_channels,
+            norm_layer=norm_layer,
+            activation_layer=activation,
+        ),
         # 1x1 projetion to output channels
-        ConvNormActivation(intermediate_channels, out_channels, kernel_size=1,
-                           norm_layer=norm_layer, activation_layer=activation),
+        ConvNormActivation(
+            intermediate_channels,
+            out_channels,
+            kernel_size=1,
+            norm_layer=norm_layer,
+            activation_layer=activation,
+        ),
     )
 
 
@@ -108,24 +122,35 @@ def _normal_init(conv: nn.Module):
 
 
 class YOLOv5LiteFeatureExtractorMobileNet(nn.Module):
-    def __init__(self, backbone: nn.Module, c4_pos: int, norm_layer: Callable[..., nn.Module], width_mult: float = 1.0,
-                 min_depth: int = 16, **kwargs: Any):
+    def __init__(
+        self,
+        backbone: nn.Module,
+        c4_pos: int,
+        norm_layer: Callable[..., nn.Module],
+        width_mult: float = 1.0,
+        min_depth: int = 16,
+        **kwargs: Any,
+    ):
         super().__init__()
 
         assert not backbone[c4_pos].use_res_connect
         self.features = nn.Sequential(
             # As described in section 6.3 of MobileNetV3 paper
-            nn.Sequential(*backbone[:c4_pos], backbone[c4_pos].block[0]),  # from start until C4 expansion layer
-            nn.Sequential(backbone[c4_pos].block[1:], *backbone[c4_pos + 1:]),  # from C4 depthwise until end
+            nn.Sequential(
+                *backbone[:c4_pos], backbone[c4_pos].block[0]
+            ),  # from start until C4 expansion layer
+            nn.Sequential(backbone[c4_pos].block[1:], *backbone[c4_pos + 1 :]),  # from C4 depthwise until end
         )
 
         get_depth = lambda d: max(min_depth, int(d * width_mult))  # noqa: E731
-        extra = nn.ModuleList([
-            _extra_block(backbone[-1].out_channels, get_depth(512), norm_layer),
-            _extra_block(get_depth(512), get_depth(256), norm_layer),
-            _extra_block(get_depth(256), get_depth(256), norm_layer),
-            _extra_block(get_depth(256), get_depth(128), norm_layer),
-        ])
+        extra = nn.ModuleList(
+            [
+                _extra_block(backbone[-1].out_channels, get_depth(512), norm_layer),
+                _extra_block(get_depth(512), get_depth(256), norm_layer),
+                _extra_block(get_depth(256), get_depth(256), norm_layer),
+                _extra_block(get_depth(256), get_depth(128), norm_layer),
+            ]
+        )
         _normal_init(extra)
 
         self.extra = extra
@@ -144,17 +169,26 @@ class YOLOv5LiteFeatureExtractorMobileNet(nn.Module):
         return OrderedDict([(str(i), v) for i, v in enumerate(output)])
 
 
-def _mobilenet_extractor(backbone_name: str, progress: bool, pretrained: bool, trainable_layers: int,
-                         norm_layer: Callable[..., nn.Module], **kwargs: Any):
-    backbone = mobilenet.__dict__[backbone_name](pretrained=pretrained, progress=progress,
-                                                 norm_layer=norm_layer, **kwargs).features
+def _mobilenet_extractor(
+    backbone_name: str,
+    progress: bool,
+    pretrained: bool,
+    trainable_layers: int,
+    norm_layer: Callable[..., nn.Module],
+    **kwargs: Any,
+):
+    backbone = mobilenet.__dict__[backbone_name](
+        pretrained=pretrained, progress=progress, norm_layer=norm_layer, **kwargs
+    ).features
     if not pretrained:
         # Change the default initialization scheme if not pretrained
         _normal_init(backbone)
 
     # Gather the indices of blocks which are strided. These are the locations of C1, ..., Cn-1 blocks.
     # The first and last blocks are always included because they are the C0 (conv1) and Cn.
-    stage_indices = [0] + [i for i, b in enumerate(backbone) if getattr(b, "_is_cn", False)] + [len(backbone) - 1]
+    stage_indices = (
+        [0] + [i for i, b in enumerate(backbone) if getattr(b, "_is_cn", False)] + [len(backbone) - 1]
+    )
     num_stages = len(stage_indices)
 
     # find the index of the layer from which we wont freeze
@@ -197,8 +231,9 @@ def yolov5lite(
         progress (bool): If True, displays a progress bar of the download to stderr
         num_classes (int): number of output classes of the model (including the background)
         pretrained_backbone (bool): If True, returns a model with backbone pre-trained on Imagenet
-        trainable_backbone_layers (int): number of trainable (not frozen) resnet layers starting from final block.
-            Valid values are between 0 and 6, with 6 meaning all backbone layers are trainable.
+        trainable_backbone_layers (int): number of trainable (not frozen) resnet layers starting
+            from final block. Valid values are between 0 and 6, with 6 meaning all backbone layers
+            are trainable.
         norm_layer (callable, optional): Module specifying the normalization layer to use.
     """
 

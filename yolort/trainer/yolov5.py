@@ -48,7 +48,6 @@ class YOLOTraining(nn.Module):
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
-
         self.compute_loss = criterion
 
         print(backbone.out_channels)
@@ -126,8 +125,7 @@ def yolov5n(
     num_classes: int = 80,
     **kwargs: Any,
 ) -> YOLOTraining:
-    r"""yolov5 nano release 6.0 model from
-    """
+    r"""yolov5 nano release 6.0 model from"""
     backbone_name = "darknet_n_r6_0"
     weights_name = "yolov5_darknet_pan_n_r60_coco"
     depth_multiple = 0.33
