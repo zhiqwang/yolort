@@ -7,7 +7,7 @@ from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastL
 
 from .yolo import YOLO
 
-__all__ = ["yolov5_mobilenet_v3_large_fpn"]
+__all__ = ["yolov5_mobilenet_v3_small_fpn"]
 
 
 class BackboneWithFPN(nn.Module):
@@ -93,7 +93,7 @@ def mobilenet_backbone(
     )
 
 
-def _yolov5_mobilenet_v3_large_fpn(
+def _yolov5_mobilenet_v3_small_fpn(
     weights_name,
     pretrained=False,
     progress=True,
@@ -109,7 +109,7 @@ def _yolov5_mobilenet_v3_large_fpn(
     if pretrained:
         pretrained_backbone = False
     backbone = mobilenet_backbone(
-        "mobilenet_v3_large",
+        "mobilenet_v3_small",
         pretrained_backbone,
         trainable_layers=trainable_backbone_layers,
     )
@@ -119,7 +119,7 @@ def _yolov5_mobilenet_v3_large_fpn(
     return model
 
 
-def yolov5_mobilenet_v3_large_fpn(
+def yolov5_mobilenet_v3_small_fpn(
     pretrained=False,
     progress=True,
     num_classes=80,
@@ -133,6 +133,11 @@ def yolov5_mobilenet_v3_large_fpn(
     :func:`~torchvision.models.detection.fasterrcnn_resnet50_fpn` for more
     details.
 
+    Note:
+        We do not provide a pre-trained model with mobilenet as the backbone now, this function
+        is just used as an example of how to construct a YOLOv5 model with TorchVision's pre-trained
+        MobileNetV3-Small FPN backbone.
+
     Args:
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
         progress (bool): If True, displays a progress bar of the download to stderr
@@ -142,9 +147,9 @@ def yolov5_mobilenet_v3_large_fpn(
             from final block. Valid values are between 0 and 6, with 6 meaning all backbone layers
             are trainable.
     """
-    weights_name = "yolov5_mobilenet_v3_large_fpn_coco"
+    weights_name = "yolov5_mobilenet_v3_small_fpn_coco"
 
-    return _yolov5_mobilenet_v3_large_fpn(
+    return _yolov5_mobilenet_v3_small_fpn(
         weights_name,
         pretrained=pretrained,
         progress=progress,
