@@ -16,6 +16,7 @@ class BackboneWithFPN(nn.Module):
     Internally, it uses torchvision.models._utils.IntermediateLayerGetter to
     extract a submodel that returns the feature maps specified in return_layers.
     The same limitations of IntermediateLayerGetter apply here.
+
     Args:
         backbone (nn.Module)
         return_layers (Dict[name, new_name]): a dict containing the names
@@ -25,11 +26,13 @@ class BackboneWithFPN(nn.Module):
         in_channels_list (List[int]): number of channels for each feature map
             that is returned, in the order they are present in the OrderedDict
         out_channels (int): number of channels in the FPN.
+
     Attributes:
         out_channels (int): the number of channels in the FPN
     """
+
     def __init__(self, backbone, return_layers, in_channels_list, out_channels, extra_blocks=None):
-        super(BackboneWithFPN, self).__init__()
+        super().__init__()
 
         if extra_blocks is None:
             extra_blocks = LastLevelMaxPool()
