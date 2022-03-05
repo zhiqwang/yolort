@@ -50,7 +50,6 @@ class YOLOTraining(nn.Module):
 
         self.compute_loss = criterion
 
-        print(backbone.out_channels)
         if head is None:
             head = YOLOHead(
                 backbone.out_channels,

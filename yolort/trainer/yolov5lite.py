@@ -2,10 +2,10 @@ from typing import List, Optional
 
 from torch import nn, Tensor
 from torchvision.models import mobilenet
-from torchvision.models.detection.backbone_utils import _validate_trainable_layers
+from torchvision.models.detection.backbone_utils import _validate_trainable_layers, BackboneWithFPN
 from torchvision.ops import misc as misc_nn_ops
+from torchvision.ops.feature_pyramid_network import LastLevelMaxPool
 from yolort.models.anchor_utils import AnchorGenerator
-from yolort.models.backbone_utils import BackboneWithPAN
 from yolort.models.box_head import YOLOHead
 
 __all__ = ["yolov5lite"]
@@ -44,7 +44,7 @@ class YOLOv5Lite(nn.Module):
             anchor_generator = AnchorGenerator(strides, anchor_grids)
         self.anchor_generator = anchor_generator
 
-        out_channels = [64, 128, 256]
+        out_channels = [256, 256, 256]
 
         if head is None:
             head = YOLOHead(
@@ -70,6 +70,8 @@ class YOLOv5Lite(nn.Module):
         """
         # get the features from the backbone
         features = self.backbone(samples)
+        # unpack OrderedDict into two lists for easier handling
+        features = list(features.values())
 
         # compute the yolo heads outputs using the features
         head_outputs = self.head(features)
@@ -106,10 +108,16 @@ def mobilenet_backbone(
     if returned_layers is None:
         returned_layers = [num_stages - 2, num_stages - 1]
     assert min(returned_layers) >= 0 and max(returned_layers) < num_stages
-    return_layers = {f"{stage_indices[k]}": str(v) for v, k in enumerate(returned_layers)}
+    return_layers = {f'{stage_indices[k]}': str(v) for v, k in enumerate(returned_layers)}
 
     in_channels_list = [backbone[stage_indices[i]].out_channels for i in returned_layers]
-    return BackboneWithPAN(backbone, return_layers, in_channels_list, out_channels)
+    return BackboneWithFPN(
+        backbone,
+        return_layers,
+        in_channels_list,
+        out_channels,
+        extra_blocks=LastLevelMaxPool(),
+    )
 
 
 def _yolov5_mobilenet_v3_large_fpn(
