@@ -1,7 +1,7 @@
 from torch import nn
 from torchvision.models import mobilenet
-from torchvision.models.detection.backbone_utils import _validate_trainable_layers
 from torchvision.models._utils import IntermediateLayerGetter
+from torchvision.models.detection.backbone_utils import _validate_trainable_layers
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastLevelMaxPool
 
