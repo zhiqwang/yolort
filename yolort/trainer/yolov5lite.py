@@ -1,15 +1,12 @@
-from collections import OrderedDict
-from functools import partial
-from typing import Any, Callable, Dict, List, Optional
+from typing import List, Optional
 
-import torch
 from torch import nn, Tensor
 from torchvision.models import mobilenet
 from torchvision.models.detection.backbone_utils import _validate_trainable_layers
-from torchvision.ops.misc import ConvNormActivation
+from torchvision.ops import misc as misc_nn_ops
 from yolort.models.anchor_utils import AnchorGenerator
+from yolort.models.backbone_utils import BackboneWithPAN
 from yolort.models.box_head import YOLOHead
-
 
 __all__ = ["yolov5lite"]
 
@@ -80,109 +77,14 @@ class YOLOv5Lite(nn.Module):
         return head_outputs
 
 
-def _extra_block(in_channels: int, out_channels: int, norm_layer: Callable[..., nn.Module]) -> nn.Sequential:
-    activation = nn.ReLU6
-    intermediate_channels = out_channels // 2
-    return nn.Sequential(
-        # 1x1 projection to half output channels
-        ConvNormActivation(
-            in_channels,
-            intermediate_channels,
-            kernel_size=1,
-            norm_layer=norm_layer,
-            activation_layer=activation,
-        ),
-        # 3x3 depthwise with stride 2 and padding 1
-        ConvNormActivation(
-            intermediate_channels,
-            intermediate_channels,
-            kernel_size=3,
-            stride=2,
-            groups=intermediate_channels,
-            norm_layer=norm_layer,
-            activation_layer=activation,
-        ),
-        # 1x1 projetion to output channels
-        ConvNormActivation(
-            intermediate_channels,
-            out_channels,
-            kernel_size=1,
-            norm_layer=norm_layer,
-            activation_layer=activation,
-        ),
-    )
-
-
-def _normal_init(conv: nn.Module):
-    for layer in conv.modules():
-        if isinstance(layer, nn.Conv2d):
-            torch.nn.init.normal_(layer.weight, mean=0.0, std=0.03)
-            if layer.bias is not None:
-                torch.nn.init.constant_(layer.bias, 0.0)
-
-
-class YOLOv5LiteFeatureExtractorMobileNet(nn.Module):
-    def __init__(
-        self,
-        backbone: nn.Module,
-        c4_pos: int,
-        norm_layer: Callable[..., nn.Module],
-        width_mult: float = 1.0,
-        min_depth: int = 16,
-        **kwargs: Any,
-    ):
-        super().__init__()
-
-        assert not backbone[c4_pos].use_res_connect
-        self.features = nn.Sequential(
-            # As described in section 6.3 of MobileNetV3 paper
-            nn.Sequential(
-                *backbone[:c4_pos], backbone[c4_pos].block[0]
-            ),  # from start until C4 expansion layer
-            nn.Sequential(backbone[c4_pos].block[1:], *backbone[c4_pos + 1 :]),  # from C4 depthwise until end
-        )
-
-        get_depth = lambda d: max(min_depth, int(d * width_mult))  # noqa: E731
-        extra = nn.ModuleList(
-            [
-                _extra_block(backbone[-1].out_channels, get_depth(512), norm_layer),
-                _extra_block(get_depth(512), get_depth(256), norm_layer),
-                _extra_block(get_depth(256), get_depth(256), norm_layer),
-                _extra_block(get_depth(256), get_depth(128), norm_layer),
-            ]
-        )
-        _normal_init(extra)
-
-        self.extra = extra
-
-    def forward(self, x: Tensor) -> Dict[str, Tensor]:
-        # Get feature maps from backbone and extra. Can't be refactored due to JIT limitations.
-        output = []
-        for block in self.features:
-            x = block(x)
-            output.append(x)
-
-        for block in self.extra:
-            x = block(x)
-            output.append(x)
-
-        return OrderedDict([(str(i), v) for i, v in enumerate(output)])
-
-
-def _mobilenet_extractor(
-    backbone_name: str,
-    progress: bool,
-    pretrained: bool,
-    trainable_layers: int,
-    norm_layer: Callable[..., nn.Module],
-    **kwargs: Any,
+def mobilenet_backbone(
+    backbone_name,
+    pretrained,
+    norm_layer=misc_nn_ops.FrozenBatchNorm2d,
+    trainable_layers=2,
+    returned_layers=None,
 ):
-    backbone = mobilenet.__dict__[backbone_name](
-        pretrained=pretrained, progress=progress, norm_layer=norm_layer, **kwargs
-    ).features
-    if not pretrained:
-        # Change the default initialization scheme if not pretrained
-        _normal_init(backbone)
+    backbone = mobilenet.__dict__[backbone_name](pretrained=pretrained, norm_layer=norm_layer).features
 
     # Gather the indices of blocks which are strided. These are the locations of C1, ..., Cn-1 blocks.
     # The first and last blocks are always included because they are the C0 (conv1) and Cn.
@@ -199,31 +101,56 @@ def _mobilenet_extractor(
         for parameter in b.parameters():
             parameter.requires_grad_(False)
 
-    return YOLOv5LiteFeatureExtractorMobileNet(backbone, stage_indices[-2], norm_layer, **kwargs)
+    out_channels = 256
+
+    if returned_layers is None:
+        returned_layers = [num_stages - 2, num_stages - 1]
+    assert min(returned_layers) >= 0 and max(returned_layers) < num_stages
+    return_layers = {f"{stage_indices[k]}": str(v) for v, k in enumerate(returned_layers)}
+
+    in_channels_list = [backbone[stage_indices[i]].out_channels for i in returned_layers]
+    return BackboneWithPAN(backbone, return_layers, in_channels_list, out_channels)
+
+
+def _yolov5_mobilenet_v3_large_fpn(
+    weights_name,
+    pretrained=False,
+    progress=True,
+    num_classes=80,
+    pretrained_backbone=True,
+    trainable_backbone_layers=None,
+    **kwargs,
+):
+    trainable_backbone_layers = _validate_trainable_layers(
+        pretrained or pretrained_backbone, trainable_backbone_layers, 6, 3
+    )
+
+    if pretrained:
+        pretrained_backbone = False
+    backbone = mobilenet_backbone(
+        "mobilenet_v3_large",
+        pretrained_backbone,
+        trainable_layers=trainable_backbone_layers,
+    )
+
+    model = YOLOv5Lite(backbone, num_classes, **kwargs)
+
+    return model
 
 
 def yolov5lite(
-    pretrained: bool = False,
-    progress: bool = True,
-    num_classes: int = 91,
-    pretrained_backbone: bool = False,
-    trainable_backbone_layers: Optional[int] = None,
-    norm_layer: Optional[Callable[..., nn.Module]] = None,
-    **kwargs: Any,
+    pretrained=False,
+    progress=True,
+    num_classes=80,
+    pretrained_backbone=True,
+    trainable_backbone_layers=None,
+    **kwargs,
 ):
     """
-    Constructs an YOLOv5lite model and a MobileNetV3 Large backbone, as described at
-    `"Searching for MobileNetV3" <https://arxiv.org/abs/1905.02244>`_ and
-    `"MobileNetV2: Inverted Residuals and Linear Bottlenecks" <https://arxiv.org/abs/1801.04381>`_.
-
-    See :func:`~torchvision.models.detection.ssd300_vgg16` for more details.
-
-    Example:
-
-        >>> model = torchvision.models.detection.ssdlite320_mobilenet_v3_large(pretrained=True)
-        >>> model.eval()
-        >>> x = [torch.rand(3, 320, 320), torch.rand(3, 500, 400)]
-        >>> predictions = model(x)
+    Constructs a high resolution Faster R-CNN model with a MobileNetV3-Large FPN backbone.
+    It works similarly to Faster R-CNN with ResNet-50 FPN backbone. See
+    :func:`~torchvision.models.detection.fasterrcnn_resnet50_fpn` for more
+    details.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on COCO train2017
@@ -233,33 +160,15 @@ def yolov5lite(
         trainable_backbone_layers (int): number of trainable (not frozen) resnet layers starting
             from final block. Valid values are between 0 and 6, with 6 meaning all backbone layers
             are trainable.
-        norm_layer (callable, optional): Module specifying the normalization layer to use.
     """
+    weights_name = "yolov5_mobilenet_v3_large_fpn_coco"
 
-    trainable_backbone_layers = _validate_trainable_layers(
-        pretrained or pretrained_backbone, trainable_backbone_layers, 6, 6
-    )
-
-    if pretrained:
-        pretrained_backbone = False
-
-    # Enable reduced tail if no pretrained backbone is selected.
-    # See Table 6 of MobileNetV3 paper.
-    reduce_tail = not pretrained_backbone
-
-    if norm_layer is None:
-        norm_layer = partial(nn.BatchNorm2d, eps=0.001, momentum=0.03)
-
-    backbone = _mobilenet_extractor(
-        "mobilenet_v3_large",
-        progress,
-        pretrained_backbone,
-        trainable_backbone_layers,
-        norm_layer,
-        reduced_tail=reduce_tail,
+    return _yolov5_mobilenet_v3_large_fpn(
+        weights_name,
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        pretrained_backbone=pretrained_backbone,
+        trainable_backbone_layers=trainable_backbone_layers,
         **kwargs,
     )
-
-    model = YOLOv5Lite(backbone, num_classes)
-
-    return model
