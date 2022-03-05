@@ -19,6 +19,8 @@ class YOLOHead(nn.Module):
         num_classes: int,
     ):
         super().__init__()
+        if not isinstance(in_channels, list):
+            in_channels = [in_channels] * num_anchors
         self.num_anchors = num_anchors  # anchors
         self.num_classes = num_classes
         self.num_outputs = num_classes + 5  # number of outputs per anchor
