@@ -1,82 +1,52 @@
-from typing import List, Optional
-
-from torch import nn, Tensor
+from torch import nn
 from torchvision.models import mobilenet
-from torchvision.models.detection.backbone_utils import _validate_trainable_layers, BackboneWithFPN
+from torchvision.models.detection.backbone_utils import _validate_trainable_layers
+from torchvision.models._utils import IntermediateLayerGetter
 from torchvision.ops import misc as misc_nn_ops
-from torchvision.ops.feature_pyramid_network import LastLevelMaxPool
-from yolort.models.anchor_utils import AnchorGenerator
-from yolort.models.box_head import YOLOHead
+from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastLevelMaxPool
 
-__all__ = ["yolov5lite"]
+from .yolo import YOLO
+
+__all__ = ["yolov5_mobilenet_v3_large_fpn"]
 
 
-class YOLOv5Lite(nn.Module):
+class BackboneWithFPN(nn.Module):
     """
-    Another way to implement ultralytics/yolov5 models with mobilenetv3 for training.
+    Adds a FPN on top of a model.
+    Internally, it uses torchvision.models._utils.IntermediateLayerGetter to
+    extract a submodel that returns the feature maps specified in return_layers.
+    The same limitations of IntermediateLayerGetter apply here.
+    Args:
+        backbone (nn.Module)
+        return_layers (Dict[name, new_name]): a dict containing the names
+            of the modules for which the activations will be returned as
+            the key of the dict, and the value of the dict is the name
+            of the returned activation (which the user can specify).
+        in_channels_list (List[int]): number of channels for each feature map
+            that is returned, in the order they are present in the OrderedDict
+        out_channels (int): number of channels in the FPN.
+    Attributes:
+        out_channels (int): the number of channels in the FPN
     """
+    def __init__(self, backbone, return_layers, in_channels_list, out_channels, extra_blocks=None):
+        super(BackboneWithFPN, self).__init__()
 
-    def __init__(
-        self,
-        backbone: nn.Module,
-        num_classes: int,
-        # Anchor parameters
-        strides: Optional[List[int]] = None,
-        anchor_grids: Optional[List[List[float]]] = None,
-        anchor_generator: Optional[nn.Module] = None,
-        head: Optional[nn.Module] = None,
-    ):
-        super().__init__()
+        if extra_blocks is None:
+            extra_blocks = LastLevelMaxPool()
 
-        self.backbone = backbone
+        self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
+        self.fpn = FeaturePyramidNetwork(
+            in_channels_list=in_channels_list,
+            out_channels=out_channels,
+            extra_blocks=extra_blocks,
+        )
+        self.out_channels = out_channels
 
-        if strides is None:
-            strides: List[int] = [8, 16, 32]
+    def forward(self, x):
+        x = self.body(x)
+        x = self.fpn(x)
 
-        if anchor_grids is None:
-            anchor_grids: List[List[float]] = [
-                [10, 13, 16, 30, 33, 23],
-                [30, 61, 62, 45, 59, 119],
-                [116, 90, 156, 198, 373, 326],
-            ]
-
-        if anchor_generator is None:
-            anchor_generator = AnchorGenerator(strides, anchor_grids)
-        self.anchor_generator = anchor_generator
-
-        out_channels = [256, 256, 256]
-
-        if head is None:
-            head = YOLOHead(
-                out_channels,
-                anchor_generator.num_anchors,
-                anchor_generator.strides,
-                num_classes,
-            )
-        self.head = head
-
-    def forward(self, samples: Tensor):
-        """
-        Args:
-            samples (NestedTensor): Expects a NestedTensor, which consists of:
-               - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
-            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
-
-        Returns:
-            result (list[BoxList] or dict[Tensor]): the output from the model.
-                During training, it returns a dict[Tensor] which contains the losses.
-                During testing, it returns list[BoxList] contains additional fields
-                like `scores`, `labels` and `mask` (for Mask R-CNN models).
-        """
-        # get the features from the backbone
-        features = self.backbone(samples)
-        # unpack OrderedDict into two lists for easier handling
-        features = list(features.values())
-
-        # compute the yolo heads outputs using the features
-        head_outputs = self.head(features)
-
-        return head_outputs
+        return list(x.values())  # unpack OrderedDict into two lists for easier handling
 
 
 def mobilenet_backbone(
@@ -141,12 +111,12 @@ def _yolov5_mobilenet_v3_large_fpn(
         trainable_layers=trainable_backbone_layers,
     )
 
-    model = YOLOv5Lite(backbone, num_classes, **kwargs)
+    model = YOLO(backbone, num_classes, **kwargs)
 
     return model
 
 
-def yolov5lite(
+def yolov5_mobilenet_v3_large_fpn(
     pretrained=False,
     progress=True,
     num_classes=80,
@@ -155,7 +125,7 @@ def yolov5lite(
     **kwargs,
 ):
     """
-    Constructs a high resolution Faster R-CNN model with a MobileNetV3-Large FPN backbone.
+    Constructs a high resolution YOLOv5 model with a MobileNetV3-Large FPN backbone.
     It works similarly to Faster R-CNN with ResNet-50 FPN backbone. See
     :func:`~torchvision.models.detection.fasterrcnn_resnet50_fpn` for more
     details.
