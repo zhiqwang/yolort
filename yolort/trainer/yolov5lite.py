@@ -108,7 +108,7 @@ def mobilenet_backbone(
     if returned_layers is None:
         returned_layers = [num_stages - 2, num_stages - 1]
     assert min(returned_layers) >= 0 and max(returned_layers) < num_stages
-    return_layers = {f'{stage_indices[k]}': str(v) for v, k in enumerate(returned_layers)}
+    return_layers = {f"{stage_indices[k]}": str(v) for v, k in enumerate(returned_layers)}
 
     in_channels_list = [backbone[stage_indices[i]].out_channels for i in returned_layers]
     return BackboneWithFPN(
