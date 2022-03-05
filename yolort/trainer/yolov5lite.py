@@ -211,11 +211,10 @@ def yolov5lite(
     norm_layer: Optional[Callable[..., nn.Module]] = None,
     **kwargs: Any,
 ):
-    """Constructs an YOLOv5lite model and a MobileNetV3 Large backbone, as described at
-    `"Searching for MobileNetV3"
-    <https://arxiv.org/abs/1905.02244>`_ and
-    `"MobileNetV2: Inverted Residuals and Linear Bottlenecks"
-    <https://arxiv.org/abs/1801.04381>`_.
+    """
+    Constructs an YOLOv5lite model and a MobileNetV3 Large backbone, as described at
+    `"Searching for MobileNetV3" <https://arxiv.org/abs/1905.02244>`_ and
+    `"MobileNetV2: Inverted Residuals and Linear Bottlenecks" <https://arxiv.org/abs/1801.04381>`_.
 
     See :func:`~torchvision.models.detection.ssd300_vgg16` for more details.
 
@@ -244,7 +243,8 @@ def yolov5lite(
     if pretrained:
         pretrained_backbone = False
 
-    # Enable reduced tail if no pretrained backbone is selected. See Table 6 of MobileNetV3 paper.
+    # Enable reduced tail if no pretrained backbone is selected.
+    # See Table 6 of MobileNetV3 paper.
     reduce_tail = not pretrained_backbone
 
     if norm_layer is None:
