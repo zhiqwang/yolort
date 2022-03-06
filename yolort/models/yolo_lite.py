@@ -5,6 +5,8 @@ from torchvision.models.detection.backbone_utils import _validate_trainable_laye
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops.feature_pyramid_network import FeaturePyramidNetwork, LastLevelMaxPool
 
+from .anchor_utils import AnchorGenerator
+from .box_head import YOLOHead
 from .yolo import YOLO
 
 __all__ = ["yolov5_mobilenet_v3_small_fpn"]
@@ -79,7 +81,7 @@ def mobilenet_backbone(
     out_channels = 256
 
     if returned_layers is None:
-        returned_layers = [num_stages - 2, num_stages - 1]
+        returned_layers = [num_stages - 3, num_stages - 2, num_stages - 1]
     assert min(returned_layers) >= 0 and max(returned_layers) < num_stages
     return_layers = {f"{stage_indices[k]}": str(v) for v, k in enumerate(returned_layers)}
 
@@ -113,8 +115,22 @@ def _yolov5_mobilenet_v3_small_fpn(
         pretrained_backbone,
         trainable_layers=trainable_backbone_layers,
     )
+    strides = [8, 16, 32, 64]
+    anchor_grids = [
+        [19, 27, 44, 40, 38, 94],
+        [96, 68, 86, 152, 180, 137],
+        [140, 301, 303, 264, 238, 542],
+        [436, 615, 739, 380, 925, 792],
+    ]
+    anchor_generator = AnchorGenerator(strides, anchor_grids)
 
-    model = YOLO(backbone, num_classes, **kwargs)
+    head = YOLOHead(
+        backbone.out_channels,
+        anchor_generator.num_anchors,
+        anchor_generator.strides,
+        num_classes,
+    )
+    model = YOLO(backbone, num_classes, anchor_generator=anchor_generator, head=head, **kwargs)
 
     return model
 
