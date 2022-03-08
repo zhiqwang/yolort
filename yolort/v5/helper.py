@@ -46,14 +46,14 @@ def get_yolov5_size(depth_multiple, width_multiple):
     )
 
 
-def load_yolov5_model(checkpoint_path: str, inplace: bool = True, fuse: bool = True):
+def load_yolov5_model(checkpoint_path: str, inplace: bool = True, fuse: bool = False):
     """
     Creates a specified YOLOv5 model
 
     Args:
         checkpoint_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'
         inplace (bool): An in-place operation. Default: True
-        fuse (bool): fuse model Conv2d() + BatchNorm2d() layers. Default: True
+        fuse (bool): fuse model Conv2d() + BatchNorm2d() layers. Default: False
 
     Returns:
         YOLOv5 pytorch model
