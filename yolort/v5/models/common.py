@@ -68,7 +68,7 @@ class Conv(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(x)))
 
-    def fuseforward(self, x):
+    def forward_fuse(self, x: Tensor) -> Tensor:
         return self.act(self.conv(x))
 
 

@@ -2,7 +2,7 @@
 import hashlib
 
 from torch import Tensor
-from yolort.v5 import load_yolov5_model, attempt_download
+from yolort.v5 import AutoShape, attempt_download, load_yolov5_model
 
 
 def test_attempt_download():
@@ -15,16 +15,19 @@ def test_attempt_download():
     assert readable_hash[:8] == "9ca9a642"
 
 
-def test_load_yolov5_model():
+def test_load_yolov5_model_autoshape_attached():
     img_path = "test/assets/zidane.jpg"
 
-    model_url = "https://github.com/ultralytics/yolov5/releases/download/v4.0/yolov5s.pt"
-    checkpoint_path = attempt_download(model_url, hash_prefix="9ca9a642")
+    model_url = "https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5s.pt"
+    checkpoint_path = attempt_download(model_url, hash_prefix="8b3b748c")
 
-    model = load_yolov5_model(checkpoint_path, autoshape=True, verbose=False)
+    model = load_yolov5_model(checkpoint_path)
+    # Attach AutoShape
+    model = AutoShape(model)
+
     results = model(img_path)
 
     assert isinstance(results.pred, list)
     assert len(results.pred) == 1
     assert isinstance(results.pred[0], Tensor)
-    assert results.pred[0].shape == (3, 6)
+    assert results.pred[0].shape == (4, 6)
