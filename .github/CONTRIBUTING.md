@@ -104,8 +104,11 @@ If all previous checks (flake8, mypy, unit tests) are passing, please send a PR.
   ```bash
   git remote add upstream https://github.com/zhiqwang/yolov5-rt-stack.git
   git fetch upstream
-  git checkout feature  # <----- replace 'feature' with local branch name
-  git merge upstream/main
+  git rebase upstream/main
+  git checkout -b feature  # <--- REPLACE 'feature' WITH YOUR LOCAL BRANCH NAME
+  # ADD YOUR PROPOSED CHANGES HERE
+  git add .
+  git commit -m "YOUR REVISION MESSAGE"
   git push origin feature
   ```
 
