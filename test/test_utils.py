@@ -92,27 +92,20 @@ def test_load_from_ultralytics_voc(
 
     # Define YOLOv5 model
     model_yolov5 = load_yolov5_model(checkpoint_path)
-    model_yolov5.conf = conf  # confidence threshold (0-1)
-    model_yolov5.iou = iou  # NMS IoU threshold (0-1)
-    model_yolov5.eval()
     with torch.no_grad():
         outs = model_yolov5(img[None])[0]
         outs = non_max_suppression(outs, conf, iou, agnostic=True)
-        out_from_yolov5 = outs[0]
+        out_yolov5 = outs[0]
 
     # Define yolort model
-    model_yolort = YOLO.load_from_yolov5(
-        checkpoint_path,
-        score_thresh=conf,
-        version=version,
-    )
+    model_yolort = YOLO.load_from_yolov5(checkpoint_path, score_thresh=conf, version=version)
     model_yolort.eval()
     with torch.no_grad():
-        out_from_yolort = model_yolort(img[None])
+        out_yolort = model_yolort(img[None])
 
-    torch.testing.assert_allclose(out_from_yolort[0]["boxes"], out_from_yolov5[:, :4])
-    torch.testing.assert_allclose(out_from_yolort[0]["scores"], out_from_yolov5[:, 4])
-    torch.testing.assert_allclose(out_from_yolort[0]["labels"], out_from_yolov5[:, 5].to(dtype=torch.int64))
+    torch.testing.assert_allclose(out_yolort[0]["boxes"], out_yolov5[:, :4])
+    torch.testing.assert_allclose(out_yolort[0]["scores"], out_yolov5[:, 4])
+    torch.testing.assert_allclose(out_yolort[0]["labels"], out_yolov5[:, 5].to(dtype=torch.int64))
 
 
 def test_read_image_to_tensor():
