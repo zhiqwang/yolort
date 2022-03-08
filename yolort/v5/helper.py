@@ -51,9 +51,9 @@ def load_yolov5_model(checkpoint_path: str, fuse: bool = False):
     Creates a specified YOLOv5 model.
 
     Note:
-        Currently this tool is mainly used to load the checkpoints trained by yolov5 with
-        support for versions v3.1, v4.0 and v6.0. In addition it is available for inference
-        with Autoshape attached for version v6.0 and above.
+        Currently this tool is mainly used to load the checkpoints trained by yolov5
+        with support for versions v3.1, v4.0 (v5.0) and v6.0 (v6.1). In addition it is
+        available for inference with AutoShape attached for versions v6.0 (v6.1).
 
     Args:
         checkpoint_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'
