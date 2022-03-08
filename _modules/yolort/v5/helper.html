@@ -321,10 +321,10 @@
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">AutoShape</span>
-<span class="kn">from</span> <span class="nn">.models.yolo</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">attempt_download</span><span class="p">,</span> <span class="n">intersect_dicts</span><span class="p">,</span> <span class="n">set_logging</span>
+<span class="kn">from</span> <span class="nn">.models.yolo</span> <span class="kn">import</span> <span class="n">Detect</span><span class="p">,</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">attempt_download</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"add_yolov5_context"</span><span class="p">,</span> <span class="s2">"load_yolov5_model"</span><span class="p">,</span> <span class="s2">"get_yolov5_size"</span><span class="p">]</span>
 
@@ -363,35 +363,39 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="load_yolov5_model"><a class="viewcode-back" href="../../../yolov5.html#yolort.v5.load_yolov5_model">[docs]</a><span class="k">def</span> <span class="nf">load_yolov5_model</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">autoshape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="load_yolov5_model"><a class="viewcode-back" href="../../../yolov5.html#yolort.v5.load_yolov5_model">[docs]</a><span class="k">def</span> <span class="nf">load_yolov5_model</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fuse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="sd">"""</span>
-<span class="sd">    Creates a specified YOLOv5 model</span>
+<span class="sd">    Creates a specified YOLOv5 model.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Currently this tool is mainly used to load the checkpoints trained by yolov5</span>
+<span class="sd">        with support for versions v3.1, v4.0 (v5.0) and v6.0 (v6.1). In addition it is</span>
+<span class="sd">        available for inference with AutoShape attached for versions v6.0 (v6.1).</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        checkpoint_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'</span>
-<span class="sd">        autoshape (bool): apply YOLOv5 .autoshape() wrapper to model. Default: False.</span>
-<span class="sd">        verbose (bool): print all information to screen. Default: True.</span>
+<span class="sd">        fuse (bool): fuse model Conv2d() + BatchNorm2d() layers. Default: False</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        YOLOv5 pytorch model</span>
 <span class="sd">    """</span>
-    <span class="n">set_logging</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="n">add_yolov5_context</span><span class="p">():</span>
         <span class="n">ckpt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">attempt_download</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">),</span> <span class="n">map_location</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">fuse</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">ckpt</span><span class="p">[</span><span class="s2">"ema"</span> <span class="k">if</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ema"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"model"</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">fuse</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># without layer fuse</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">ckpt</span><span class="p">[</span><span class="s2">"ema"</span> <span class="k">if</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ema"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"model"</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">model_ckpt</span> <span class="o">=</span> <span class="n">ckpt</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span>  <span class="c1"># load model</span>
+        <span class="c1"># Compatibility updates</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Hardswish</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU6</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">,</span> <span class="n">Detect</span><span class="p">,</span> <span class="n">Model</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Detect</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">anchor_grid</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>  <span class="c1"># new Detect Layer compatibility</span>
+                        <span class="nb">delattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"anchor_grid"</span><span class="p">)</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"anchor_grid"</span><span class="p">,</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">nl</span><span class="p">)</span>
 
-    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">model_ckpt</span><span class="o">.</span><span class="n">yaml</span><span class="p">)</span>  <span class="c1"># create model</span>
-    <span class="n">ckpt_state_dict</span> <span class="o">=</span> <span class="n">model_ckpt</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>  <span class="c1"># checkpoint state_dict as FP32</span>
-    <span class="n">ckpt_state_dict</span> <span class="o">=</span> <span class="n">intersect_dicts</span><span class="p">(</span><span class="n">ckpt_state_dict</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">"anchors"</span><span class="p">])</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">ckpt_state_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">autoshape</span><span class="p">:</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">AutoShape</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">model</span></div>
+        <span class="k">return</span> <span class="n">model</span></div>
 </pre></div>
 
           </article>

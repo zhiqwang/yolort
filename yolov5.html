@@ -454,8 +454,8 @@ are [“r3.1”, “r4.0”]. Default: “r4.0”.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="yolort.v5.Conv.fuseforward">
-<span class="sig-name descname"><span class="pre">fuseforward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Conv.fuseforward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Conv.fuseforward" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="yolort.v5.Conv.forward_fuse">
+<span class="sig-name descname"><span class="pre">forward_fuse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/yolort/v5/models/common.html#Conv.forward_fuse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.Conv.forward_fuse" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 </dd></dl>
 <dl class="py class">
@@ -578,14 +578,19 @@ omitting ‘exclude’ keys, using dict1 values</p>
 <dd></dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="yolort.v5.load_yolov5_model">
-<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">load_yolov5_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoshape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/helper.html#load_yolov5_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.load_yolov5_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a specified YOLOv5 model</p>
+<span class="sig-prename descclassname"><span class="pre">yolort.v5.</span></span><span class="sig-name descname"><span class="pre">load_yolov5_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/yolort/v5/helper.html#load_yolov5_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#yolort.v5.load_yolov5_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a specified YOLOv5 model.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently this tool is mainly used to load the checkpoints trained by yolov5
+with support for versions v3.1, v4.0 (v5.0) and v6.0 (v6.1). In addition it is
+available for inference with AutoShape attached for versions v6.0 (v6.1).</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>checkpoint_path</strong> (<em>str</em>) – path of the YOLOv5 model, i.e. ‘yolov5s.pt’</p></li>
-<li><p><strong>autoshape</strong> (<em>bool</em>) – apply YOLOv5 .autoshape() wrapper to model. Default: False.</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em>) – print all information to screen. Default: True.</p></li>
+<li><p><strong>fuse</strong> (<em>bool</em>) – fuse model Conv2d() + BatchNorm2d() layers. Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
