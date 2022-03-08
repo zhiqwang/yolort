@@ -635,8 +635,8 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">cv2_imshow</span><span class="p">,</span> <span class="n">get_image_from_url</span><span class="p">,</span> <span class="n">read_image_to_tensor</span>
-<span class="kn">from</span> <span class="nn">yolort.utils.image_utils</span> <span class="kn">import</span> <span class="n">color_list</span><span class="p">,</span> <span class="n">plot_one_box</span>
+<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">Visualizer</span><span class="p">,</span> <span class="n">get_image_from_url</span><span class="p">,</span> <span class="n">read_image_to_tensor</span>
+<span class="kn">from</span> <span class="nn">yolort.v5.utils.downloads</span> <span class="kn">import</span> <span class="n">safe_download</span>
 </pre></div>
 </div>
 </div>
@@ -802,42 +802,47 @@ tensor([5, 0, 0, 0])
 <section id="Detection-output-visualisation">
 <h2 id="Detection-output-visualisation">Detection output visualisation<a class="headerlink" href="#Detection-output-visualisation" title="Permalink to this headline">¶</a></h2>
 <p>First let get the labels of COCO datasets.</p>
-<div class="nbinput nblast docutils container">
+<p>Get label names first.</p>
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get label names</span>
-<span class="kn">import</span> <span class="nn">requests</span>
-
-<span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.names"</span><span class="p">)</span>
-<span class="n">names</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
-
-<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">):</span>
-    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># label_path = "https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/main/notebooks/assets/coco.names"</span>
+<span class="n">label_source</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.names"</span>
+<span class="n">label_path</span> <span class="o">=</span> <span class="n">label_source</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">safe_download</span><span class="p">(</span><span class="n">label_path</span><span class="p">,</span> <span class="n">label_source</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>The labels can also be obtained by</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.utils.image_utils</span> <span class="kn">import</span> <span class="n">load_names</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="n">load_names</span><span class="p">(</span><span class="s1">'../notebooks/assets/coco.names'</span><span class="p">)</span>
-</pre></div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
 </div>
-<div class="nbinput nblast docutils container">
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.names to coco.names...
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b73354af7f8748c4884aeaaa37a0b95d", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">colors</span> <span class="o">=</span> <span class="n">color_list</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">model_out</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'boxes'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">model_out</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'labels'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()):</span>
-    <span class="n">img_raw</span> <span class="o">=</span> <span class="n">plot_one_box</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">img_raw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">label</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)],</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">])</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cv2_imshow</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">imshow_scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">v</span> <span class="o">=</span> <span class="n">Visualizer</span><span class="p">(</span><span class="n">img_raw</span><span class="p">,</span> <span class="n">metalabels</span><span class="o">=</span><span class="n">label_path</span><span class="p">)</span>
+<span class="n">v</span><span class="o">.</span><span class="n">draw_instance_predictions</span><span class="p">(</span><span class="n">model_out</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">v</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -845,14 +850,14 @@ tensor([5, 0, 0, 0])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_inference-pytorch-export-libtorch_22_0.png" src="../_images/notebooks_inference-pytorch-export-libtorch_22_0.png"/>
+<img alt="../_images/notebooks_inference-pytorch-export-libtorch_21_0.png" src="../_images/notebooks_inference-pytorch-export-libtorch_21_0.png"/>
 </div>
 </div>
 </section>
 <section id="Scripting-YOLOv5">
 <h2 id="Scripting-YOLOv5">Scripting YOLOv5<a class="headerlink" href="#Scripting-YOLOv5" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># TorchScript export</span>
@@ -866,11 +871,11 @@ tensor([5, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Starting TorchScript export with torch 1.10.1+cu113...
+Starting TorchScript export with torch 1.10.2+cu113...
 </pre></div></div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_script</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -879,25 +884,8 @@ Starting TorchScript export with torch 1.10.1+cu113...
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/opt/conda/lib/python3.8/site-packages/torch/jit/_recursive.py:614: LightningDeprecationWarning: The `LightningModule.loaded_optimizer_states_dict` property is deprecated in v1.4 and will be removed in v1.6.
-  item = getattr(mod, name, None)
-/opt/conda/lib/python3.8/site-packages/torch/jit/_recursive.py:614: LightningDeprecationWarning: The `LightningModule.model_size` property was deprecated in v1.5 and will be removed in v1.7. Please use the `pytorch_lightning.utilities.memory.get_model_size_mb`.
-  item = getattr(mod, name, None)
-/opt/conda/lib/python3.8/site-packages/torch/jit/_recursive.py:701: LightningDeprecationWarning: The `LightningModule.model_size` property was deprecated in v1.5 and will be removed in v1.7. Please use the `pytorch_lightning.utilities.memory.get_model_size_mb`.
-  item = getattr(nn_module, name, None)
-/opt/conda/lib/python3.8/site-packages/torch/jit/_recursive.py:501: LightningDeprecationWarning: The `LightningModule.model_size` property was deprecated in v1.5 and will be removed in v1.7. Please use the `pytorch_lightning.utilities.memory.get_model_size_mb`.
-  item = getattr(nn_module, name, None)
-/opt/conda/lib/python3.8/site-packages/torch/jit/_recursive.py:584: LightningDeprecationWarning: The `LightningModule.model_size` property was deprecated in v1.5 and will be removed in v1.7. Please use the `pytorch_lightning.utilities.memory.get_model_size_mb`.
-  item = getattr(nn_module, name, None)
-</pre></div></div>
-</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the scripted model file for subsequent use (Optional)</span>
@@ -909,7 +897,7 @@ Starting TorchScript export with torch 1.10.1+cu113...
 <section id="Inference-on-TorchScript-Backend">
 <h2 id="Inference-on-TorchScript-Backend">Inference on TorchScript Backend<a class="headerlink" href="#Inference-on-TorchScript-Backend" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
@@ -922,9 +910,9 @@ Starting TorchScript export with torch 1.10.1+cu113...
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/opt/conda/lib/python3.8/site-packages/yolort/models/yolo.py:179: UserWarning: YOLO always returns a (Losses, Detections) tuple in scripting.
+/coding/yolov5-rt-stack/yolort/models/yolo.py:179: UserWarning: YOLO always returns a (Losses, Detections) tuple in scripting.
   warnings.warn("YOLO always returns a (Losses, Detections) tuple in scripting.")
-/opt/conda/lib/python3.8/site-packages/yolort/models/yolo_module.py:142: UserWarning: YOLOv5 always returns a (Losses, Detections) tuple in scripting.
+/coding/yolov5-rt-stack/yolort/models/yolov5.py:180: UserWarning: YOLOv5 always returns a (Losses, Detections) tuple in scripting.
   warnings.warn("YOLOv5 always returns a (Losses, Detections) tuple in scripting.")
 </pre></div></div>
 </div>
@@ -932,7 +920,7 @@ Starting TorchScript export with torch 1.10.1+cu113...
 <section id="Verify-the-Inference-Output-on-LibTorch-backend">
 <h2 id="Verify-the-Inference-Output-on-LibTorch-backend">Verify the Inference Output on LibTorch backend<a class="headerlink" href="#Verify-the-Inference-Output-on-LibTorch-backend" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -954,7 +942,7 @@ Exported model has been tested with libtorch, and the result looks good!
 <h3 id="Comparing-Inference-Time-between-pytorch-and-libtorch">Comparing Inference Time between <code class="docutils literal notranslate"><span class="pre">pytorch</span></code> and <code class="docutils literal notranslate"><span class="pre">libtorch</span></code><a class="headerlink" href="#Comparing-Inference-Time-between-pytorch-and-libtorch" title="Permalink to this headline">¶</a></h3>
 <p><strong>Time consumed on PyTorch backend</strong></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>it
@@ -968,12 +956,12 @@ Exported model has been tested with libtorch, and the result looks good!
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-13.7 ms ± 412 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+23.8 ms ± 3.64 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 </pre></div></div>
 </div>
 <p><strong>Time consumed on LibTorch backend</strong></p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Dummy run once for torchscript</span>
@@ -983,7 +971,7 @@ Exported model has been tested with libtorch, and the result looks good!
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>it
@@ -997,7 +985,7 @@ Exported model has been tested with libtorch, and the result looks good!
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-8.7 ms ± 310 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+14 ms ± 564 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 </pre></div></div>
 </div>
 </section>
