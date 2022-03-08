@@ -46,13 +46,17 @@ def get_yolov5_size(depth_multiple, width_multiple):
     )
 
 
-def load_yolov5_model(checkpoint_path: str, inplace: bool = True, fuse: bool = False):
+def load_yolov5_model(checkpoint_path: str, fuse: bool = False):
     """
-    Creates a specified YOLOv5 model
+    Creates a specified YOLOv5 model.
+
+    Note:
+        Currently this tool is mainly used to load the checkpoints trained by yolov5 with
+        support for versions v3.1, v4.0 and v6.0. In addition it is available for inference
+        with Autoshape attached for version v6.0 and above.
 
     Args:
         checkpoint_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'
-        inplace (bool): An in-place operation. Default: True
         fuse (bool): fuse model Conv2d() + BatchNorm2d() layers. Default: False
 
     Returns:
@@ -69,8 +73,7 @@ def load_yolov5_model(checkpoint_path: str, inplace: bool = True, fuse: bool = F
         # Compatibility updates
         for m in model.modules():
             if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, Model]:
-                m.inplace = inplace  # pytorch 1.7.0 compatibility
-                if type(m) is Detect:
+                if isinstance(m, Detect):
                     if not isinstance(m.anchor_grid, list):  # new Detect Layer compatibility
                         delattr(m, "anchor_grid")
                         setattr(m, "anchor_grid", [torch.zeros(1)] * m.nl)
