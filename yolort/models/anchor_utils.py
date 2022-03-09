@@ -1,4 +1,5 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
+
 from typing import Tuple, List
 
 import torch
