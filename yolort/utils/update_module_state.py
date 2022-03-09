@@ -1,4 +1,5 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
+
 from functools import reduce
 from typing import List, Dict, Optional
 
@@ -35,10 +36,7 @@ def convert_yolov5_to_yolort(
     torch.save(model_state_dict, output_path / output_postfix)
 
 
-def load_from_ultralytics(
-    checkpoint_path: str,
-    version: str = "r6.0",
-):
+def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     """
     Allows the user to load model state file from the checkpoint trained from
     the ultralytics/yolov5.
