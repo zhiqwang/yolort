@@ -12,13 +12,8 @@ from . import _utils as det_utils
 
 
 class YOLOHead(nn.Module):
-    def __init__(
-        self,
-        in_channels: List[int],
-        num_anchors: int,
-        strides: List[int],
-        num_classes: int,
-    ):
+    def __init__(self, in_channels: List[int], num_anchors: int, strides: List[int], num_classes: int):
+
         super().__init__()
         if not isinstance(in_channels, list):
             in_channels = [in_channels] * len(strides)
@@ -27,19 +22,20 @@ class YOLOHead(nn.Module):
         self.num_outputs = num_classes + 5  # number of outputs per anchor
         self.strides = strides
 
-        self.head = nn.ModuleList(
+        head = nn.ModuleList(
             nn.Conv2d(ch, self.num_outputs * self.num_anchors, 1) for ch in in_channels
         )
 
-        # Initialize biases into head, cf is class frequency
-        # Check section 3.3 in <https://arxiv.org/abs/1708.02002>
-        for mi, s in zip(self.head, self.strides):
+        # Initialize biases into head
+        for mi, s in zip(head, self.strides):
             b = mi.bias.view(self.num_anchors, -1)  # conv.bias(255) to (3,85)
             # obj (8 objects per 640 image)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)
             # classes
             b.data[:, 5:] += math.log(0.6 / (self.num_classes - 0.999999))
             mi.bias = nn.Parameter(b.view(-1), requires_grad=True)
+
+        self.head = head
 
     def get_result_from_head(self, features: Tensor, idx: int) -> Tensor:
         """
