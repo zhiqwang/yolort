@@ -107,10 +107,7 @@ def get_image_from_url(url: str, flags: int = 1) -> np.ndarray:
     return image
 
 
-def read_image_to_tensor(
-    image: np.ndarray,
-    is_half: bool = False,
-) -> Tensor:
+def read_image_to_tensor(image: np.ndarray, is_half: bool = False) -> Tensor:
     """
     Parse an image to Tensor.
 
@@ -122,9 +119,8 @@ def read_image_to_tensor(
     image = np.ascontiguousarray(image, dtype=np.float32)  # uint8 to float32
     image = np.transpose(image / 255.0, [2, 0, 1])
 
-    image = torch.from_numpy(image)
-    image = image.half() if is_half else image.float()
-    return image
+    _dtype = torch.float16 if is_half else torch.float32
+    return torch.from_numpy(image).to(dtype=_dtype)
 
 
 def load_names(category_path):
