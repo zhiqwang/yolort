@@ -7,8 +7,6 @@ from torch import nn
 from yolort.models import yolo
 from yolort.v5 import load_yolov5_model, get_yolov5_size
 
-from .image_utils import to_numpy
-
 
 def convert_yolov5_to_yolort(
     checkpoint_path: str,
@@ -62,8 +60,10 @@ def load_from_ultralytics(
     strides = checkpoint_yolov5.stride
     # anchor_grids = checkpoint_yolov5.yaml["anchors"]
     anchor_grids = (
-        checkpoint_yolov5.model[-1].anchors * checkpoint_yolov5.model[-1].stride.view(-1, 1, 1)
-    ).reshape(1, -1, 6).tolist()[0]
+        (checkpoint_yolov5.model[-1].anchors * checkpoint_yolov5.model[-1].stride.view(-1, 1, 1))
+        .reshape(1, -1, 6)
+        .tolist()[0]
+    )
 
     depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
     width_multiple = checkpoint_yolov5.yaml["width_multiple"]
