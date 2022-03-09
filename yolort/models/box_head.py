@@ -1,4 +1,5 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
+
 import math
 from typing import Tuple, List, Dict
 
@@ -28,21 +29,16 @@ class YOLOHead(nn.Module):
 
         self.head = nn.ModuleList(
             nn.Conv2d(ch, self.num_outputs * self.num_anchors, 1) for ch in in_channels
-        )  # output conv
+        )
 
-        self._initialize_biases()  # Init weights, biases
-
-    def _initialize_biases(self, cf=None):
-        """
-        Initialize biases into YOLOHead, cf is class frequency
-        Check section 3.3 in <https://arxiv.org/abs/1708.02002>
-        """
+        # Initialize biases into head, cf is class frequency
+        # Check section 3.3 in <https://arxiv.org/abs/1708.02002>
         for mi, s in zip(self.head, self.strides):
             b = mi.bias.view(self.num_anchors, -1)  # conv.bias(255) to (3,85)
             # obj (8 objects per 640 image)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)
             # classes
-            b.data[:, 5:] += torch.log(cf / cf.sum()) if cf else math.log(0.6 / (self.num_classes - 0.99))
+            b.data[:, 5:] += math.log(0.6 / (self.num_classes - 0.999999))
             mi.bias = nn.Parameter(b.view(-1), requires_grad=True)
 
     def get_result_from_head(self, features: Tensor, idx: int) -> Tensor:
