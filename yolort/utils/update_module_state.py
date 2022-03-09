@@ -60,9 +60,10 @@ def load_from_ultralytics(
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
     strides = checkpoint_yolov5.stride
-    anchor_grids = checkpoint_yolov5.yaml["anchors"]
-    if isinstance(anchor_grids, int):
-        anchor_grids = to_numpy(checkpoint_yolov5.model[-1].anchor_grid).reshape(3, -1).tolist()
+    # anchor_grids = checkpoint_yolov5.yaml["anchors"]
+    anchor_grids = (
+        checkpoint_yolov5.model[-1].anchors * checkpoint_yolov5.model[-1].stride.view(-1, 1, 1)
+    ).reshape(1, -1, 6).tolist()[0]
 
     depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
     width_multiple = checkpoint_yolov5.yaml["width_multiple"]
