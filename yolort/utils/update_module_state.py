@@ -173,16 +173,10 @@ class ModuleStateUpdate:
         # PAN
         # Update P6 weights
         if self.p6_block_maps is not None:
-            for (
-                name,
-                params,
-            ) in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
+            for name, params in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
                 params.data.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
 
-            for (
-                name,
-                buffers,
-            ) in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
+            for name, buffers in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
                 buffers.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
 
         # Update inner_block weights
