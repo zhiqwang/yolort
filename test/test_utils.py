@@ -1,4 +1,4 @@
-# Copyright (c) 2021, Zhiqiang Wang. All rights reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
 
 import numpy as np
 import pytest
