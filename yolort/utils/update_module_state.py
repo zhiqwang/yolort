@@ -53,7 +53,9 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
     strides = checkpoint_yolov5.stride
-    # anchor_grids = checkpoint_yolov5.yaml["anchors"]
+    # YOLOv5 will change the anchors setting when using the auto-anchor mechanism. So we
+    # use the following formula to compute the anchor_grids instead of attaching it via
+    # checkpoint_yolov5.yaml["anchors"]
     anchor_grids = (
         (checkpoint_yolov5.model[-1].anchors * checkpoint_yolov5.model[-1].stride.view(-1, 1, 1))
         .reshape(1, -1, 6)
