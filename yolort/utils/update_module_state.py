@@ -1,7 +1,7 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 from functools import reduce
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import torch
 from torch import nn
@@ -56,9 +56,10 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     # YOLOv5 will change the anchors setting when using the auto-anchor mechanism. So we
     # use the following formula to compute the anchor_grids instead of attaching it via
     # checkpoint_yolov5.yaml["anchors"]
+    num_anchors = checkpoint_yolov5.model[-1].anchors.shape[1]
     anchor_grids = (
         (checkpoint_yolov5.model[-1].anchors * checkpoint_yolov5.model[-1].stride.view(-1, 1, 1))
-        .reshape(1, -1, 6)
+        .reshape(1, -1, 2 * num_anchors)
         .tolist()[0]
     )
 
