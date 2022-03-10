@@ -34,10 +34,10 @@ from .metrics import box_iou, fitness
 # Settings
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # YOLOv5 root directory
-DATASETS_DIR = ROOT.parent / 'datasets'  # YOLOv5 datasets directory
+DATASETS_DIR = ROOT.parent / "datasets"  # YOLOv5 datasets directory
 NUM_THREADS = min(8, max(1, os.cpu_count() - 1))  # number of YOLOv5 multiprocessing threads
-VERBOSE = str(os.getenv('YOLOv5_VERBOSE', True)).lower() == 'true'  # global verbose mode
-FONT = 'Arial.ttf'  # https://ultralytics.com/assets/Arial.ttf
+VERBOSE = str(os.getenv("YOLOv5_VERBOSE", True)).lower() == "true"  # global verbose mode
+FONT = "Arial.ttf"  # https://ultralytics.com/assets/Arial.ttf
 
 torch.set_printoptions(linewidth=320, precision=5, profile="long")
 # format short g, %precision=5
@@ -47,8 +47,6 @@ pd.options.display.max_columns = 10
 if cv2 is not None:
     cv2.setNumThreads(0)
 os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # NumExpr max threads
-
-
 
 
 def set_logging(name=None, verbose=True):
@@ -92,6 +90,7 @@ class Timeout(contextlib.ContextDecorator):
         if self.suppress and exc_type is TimeoutError:  # Suppress TimeoutError
             return True
 
+
 class WorkingDirectory(contextlib.ContextDecorator):
     # Usage: @WorkingDirectory(dir) decorator or 'with WorkingDirectory(dir):' context manager
     def __init__(self, new_dir):
@@ -104,13 +103,14 @@ class WorkingDirectory(contextlib.ContextDecorator):
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.cwd)
 
+
 def try_except(func):
     # try-except function. Usage: @try_except decorator
     def handler(*args, **kwargs):
         try:
             func(*args, **kwargs)
         except Exception as e:
-            print('expect')
+            print("expect")
             print(e)
 
     return handler
@@ -123,8 +123,7 @@ def methods(instance):
 
 def print_args(name, opt):
     # Print argparser arguments
-    LOGGER.info(colorstr(f'{name}: ') + ', '.join(f'{k}={v}' for k, v in vars(opt).items()))
-
+    LOGGER.info(colorstr(f"{name}: ") + ", ".join(f"{k}={v}" for k, v in vars(opt).items()))
 
 
 def init_seeds(seed=0):
@@ -161,8 +160,6 @@ def get_latest_run(search_dir="."):
     return max(last_list, key=os.path.getctime) if last_list else ""
 
 
-
-
 def is_writeable(dir, test=False):
     """
     Return True if directory has write permissions, test opening a file
@@ -179,6 +176,7 @@ def is_writeable(dir, test=False):
             return False
     else:  # method 2
         return os.access(dir, os.R_OK)  # possible issues on Windows
+
 
 def user_config_dir(dir="Ultralytics", env_var="YOLOV5_CONFIG_DIR"):
     """
@@ -201,7 +199,9 @@ def user_config_dir(dir="Ultralytics", env_var="YOLOV5_CONFIG_DIR"):
     path.mkdir(exist_ok=True)  # make if required
     return path
 
+
 CONFIG_DIR = user_config_dir()  # Ultralytics settings dir
+
 
 def is_pip():
     # Is file in a pip package?
@@ -217,9 +217,9 @@ def is_ascii(s=""):
     return len(s.encode().decode("ascii", "ignore")) == len(s)
 
 
-def is_chinese(s='人工智能'):
+def is_chinese(s="人工智能"):
     # Is string composed of any Chinese characters?
-    return True if re.search('[\u4e00-\u9fff]', str(s)) else False
+    return True if re.search("[\u4e00-\u9fff]", str(s)) else False
 
 
 def emojis(str=""):
@@ -247,37 +247,40 @@ def check_online():
         return True
     except OSError:
         return False
-        
+
+
 def check_font(font=FONT):
     # Download font to CONFIG_DIR if necessary
     font = Path(font)
     if not font.exists() and not (CONFIG_DIR / font.name).exists():
         url = "https://ultralytics.com/assets/" + font.name
-        LOGGER.info(f'Downloading {url} to {CONFIG_DIR / font.name}...')
+        LOGGER.info(f"Downloading {url} to {CONFIG_DIR / font.name}...")
         torch.hub.download_url_to_file(url, str(font), progress=False)
+
 
 def check_python(minimum="3.6.2"):
     # Check current python version vs. required python version
     check_version(platform.python_version(), minimum, name="Python ", hard=True)
 
+
 @try_except
 @WorkingDirectory(ROOT)
 def check_git_status():
     # Recommend 'git pull' if code is out of date
-    msg = ', for updates see https://github.com/ultralytics/yolov5'
-    s = colorstr('github: ')  # string
-    assert Path('.git').exists(), s + 'skipping check (not a git repository)' + msg
-    assert not is_docker(), s + 'skipping check (Docker image)' + msg
-    assert check_online(), s + 'skipping check (offline)' + msg
+    msg = ", for updates see https://github.com/ultralytics/yolov5"
+    s = colorstr("github: ")  # string
+    assert Path(".git").exists(), s + "skipping check (not a git repository)" + msg
+    assert not is_docker(), s + "skipping check (Docker image)" + msg
+    assert check_online(), s + "skipping check (offline)" + msg
 
-    cmd = 'git fetch && git config --get remote.origin.url'
-    url = check_output(cmd, shell=True, timeout=5).decode().strip().rstrip('.git')  # git fetch
-    branch = check_output('git rev-parse --abbrev-ref HEAD', shell=True).decode().strip()  # checked out
-    n = int(check_output(f'git rev-list {branch}..origin/master --count', shell=True))  # commits behind
+    cmd = "git fetch && git config --get remote.origin.url"
+    url = check_output(cmd, shell=True, timeout=5).decode().strip().rstrip(".git")  # git fetch
+    branch = check_output("git rev-parse --abbrev-ref HEAD", shell=True).decode().strip()  # checked out
+    n = int(check_output(f"git rev-list {branch}..origin/master --count", shell=True))  # commits behind
     if n > 0:
         s += f"⚠️ YOLOv5 is out of date by {n} commit{'s' * (n > 1)}. Use `git pull` or `git clone {url}` to update."
     else:
-        s += f'up to date with {url} ✅'
+        s += f"up to date with {url} ✅"
     LOGGER.info(emojis(s))  # emoji-safe
 
 
@@ -323,41 +326,47 @@ def check_yaml(file, suffix=(".yaml", ".yml")):
     return check_file(file, suffix)
 
 
-def check_file(file, suffix=''):
+def check_file(file, suffix=""):
     # Search/download file (if necessary) and return path
     check_suffix(file, suffix)  # optional
     file = str(file)  # convert to str()
-    if Path(file).is_file() or file == '':  # exists
+    if Path(file).is_file() or file == "":  # exists
         return file
-    elif file.startswith(('http:/', 'https:/')):  # download
-        url = str(Path(file)).replace(':/', '://')  # Pathlib turns :// -> :/
-        file = Path(urllib.parse.unquote(file).split('?')[0]).name  # '%2F' to '/', split https://url.com/file.txt?auth
+    elif file.startswith(("http:/", "https:/")):  # download
+        url = str(Path(file)).replace(":/", "://")  # Pathlib turns :// -> :/
+        file = Path(
+            urllib.parse.unquote(file).split("?")[0]
+        ).name  # '%2F' to '/', split https://url.com/file.txt?auth
         if Path(file).is_file():
-            LOGGER.info(f'Found {url} locally at {file}')  # file already exists
+            LOGGER.info(f"Found {url} locally at {file}")  # file already exists
         else:
-            LOGGER.info(f'Downloading {url} to {file}...')
+            LOGGER.info(f"Downloading {url} to {file}...")
             torch.hub.download_url_to_file(url, file)
-            assert Path(file).exists() and Path(file).stat().st_size > 0, f'File download failed: {url}'  # check
+            assert (
+                Path(file).exists() and Path(file).stat().st_size > 0
+            ), f"File download failed: {url}"  # check
         return file
     else:  # search
         files = []
-        for d in 'data', 'models', 'utils':  # search directories
-            files.extend(glob.glob(str(ROOT / d / '**' / file), recursive=True))  # find file
-        assert len(files), f'File not found: {file}'  # assert file was found
+        for d in "data", "models", "utils":  # search directories
+            files.extend(glob.glob(str(ROOT / d / "**" / file), recursive=True))  # find file
+        assert len(files), f"File not found: {file}"  # assert file was found
         assert len(files) == 1, f"Multiple files match '{file}', specify exact path: {files}"  # assert unique
         return files[0]  # return file
 
-    
+
 @try_except
-def check_requirements(requirements=ROOT / 'requirements.txt', exclude=(), install=True):
+def check_requirements(requirements=ROOT / "requirements.txt", exclude=(), install=True):
     # Check installed dependencies meet requirements (pass *.txt file or list of packages)
-    prefix = colorstr('red', 'bold', 'requirements:')
+    prefix = colorstr("red", "bold", "requirements:")
     check_python()  # check python version
     if isinstance(requirements, (str, Path)):  # requirements.txt file
         file = Path(requirements)
         assert file.exists(), f"{prefix} {file.resolve()} not found, check failed."
         with file.open() as f:
-            requirements = [f'{x.name}{x.specifier}' for x in pkg.parse_requirements(f) if x.name not in exclude]
+            requirements = [
+                f"{x.name}{x.specifier}" for x in pkg.parse_requirements(f) if x.name not in exclude
+            ]
     else:  # list or tuple of packages
         requirements = [x for x in requirements if x not in exclude]
 
@@ -374,70 +383,76 @@ def check_requirements(requirements=ROOT / 'requirements.txt', exclude=(), insta
                     LOGGER.info(check_output(f"pip install '{r}'", shell=True).decode())
                     n += 1
                 except Exception as e:
-                    LOGGER.warning(f'{prefix} {e}')
+                    LOGGER.warning(f"{prefix} {e}")
             else:
-                LOGGER.info(f'{s}. Please install and rerun your command.')
+                LOGGER.info(f"{s}. Please install and rerun your command.")
 
     if n:  # if packages updated
-        source = file.resolve() if 'file' in locals() else requirements
-        s = f"{prefix} {n} package{'s' * (n > 1)} updated per {source}\n" \
+        source = file.resolve() if "file" in locals() else requirements
+        s = (
+            f"{prefix} {n} package{'s' * (n > 1)} updated per {source}\n"
             f"{prefix} ⚠️ {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n"
+        )
         LOGGER.info(emojis(s))
-        
+
+
 def check_dataset(data, autodownload=True):
     # Download and/or unzip dataset if not found locally
     # Usage: https://github.com/ultralytics/yolov5/releases/download/v1.0/coco128_with_yaml.zip
 
     # Download (optional)
-    extract_dir = ''
-    if isinstance(data, (str, Path)) and str(data).endswith('.zip'):  # i.e. gs://bucket/dir/coco128.zip
+    extract_dir = ""
+    if isinstance(data, (str, Path)) and str(data).endswith(".zip"):  # i.e. gs://bucket/dir/coco128.zip
         download(data, dir=DATASETS_DIR, unzip=True, delete=False, curl=False, threads=1)
-        data = next((DATASETS_DIR / Path(data).stem).rglob('*.yaml'))
+        data = next((DATASETS_DIR / Path(data).stem).rglob("*.yaml"))
         extract_dir, autodownload = data.parent, False
 
     # Read yaml (optional)
     if isinstance(data, (str, Path)):
-        with open(data, errors='ignore') as f:
+        with open(data, errors="ignore") as f:
             data = yaml.safe_load(f)  # dictionary
 
     # Resolve paths
-    path = Path(extract_dir or data.get('path') or '')  # optional 'path' default to '.'
+    path = Path(extract_dir or data.get("path") or "")  # optional 'path' default to '.'
     if not path.is_absolute():
         path = (ROOT / path).resolve()
-    for k in 'train', 'val', 'test':
+    for k in "train", "val", "test":
         if data.get(k):  # prepend path
             data[k] = str(path / data[k]) if isinstance(data[k], str) else [str(path / x) for x in data[k]]
 
     # Parse yaml
-    assert 'nc' in data, "Dataset 'nc' key missing."
-    if 'names' not in data:
-        data['names'] = [f'class{i}' for i in range(data['nc'])]  # assign class names if missing
-    train, val, test, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
+    assert "nc" in data, "Dataset 'nc' key missing."
+    if "names" not in data:
+        data["names"] = [f"class{i}" for i in range(data["nc"])]  # assign class names if missing
+    train, val, test, s = (data.get(x) for x in ("train", "val", "test", "download"))
     if val:
         val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
         if not all(x.exists() for x in val):
-            LOGGER.info('\nDataset not found, missing paths: %s' % [str(x) for x in val if not x.exists()])
+            LOGGER.info("\nDataset not found, missing paths: %s" % [str(x) for x in val if not x.exists()])
             if s and autodownload:  # download script
-                root = path.parent if 'path' in data else '..'  # unzip directory i.e. '../'
-                if s.startswith('http') and s.endswith('.zip'):  # URL
+                root = path.parent if "path" in data else ".."  # unzip directory i.e. '../'
+                if s.startswith("http") and s.endswith(".zip"):  # URL
                     f = Path(s).name  # filename
-                    LOGGER.info(f'Downloading {s} to {f}...')
+                    LOGGER.info(f"Downloading {s} to {f}...")
                     torch.hub.download_url_to_file(s, f)
                     Path(root).mkdir(parents=True, exist_ok=True)  # create root
                     ZipFile(f).extractall(path=root)  # unzip
                     Path(f).unlink()  # remove zip
                     r = None  # success
-                elif s.startswith('bash '):  # bash script
-                    LOGGER.info(f'Running {s} ...')
+                elif s.startswith("bash "):  # bash script
+                    LOGGER.info(f"Running {s} ...")
                     r = os.system(s)
                 else:  # python script
-                    r = exec(s, {'yaml': data})  # return None
-                LOGGER.info(f"Dataset autodownload {f'success, saved to {root}' if r in (0, None) else 'failure'}\n")
+                    r = exec(s, {"yaml": data})  # return None
+                LOGGER.info(
+                    f"Dataset autodownload {f'success, saved to {root}' if r in (0, None) else 'failure'}\n"
+                )
             else:
-                raise Exception('Dataset not found.')
+                raise Exception("Dataset not found.")
 
     return data  # dictionary
-    
+
+
 def url2file(url):
     # Convert URL to filename, i.e. https://url.com/file.txt?auth -> file.txt
     url = str(Path(url)).replace(":/", "://")  # Pathlib turns :// -> :/
@@ -518,15 +533,95 @@ def labels_to_image_weights(labels, nc=80, class_weights=np.ones(80)):
     # index = random.choices(range(n), weights=image_weights, k=1)  # weight image sample
     return image_weights
 
+
 def coco80_to_coco91_class():  # converts 80-index (val2014) to 91-index (paper)
     # https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
     # a = np.loadtxt('data/coco.names', dtype='str', delimiter='\n')
     # b = np.loadtxt('data/coco_paper.names', dtype='str', delimiter='\n')
     # x1 = [list(a[i] == b).index(True) + 1 for i in range(80)]  # darknet to coco
     # x2 = [list(b[i] == a).index(True) if any(b[i] == a) else None for i in range(91)]  # coco to darknet
-    x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34,
-         35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-         64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90]
+    x = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        27,
+        28,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        67,
+        70,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+    ]
     return x
 
 
