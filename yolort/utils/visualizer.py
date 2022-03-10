@@ -31,16 +31,23 @@ class Visualizer:
         https://github.com/facebookresearch/detectron2/blob/9258799/detectron2/utils/visualizer.py
 
     Args:
-        image (torch.Tensor or numpy.ndarray): Tensor of shape (C x H x W) or ndarray of
-            shape (H x W x C) with dtype uint8.
-        metalabels (string, optional): Concrete label names of different classes. Default: None
-        instance_mode (int, optional): defines one of the pre-defined style for drawing
-            instances on an image. Default: None
+        image (Tensor | numpy.ndarray): Tensor of shape (C x H x W) or ndarray
+            of shape (H x W x C) with dtype uint8.
+        metalabels (string | List[string]): Concrete label names of different classes.
     """
 
-    def __init__(self, image: Union[Tensor, np.ndarray], *, metalabels: Optional[str] = None) -> None:
+    def __init__(self, image: Union[Tensor, np.ndarray], metalabels: Union[str, List[str]]) -> None:
+        # Set image and its RGB mode
+        self.img, self.is_bgr = self._set_image(image)
+        # Set dataset metadata (e.g. class names)
+        self.metadata = self._set_metadata(metalabels)
+        self.line_width = max(round(sum(self.img.shape) / 2 * 0.003), 2)
+        self.assigned_colors = Colors()
+        self.output = self.img
 
-        if isinstance(image, torch.Tensor):
+    @staticmethod
+    def _set_image(image: Union[Tensor, np.ndarray]):
+        if isinstance(image, Tensor):
             if image.dtype != torch.uint8:
                 raise ValueError(f"Tensor uint8 expected, got {image.dtype}")
             if image.dim() != 3:
@@ -50,26 +57,26 @@ class Visualizer:
             # Handle Grayscale images
             if image.size(0) == 1:
                 image = torch.tile(image, (3, 1, 1))
-            self.img = image.permute(1, 2, 0).cpu().numpy()
-            self.is_bgr = False
-        elif isinstance(image, np.ndarray):
+            return image.permute(1, 2, 0).cpu().numpy(), False
+
+        if isinstance(image, np.ndarray):
             if image.dtype != np.uint8:
                 raise ValueError(f"Numpy uint8 expected, got {image.dtype}")
             if image.ndim != 3:
                 raise ValueError("Currently only BGR images are supported")
-            self.img = image
-            self.is_bgr = True
-        else:
-            raise TypeError(f"Tensor or numpy.ndarray expected, got {type(image)}")
+            return image, True
 
-        # Set dataset metadata (e.g. class names)
-        self.metadata = None
-        if metalabels is not None:
-            self.metadata = np.loadtxt(metalabels, dtype="str", delimiter="\n")
+        raise TypeError(f"Tensor or numpy.ndarray expected, got {type(image)}")
 
-        self.line_width = max(round(sum(self.img.shape) / 2 * 0.003), 2)
-        self.assigned_colors = Colors()
-        self.output = self.img
+    @staticmethod
+    def _set_metadata(metalabels: Union[str, List[str]]):
+        if isinstance(metalabels, list):
+            return metalabels
+
+        if isinstance(metalabels, str):
+            return np.loadtxt(metalabels, dtype="str", delimiter="\n")
+
+        raise TypeError(f"path of metalabels of list of strings expected, got {type(metalabels)}")
 
     def draw_instance_predictions(self, predictions: Dict[str, Tensor]):
         """
