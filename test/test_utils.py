@@ -69,7 +69,7 @@ def test_load_from_ultralytics(
     "arch, version, upstream_version, hash_prefix",
     [("yolov5s-VOC", "r4.0", "v5.0", "23818cff")],
 )
-def test_load_from_ultralytics_voc(arch: str, version: str, upstream_version: str, hash_prefix: str):
+def test_load_from_ultralytics_voc(arch, version, upstream_version, hash_prefix):
     img_path = "test/assets/bus.jpg"
 
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
@@ -88,7 +88,7 @@ def test_load_from_ultralytics_voc(arch: str, version: str, upstream_version: st
     model_yolov5 = load_yolov5_model(checkpoint_path)
     with torch.no_grad():
         outs = model_yolov5(img[None])[0]
-        outs = non_max_suppression(outs, conf, iou, agnostic=True)
+        outs = non_max_suppression(outs, conf, iou, agnostic=False)
         out_yolov5 = outs[0]
 
     # Define yolort model
