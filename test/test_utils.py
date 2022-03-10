@@ -78,7 +78,7 @@ def test_load_from_ultralytics_voc(arch, version, upstream_version, hash_prefix)
     assert isinstance(predictions[0]["boxes"], Tensor)
     assert isinstance(predictions[0]["labels"], Tensor)
     assert isinstance(predictions[0]["scores"], Tensor)
-    assert len(predictions[0]['labels']) == 4
+    assert len(predictions[0]["labels"]) == 4
 
 
 def test_read_image_to_tensor():
