@@ -170,8 +170,8 @@ class ModuleStateUpdate:
         for name, buffers in self.model.backbone.body.named_buffers():
             buffers.copy_(self.attach_parameters_block(state_dict, name, None))
 
-        # PAN
-        # Update P6 weights
+        # Update PAN weights
+        # Updating P6 weights
         if self.p6_block_maps is not None:
             for name, params in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
                 params.data.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
@@ -179,14 +179,14 @@ class ModuleStateUpdate:
             for name, buffers in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
                 buffers.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
 
-        # Update inner_block weights
+        # Updating inner_block weights
         for name, params in self.model.backbone.pan.inner_blocks.named_parameters():
             params.data.copy_(self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
         for name, buffers in self.model.backbone.pan.inner_blocks.named_buffers():
             buffers.copy_(self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
-        # Update layer_block weights
+        # Updating layer_block weights
         for name, params in self.model.backbone.pan.layer_blocks.named_parameters():
             params.data.copy_(self.attach_parameters_block(state_dict, name, self.layer_block_maps))
 
