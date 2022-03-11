@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 import pytorch_lightning as pl
-from yolort.data import DetectionDataModule, _helper as data_helper
+from yolort.data import _helper as data_helper
+from yolort.data.data_module import DetectionDataModule
 from yolort.trainer import DefaultTask
 
 

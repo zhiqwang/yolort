@@ -1,3 +1,5 @@
+# Copyright (c) 2020, yolort team. All rights reserved.
+
 import math
 from typing import Tuple, Optional
 

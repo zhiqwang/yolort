@@ -1,13 +1,12 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
+
 from functools import reduce
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import torch
 from torch import nn
 from yolort.models import yolo
 from yolort.v5 import load_yolov5_model, get_yolov5_size
-
-from .image_utils import to_numpy
 
 
 def convert_yolov5_to_yolort(
@@ -28,6 +27,7 @@ def convert_yolov5_to_yolort(
         prefix (str): The prefix string of the saved model. Default: "yolov5_darknet_pan".
         postfix (str): The postfix string of the saved model. Default: "custom.pt".
     """
+
     model_info = load_from_ultralytics(checkpoint_path, version=version)
     model_state_dict = model_info["state_dict"]
 
@@ -37,10 +37,7 @@ def convert_yolov5_to_yolort(
     torch.save(model_state_dict, output_path / output_postfix)
 
 
-def load_from_ultralytics(
-    checkpoint_path: str,
-    version: str = "r6.0",
-):
+def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     """
     Allows the user to load model state file from the checkpoint trained from
     the ultralytics/yolov5.
@@ -51,18 +48,20 @@ def load_from_ultralytics(
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
 
-    assert version in [
-        "r3.1",
-        "r4.0",
-        "r6.0",
-    ], "Currently does not support this version."
+    assert version in ["r3.1", "r4.0", "r6.0"], "Currently does not support this version."
 
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
     strides = checkpoint_yolov5.stride
-    anchor_grids = checkpoint_yolov5.yaml["anchors"]
-    if isinstance(anchor_grids, int):
-        anchor_grids = to_numpy(checkpoint_yolov5.model[-1].anchor_grid).reshape(3, -1).tolist()
+    # YOLOv5 will change the anchors setting when using the auto-anchor mechanism. So we
+    # use the following formula to compute the anchor_grids instead of attaching it via
+    # checkpoint_yolov5.yaml["anchors"]
+    num_anchors = checkpoint_yolov5.model[-1].anchors.shape[1]
+    anchor_grids = (
+        (checkpoint_yolov5.model[-1].anchors * checkpoint_yolov5.model[-1].stride.view(-1, 1, 1))
+        .reshape(1, -1, 2 * num_anchors)
+        .tolist()[0]
+    )
 
     depth_multiple = checkpoint_yolov5.yaml["depth_multiple"]
     width_multiple = checkpoint_yolov5.yaml["width_multiple"]
@@ -72,23 +71,8 @@ def load_from_ultralytics(
         use_p6 = True
 
     if use_p6:
-        inner_block_maps = {
-            "0": "11",
-            "1": "12",
-            "3": "15",
-            "4": "16",
-            "6": "19",
-            "7": "20",
-        }
-        layer_block_maps = {
-            "0": "23",
-            "1": "24",
-            "2": "26",
-            "3": "27",
-            "4": "29",
-            "5": "30",
-            "6": "32",
-        }
+        inner_block_maps = {"0": "11", "1": "12", "3": "15", "4": "16", "6": "19", "7": "20"}
+        layer_block_maps = {"0": "23", "1": "24", "2": "26", "3": "27", "4": "29", "5": "30", "6": "32"}
         p6_block_maps = {"0": "9", "1": "10"}
         head_ind = 33
         head_name = "m"
@@ -153,21 +137,10 @@ class ModuleStateUpdate:
 
         # Configuration for making the keys consistent
         if inner_block_maps is None:
-            inner_block_maps = {
-                "0": "9",
-                "1": "10",
-                "3": "13",
-                "4": "14",
-            }
+            inner_block_maps = {"0": "9", "1": "10", "3": "13", "4": "14"}
         self.inner_block_maps = inner_block_maps
         if layer_block_maps is None:
-            layer_block_maps = {
-                "0": "17",
-                "1": "18",
-                "2": "20",
-                "3": "21",
-                "4": "23",
-            }
+            layer_block_maps = {"0": "17", "1": "18", "2": "20", "3": "21", "4": "23"}
         self.layer_block_maps = layer_block_maps
         self.p6_block_maps = p6_block_maps
         self.head_ind = head_ind
@@ -198,29 +171,23 @@ class ModuleStateUpdate:
         for name, buffers in self.model.backbone.body.named_buffers():
             buffers.copy_(self.attach_parameters_block(state_dict, name, None))
 
-        # PAN
-        # Update P6 weights
+        # Update PAN weights
+        # Updating P6 weights
         if self.p6_block_maps is not None:
-            for (
-                name,
-                params,
-            ) in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
+            for name, params in self.model.backbone.pan.intermediate_blocks.p6.named_parameters():
                 params.data.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
 
-            for (
-                name,
-                buffers,
-            ) in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
+            for name, buffers in self.model.backbone.pan.intermediate_blocks.p6.named_buffers():
                 buffers.copy_(self.attach_parameters_block(state_dict, name, self.p6_block_maps))
 
-        # Update inner_block weights
+        # Updating inner_block weights
         for name, params in self.model.backbone.pan.inner_blocks.named_parameters():
             params.data.copy_(self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
         for name, buffers in self.model.backbone.pan.inner_blocks.named_buffers():
             buffers.copy_(self.attach_parameters_block(state_dict, name, self.inner_block_maps))
 
-        # Update layer_block weights
+        # Updating layer_block weights
         for name, params in self.model.backbone.pan.layer_blocks.named_parameters():
             params.data.copy_(self.attach_parameters_block(state_dict, name, self.layer_block_maps))
 
