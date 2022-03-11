@@ -7,7 +7,8 @@ from pathlib import Path
 import torch
 import torchvision
 import yolort
-from yolort.data import COCOEvaluator, _helper as data_helper
+from yolort.data import _helper as data_helper
+from yolort.data.coco_eval import COCOEvaluator
 from yolort.data.coco import COCODetection
 from yolort.data.transforms import default_val_transforms, collate_fn
 from yolort.utils.logger import MetricLogger
