@@ -8,15 +8,19 @@ import os
 from copy import copy
 from pathlib import Path
 
-import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sn
 import torch
 from PIL import Image, ImageDraw, ImageFont
-from yolort.v5.utils.general import (
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
+from .general import (
     CONFIG_DIR,
     FONT,
     LOGGER,
@@ -31,7 +35,7 @@ from yolort.v5.utils.general import (
     xywh2xyxy,
     xyxy2xywh,
 )
-from yolort.v5.utils.metrics import fitness
+from .metrics import fitness
 
 # Settings
 RANK = int(os.getenv("RANK", -1))
@@ -402,6 +406,9 @@ def plot_val_study(file="", dir="", x=None):
 @try_except  # known issue https://github.com/ultralytics/yolov5/issues/5395
 @Timeout(30)  # known issue https://github.com/ultralytics/yolov5/issues/5611
 def plot_labels(labels, names=(), save_dir=Path("")):
+
+    import seaborn as sn
+
     # plot dataset labels
     LOGGER.info(f"Plotting labels to {save_dir / 'labels.jpg'}... ")
     c, b = labels[:, 0], labels[:, 1:].transpose()  # classes, boxes
