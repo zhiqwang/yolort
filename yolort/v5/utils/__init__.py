@@ -1,21 +1,23 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+"""
+utils/initialization
+"""
+
 from .augmentations import letterbox
 from .downloads import attempt_download
 from .general import non_max_suppression, intersect_dicts, scale_coords, set_logging
 from .torch_utils import select_device
 
 __all__ = [
+    "attempt_download",
+    "intersect_dicts",
     "letterbox",
     "non_max_suppression",
-    "intersect_dicts",
+    "notebook_init",
     "scale_coords",
-    "set_logging",
-    "attempt_download",
     "select_device",
+    "set_logging",
 ]
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-"""
-utils/initialization
-"""
 
 
 def notebook_init(verbose=True):
@@ -42,7 +44,10 @@ def notebook_init(verbose=True):
         ram = psutil.virtual_memory().total
         total, used, free = shutil.disk_usage("/")
         display.clear_output()
-        s = f"({os.cpu_count()} CPUs, {ram * gib:.1f} GB RAM, {(total - free) * gib:.1f}/{total * gib:.1f} GB disk)"
+        s = (
+            f"({os.cpu_count()} CPUs, {ram * gib:.1f} GB RAM, "
+            f"{(total - free) * gib:.1f}/{total * gib:.1f} GB disk)"
+        )
     else:
         s = ""
 
