@@ -1,13 +1,4 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
-#
-# This source code is licensed under the GPL-3.0 license found in the
-# LICENSE file in the root directory of this source tree.
-#
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
-#
-# This source code is licensed under the Apache-2.0 license found in the
-# LICENSE file in the root directory of TensorRT source tree.
-#
 
 import logging
 from pathlib import Path
@@ -24,16 +15,18 @@ try:
 except ImportError:
     gs = None
 
-from .trt_helper import YOLOTRTModule
+from .trt_inference import YOLOTRTInference
 
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("YOLOGraphSurgeon").setLevel(logging.INFO)
-logger = logging.getLogger("YOLOGraphSurgeon")
+logging.getLogger("YOLOTRTGraphSurgeon").setLevel(logging.INFO)
+logger = logging.getLogger("YOLOTRTGraphSurgeon")
+
+__all__ = ["YOLOTRTGraphSurgeon"]
 
 
-class YOLOGraphSurgeon:
+class YOLOTRTGraphSurgeon:
     """
-    Constructor of the YOLOv5 Graph Surgeon object.
+    YOLOv5 Graph Surgeon for TensorRT inference.
 
     Because TensorRT treat the ``torchvision::ops::nms`` as plugin, we use the a simple post-processing
     module named ``LogitsDecoder`` to connect to ``EfficientNMS_TRT`` plugin in TensorRT.
@@ -43,29 +36,31 @@ class YOLOGraphSurgeon:
 
     Args:
         checkpoint_path (string): The path pointing to the PyTorch saved model to load.
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         input_sample (Tensor, optional): Specify the input shape to export ONNX, and the
             default shape for the sample is (1, 3, 640, 640).
         score_thresh (float): Score threshold used for postprocessing the detections.
-        version (str): upstream version released by the ultralytics/yolov5, Possible
-            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: False.
         device (torch.device): The device to be used for importing ONNX. Default: torch.device("cpu").
+        precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
     """
 
     def __init__(
         self,
         checkpoint_path: str,
         *,
-        input_sample: Optional[Tensor] = None,
         version: str = "r6.0",
+        input_sample: Optional[Tensor] = None,
         enable_dynamic: bool = False,
         device: torch.device = torch.device("cpu"),
+        precision: str = "fp32",
     ):
         checkpoint_path = Path(checkpoint_path)
         assert checkpoint_path.exists()
 
-        # Use YOLOTRTModule to convert saved model to an initial ONNX graph.
-        model = YOLOTRTModule(checkpoint_path, version=version)
+        # Use YOLOTRTInference to convert saved model to an initial ONNX graph.
+        model = YOLOTRTInference(checkpoint_path, version=version)
         model = model.eval()
         model = model.to(device=device)
         logger.info(f"Loaded saved model from {checkpoint_path}")
@@ -82,6 +77,7 @@ class YOLOGraphSurgeon:
         self.graph.fold_constants()
         self.num_classes = model.num_classes
         self.batch_size = 1
+        self.precision = precision
 
     def infer(self):
         """
@@ -165,6 +161,13 @@ class YOLOGraphSurgeon:
             "box_coding": 0,
         }
 
+        if self.precision == "fp32":
+            dtype_output = np.float32
+        elif self.precision == "fp16":
+            dtype_output = np.float16
+        else:
+            raise NotImplementedError(f"Currently not supports precision: {self.precision}")
+
         # NMS Outputs
         output_num_detections = gs.Variable(
             name="num_detections",
@@ -173,12 +176,12 @@ class YOLOGraphSurgeon:
         )  # A scalar indicating the number of valid detections per batch image.
         output_boxes = gs.Variable(
             name="detection_boxes",
-            dtype=np.float32,
+            dtype=dtype_output,
             shape=[self.batch_size, detections_per_img, 4],
         )
         output_scores = gs.Variable(
             name="detection_scores",
-            dtype=np.float32,
+            dtype=dtype_output,
             shape=[self.batch_size, detections_per_img],
         )
         output_labels = gs.Variable(

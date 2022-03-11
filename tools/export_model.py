@@ -1,16 +1,17 @@
+# Copyright (c) 2021, yolort team. All rights reserved.
+
+"""
+Export a YOLOv5 PyTorch model to other formats.
+
+Usage:
+    $ python tools/export_model.py --checkpoint_path yolov5s.pt --include onnx engine ...
+"""
+
 import argparse
 from pathlib import Path
+from typing import Tuple
 
-import onnx
 import torch
-from torchvision.ops._register_onnx_ops import _onnx_opset_version as DEFAULT_OPSET
-
-try:
-    import onnxsim
-except ImportError:
-    onnxsim = None
-
-from yolort.models import YOLO, YOLOv5
 
 
 def get_parser():
@@ -21,6 +22,25 @@ def get_parser():
         type=str,
         required=True,
         help="The path of checkpoint weights",
+    )
+    parser.add_argument(
+        "--include",
+        nargs="+",
+        default=["onnx"],
+        choices=["onnx", "engine"],
+        help="onnx for ONNX Runtime, engine for TensorRT (default: 'onnx')",
+    )
+    parser.add_argument(
+        "--onnx_path",
+        type=str,
+        default=None,
+        help="The path of the exported ONNX models",
+    )
+    parser.add_argument(
+        "--trt_path",
+        type=str,
+        default=None,
+        help="The path of the exported TensorRT serialized engines",
     )
     parser.add_argument(
         "--skip_preprocess",
@@ -34,92 +54,90 @@ def get_parser():
         help="Score threshold used for postprocessing the detections.",
     )
     parser.add_argument(
+        "--nms_thresh",
+        default=0.45,
+        type=float,
+        help="IOU threshold used for doing the NMS.",
+    )
+    parser.add_argument(
         "--version",
         type=str,
         default="r6.0",
-        help="Upstream version released by the ultralytics/yolov5, Possible "
-        "values are ['r3.1', 'r4.0', 'r6.0']. Default: 'r6.0'.",
-    )
-    parser.add_argument(
-        "--export_friendly",
-        action="store_true",
-        help="Replace torch.nn.SiLU with SiLU.",
+        choices=["r3.1", "r4.0", "r6.0"],
+        help="Upstream version released by the ultralytics/yolov5 (default: 'r6.0').",
     )
     parser.add_argument(
         "--image_size",
         nargs="+",
         type=int,
         default=[640, 640],
-        help="Image size for evaluation (default: 640, 640).",
+        help="Image size for inferencing (default: 640, 640).",
     )
-    parser.add_argument("--batch_size", default=1, type=int, help="Batch size.")
-    parser.add_argument("--opset", default=DEFAULT_OPSET, type=int, help="opset_version")
+    parser.add_argument("--size_divisible", type=int, default=32, help="Stride for pre-processing.")
+    parser.add_argument("--batch_size", default=1, type=int, help="Batch size for pre-processing.")
+    parser.add_argument("--opset", default=11, type=int, help="Opset version for exporing ONNX models")
     parser.add_argument("--simplify", action="store_true", help="ONNX: simplify model.")
 
     return parser
 
 
-def export_onnx(
-    model,
-    inputs,
-    export_onnx_path,
-    dynamic_axes,
-    input_names=["images_tensors"],
-    output_names=["scores", "labels", "boxes"],
-    opset_version=11,
-    enable_simplify=False,
+def export_onnxruntime(
+    onnx_path: str,
+    checkpoint_path: str,
+    *,
+    size: Tuple[int, int] = (640, 640),
+    size_divisible: int = 32,
+    score_thresh: float = 0.25,
+    nms_thresh: float = 0.45,
+    version: str = "r6.0",
+    skip_preprocess: bool = False,
+    opset_version: int = 11,
+    batch_size: int = 1,
 ):
-    """
-    Export the yolort models.
+    from yolort.runtime.ort_helper import export_onnx
 
-    Args:
-        model (nn.Module): The model to be exported.
-        inputs (Tuple[torch.Tensor]): The inputs to the model.
-        export_onnx_path (str): A string containing a file name. A binary Protobuf
-            will be written to this file.
-        dynamic_axes (dict): A dictionary of dynamic axes.
-        input_names (str): A names list of input names.
-        output_names (str): A names list of output names.
-        opset_version (int, default is 11): By default we export the model to the
-            opset version of the onnx submodule.
-        enable_simplify (bool, default is False): Whether to enable simplification
-            of the ONNX model.
-    """
-    torch.onnx.export(
-        model,
-        inputs,
-        export_onnx_path,
-        do_constant_folding=True,
+    export_onnx(
+        onnx_path,
+        checkpoint_path=checkpoint_path,
+        size=size,
+        size_divisible=size_divisible,
+        score_thresh=score_thresh,
+        nms_thresh=nms_thresh,
+        version=version,
+        skip_preprocess=skip_preprocess,
         opset_version=opset_version,
-        input_names=input_names,
-        output_names=output_names,
-        dynamic_axes=dynamic_axes,
+        batch_size=batch_size,
     )
 
-    if enable_simplify:
-        input_shapes = {input_names[0]: list(inputs[0][0].shape)}
-        simplify_onnx(export_onnx_path, input_shapes)
+    return onnx_path
 
 
-def simplify_onnx(onnx_path, input_shapes):
-    if onnxsim is None:
-        raise ImportError("onnx-simplifier not found and is required by yolort.")
+def export_tensorrt(
+    checkpoint_path: str,
+    score_thresh: float,
+    nms_thresh: float,
+    version: str,
+    onnx_path: str,
+    engine_path: str,
+    input_sample: torch.Tensor = None,
+    detections_per_img: int = 100,
+    workspace: int = 12,
+):
+    from yolort.runtime.trt_helper import export_tensorrt_engine
 
-    print(f"Simplifying with onnx-simplifier {onnxsim.__version__}...")
-
-    # Load onnx mode
-    onnx_model = onnx.load(onnx_path)
-
-    # Simplify the ONNX model
-    model_sim, check = onnxsim.simplify(
-        onnx_model,
-        input_shapes=input_shapes,
-        dynamic_input_shape=True,
+    export_tensorrt_engine(
+        checkpoint_path,
+        score_thresh=score_thresh,
+        nms_thresh=nms_thresh,
+        version=version,
+        onnx_path=onnx_path,
+        engine_path=engine_path,
+        input_sample=input_sample,
+        detections_per_img=detections_per_img,
+        workspace=workspace,
     )
 
-    assert check, "There is something error when simplifying ONNX model"
-    export_onnx_sim_path = onnx_path.with_suffix(".sim.onnx")
-    onnx.save(model_sim, export_onnx_sim_path)
+    return engine_path
 
 
 def cli_main():
@@ -129,59 +147,46 @@ def cli_main():
     checkpoint_path = Path(args.checkpoint_path)
     assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
 
-    image_size = args.image_size
-    image_size *= 2 if len(args.image_size) == 1 else 1  # auto expand
+    include = [x.lower() for x in args.include]
 
-    if args.skip_preprocess:
-        # input data
-        inputs = torch.rand(args.batch_size, 3, *image_size)
-        dynamic_axes = {
-            "images_tensors": {0: "batch", 2: "height", 3: "width"},
-            "boxes": {0: "batch", 1: "num_objects"},
-            "labels": {0: "batch", 1: "num_objects"},
-            "scores": {0: "batch", 1: "num_objects"},
-        }
-        input_names = ["images_tensors"]
-        output_names = ["scores", "labels", "boxes"]
-        model = YOLO.load_from_yolov5(
+    # Export
+    exported_paths = [""] * 2  # exported filenames
+
+    if "onnx" in include:
+        # Save the ONNX model in the same directory of the checkpoint if not determined
+        onnx_path = args.onnx_path or checkpoint_path.with_suffix(".onnx")
+
+        exported_paths[0] = export_onnxruntime(
+            onnx_path,
+            checkpoint_path=checkpoint_path,
+            size=tuple(args.image_size),
+            size_divisible=args.size_divisible,
+            score_thresh=args.score_thresh,
+            nms_thresh=args.nms_thresh,
+            version=args.version,
+            skip_preprocess=args.skip_preprocess,
+            opset_version=args.opset,
+            batch_size=args.batch_size,
+        )
+
+    if "engine" in include:
+        # Save the ONNX and seriesed engine in the same directory of the checkpoint if not determined
+        onnx_path = args.onnx_path or checkpoint_path.with_suffix(".trt.onnx")
+        tensorrt_path = args.trt_path or checkpoint_path.with_suffix(".engine")
+
+        input_sample = torch.rand(args.batch_size, 3, *args.image_size)
+        exported_paths[1] = export_tensorrt(
             checkpoint_path,
             score_thresh=args.score_thresh,
+            nms_thresh=args.nms_thresh,
             version=args.version,
+            onnx_path=str(onnx_path),
+            engine_path=str(tensorrt_path),
+            input_sample=input_sample,
         )
-        model.eval()
-    else:
-        # input data
-        images = [torch.rand(3, *image_size)]
-        inputs = (images,)
-        dynamic_axes = {
-            "images_tensors": {1: "height", 2: "width"},
-            "boxes": {0: "num_objects"},
-            "labels": {0: "num_objects"},
-            "scores": {0: "num_objects"},
-        }
-        input_names = ["images_tensors"]
-        output_names = ["scores", "labels", "boxes"]
-        model = YOLOv5.load_from_yolov5(
-            checkpoint_path,
-            size=tuple(image_size),
-            score_thresh=args.score_thresh,
-            version=args.version,
-        )
-        model.eval()
 
-    # export ONNX models
-    export_onnx_path = checkpoint_path.with_suffix(".onnx")
-
-    export_onnx(
-        model,
-        inputs,
-        export_onnx_path,
-        dynamic_axes,
-        input_names=input_names,
-        output_names=output_names,
-        opset_version=args.opset,
-        enable_simplify=args.simplify,
-    )
+    # Finish
+    exported_paths = [str(x) for x in exported_paths if x]  # filter out '' and None
 
 
 if __name__ == "__main__":

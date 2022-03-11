@@ -1,30 +1,82 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
-import argparse
+
 import warnings
-from pathlib import PosixPath
-from typing import Any, List, Dict, Tuple, Optional, Union, Callable
+from typing import Any, Dict, List, Callable, Optional, Tuple
 
 import torch
 import torchvision
-from pytorch_lightning import LightningModule
 from torch import nn, Tensor
 from torchvision.io import read_image
-from yolort.data import COCOEvaluator, contains_any_tensor
+from yolort.data import contains_any_tensor
 
 from . import yolo
-from ._utils import _evaluate_iou
 from .transform import YOLOTransform, _get_shape_onnx
 from .yolo import YOLO
 
 __all__ = ["YOLOv5"]
 
 
-class YOLOv5(LightningModule):
+class YOLOv5(nn.Module):
     """
     Wrapping the pre-processing (`LetterBox`) into the YOLO models.
 
+    The input to the model is expected to be a list of tensors, each of shape [C, H, W], one for each
+    image, and should be in 0-1 range. Different images can have different sizes but they will be resized
+    to a fixed size that maintains the aspect ratio before passing it to the backbone.
+
+    The behavior of the model changes depending if it is in training or evaluation mode.
+
+    During training, the model expects both the input tensors, as well as a targets (list of dictionary),
+    containing:
+        - boxes (``FloatTensor[N, 4]``): the ground-truth boxes in ``[x1, y1, x2, y2]`` format, with
+          ``0 <= x1 < x2 <= W`` and ``0 <= y1 < y2 <= H``.
+        - labels (Int64Tensor[N]): the class label for each ground-truth box
+
+    The model returns a Dict[Tensor] during training, containing the classification and regression
+    losses.
+
+    During inference, the model requires only the input tensors, and returns the post-processed
+    predictions as a List[Dict[Tensor]], one for each input image. The fields of the Dict are as
+    follows, where ``N`` is the number of detections:
+
+        - boxes (``FloatTensor[N, 4]``): the predicted boxes in ``[x1, y1, x2, y2]`` format, with
+          ``0 <= x1 < x2 <= W`` and ``0 <= y1 < y2 <= H``.
+        - labels (Int64Tensor[N]): the predicted labels for each detection
+        - scores (Tensor[N]): the scores for each detection
+
+    Example:
+
+        Demo pipeline for YOLOv5 Inference.
+
+        .. code-block:: python
+
+            from yolort.models import YOLOv5
+
+            # Load the yolov5s version 6.0 models
+            arch = 'yolov5_darknet_pan_s_r60'
+            model = YOLOv5(arch=arch, pretrained=True, score_thresh=0.35)
+            model = model.eval()
+
+            # Perform inference on an image file
+            predictions = model.predict('bus.jpg')
+            # Perform inference on a list of image files
+            predictions2 = model.predict(['bus.jpg', 'zidane.jpg'])
+
+        We also support loading the custom checkpoints trained from ultralytics/yolov5
+
+        .. code-block:: python
+
+            from yolort.models import YOLOv5
+
+            # Your trained checkpoint from ultralytics
+            checkpoint_path = 'yolov5n.pt'
+            model = YOLOv5.load_from_yolov5(checkpoint_path, score_thresh=0.35)
+            model = model.eval()
+
+            # Perform inference on an image file
+            predictions = model.predict('bus.jpg')
+
     Args:
-        lr (float): The initial learning rate
         arch (string): YOLO model architecture. Default: None
         model (nn.Module): YOLO model. Default: None
         num_classes (int): number of output classes of the model (doesn't including
@@ -39,13 +91,10 @@ class YOLOv5(LightningModule):
             be padded to a minimum rectangle to match `min_size / max_size` and each of its edges
             is divisible by `size_divisible` if it is not specified. Default: None
         fill_color (int): fill value for padding. Default: 114
-        annotation_path (Optional[Union[string, PosixPath]]): Path of the COCO annotation file
-            Default: None.
     """
 
     def __init__(
         self,
-        lr: float = 0.01,
         arch: Optional[str] = None,
         model: Optional[nn.Module] = None,
         num_classes: int = 80,
@@ -55,13 +104,11 @@ class YOLOv5(LightningModule):
         size_divisible: int = 32,
         fixed_shape: Optional[Tuple[int, int]] = None,
         fill_color: int = 114,
-        annotation_path: Optional[Union[str, PosixPath]] = None,
         **kwargs: Any,
     ) -> None:
 
         super().__init__()
 
-        self.lr = lr
         self.arch = arch
         self.num_classes = num_classes
 
@@ -82,30 +129,15 @@ class YOLOv5(LightningModule):
             fill_color=fill_color,
         )
 
-        # metrics
-        self.evaluator = None
-        if annotation_path is not None:
-            self.evaluator = COCOEvaluator(annotation_path, iou_type="bbox")
-
         # used only on torchscript mode
         self._has_warned = False
 
-    def _forward_impl(
+    def forward(
         self,
         inputs: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
-        """
-        Args:
-            inputs (list[Tensor]): images to be processed
-            targets (list[Dict[Tensor]]): ground-truth boxes present in the image (optional)
 
-        Returns:
-            result (list[BoxList] or dict[Tensor]): the output from the model.
-                During training, it returns a dict[Tensor] which contains the losses.
-                During testing, it returns list[BoxList] contains additional fields
-                like `scores`, `labels` and `mask` (for Mask R-CNN models).
-        """
         # get the original image sizes
         original_image_sizes: List[Tuple[int, int]] = []
 
@@ -162,69 +194,11 @@ class YOLOv5(LightningModule):
 
         return detections
 
-    def forward(
-        self,
-        inputs: List[Tensor],
-        targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> Tuple[Dict[str, Tensor], List[Dict[str, Tensor]]]:
-        """
-        This exists since PyTorchLightning forward are used for inference only (separate from
-        ``training_step``). We keep ``targets`` here for Backward Compatible.
-        """
-        return self._forward_impl(inputs, targets)
-
-    def training_step(self, batch, batch_idx):
-        """
-        The training step.
-        """
-        loss_dict = self._forward_impl(*batch)
-        loss = sum(loss_dict.values())
-        self.log_dict(loss_dict, on_step=True, on_epoch=True, prog_bar=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        images, targets = batch
-        # fasterrcnn takes only images for eval() mode
-        preds = self._forward_impl(images)
-        iou = torch.stack([_evaluate_iou(t, o) for t, o in zip(targets, preds)]).mean()
-        outs = {"val_iou": iou}
-        self.log_dict(outs, on_step=True, on_epoch=True, prog_bar=True)
-        return outs
-
-    def validation_epoch_end(self, outs):
-        avg_iou = torch.stack([o["val_iou"] for o in outs]).mean()
-        self.log("avg_val_iou", avg_iou)
-
-    def test_step(self, batch, batch_idx):
-        """
-        The test step.
-        """
-        images, targets = batch
-        images = list(image.to(next(self.parameters()).device) for image in images)
-        preds = self._forward_impl(images)
-        results = self.evaluator(preds, targets)
-        # log step metric
-        self.log("eval_step", results, prog_bar=True, on_step=True)
-
-    def test_epoch_end(self, outputs):
-        return self.log("coco_eval", self.evaluator.compute())
-
-    def configure_optimizers(self):
-        return torch.optim.SGD(
-            self.model.parameters(),
-            lr=self.lr,
-            momentum=0.9,
-            weight_decay=5e-4,
-        )
-
     @torch.no_grad()
-    def predict(
-        self,
-        x: Any,
-        image_loader: Optional[Callable] = None,
-    ) -> List[Dict[str, Tensor]]:
+    def predict(self, x: Any, image_loader: Optional[Callable] = None) -> List[Dict[str, Tensor]]:
         """
         Predict function for raw data or processed data
+
         Args:
             x: Input to predict. Can be raw data or processed data.
             image_loader: Utility function to convert raw data to Tensor.
@@ -234,8 +208,7 @@ class YOLOv5(LightningModule):
         """
         image_loader = image_loader or self.default_loader
         images = self.collate_images(x, image_loader)
-        outputs = self.forward(images)
-        return outputs
+        return self.forward(images)
 
     def default_loader(self, img_path: str) -> Tensor:
         """
@@ -283,38 +256,11 @@ class YOLOv5(LightningModule):
             "samples should be either a tensor, list of tensors, a image path or list of image paths."
         )
 
-    @staticmethod
-    def add_model_specific_args(parent_parser):
-        parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument("--arch", default="yolov5_darknet_pan_s_r40", help="model architecture")
-        parser.add_argument(
-            "--pretrained",
-            action="store_true",
-            help="Use pre-trained models from the modelzoo",
-        )
-        parser.add_argument(
-            "--lr",
-            default=0.01,
-            type=float,
-            help="initial learning rate, 0.01 is the default value for training "
-            "on 8 gpus and 2 images_per_gpu",
-        )
-        parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
-        parser.add_argument(
-            "--weight-decay",
-            default=5e-4,
-            type=float,
-            metavar="W",
-            help="weight decay (default: 5e-4)",
-        )
-        return parser
-
     @classmethod
     def load_from_yolov5(
         cls,
         checkpoint_path: str,
         *,
-        lr: float = 0.01,
         size: Tuple[int, int] = (640, 640),
         size_divisible: int = 32,
         fixed_shape: Optional[Tuple[int, int]] = None,
@@ -322,11 +268,10 @@ class YOLOv5(LightningModule):
         **kwargs: Any,
     ):
         """
-        Load model state from the checkpoint trained by YOLOv5.
+        Load custom checkpoints trained from YOLOv5.
 
         Args:
             checkpoint_path (str): Path of the YOLOv5 checkpoint model.
-            lr (float): The initial learning rate
             size: (Tuple[int, int]): the minimum and maximum size of the image to be rescaled.
                 Default: (640, 640)
             size_divisible (int): stride of the models. Default: 32
@@ -338,7 +283,6 @@ class YOLOv5(LightningModule):
         """
         model = YOLO.load_from_yolov5(checkpoint_path, **kwargs)
         yolov5 = cls(
-            lr=lr,
             model=model,
             size=size,
             size_divisible=size_divisible,

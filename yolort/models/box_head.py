@@ -1,6 +1,7 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
+
 import math
-from typing import Tuple, List, Dict
+from typing import Dict, List, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -11,37 +12,40 @@ from . import _utils as det_utils
 
 
 class YOLOHead(nn.Module):
-    def __init__(
-        self,
-        in_channels: List[int],
-        num_anchors: int,
-        strides: List[int],
-        num_classes: int,
-    ):
+    """
+    A regression and classification head for use in YOLO.
+
+    Args:
+        in_channels (List[int]): number of channels of the input feature
+        num_anchors (int): number of anchors to be predicted
+        strides (List[int]): number of strides of the anchors
+        num_classes (int): number of classes to be predicted
+    """
+
+    def __init__(self, in_channels: List[int], num_anchors: int, strides: List[int], num_classes: int):
+
         super().__init__()
+        if not isinstance(in_channels, list):
+            in_channels = [in_channels] * len(strides)
         self.num_anchors = num_anchors  # anchors
         self.num_classes = num_classes
         self.num_outputs = num_classes + 5  # number of outputs per anchor
         self.strides = strides
 
-        self.head = nn.ModuleList(
+        head_blocks = nn.ModuleList(
             nn.Conv2d(ch, self.num_outputs * self.num_anchors, 1) for ch in in_channels
-        )  # output conv
+        )
 
-        self._initialize_biases()  # Init weights, biases
-
-    def _initialize_biases(self, cf=None):
-        """
-        Initialize biases into YOLOHead, cf is class frequency
-        Check section 3.3 in <https://arxiv.org/abs/1708.02002>
-        """
-        for mi, s in zip(self.head, self.strides):
+        # Initialize biases into head blocks
+        for mi, s in zip(head_blocks, self.strides):
             b = mi.bias.view(self.num_anchors, -1)  # conv.bias(255) to (3,85)
             # obj (8 objects per 640 image)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)
             # classes
-            b.data[:, 5:] += torch.log(cf / cf.sum()) if cf else math.log(0.6 / (self.num_classes - 0.99))
+            b.data[:, 5:] += math.log(0.6 / (self.num_classes - 0.999999))
             mi.bias = nn.Parameter(b.view(-1), requires_grad=True)
+
+        self.head = head_blocks
 
     def get_result_from_head(self, features: Tensor, idx: int) -> Tensor:
         """
@@ -356,6 +360,12 @@ def _decode_pred_logits(pred_logits: Tensor):
 class PostProcess(nn.Module):
     """
     Performs Non-Maximum Suppression (NMS) on inference results
+
+    Args:
+        strides (List[int]): Strides of the AnchorGenerator.
+        score_thresh (float): Score threshold used for postprocessing the detections.
+        nms_thresh (float): NMS threshold used for postprocessing the detections.
+        detections_per_img (int): Number of best detections to keep after NMS.
     """
 
     def __init__(
@@ -365,13 +375,7 @@ class PostProcess(nn.Module):
         nms_thresh: float,
         detections_per_img: int,
     ) -> None:
-        """
-        Args:
-            strides (List[int]): Strides of the AnchorGenerator.
-            score_thresh (float): Score threshold used for postprocessing the detections.
-            nms_thresh (float): NMS threshold used for postprocessing the detections.
-            detections_per_img (int): Number of best detections to keep after NMS.
-        """
+
         super().__init__()
         self.strides = strides
         self.score_thresh = score_thresh

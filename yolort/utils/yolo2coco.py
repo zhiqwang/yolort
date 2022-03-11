@@ -1,11 +1,11 @@
-# Copyright (c) 2020, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All Rights Reserved.
+
 import argparse
 import json
 from pathlib import Path
 
 from PIL import Image
-
-from .builtin_meta import COCO_CATEGORIES
+from yolort.data.builtin_meta import COCO_CATEGORIES
 
 
 class YOLO2COCO:

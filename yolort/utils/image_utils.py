@@ -1,3 +1,5 @@
+# Copyright (c) 2020, yolort team. All rights reserved.
+
 import logging
 from io import BytesIO
 from pathlib import Path
@@ -7,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
-from IPython.display import display
 from PIL import Image
 from torch import Tensor
 from torchvision.ops.boxes import box_convert
@@ -48,7 +49,7 @@ def plot_one_box(box, img, color=None, label=None, line_thickness=None):
 
 
 def cv2_imshow(
-    image: np.ndarray,
+    img_bgr: np.ndarray,
     imshow_scale: Optional[float] = None,
     convert_bgr_to_rgb: bool = True,
 ) -> None:
@@ -56,23 +57,26 @@ def cv2_imshow(
     A replacement of cv2.imshow() for using in Jupyter notebooks.
 
     Args:
-        image (np.ndarray):. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape (N, M, 3)
+        img_bgr (np.ndarray):. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape (N, M, 3)
             is an NxM BGR color image. shape (N, M, 4) is an NxM BGRA color image.
         imshow_scale (Optional[float]): zoom ratio to show the image
         convert_bgr_to_rgb (bool): switch to convert BGR to RGB channel.
     """
-    image = image.clip(0, 255).astype("uint8")
+
+    from IPython.display import display
+
+    img_bgr = img_bgr.clip(0, 255).astype("uint8")
     # cv2 stores colors as BGR; convert to RGB
-    if convert_bgr_to_rgb and image.ndim == 3:
-        if image.shape[2] == 4:
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+    if convert_bgr_to_rgb and img_bgr.ndim == 3:
+        if img_bgr.shape[2] == 4:
+            img_bgr = cv2.cvtColor(img_bgr, cv2.COLOR_BGRA2RGBA)
         else:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            img_bgr = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
     if imshow_scale is not None:
-        image = cv2.resize(image, None, fx=imshow_scale, fy=imshow_scale)
+        img_bgr = cv2.resize(img_bgr, None, fx=imshow_scale, fy=imshow_scale)
 
-    display(Image.fromarray(image))
+    display(Image.fromarray(img_bgr))
 
 
 def color_list():
@@ -103,10 +107,7 @@ def get_image_from_url(url: str, flags: int = 1) -> np.ndarray:
     return image
 
 
-def read_image_to_tensor(
-    image: np.ndarray,
-    is_half: bool = False,
-) -> Tensor:
+def read_image_to_tensor(image: np.ndarray, is_half: bool = False) -> Tensor:
     """
     Parse an image to Tensor.
 
@@ -118,9 +119,8 @@ def read_image_to_tensor(
     image = np.ascontiguousarray(image, dtype=np.float32)  # uint8 to float32
     image = np.transpose(image / 255.0, [2, 0, 1])
 
-    image = torch.from_numpy(image)
-    image = image.half() if is_half else image.float()
-    return image
+    _dtype = torch.float16 if is_half else torch.float32
+    return torch.from_numpy(image).to(dtype=_dtype)
 
 
 def load_names(category_path):

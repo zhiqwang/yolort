@@ -1,16 +1,11 @@
 #include <cuda_runtime_api.h>
 #include <opencv2/opencv.hpp>
-#include <string.h>
-#include <sys/time.h>
-#include <cassert>
-#include <cmath>
-#include <iomanip>
+#include <fstream>
 #include <iostream>
 #include <memory>
-#include <ostream>
-#include <sstream>
 #include <string>
 #include "NvInfer.h"
+#include "NvInferPlugin.h"
 #include "NvOnnxParser.h"
 #include "cmdline.h"
 
@@ -82,6 +77,51 @@ void visualizeDetection(
   }
 }
 
+float letterbox(
+    const cv::Mat& image,
+    cv::Mat& out_image,
+    const cv::Size& new_shape = cv::Size(640, 640),
+    int stride = 32,
+    const cv::Scalar& color = cv::Scalar(114, 114, 114),
+    bool fixed_shape = false,
+    bool scale_up = true) {
+  cv::Size shape = image.size();
+  float r = std::min(
+      (float)new_shape.height / (float)shape.height, (float)new_shape.width / (float)shape.width);
+  if (!scale_up) {
+    r = std::min(r, 1.0f);
+  }
+
+  int newUnpad[2]{
+      (int)std::round((float)shape.width * r), (int)std::round((float)shape.height * r)};
+
+  cv::Mat tmp;
+  if (shape.width != newUnpad[0] || shape.height != newUnpad[1]) {
+    cv::resize(image, tmp, cv::Size(newUnpad[0], newUnpad[1]));
+  } else {
+    tmp = image.clone();
+  }
+
+  float dw = new_shape.width - newUnpad[0];
+  float dh = new_shape.height - newUnpad[1];
+
+  if (!fixed_shape) {
+    dw = (float)((int)dw % stride);
+    dh = (float)((int)dh % stride);
+  }
+
+  dw /= 2.0f;
+  dh /= 2.0f;
+
+  int top = int(std::round(dh - 0.1f));
+  int bottom = int(std::round(dh + 0.1f));
+  int left = int(std::round(dw - 0.1f));
+  int right = int(std::round(dw + 0.1f));
+  cv::copyMakeBorder(tmp, out_image, top, bottom, left, right, cv::BORDER_CONSTANT, color);
+
+  return 1.0f / r;
+}
+
 std::vector<std::string> loadNames(const std::string& path) {
   // load class names
   std::vector<std::string> classNames;
@@ -138,7 +178,7 @@ ICudaEngine* CreateCudaEngineFromOnnx(
   if (!config) {
     return nullptr;
   }
-  config->setMaxWorkspaceSize(40 * (1U << 20));
+  config->setMaxWorkspaceSize(100 * (1U << 20));
   config->setFlag(BuilderFlag::kGPU_FALLBACK);
   if (enable_int8) {
     if (builder->platformHasFastInt8()) {
@@ -162,32 +202,6 @@ ICudaEngine* CreateCudaEngineFromOnnx(
     config->setDefaultDeviceType(DeviceType::kDLA);
     config->setDLACore(builder->getNbDLACores());
   }
-
-  // TODO: dynamic input，还没想好怎么搞
-  // IOptimizationProfile* profile = builder->createOptimizationProfile();
-  // if (!profile) {
-  //   return nullptr;
-  // }
-  //
-  // {
-  //   Dims dim = network->getInput(0)->getDimensions();
-  //   const char* name = network->getInput(0)->getName();
-  //   profile->setDimensions(name, OptProfileSelector::kMIN, Dims4(1, dim.d[1], dim.d[2],
-  //   dim.d[3])); profile->setDimensions(name, OptProfileSelector::kOPT, Dims4(1, dim.d[1],
-  //   dim.d[2], dim.d[3])); profile->setDimensions(
-  //       name,
-  //       OptProfileSelector::kMAX,
-  //       Dims4(builder->getMaxBatchSize(), dim.d[1], dim.d[2], dim.d[3]));
-  //   // profile->setDimensions(name, OptProfileSelector::kMIN, Dims4(1, 3, 192, 320));
-  //   // profile->setDimensions(name, OptProfileSelector::kOPT, Dims4(1, 3, 256, 416));
-  //   // profile->setDimensions(name, OptProfileSelector::kMAX, Dims4(1, 3, 640, 640));
-  //   if (profile->isValid()) {
-  //     config->addOptimizationProfile(profile);
-  //   } else {
-  //     std::cout << "profile is invalid!\n" << std::endl;
-  //     exit(-1);
-  //   }
-  // }
 
   std::unique_ptr<IHostMemory> serializedModel{
       builder->buildSerializedNetwork(*network.get(), *config.get())};
@@ -217,6 +231,46 @@ ICudaEngine* CreateCudaEngineFromOnnx(
   return runtime->deserializeCudaEngine(serializedModel->data(), serializedModel->size());
 }
 
+ICudaEngine* CreateCudaEngineFromSerializedModel(MyLogger& logger, const char* model_path) {
+  std::cout << "Loading engine from file: " << model_path << std::endl;
+  std::ifstream engineFile(model_path, std::ios::binary);
+  if (!engineFile.is_open()) {
+    std::cerr << "Open model file fail: " << model_path << std::endl;
+    return nullptr;
+  }
+  engineFile.seekg(0, std::ifstream::end);
+  int64_t fsize = engineFile.tellg();
+  engineFile.seekg(0, std::ifstream::beg);
+
+  std::vector<char> engineData(fsize);
+  engineFile.read(engineData.data(), fsize);
+
+  std::unique_ptr<IRuntime> runtime{createInferRuntime(logger)};
+  if (!runtime) {
+    std::cerr << "createInferRuntime fail!" << std::endl;
+    return nullptr;
+  }
+
+  /* Must initLibNvInferPlugins if you use any plugin */
+  initLibNvInferPlugins(&logger, "");
+
+  return runtime->deserializeCudaEngine(engineData.data(), fsize);
+}
+
+ICudaEngine* CreateCudaEngineFromFile(
+    MyLogger& logger,
+    const std::string& file_path,
+    const int max_batch_size,
+    bool enable_int8,
+    bool enable_fp16) {
+  if (file_path.find_last_of(".onnx") == (file_path.size() - 1)) {
+    return CreateCudaEngineFromOnnx(
+        logger, file_path.c_str(), max_batch_size, enable_int8, enable_fp16);
+  }
+  /* All suffixes except .onnx will be treated as the TensorRT serialized engine. */
+  return CreateCudaEngineFromSerializedModel(logger, file_path.c_str());
+}
+
 class YOLOv5Detector {
  public:
   YOLOv5Detector(
@@ -244,7 +298,7 @@ YOLOv5Detector::YOLOv5Detector(
     bool enable_int8,
     bool enable_fp16)
     : engine(
-          {CreateCudaEngineFromOnnx(logger, model_path, max_batch_size, enable_int8, enable_fp16)}),
+          {CreateCudaEngineFromFile(logger, model_path, max_batch_size, enable_int8, enable_fp16)}),
       context({engine->createExecutionContext()}) {
   CHECK(cudaStreamCreate(&stream));
 }
@@ -257,8 +311,8 @@ YOLOv5Detector::~YOLOv5Detector() {
 
 std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   std::vector<Detection> result;
+  std::vector<void*> buffers(engine->getNbBindings());
   std::size_t batch_size = 1;
-  void* buffers[engine->getNbBindings()];
   int num_detections_index = engine->getBindingIndex("num_detections");
   int detection_boxes_index = engine->getBindingIndex("detection_boxes");
   int detection_scores_index = engine->getBindingIndex("detection_scores");
@@ -304,7 +358,9 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   int32_t input_h = engine->getBindingDimensions(0).d[2];
   int32_t input_w = engine->getBindingDimensions(0).d[3];
   cv::Mat tmp;
-  cv::resize(image, tmp, cv::Size(input_w, input_h));
+  /* Fixed shape */
+  float scale = letterbox(image, tmp, {input_w, input_h}, 32, {114, 114, 114}, true);
+  cv::cvtColor(tmp, tmp, cv::COLOR_BGR2RGB);
   tmp.convertTo(tmp, CV_32FC3, 1 / 255.0);
   {
     /* HWC ==> CHW */
@@ -318,10 +374,10 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
           split_image.total() * sizeof(float),
           cudaMemcpyHostToDevice,
           stream));
-      offset = split_image.total();
+      offset += split_image.total();
     }
   }
-  context->enqueueV2(buffers, stream, nullptr);
+  context->enqueueV2(buffers.data(), stream, nullptr);
 
   for (int32_t i = 1; i < engine->getNbBindings(); i++) {
     if (i == detection_boxes_index) {
@@ -356,15 +412,17 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
   }
 
   /* Convert box fromat from LTRB to LTWH */
+  int x_offset = (input_w * scale - image.cols) / 2;
+  int y_offset = (input_h * scale - image.rows) / 2;
   for (int32_t i = 0; i < num_detections; i++) {
-    Detection detection;
-    detection.box.x = detection_boxes[4 * i] * image.cols / input_w;
-    detection.box.y = detection_boxes[4 * i + 1] * image.rows / input_h;
-    detection.box.width = detection_boxes[4 * i + 2] * image.cols / input_w - detection.box.x;
-    detection.box.height = detection_boxes[4 * i + 3] * image.rows / input_h - detection.box.y;
+    result.emplace_back();
+    Detection& detection = result.back();
+    detection.box.x = detection_boxes[4 * i] * scale - x_offset;
+    detection.box.y = detection_boxes[4 * i + 1] * scale - y_offset;
+    detection.box.width = detection_boxes[4 * i + 2] * scale - x_offset - detection.box.x;
+    detection.box.height = detection_boxes[4 * i + 3] * scale - y_offset - detection.box.y;
     detection.classId = detection_labels[i];
     detection.conf = detection_scores[i];
-    result.push_back(detection);
   }
 
   return result;
@@ -385,6 +443,10 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> classNames = loadNames(classNamesPath);
 
   cv::Mat image = cv::imread(imagePath);
+  if (image.empty()) {
+    std::cerr << "Read image file fail: " << imagePath << std::endl;
+    return -1;
+  }
   YOLOv5Detector yolo_detector(modelPath.c_str(), cmd.exist("int8"), cmd.exist("fp16"));
   std::vector<Detection> result = yolo_detector.detect(image);
 

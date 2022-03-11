@@ -157,6 +157,24 @@ class YOLOTransform(nn.Module):
         images: List[Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Tuple[NestedTensor, Optional[Tensor]]:
+        """
+        Perform letterboxing transformation.
+
+        Args:
+            images (List[Tensor]): Images to be processed. In general the type of images is a list
+                of 3-dim `Tensor`, except for the dataloader in training and evaluation, the `images`
+                will be a 4-dim `Tensor` in that case. Check out the belows link for more details:
+                https://github.com/zhiqwang/yolov5-rt-stack/pull/308#pullrequestreview-878689796
+            targets (List[Dict[Tensor]], optional): ground-truth boxes present in the image for
+                training. Default: None
+
+        Returns:
+            result (List[BoxList] or Dict[Tensor]): the output from the model.
+                During training, it returns a Dict[Tensor] which contains the losses.
+                During testing, it returns List[BoxList] contains additional fields
+                like `scores`, `labels` and `boxes`.
+        """
+
         device = images[0].device
         images = [img for img in images]
         if targets is not None:

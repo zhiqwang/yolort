@@ -1,16 +1,5 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from ._helper import contains_any_tensor
-from .coco_eval import COCOEvaluator
-from .data_module import (
-    DetectionDataModule,
-    VOCDetectionDataModule,
-    COCODetectionDataModule,
-)
+# Copyright (c) 2021, yolort team. All rights reserved.
 
-all = [
-    "contains_any_tensor",
-    "COCOEvaluator",
-    "DetectionDataModule",
-    "VOCDetectionDataModule",
-    "COCODetectionDataModule",
-]
+from ._helper import contains_any_tensor
+
+__all__ = ["contains_any_tensor"]

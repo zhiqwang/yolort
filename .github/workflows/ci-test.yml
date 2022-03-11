@@ -28,10 +28,10 @@ jobs:
 
     steps:
       - name: Clone repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: '3.8'
 
@@ -67,6 +67,9 @@ jobs:
           pip install --user --progress-bar off opencv-python
           pip install --user --progress-bar off pycocotools>=2.0.2
           pip install --user --progress-bar off onnx
+          pip install --user --progress-bar off onnxruntime
+          pip install --user --progress-bar off pytorch_lightning
+          pip install --user --progress-bar off torchmetrics
           pip install --user --progress-bar off onnxruntime
           pip install --user onnx_graphsurgeon --index-url https://pypi.ngc.nvidia.com
 

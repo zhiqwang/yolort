@@ -1,44 +1,46 @@
 # This workflow will upload a Python Package using Twine when a release is created
 
-name: PyPI release
+name: Publish 🐍 to PyPI.org
 
 on:
   push:
-    branches: ["release/*"]
+    branches: [ main, "release/*" ]
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3.0.0
+        with:
+          python-version: 3.8
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --user --upgrade setuptools wheel
+      - name: Install dependencies
+        run: |
+          python -m pip install --user --upgrade setuptools wheel
 
-    - name: Build package
-      run: python setup.py sdist bdist_wheel
+      - name: Build package
+        run: |
+          BUILD_VERSION=${GITHUB_REF:11} python setup.py sdist bdist_wheel
+          ls -lh dist/
 
-    # We do this, since failures on test.pypi aren't that bad
-    - name: Publish to Test PyPI
-      if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
-        verbose: true
+      # We do this, since failures on test.pypi aren't that bad
+      - name: Publish distribution 📦 to Test PyPI
+        if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          verbose: true
 
-    - name: Publish distribution 📦 to PyPI
-      if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Publish distribution 📦 to PyPI
+        if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

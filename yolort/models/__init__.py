@@ -1,12 +1,11 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
+
 from typing import Any
 
 from torch import nn
-from yolort.v5 import Conv
-from yolort.v5.utils.activations import Hardswish, SiLU
 
 from .yolo import YOLO
-from .yolo_module import YOLOv5
+from .yolov5 import YOLOv5
 
 __all__ = [
     "YOLO",
@@ -187,6 +186,9 @@ def yolov5ts(upstream_version: str = "r4.0", export_friendly: bool = False, **kw
 
 
 def _export_module_friendly(model):
+    from yolort.v5 import Conv
+    from yolort.v5.utils.activations import Hardswish, SiLU
+
     for m in model.modules():
         m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatibility
         if isinstance(m, Conv):

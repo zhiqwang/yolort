@@ -4,76 +4,55 @@ The TensorRT inference for `yolort`, support CUDA only.
 
 ## Dependencies
 
-- TensorRT 8.0 +
+- TensorRT 8.2 +
 
 ## Usage
 
-1. Create build directory and cmake config.
+Here we will mainly discuss how to use the C++ interface, we recommend that you check out our [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) first.
+
+1. Export your custom model to TensorRT format
+
+   We provide a CLI tool to export the custom model checkpoint trained from yolov5 to TensorRT serialized engine.
 
    ```bash
-   mkdir -p build/ && cd build/
-   cmake .. -DTENSORRT_DIR={path/to/your/trt/install/director}
+   python tools/export_model.py --checkpoint_path {path/to/your/best.pt} --include engine
    ```
 
-1. Build project
+   Note: This CLI will output a pair of ONNX model and TensorRT serialized engine if you have the full TensorRT's Python environment, otherwise it will only output an ONNX models with suffixes ".trt.onnx". And then you can also use the [`trtexct`](https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#trtexec) provided by TensorRT to export the serialized engine as below:
 
    ```bash
-   cmake --build . -j4
+   trtexec --onnx=best.trt.onnx --saveEngine=best.engine --workspace=8192
    ```
 
-1. Export your custom model to ONNX
+1. \[Optional\] Quick test with the TensorRT Python interface.
 
-   Here is a small demo to surgeon the YOLOv5 ONNX model and then export to TensorRT engine. For details see out our [tutorial for deploying yolort on TensorRT](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html).
+   ```python
+   import torch
+   from yolort.runtime import PredictorTRT
 
-   - Set the super parameters
+   # Load the exported TensorRT engine
+   engine_path = "best.engine"
+   device = torch.device("cuda")
+   y_runtime = PredictorTRT(engine_path, device=device)
 
-     ```python
-     model_path = "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n6.pt"
-     checkpoint_path = attempt_download(model_path)
-     onnx_path = "yolov5n6.onnx"
-     engine_path = "yolov5n6.engine"
+   # Perform inference on an image file
+   predictions = y_runtime.predict("bus.jpg")
+   ```
 
-     score_thresh = 0.4
-     iou_thresh = 0.45
-     detections_per_img = 100
-     ```
+1. Create build directory and build project.
 
-   - Surgeon the yolov5 ONNX models
-
-     ```python
-     from yolort.runtime.yolo_graphsurgeon import YOLOGraphSurgeon
-
-     yolo_gs = YOLOGraphSurgeon(
-         checkpoint_path,
-         version="r6.0",
-         enable_dynamic=False,
-     )
-
-     yolo_gs.register_nms(
-         score_thresh=score_thresh,
-         nms_thresh=iou_thresh,
-         detections_per_img=detections_per_img,
-     )
-
-     # Export the ONNX model
-     yolo_gs.save(onnx_path)
-     ```
-
-   - Build the TensorRT engine
-
-     ```python
-     from yolort.runtime.trt_helper import EngineBuilder
-
-     engine_builder = EngineBuilder()
-     engine_builder.create_network(onnx_path)
-     engine_builder.create_engine(engine_path, precision="fp32")
-     ```
+   ```bash
+   mkdir -p build && cd build
+   cmake .. -DTENSORRT_DIR={path/to/your/TensorRT/install/director}
+   cmake --build .
+   ```
 
 1. Now, you can infer your own images.
 
    ```bash
-   ./yolort_trt [--image ../../../test/assets/zidane.jpg]
-                [--model_path ../../../notebooks/yolov5s.onnx]
-                [--class_names ../../../notebooks/assets/coco.names]
-                [--fp16]  # Enable it if your GPU support fp16 inference
+   ./yolort_trt --image ../../../test/assets/zidane.jpg
+                --model_path ../../../notebooks/best.engine
+                --class_names ../../../notebooks/assets/coco.names
    ```
+
+   The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.

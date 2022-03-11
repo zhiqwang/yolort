@@ -32,7 +32,7 @@ ______________________________________________________________________
 
 ## 🤗 Introduction
 
-**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). `yolort` aims to make the training and inference of the object detection integrate more seamlessly together. `yolort` now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (`letterbox`) and post-processing (`nms`) into the model graph, which simplifies the deployment strategy. In this sense, `yolort` makes it possible to be deployed more friendly on `LibTorch`, `ONNX Runtime`, `TVM` , `TensorRT`and so on.
+**What it is.** Yet another implementation of Ultralytics's [YOLOv5](https://github.com/ultralytics/yolov5). yolort aims to make the training and inference of the object detection task integrate more seamlessly together. yolort now adopts the same model structure as the official YOLOv5. The significant difference is that we adopt the dynamic shape mechanism, and within this, we can embed both pre-processing (letterbox) and post-processing (nms) into the model graph, which simplifies the deployment strategy. In this sense, yolort makes it possible to deploy the object detection more easily and friendly on `LibTorch`, `ONNX Runtime`, `TVM`, `TensorRT` and so on.
 
 **About the code.** Follow the design principle of [detr](https://github.com/facebookresearch/detr):
 
@@ -62,7 +62,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 - Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
 
-- Installation via Pip
+- Installation via pip
 
   Simple installation from [PyPI](https://pypi.org/project/yolort/)
 
@@ -111,12 +111,12 @@ model = torch.hub.load("zhiqwang/yolov5-rt-stack:main", "yolov5s", pretrained=Tr
 
 ### Loading checkpoint from official yolov5
 
-The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. See our [how-to-align-with-ultralytics-yolov5](notebooks/how-to-align-with-ultralytics-yolov5.ipynb) notebook for more details.
+The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. Please see our documents on what we [share](https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html) and how we [differ](https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html) from yolov5 for more details.
 
 ```python
 from yolort.models import YOLOv5
 
-# 'yolov5s.pt' is downloaded from https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s.pt
+# Download checkpoint from https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5s.pt
 ckpt_path_from_ultralytics = "yolov5s.pt"
 model = YOLOv5.load_from_yolov5(ckpt_path_from_ultralytics, score_thresh=0.25)
 
@@ -129,26 +129,55 @@ predictions = model.predict(img_path)
 
 ### Inference on LibTorch backend
 
-We provide a [notebook](notebooks/inference-pytorch-export-libtorch.ipynb) to demonstrate how the model is transformed into `torchscript`. And we provide an [C++ example](deployment/libtorch) of how to infer with the transformed `torchscript` model. For details see the [GitHub Actions](.github/workflows/ci_test.yml).
+We provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is converted into `torchscript`. And we provide a [C++ example](deployment/libtorch) of how to do inference with the serialized `torchscript` model.
 
 ### Inference on ONNX Runtime backend
 
-On the `ONNX Runtime` front you can use the [C++ example](deployment/onnxruntime), and we also provide a tutorial [export-onnx-inference-onnxruntime](notebooks/export-onnx-inference-onnxruntime.ipynb) for using the `ONNX Runtime`.
+We provide a pipeline for deploying yolort with ONNX Runtime.
+
+```python
+from yolort.runtime import PredictorORT
+
+# Load the serialized ONNX model
+engine_path = "yolov5n6.onnx"
+y_runtime = PredictorORT(engine_path, device="cpu")
+
+# Perform inference on an image file
+predictions = y_runtime.predict("bus.jpg")
+```
+
+Please check out this [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/export-onnx-inference-onnxruntime.html) to use yolort's ONNX model conversion and ONNX Runtime inferencing. And you can use the [example](deployment/onnxruntime) for ONNX Runtime C++ interface.
 
 ### Inference on TensorRT backend
 
-On the `TensorRT` front you can use the [C++ example](deployment/tensorrt), and we also provide a tutorial [onnx-graphsurgeon-inference-tensorrt](notebooks/onnx-graphsurgeon-inference-tensorrt.ipynb) for using the `TensorRT`.
+The pipeline for TensorRT deployment is also very easy to use.
+
+```python
+import torch
+from yolort.runtime import PredictorTRT
+
+# Load the serialized TensorRT engine
+engine_path = "yolov5n6.engine"
+device = torch.device("cuda")
+y_runtime = PredictorTRT(engine_path, device=device)
+
+# Perform inference on an image file
+predictions = y_runtime.predict("bus.jpg")
+```
+
+Besides, we provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) detailing yolort's model conversion to TensorRT and the use of the Python interface. Please check this [example](deployment/tensorrt) if you want to use the C++ interface.
 
 ## 🎨 Model Graph Visualization
 
-Now, `yolort` can draw the model graph directly, checkout our [model-graph-visualization](notebooks/model-graph-visualization.ipynb) notebook to see how to use and visualize the model graph.
+Now, `yolort` can draw the model graph directly, checkout our [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/model-graph-visualization.html) to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5_graph_visualize.svg"><img src="notebooks/assets/yolov5_graph_visualize.svg" alt="YOLO model visualize" width="500"/></a>
 
-## 🎓 Acknowledgement
+## 👋 Contributing
 
-- The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
-- This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).
+We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors! If you like this project please consider ⭐ this repo, as it is the simplest way to support us.
+
+[![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
 
 ## 📖 Citing yolort
 
@@ -156,15 +185,14 @@ If you use yolort in your publication, please cite it by using the following Bib
 
 ```bibtex
 @Misc{yolort2021,
-  author =       {Zhiqiang Wang, Shiquan Yu, Fidan Kharrasov},
+  author =       {Zhiqiang Wang and Shiquan Yu and Fidan Kharrasov},
   title =        {yolort: A runtime stack for object detection on specialized accelerators},
   howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
   year =         {2021}
 }
 ```
 
-## 👋 Contributing
+## 🎓 Acknowledgement
 
-We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors!
-
-[![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
+- The implementation of `yolov5` borrow the code from [ultralytics](https://github.com/ultralytics/yolov5).
+- This repo borrows the architecture design and part of the code from [torchvision](https://github.com/pytorch/vision).

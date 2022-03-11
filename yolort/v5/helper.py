@@ -4,10 +4,10 @@ import sys
 from pathlib import Path
 
 import torch
+from torch import nn
 
-from .models import AutoShape
-from .models.yolo import Model
-from .utils import attempt_download, intersect_dicts, set_logging
+from .models.yolo import Detect, Model
+from .utils import attempt_download
 
 __all__ = ["add_yolov5_context", "load_yolov5_model", "get_yolov5_size"]
 
@@ -46,32 +46,36 @@ def get_yolov5_size(depth_multiple, width_multiple):
     )
 
 
-def load_yolov5_model(checkpoint_path: str, autoshape: bool = False, verbose: bool = True):
+def load_yolov5_model(checkpoint_path: str, fuse: bool = False):
     """
-    Creates a specified YOLOv5 model
+    Creates a specified YOLOv5 model.
+
+    Note:
+        Currently this tool is mainly used to load the checkpoints trained by yolov5
+        with support for versions v3.1, v4.0 (v5.0) and v6.0 (v6.1). In addition it is
+        available for inference with AutoShape attached for versions v6.0 (v6.1).
 
     Args:
         checkpoint_path (str): path of the YOLOv5 model, i.e. 'yolov5s.pt'
-        autoshape (bool): apply YOLOv5 .autoshape() wrapper to model. Default: False.
-        verbose (bool): print all information to screen. Default: True.
+        fuse (bool): fuse model Conv2d() + BatchNorm2d() layers. Default: False
 
     Returns:
         YOLOv5 pytorch model
     """
-    set_logging(verbose=verbose)
 
     with add_yolov5_context():
         ckpt = torch.load(attempt_download(checkpoint_path), map_location=torch.device("cpu"))
+        if fuse:
+            model = ckpt["ema" if ckpt.get("ema") else "model"].float().fuse().eval()
+        else:  # without layer fuse
+            model = ckpt["ema" if ckpt.get("ema") else "model"].float().eval()
 
-    if isinstance(ckpt, dict):
-        model_ckpt = ckpt["model"]  # load model
+        # Compatibility updates
+        for m in model.modules():
+            if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, Model]:
+                if isinstance(m, Detect):
+                    if not isinstance(m.anchor_grid, list):  # new Detect Layer compatibility
+                        delattr(m, "anchor_grid")
+                        setattr(m, "anchor_grid", [torch.zeros(1)] * m.nl)
 
-    model = Model(model_ckpt.yaml)  # create model
-    ckpt_state_dict = model_ckpt.float().state_dict()  # checkpoint state_dict as FP32
-    ckpt_state_dict = intersect_dicts(ckpt_state_dict, model.state_dict(), exclude=["anchors"])
-    model.load_state_dict(ckpt_state_dict, strict=False)
-
-    if autoshape:
-        model = AutoShape(model)
-
-    return model
+        return model
