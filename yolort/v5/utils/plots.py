@@ -172,12 +172,13 @@ class Annotator:
 
 
 def feature_visualization(x, module_type, stage, n=32, save_dir=Path("runs/detect/exp")):
-    """
-    x:              Features to be visualized
-    module_type:    Module type
-    stage:          Module stage within model
-    n:              Maximum number of feature maps to plot
-    save_dir:       Directory to save results
+     """
+    Args:
+	    x:              Features to be visualized
+	    module_type:    Module type
+	    stage:          Module stage within model
+	    n:              Maximum number of feature maps to plot
+	    save_dir:       Directory to save results
     """
     if "Detect" not in module_type:
         batch, channels, height, width = x.shape  # batch, channels, height, width
