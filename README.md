@@ -38,7 +38,7 @@ ______________________________________________________________________
 
 > object detection should not be more difficult than classification, and should not require complex libraries for training and inference.
 
-`yolort` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolort`!
+`yolort` is very simple to implement and experiment with. Do you like the implementation of torchvision's faster-rcnn, retinanet or detr? Do you like yolov5? You'll love `yolort`!
 
 <a href="notebooks/assets/zidane.jpg"><img src="notebooks/assets/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
