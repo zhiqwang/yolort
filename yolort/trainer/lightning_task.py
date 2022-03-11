@@ -9,7 +9,7 @@ import yolort.models as models
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torchvision.ops import box_iou
-from yolort.data import COCOEvaluator
+from yolort.data.coco_eval import COCOEvaluator
 
 
 __all__ = ["DefaultTask"]
