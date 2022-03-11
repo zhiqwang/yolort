@@ -1,5 +1,6 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
-from typing import Callable, List, Optional, Any
+
+from typing import Any, Callable, List, Optional
 
 import torch
 from torch import nn, Tensor

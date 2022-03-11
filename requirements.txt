@@ -24,10 +24,6 @@ ipython
 tabulate
 pandas
 
-# Lightning -----------------------------------
-pytorch_lightning>=1.3.1
-torchmetrics
-
 # extras --------------------------------------
 # pycocotools on PyPI needs python3.7 as minimal
 # pycocotools>=2.0.2  # corresponds to https://github.com/ppwwyyxx/cocoapi

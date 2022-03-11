@@ -1,9 +1,5 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-"""
-The transformer attention network blocks.
+# Copyright (c) 2021, yolort team. All rights reserved.
 
-Mostly copy-paste from <https://github.com/dingyiwei/yolov5/tree/Transformer>.
-"""
 from typing import Callable, List, Optional
 
 from torch import nn

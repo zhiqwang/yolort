@@ -4,7 +4,8 @@ import pytest
 import torch
 from torch import Tensor
 from torchvision.io import read_image
-from yolort.data import COCOEvaluator, _helper as data_helper
+from yolort.data import _helper as data_helper
+from yolort.data.coco_eval import COCOEvaluator
 from yolort.models import yolov5s
 from yolort.models.transform import YOLOTransform
 from yolort.models.yolo import yolov5_darknet_pan_s_r31

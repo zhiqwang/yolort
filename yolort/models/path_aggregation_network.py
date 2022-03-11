@@ -1,5 +1,6 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import List, Dict, Callable, Optional
+# Copyright (c) 2021, yolort team. All rights reserved.
+
+from typing import Dict, List, Callable, Optional
 
 import torch
 from torch import nn, Tensor
