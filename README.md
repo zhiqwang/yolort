@@ -38,7 +38,7 @@ ______________________________________________________________________
 
 > object detection should not be more difficult than classification, and should not require complex libraries for training and inference.
 
-`yolort` is very simple to implement and experiment with. You like the implementation of torchvision's faster-rcnn, retinanet or detr? You like yolov5? You love `yolort`!
+`yolort` is very simple to implement and experiment with. Do you like the implementation of torchvision's faster-rcnn, retinanet or detr? Do you like yolov5? You'll love `yolort`!
 
 <a href="notebooks/assets/zidane.jpg"><img src="notebooks/assets/zidane.jpg" alt="YOLO inference demo" width="500"/></a>
 
@@ -60,7 +60,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 ### Installation and Inference Examples
 
-- Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
+- Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.8.0+ and torchvision 0.9.0+
 
 - Installation via pip
 
