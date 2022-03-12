@@ -1,4 +1,5 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
+
 import contextlib
 import copy
 import io

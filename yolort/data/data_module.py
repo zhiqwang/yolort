@@ -1,4 +1,5 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
+
 from pathlib import Path
 from typing import Callable, List, Any, Optional
 
