@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from .models.yolo import Detect, Model
+from .models.yolo import Detect
 from .utils import attempt_download
 
 __all__ = ["add_yolov5_context", "load_yolov5_model", "get_yolov5_size"]
@@ -71,11 +71,12 @@ def load_yolov5_model(checkpoint_path: str, fuse: bool = False):
             model = ckpt["ema" if ckpt.get("ema") else "model"].float().eval()
 
         # Compatibility updates
-        for m in model.modules():
-            if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, Model]:
-                if isinstance(m, Detect):
-                    if not isinstance(m.anchor_grid, list):  # new Detect Layer compatibility
-                        delattr(m, "anchor_grid")
-                        setattr(m, "anchor_grid", [torch.zeros(1)] * m.nl)
+        for sub_module in model.modules():
+            if isinstance(sub_module, Detect):
+                if not isinstance(sub_module.anchor_grid, list):  # new Detect Layer compatibility
+                    delattr(sub_module, "anchor_grid")
+                    setattr(sub_module, "anchor_grid", [torch.zeros(1)] * sub_module.nl)
+            if isinstance(sub_module, nn.Upsample) and not hasattr(sub_module, "recompute_scale_factor"):
+                sub_module.recompute_scale_factor = None  # torch 1.11.0 compatibility
 
         return model

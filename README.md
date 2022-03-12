@@ -60,7 +60,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
 ### Installation and Inference Examples
 
-- Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.7.0+ and torchvision 0.8.1+
+- Above all, follow the [official instructions](https://pytorch.org/get-started/locally/) to install PyTorch 1.8.0+ and torchvision 0.9.0+
 
 - Installation via pip
 
