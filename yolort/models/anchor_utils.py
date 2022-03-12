@@ -5,6 +5,8 @@ from typing import Tuple, List
 import torch
 from torch import nn, Tensor
 
+from yolort.utils import check_version
+
 
 class AnchorGenerator(nn.Module):
     def __init__(self, strides: List[int], anchor_grids: List[List[float]]):
@@ -29,7 +31,10 @@ class AnchorGenerator(nn.Module):
             widths = torch.arange(width, dtype=torch.int32, device=device).to(dtype=dtype)
             heights = torch.arange(height, dtype=torch.int32, device=device).to(dtype=dtype)
 
-            shift_y, shift_x = torch.meshgrid(heights, widths)
+            if check_version(torch.__version__, "1.10.0"):
+                shift_y, shift_x = torch.meshgrid(heights, widths, indexing="ij")
+            else:
+                shift_y, shift_x = torch.meshgrid(heights, widths)
 
             grid = torch.stack((shift_x, shift_y), 2).expand((1, self.num_anchors, height, width, 2))
             grids.append(grid)
