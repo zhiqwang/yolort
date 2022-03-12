@@ -3,8 +3,12 @@ from pathlib import Path
 from typing import Callable, List, Any, Optional
 
 import torch.utils.data
-from pytorch_lightning import LightningDataModule
 from torch.utils.data.dataset import Dataset
+
+try:
+    from pytorch_lightning import LightningDataModule
+except ImportError:
+    LightningDataModule = None
 
 from .coco import COCODetection
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
