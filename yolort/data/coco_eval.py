@@ -1,4 +1,5 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
+
 import contextlib
 import copy
 import io
@@ -8,16 +9,16 @@ from pathlib import PosixPath
 
 import numpy as np
 from tabulate import tabulate
-from torchmetrics import Metric
 from torchvision.ops import box_convert
 
 try:
     from pycocotools.coco import COCO
     from pycocotools.cocoeval import COCOeval
+    from torchmetrics import Metric
 except ImportError:
-    COCO, COCOeval = None, None
+    COCO, COCOeval, Metric = None, None, None
 
-from typing import List, Any, Callable, Optional, Union
+from typing import Any, List, Callable, Optional, Union
 
 from ._helper import create_small_table
 from .distributed import all_gather
