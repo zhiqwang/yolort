@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from .models.yolo import Detect, Model
+from .models.yolo import Detect
 from .utils import attempt_download
 
 __all__ = ["add_yolov5_context", "load_yolov5_model", "get_yolov5_size"]
