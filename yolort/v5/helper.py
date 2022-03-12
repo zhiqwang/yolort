@@ -77,7 +77,7 @@ def load_yolov5_model(checkpoint_path: str, fuse: bool = False):
                     if not isinstance(sub_module.anchor_grid, list):  # new Detect Layer compatibility
                         delattr(sub_module, "anchor_grid")
                         setattr(sub_module, "anchor_grid", [torch.zeros(1)] * sub_module.nl)
-            elif isinstance(sub_module, nn.Upsample) and not hasattr(sub_module, "recompute_scale_factor"):
+            if isinstance(sub_module, nn.Upsample) and not hasattr(sub_module, "recompute_scale_factor"):
                 sub_module.recompute_scale_factor = None  # torch 1.11.0 compatibility
 
         return model
