@@ -6,35 +6,48 @@ Usage:
     $ python path/to/models/yolo.py --cfg yolov5s.yaml
 """
 
-import argparse
-import sys
+import logging
+import math
 from copy import deepcopy
 from pathlib import Path
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[1]  # YOLOv5 root directory
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))  # add ROOT to PATH
-# ROOT = ROOT.relative_to(Path.cwd())  # relative
-
-from models.common import *
-from models.experimental import *
-from utils.autoanchor import check_anchor_order
-from utils.general import LOGGER, check_version, check_yaml, make_divisible, print_args
-from utils.plots import feature_visualization
-from utils.torch_utils import (
+import torch
+from torch import nn
+from yolort.v5.utils.autoanchor import check_anchor_order
+from yolort.v5.utils.general import check_version, make_divisible
+from yolort.v5.utils.torch_utils import (
+    time_sync,
     fuse_conv_and_bn,
-    initialize_weights,
     model_info,
     scale_img,
-    select_device,
-    time_sync,
+    initialize_weights,
 )
+
+from .common import (
+    Conv,
+    Bottleneck,
+    SPP,
+    SPPF,
+    DWConv,
+    Focus,
+    BottleneckCSP,
+    C3,
+    Concat,
+    GhostConv,
+    GhostBottleneck,
+    Contract,
+    Expand,
+)
+from .experimental import CrossConv, MixConv2d
 
 try:
     import thop  # for FLOPs computation
 except ImportError:
     thop = None
+
+__all__ = ["Model", "Detect"]
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Detect(nn.Module):
@@ -49,7 +62,7 @@ class Detect(nn.Module):
         self.na = len(anchors[0]) // 2  # number of anchors
         self.grid = [torch.zeros(1)] * self.nl  # init grid
         self.anchor_grid = [torch.zeros(1)] * self.nl  # init anchor grid
-        self.register_buffer("anchors", torch.tensor(anchors).float().view(self.nl, -1, 2))  # shape(nl,na,2)
+        self.register_buffer("anchors", torch.tensor(anchors).float().view(self.nl, -1, 2))
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
         self.inplace = inplace  # use in-place ops (e.g. slice assignment)
 
@@ -63,15 +76,14 @@ class Detect(nn.Module):
             if not self.training:  # inference
                 if self.onnx_dynamic or self.grid[i].shape[2:4] != x[i].shape[2:4]:
                     self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
-                    anchor_grid = (self.anchors[i].clone() * self.stride[i]).view(1, -1, 1, 1, 2)
 
                 y = x[i].sigmoid()
                 if self.inplace:
                     y[..., 0:2] = (y[..., 0:2] * 2 - 0.5 + self.grid[i]) * self.stride[i]  # xy
-                    y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+                    y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 else:  # for YOLOv5 on AWS Inferentia https://github.com/ultralytics/yolov5/pull/2953
                     xy = (y[..., 0:2] * 2 - 0.5 + self.grid[i]) * self.stride[i]  # xy
-                    wh = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+                    wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                     y = torch.cat((xy, wh, y[..., 4:]), -1)
                 z.append(y.view(bs, -1, self.no))
 
@@ -79,9 +91,7 @@ class Detect(nn.Module):
 
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
-        if check_version(
-            torch.__version__, "1.10.0"
-        ):  # torch>=1.10.0 meshgrid workaround for torch>=0.7 compatibility
+        if check_version(torch.__version__, "1.10.0"):  # torch>=1.10.0 meshgrid workaround
             yv, xv = torch.meshgrid([torch.arange(ny, device=d), torch.arange(nx, device=d)], indexing="ij")
         else:
             yv, xv = torch.meshgrid([torch.arange(ny, device=d), torch.arange(nx, device=d)])
@@ -96,9 +106,14 @@ class Detect(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(
-        self, cfg="yolov5s.yaml", ch=3, nc=None, anchors=None
-    ):  # model, input channels, number of classes
+    def __init__(self, cfg="yolov5s.yaml", ch=3, nc=None, anchors=None):
+        """
+        Args:
+            cfg (str): model
+            ch (int): input channels
+            nc (int): number of classes
+            anchors: override the anchors to the yaml value is anchors is None
+        """
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -126,9 +141,7 @@ class Model(nn.Module):
         if isinstance(m, Detect):
             s = 256  # 2x min stride
             m.inplace = self.inplace
-            m.stride = torch.tensor(
-                [s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))]
-            )  # forward
+            m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])
             m.anchors /= m.stride.view(-1, 1, 1)
             check_anchor_order(m)
             self.stride = m.stride
@@ -152,7 +165,6 @@ class Model(nn.Module):
         for si, fi in zip(s, f):
             xi = scale_img(x.flip(fi) if fi else x, si, gs=int(self.stride.max()))
             yi = self._forward_once(xi)[0]  # forward
-            # cv2.imwrite(f'img_{si}.jpg', 255 * xi[0].cpu().numpy().transpose((1, 2, 0))[:, :, ::-1])  # save
             yi = self._descale_pred(yi, fi, si, img_size)
             y.append(yi)
         y = self._clip_augmented(y)  # clip augmented tails
@@ -162,14 +174,15 @@ class Model(nn.Module):
         y, dt = [], []  # outputs
         for m in self.model:
             if m.f != -1:  # if not from previous layer
-                x = (
-                    y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]
-                )  # from earlier layers
+                # from earlier layers
+                x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]
             if profile:
                 self._profile_one_layer(m, x, dt)
             x = m(x)  # run
             y.append(x if m.i in self.save else None)  # save output
             if visualize:
+                from yolort.v5.utils.plots import feature_visualization
+
                 feature_visualization(x, m.type, m.i, save_dir=visualize)
         return x
 
@@ -182,7 +195,8 @@ class Model(nn.Module):
             elif flips == 3:
                 p[..., 0] = img_size[1] - p[..., 0]  # de-flip lr
         else:
-            x, y, wh = p[..., 0:1] / scale, p[..., 1:2] / scale, p[..., 2:4] / scale  # de-scale
+            # de-scale
+            x, y, wh = p[..., 0:1] / scale, p[..., 1:2] / scale, p[..., 2:4] / scale
             if flips == 2:
                 y = img_size[0] - y  # de-flip ud
             elif flips == 3:
@@ -203,9 +217,7 @@ class Model(nn.Module):
 
     def _profile_one_layer(self, m, x, dt):
         c = isinstance(m, Detect)  # is final layer, copy input as inplace fix
-        o = (
-            thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2 if thop else 0
-        )  # FLOPs
+        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2 if thop else 0
         t = time_sync()
         for _ in range(10):
             m(x.copy() if c else x)
@@ -218,14 +230,11 @@ class Model(nn.Module):
 
     def _initialize_biases(self, cf=None):  # initialize biases into Detect(), cf is class frequency
         # https://arxiv.org/abs/1708.02002 section 3.3
-        # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.
         m = self.model[-1]  # Detect() module
         for mi, s in zip(m.m, m.stride):  # from
             b = mi.bias.view(m.na, -1)  # conv.bias(255) to (3,85)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
-            b.data[:, 5:] += (
-                math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())
-            )  # cls
+            b.data[:, 5:] += math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())
             mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
     def _print_biases(self):
@@ -256,7 +265,10 @@ class Model(nn.Module):
         model_info(self, verbose, img_size)
 
     def _apply(self, fn):
-        # Apply to(), cpu(), cuda(), half() to model tensors that are not parameters or registered buffers
+        """
+        Apply to(), cpu(), cuda(), half() to model tensors that are not
+        parameters or registered buffers
+        """
         self = super()._apply(fn)
         m = self.model[-1]  # Detect()
         if isinstance(m, Detect):
@@ -296,16 +308,13 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             CrossConv,
             BottleneckCSP,
             C3,
-            C3TR,
-            C3SPP,
-            C3Ghost,
         ]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3TR, C3Ghost]:
+            if m in [BottleneckCSP, C3]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:
@@ -334,38 +343,3 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             ch = []
         ch.append(c2)
     return nn.Sequential(*layers), sorted(save)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cfg", type=str, default="yolov5s.yaml", help="model.yaml")
-    parser.add_argument("--device", default="", help="cuda device, i.e. 0 or 0,1,2,3 or cpu")
-    parser.add_argument("--profile", action="store_true", help="profile model speed")
-    parser.add_argument("--test", action="store_true", help="test all yolo*.yaml")
-    opt = parser.parse_args()
-    opt.cfg = check_yaml(opt.cfg)  # check YAML
-    print_args(FILE.stem, opt)
-    device = select_device(opt.device)
-
-    # Create model
-    model = Model(opt.cfg).to(device)
-    model.train()
-
-    # Profile
-    if opt.profile:
-        img = torch.rand(8 if torch.cuda.is_available() else 1, 3, 640, 640).to(device)
-        y = model(img, profile=True)
-
-    # Test all models
-    if opt.test:
-        for cfg in Path(ROOT / "models").rglob("yolo*.yaml"):
-            try:
-                _ = Model(cfg)
-            except Exception as e:
-                print(f"Error in {cfg}: {e}")
-
-    # Tensorboard (not working https://github.com/ultralytics/yolov5/issues/2898)
-    # from torch.utils.tensorboard import SummaryWriter
-    # tb_writer = SummaryWriter('.')
-    # LOGGER.info("Run 'tensorboard --logdir=models' to view tensorboard at http://localhost:6006/")
-    # tb_writer.add_graph(torch.jit.trace(model, img, strict=False), [])  # add model graph
