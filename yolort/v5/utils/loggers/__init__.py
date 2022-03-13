@@ -71,7 +71,10 @@ class Loggers:
         # Message
         if not wandb:
             prefix = colorstr("Weights & Biases: ")
-            s = f"{prefix}run 'pip install wandb' to automatically track and visualize YOLOv5 🚀 runs (RECOMMENDED)"
+            s = (
+                f"{prefix}run 'pip install wandb' to automatically track and "
+                "visualize YOLOv5 🚀 runs (RECOMMENDED)"
+            )
             print(emojis(s))
 
         # TensorBoard
@@ -159,7 +162,8 @@ class Loggers:
             if best_fitness == fi:
                 best_results = [epoch] + vals[3:7]
                 for i, name in enumerate(self.best_keys):
-                    self.wandb.wandb_run.summary[name] = best_results[i]  # log best results in the summary
+                    # log best results in the summary
+                    self.wandb.wandb_run.summary[name] = best_results[i]
             self.wandb.log(x)
             self.wandb.end_epoch(best_result=best_fitness == fi)
 
