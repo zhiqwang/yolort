@@ -2,14 +2,11 @@
 """
 Dataloaders and dataset utils
 """
+
 import glob
 import hashlib
-import json
-import math
 import os
 import random
-import shutil
-import time
 from itertools import repeat
 from multiprocessing.pool import Pool, ThreadPool
 from pathlib import Path
@@ -19,33 +16,12 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from tqdm import tqdm
-from yolort.v5.utils.general import (
-    DATASETS_DIR,
-    LOGGER,
-    NUM_THREADS,
-    check_dataset,
-    check_requirements,
-    check_yaml,
-    clean_str,
-    segments2boxes,
-    xyn2xy,
-    xywh2xyxy,
-    xywhn2xyxy,
-    xyxy2xywhn,
-)
-
-from .augmentations import letterbox
 from torch.utils.data import DataLoader, Dataset, dataloader, distributed
-from yolort.v5.utils.augmentations import (
-    Albumentations,
-    augment_hsv,
-    copy_paste,
-    letterbox,
-    mixup,
-    random_perspective,
-)
-from yolort.v5.utils.torch_utils import torch_distributed_zero_first
+from tqdm import tqdm
+
+from .augmentations import Albumentations, augment_hsv, copy_paste, letterbox, mixup, random_perspective
+from .general import LOGGER, NUM_THREADS, segments2boxes, xyn2xy, xywhn2xyxy, xyxy2xywhn
+from .torch_utils import torch_distributed_zero_first
 
 # Parameters
 
@@ -355,7 +331,10 @@ class LoadImagesAndLabels(Dataset):
         # Display cache
         nf, nm, ne, nc, n = cache.pop("results")  # found, missing, empty, corrupt, total
         if exists:
-            d = f"Scanning '{cache_path}' images and labels... {nf} found, {nm} missing, {ne} empty, {nc} corrupt"
+            d = (
+                f"Scanning '{cache_path}' images and labels... {nf} found, {nm} missing, "
+                f"{ne} empty, {nc} corrupt"
+            )
             tqdm(None, desc=prefix + d, total=n, initial=n)  # display cache results
             if cache["msgs"]:
                 LOGGER.info("\n".join(cache["msgs"]))  # display warnings
@@ -785,20 +764,14 @@ class LoadImagesAndLabels(Dataset):
         return torch.stack(img4, 0), torch.cat(label4, 0), path4, shapes4
 
 
-# Ancillary functions --------------------------------------------------------------------------------------------------
+# Ancillary functions
 
 
 def verify_image_label(args):
     # Verify one image-label pair
     im_file, lb_file, prefix = args
-    nm, nf, ne, nc, msg, segments = (
-        0,
-        0,
-        0,
-        0,
-        "",
-        [],
-    )  # number (missing, found, empty, corrupt), message, segments
+    # number (missing, found, empty, corrupt), message, segments
+    nm, nf, ne, nc, msg, segments = (0, 0, 0, 0, "", [])
     try:
         # verify images
         im = Image.open(im_file)
