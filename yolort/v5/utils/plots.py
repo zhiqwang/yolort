@@ -21,21 +21,23 @@ except ImportError:
     cv2 = None
 
 from .general import (
+    CONFIG_DIR,
+    FONT,
     LOGGER,
     Timeout,
+    check_font,
+    check_requirements,
     clip_coords,
     increment_path,
     is_ascii,
     is_chinese,
     try_except,
-    user_config_dir,
     xywh2xyxy,
     xyxy2xywh,
 )
 from .metrics import fitness
 
 # Settings
-CONFIG_DIR = user_config_dir()  # Ultralytics settings dir
 RANK = int(os.getenv("RANK", -1))
 matplotlib.rc("font", **{"size": 11})
 matplotlib.use("Agg")  # for writing to files only
@@ -79,25 +81,28 @@ class Colors:
         return tuple(int(h[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))
 
 
-colors = Colors()  # create instance
+colors = Colors()  # create instance for 'from utils.plots import colors'
 
 
-def check_font(font="Arial.ttf", size=10):
+def check_pil_font(font=FONT, size=10):
     # Return a PIL TrueType Font, downloading to CONFIG_DIR if necessary
     font = Path(font)
     font = font if font.exists() else (CONFIG_DIR / font.name)
     try:
         return ImageFont.truetype(str(font) if font.exists() else font.name, size)
-    except Exception as e:  # download if missing
-        print(f"Warning: Font error: {e}")
-        url = "https://ultralytics.com/assets/" + font.name
-        print(f"Downloading {url} to {font}...")
-        torch.hub.download_url_to_file(url, str(font), progress=False)
+    except Exception:  # download if missing
+        check_font(font)
+        try:
+            return ImageFont.truetype(str(font), size)
+        except TypeError:
+            check_requirements(
+                "Pillow>=8.4.0"
+            )  # known issue https://github.com/ultralytics/yolov5/issues/5374
 
 
 class Annotator:
     if RANK in (-1, 0):
-        check_font()  # download TTF if necessary
+        check_pil_font()  # download TTF if necessary
 
     # YOLOv5 Annotator for train/val mosaics and jpgs and detect/hub inference annotations
     def __init__(self, im, line_width=None, font_size=None, font="Arial.ttf", pil=False, example="abc"):
@@ -108,7 +113,7 @@ class Annotator:
         if self.pil:  # use PIL
             self.im = im if isinstance(im, Image.Image) else Image.fromarray(im)
             self.draw = ImageDraw.Draw(self.im)
-            self.font = check_font(
+            self.font = check_pil_font(
                 font="Arial.Unicode.ttf" if is_chinese(example) else font,
                 size=font_size or max(round(sum(self.im.size) / 2 * 0.035), 12),
             )
@@ -124,15 +129,14 @@ class Annotator:
                 w, h = self.font.getsize(label)  # text width, height
                 outside = box[1] - h >= 0  # label fits outside box
                 self.draw.rectangle(
-                    [
+                    (
                         box[0],
                         box[1] - h if outside else box[1],
                         box[0] + w + 1,
                         box[1] + 1 if outside else box[1] + h + 1,
-                    ],
+                    ),
                     fill=color,
                 )
-                # for PIL>8.0
                 # self.draw.text((box[0], box[1]), label, fill=txt_color, font=self.font, anchor='ls')
                 self.draw.text(
                     (box[0], box[1] - h if outside else box[1]), label, fill=txt_color, font=self.font
@@ -181,7 +185,7 @@ def feature_visualization(x, module_type, stage, n=32, save_dir=Path("runs/detec
         save_dir: Directory to save results
     """
     if "Detect" not in module_type:
-        _, channels, height, width = x.shape  # batch, channels, height, width
+        batch, channels, height, width = x.shape  # batch, channels, height, width
         if height > 1 and width > 1:
             f = save_dir / f"stage{stage}_{module_type.split('.')[-1]}_features.png"  # filename
 
@@ -194,7 +198,7 @@ def feature_visualization(x, module_type, stage, n=32, save_dir=Path("runs/detec
                 ax[i].imshow(blocks[i].squeeze())  # cmap='gray'
                 ax[i].axis("off")
 
-            print(f"Saving {f}... ({n}/{channels})")
+            LOGGER.info(f"Saving {f}... ({n}/{channels})")
             plt.savefig(f, dpi=300, bbox_inches="tight")
             plt.close()
             np.save(str(f.with_suffix(".npy")), x[0].cpu().numpy())  # npy save
@@ -261,7 +265,7 @@ def plot_images(images, targets, paths=None, fname="images.jpg", names=None, max
 
     # Annotate
     fs = int((h + w) * ns * 0.01)  # font size
-    annotator = Annotator(mosaic, line_width=round(fs / 10), font_size=fs, pil=True)
+    annotator = Annotator(mosaic, line_width=round(fs / 10), font_size=fs, pil=True, example=names)
     for i in range(i + 1):
         x, y = int(w * (i // ns)), int(h * (i % ns))  # block origin
         annotator.rectangle([x, y, x + w, y + h], None, (255, 255, 255), width=2)  # borders
@@ -311,7 +315,7 @@ def plot_lr_scheduler(optimizer, scheduler, epochs=300, save_dir=""):
     plt.close()
 
 
-def plot_val_txt():
+def plot_val_txt():  # from utils.plots import *; plot_val()
     # Plot val.txt histograms
     x = np.loadtxt("val.txt", dtype=np.float32)
     box = xyxy2xywh(x[:, :4])
@@ -328,7 +332,7 @@ def plot_val_txt():
     plt.savefig("hist1d.png", dpi=200)
 
 
-def plot_targets_txt():
+def plot_targets_txt():  # from utils.plots import *; plot_targets_txt()
     # Plot targets.txt histograms
     x = np.loadtxt("targets.txt", dtype=np.float32).T
     s = ["x targets", "y targets", "width targets", "height targets"]
@@ -349,6 +353,7 @@ def plot_val_study(file="", dir="", x=None):
         ax = plt.subplots(2, 4, figsize=(10, 6), tight_layout=True)[1].ravel()
 
     fig2, ax2 = plt.subplots(1, 1, figsize=(8, 4), tight_layout=True)
+    # for f in [save_dir / f'study_coco_{x}.txt' for x in ['yolov5n6', 'yolov5s6', ...]]:
     for f in sorted(save_dir.glob("study*.txt")):
         y = np.loadtxt(f, dtype=np.float32, usecols=[0, 1, 2, 3, 7, 8, 9], ndmin=2).T
         x = np.arange(y.shape[1]) if x is None else np.array(x)
@@ -401,6 +406,7 @@ def plot_val_study(file="", dir="", x=None):
 @try_except  # known issue https://github.com/ultralytics/yolov5/issues/5395
 @Timeout(30)  # known issue https://github.com/ultralytics/yolov5/issues/5611
 def plot_labels(labels, names=(), save_dir=Path("")):
+
     import seaborn as sn
 
     # plot dataset labels
@@ -419,9 +425,11 @@ def plot_labels(labels, names=(), save_dir=Path("")):
     # matplotlib labels
     matplotlib.use("svg")  # faster
     ax = plt.subplots(2, 2, figsize=(8, 8), tight_layout=True)[1].ravel()
-    _ = ax[0].hist(c, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
-    # update colors bug #3195
-    # [y[2].patches[i].set_color([x / 255 for x in colors(i)]) for i in range(nc)]
+    y = ax[0].hist(c, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
+    try:  # color histogram bars by class
+        [y[2].patches[i].set_color([x / 255 for x in colors(i)]) for i in range(nc)]  # known issue #3195
+    except Exception:
+        pass
     ax[0].set_ylabel("instances")
     if 0 < len(names) < 30:
         ax[0].set_xticks(range(len(names)))
@@ -449,7 +457,7 @@ def plot_labels(labels, names=(), save_dir=Path("")):
     plt.close()
 
 
-def plot_evolve(evolve_csv="path/to/evolve.csv"):
+def plot_evolve(evolve_csv="path/to/evolve.csv"):  # from utils.plots import *; plot_evolve()
     # Plot evolve.csv hyp evolution results
     evolve_csv = Path(evolve_csv)
     data = pd.read_csv(evolve_csv)
@@ -476,7 +484,7 @@ def plot_evolve(evolve_csv="path/to/evolve.csv"):
 
 
 def plot_results(file="path/to/results.csv", dir=""):
-    # Plot training results.csv.
+    # Plot training results.csv. Usage: from utils.plots import *; plot_results('path/to/results.csv')
     save_dir = Path(file).parent if file else Path(dir)
     fig, ax = plt.subplots(2, 5, figsize=(12, 6), tight_layout=True)
     ax = ax.ravel()
@@ -495,14 +503,14 @@ def plot_results(file="path/to/results.csv", dir=""):
                 # if j in [8, 9, 10]:  # share train and val loss y axes
                 #     ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
         except Exception as e:
-            print(f"Warning: Plotting error for {f}: {e}")
+            LOGGER.info(f"Warning: Plotting error for {f}: {e}")
     ax[1].legend()
     fig.savefig(save_dir / "results.png", dpi=200)
     plt.close()
 
 
 def profile_idetection(start=0, stop=0, labels=(), save_dir=""):
-    # Plot iDetection '*.txt' per-image logs.
+    # Plot iDetection '*.txt' per-image logs. from utils.plots import *; profile_idetection()
     ax = plt.subplots(2, 4, figsize=(12, 6), tight_layout=True)[1].ravel()
     s = [
         "Images",

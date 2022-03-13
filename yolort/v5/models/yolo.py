@@ -14,7 +14,7 @@ from pathlib import Path
 import torch
 from torch import nn
 from yolort.v5.utils.autoanchor import check_anchor_order
-from yolort.v5.utils.general import make_divisible
+from yolort.v5.utils.general import check_version, make_divisible
 from yolort.v5.utils.torch_utils import (
     time_sync,
     fuse_conv_and_bn,
@@ -91,7 +91,10 @@ class Detect(nn.Module):
 
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
-        yv, xv = torch.meshgrid([torch.arange(ny).to(d), torch.arange(nx).to(d)])
+        if check_version(torch.__version__, "1.10.0"):  # torch>=1.10.0 meshgrid workaround
+            yv, xv = torch.meshgrid([torch.arange(ny, device=d), torch.arange(nx, device=d)], indexing="ij")
+        else:
+            yv, xv = torch.meshgrid([torch.arange(ny, device=d), torch.arange(nx, device=d)])
         grid = torch.stack((xv, yv), 2).expand((1, self.na, ny, nx, 2)).float()
         anchor_grid = (
             (self.anchors[i].clone() * self.stride[i])
