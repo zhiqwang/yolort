@@ -40,7 +40,8 @@ def autobatch(model, imgsz=640, fraction=0.9, batch_size=16):
     a = torch.cuda.memory_allocated(device) / 1024 ** 3  # (GiB)
     f = t - (r + a)  # free inside reserved
     LOGGER.info(
-        f"{prefix}{d} ({properties.name}) {t:.2f}G total, {r:.2f}G reserved, {a:.2f}G allocated, {f:.2f}G free"
+        f"{prefix}{d} ({properties.name}) {t:.2f}G total, {r:.2f}G reserved, "
+        f"{a:.2f}G allocated, {f:.2f}G free"
     )
 
     batch_sizes = [1, 2, 4, 8, 16]

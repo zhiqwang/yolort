@@ -8,15 +8,16 @@ Datasets: https://github.com/ultralytics/yolov5/tree/master/data
 Tutorial: https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data
 
 Usage:
-    $ python path/to/train.py --data coco128.yaml --weights yolov5s.pt --img 640 # from pretrained (RECOMMENDED)
-    $ python path/to/train.py --data coco128.yaml --weights '' --cfg yolov5s.yaml --img 640  # from scratch
+    # from pretrained (RECOMMENDED)
+    $ python path/to/train.py --data coco128.yaml --weights yolov5s.pt --img 640
+    # from scratch
+    $ python path/to/train.py --data coco128.yaml --weights '' --cfg yolov5s.yaml --img 640
 """
 
 import argparse
 import math
 import os
 import random
-import sys
 import time
 from copy import deepcopy
 from datetime import datetime
@@ -163,7 +164,8 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
         with torch_distributed_zero_first(LOCAL_RANK):
             weights = attempt_download(weights)  # download if not found locally
         ckpt = torch.load(weights, map_location="cpu")  # load checkpoint to CPU to avoid CUDA memory leak
-        model = Model(cfg or ckpt["model"].yaml, ch=3, nc=nc, anchors=hyp.get("anchors")).to(device)  # create
+        # create model
+        model = Model(cfg or ckpt["model"].yaml, ch=3, nc=nc, anchors=hyp.get("anchors")).to(device)
         exclude = ["anchor"] if (cfg or hyp.get("anchors")) and not resume else []  # exclude keys
         csd = ckpt["model"].float().state_dict()  # checkpoint state_dict as FP32
         csd = intersect_dicts(csd, model.state_dict(), exclude=exclude)  # intersect
@@ -211,7 +213,8 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
     else:
         optimizer = SGD(g0, lr=hyp["lr0"], momentum=hyp["momentum"], nesterov=True)
 
-    optimizer.add_param_group({"params": g1, "weight_decay": hyp["weight_decay"]})  # add g1 with weight_decay
+    # add g1 with weight_decay
+    optimizer.add_param_group({"params": g1, "weight_decay": hyp["weight_decay"]})
     optimizer.add_param_group({"params": g2})  # add g2 (biases)
     LOGGER.info(
         f"{colorstr('optimizer:')} {type(optimizer).__name__} with parameter groups "
@@ -250,7 +253,8 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
             assert start_epoch > 0, f"{weights} training to {epochs} epochs is finished, nothing to resume."
         if epochs < start_epoch:
             LOGGER.info(
-                f"{weights} has been trained for {ckpt['epoch']} epochs. Fine-tuning for {epochs} more epochs."
+                f"{weights} has been trained for {ckpt['epoch']} epochs. "
+                f"Fine-tuning for {epochs} more epochs."
             )
             epochs += ckpt["epoch"]  # finetune additional epochs
 
@@ -335,7 +339,8 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
     hyp["label_smoothing"] = opt.label_smoothing
     model.nc = nc  # attach number of classes to model
     model.hyp = hyp  # attach hyperparameters to model
-    model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device) * nc  # attach class weights
+    # attach class weights
+    model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device) * nc
     model.names = names
 
     # Start training
@@ -357,9 +362,7 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
         f"Logging results to {colorstr('bold', save_dir)}\n"
         f"Starting training for {epochs} epochs..."
     )
-    for epoch in range(
-        start_epoch, epochs
-    ):  # epoch ------------------------------------------------------------------
+    for epoch in range(start_epoch, epochs):  # epoch
         model.train()
 
         # Update image weights (optional, single-GPU only)
@@ -385,7 +388,7 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
             targets,
             paths,
             _,
-        ) in pbar:  # batch -------------------------------------------------------------
+        ) in pbar:  # batch
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
 
@@ -436,7 +439,8 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
             # Log
             if RANK in [-1, 0]:
                 mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
-                mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"  # (GB)
+                # in (GB) metric
+                mem = f"{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G"
                 pbar.set_description(
                     ("%10s" * 2 + "%10.4g" * 5)
                     % (f"{epoch}/{epochs - 1}", mem, *mloss, targets.shape[0], imgs.shape[-1])
@@ -444,7 +448,7 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
                 callbacks.run("on_train_batch_end", ni, model, imgs, targets, paths, plots, opt.sync_bn)
                 if callbacks.stop_training:
                     return
-            # end batch ------------------------------------------------------------------------------------------------
+            # end batch
 
         # Scheduler
         lr = [x["lr"] for x in optimizer.param_groups]  # for loggers
@@ -470,9 +474,8 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
                 )
 
             # Update best mAP
-            fi = fitness(
-                np.array(results).reshape(1, -1)
-            )  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
+            # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
+            fi = fitness(np.array(results).reshape(1, -1))
             if fi > best_fitness:
                 best_fitness = fi
             log_vals = list(mloss) + list(results) + lr
@@ -514,8 +517,8 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
         # if stop:
         #    break  # must break all DDP ranks
 
-        # end epoch ----------------------------------------------------------------------------------------------------
-    # end training -----------------------------------------------------------------------------------------------------
+        # end epoch
+    # end training
     if RANK in [-1, 0]:
         LOGGER.info(f"\n{epoch - start_epoch + 1} epochs completed in {(time.time() - t0) / 3600:.3f} hours.")
         for f in last, best:

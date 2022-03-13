@@ -8,8 +8,9 @@ import random
 
 import cv2
 import numpy as np
-from yolort.v5.utils.general import LOGGER, check_version, colorstr, resample_segments, segment2box
-from yolort.v5.utils.metrics import bbox_ioa
+
+from .general import LOGGER, check_version, colorstr, resample_segments, segment2box
+from .metrics import bbox_ioa
 
 
 class Albumentations:
@@ -139,7 +140,12 @@ def random_perspective(
     perspective=0.0,
     border=(0, 0),
 ):
-    # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.1, 0.1), scale=(0.9, 1.1), shear=(-10, 10))
+    # torchvision.transforms.RandomAffine(
+    #     degrees=(-10, 10),
+    #     translate=(0.1, 0.1),
+    #     scale=(0.9, 1.1),
+    #     shear=(-10, 10),
+    # )
     # targets = [cls, xyxy]
 
     height = im.shape[0] + border[0] * 2  # shape(h,w,c)
@@ -288,7 +294,8 @@ def mixup(im, labels, im2, labels2):
 
 
 def box_candidates(box1, box2, wh_thr=2, ar_thr=100, area_thr=0.1, eps=1e-16):  # box1(4,n), box2(4,n)
-    # Compute candidate boxes: box1 before augment, box2 after augment, wh_thr (pixels), aspect_ratio_thr, area_ratio
+    # Compute candidate boxes: box1 before augment, box2 after augment
+    # wh_thr (pixels), aspect_ratio_thr, area_ratio
     w1, h1 = box1[2] - box1[0], box1[3] - box1[1]
     w2, h2 = box2[2] - box2[0], box2[3] - box2[1]
     ar = np.maximum(w2 / (h2 + eps), h2 / (w2 + eps))  # aspect ratio

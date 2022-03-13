@@ -315,7 +315,7 @@ def wh_iou(wh1, wh2):
     return inter / (wh1.prod(2) + wh2.prod(2) - inter)  # iou = inter / (area1 + area2 - inter)
 
 
-# Plots ----------------------------------------------------------------------------------------------------------------
+# Plots
 
 
 def plot_pr_curve(px, py, ap, save_dir="pr_curve.png", names=()):
