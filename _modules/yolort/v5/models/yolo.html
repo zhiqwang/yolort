@@ -1,0 +1,695 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="lang:clipboard.copy" content="Copy to clipboard">
+  <meta name="lang:clipboard.copied" content="Copied to clipboard">
+  <meta name="lang:search.language" content="en">
+  <meta name="lang:search.pipeline.stopwords" content="True">
+  <meta name="lang:search.pipeline.trimmer" content="True">
+  <meta name="lang:search.result.none" content="No matching documents">
+  <meta name="lang:search.result.one" content="1 matching document">
+  <meta name="lang:search.result.other" content="# matching documents">
+  <meta name="lang:search.tokenizer" content="[\s\-]+">
+
+  
+    <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&display=fallback" rel="stylesheet">
+
+    <style>
+      body,
+      input {
+        font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif
+      }
+
+      code,
+      kbd,
+      pre {
+        font-family: "Roboto Mono", "Courier New", Courier, monospace
+      }
+    </style>
+  
+
+  <link rel="stylesheet" href="../../../../_static/stylesheets/application.css"/>
+  <link rel="stylesheet" href="../../../../_static/stylesheets/application-palette.css"/>
+  <link rel="stylesheet" href="../../../../_static/stylesheets/application-fixes.css"/>
+  
+  <link rel="stylesheet" href="../../../../_static/fonts/material-icons.css"/>
+  
+  <meta name="theme-color" content="#3f51b5">
+  <script src="../../../../_static/javascripts/modernizr.js"></script>
+  
+  
+  
+    <title>yolort.v5.models.yolo &#8212; yolort  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/material.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  
+   
+
+  </head>
+  <body dir=ltr
+        data-md-color-primary=blue data-md-color-accent=light-blue>
+  
+  <svg class="md-svg">
+    <defs data-children-count="0">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+      
+    </defs>
+  </svg>
+  
+  <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
+  <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
+  <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+  <a href="#_modules/yolort/v5/models/yolo" tabindex="1" class="md-skip"> Skip to content </a>
+  <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex navheader">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../../../../index.html" title="yolort  documentation"
+           class="md-header-nav__button md-logo">
+          
+              <img src="../../../../_static/yolort_logo_icon.png" height="26"
+                   alt="yolort documentation logo">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          <span class="md-header-nav__topic">YOLOv5 Runtime Stack</span>
+          <span class="md-header-nav__topic"> yolort.v5.models.yolo </span>
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yolort
+  </div>
+</a>
+          </div>
+        </div>
+      
+      
+  
+  <script src="../../../../_static/javascripts/version_dropdown.js"></script>
+  <script>
+    var json_loc = "../../../../"versions.json"",
+        target_loc = "../../../../../",
+        text = "Versions";
+    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
+  </script>
+  
+
+    </div>
+  </nav>
+</header>
+
+  
+  <div class="md-container">
+    
+    
+    
+  <nav class="md-tabs" data-md-component="tabs">
+    <div class="md-tabs__inner md-grid">
+      <ul class="md-tabs__list">
+          <li class="md-tabs__item"><a href="../../../../index.html" class="md-tabs__link">yolort  documentation</a></li>
+          <li class="md-tabs__item"><a href="../../../index.html" class="md-tabs__link">Module code</a></li>
+      </ul>
+    </div>
+  </nav>
+    <main class="md-main">
+      <div class="md-main__inner md-grid" data-md-component="container">
+        
+          <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../../../../index.html" title="yolort documentation" class="md-nav__button md-logo">
+      
+        <img src="../../../../_static/yolort_logo_icon.png" alt=" logo" width="48" height="48">
+      
+    </a>
+    <a href="../../../../index.html"
+       title="yolort documentation">YOLOv5 Runtime Stack</a>
+  </label>
+    <div class="md-nav__source">
+      <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yolort
+  </div>
+</a>
+    </div>
+  
+  
+
+  
+  <ul class="md-nav__list">
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Getting Started</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../installation.html" class="md-nav__link">Install yolort</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Tutorials</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/inference-pytorch-export-libtorch.html" class="md-nav__link">Intuition for yolort</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/comparison-between-yolort-vs-yolov5.html" class="md-nav__link">What is the difference between yolort and yolov5</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/how-to-align-with-ultralytics-yolov5.html" class="md-nav__link">How to align with ultralytics yolov5</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/anchor-label-assignment-visualization.html" class="md-nav__link">Visualize the anchor-target assignment</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/model-graph-visualization.html" class="md-nav__link">Visualize model graph</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Deployment</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/export-onnx-inference-onnxruntime.html" class="md-nav__link">Deploying yolort on ONNX Runtime</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/onnx-graphsurgeon-inference-tensorrt.html" class="md-nav__link">Deploying yolort on TensorRT</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/export-relay-inference-tvm.html" class="md-nav__link">Deploying yolort on TVM</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">API Reference</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../models.html" class="md-nav__link">yolort.models</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../models.html#models-structure" class="md-nav__link">Models structure</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../models.html#pre-trained-weights" class="md-nav__link">Pre-trained weights</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../yolov5.html" class="md-nav__link">Modules and utils for YOLOv5</a>
+      
+    
+    </li>
+  </ul>
+  
+
+</nav>
+              </div>
+            </div>
+          </div>
+          <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                
+<nav class="md-nav md-nav--secondary">
+  <ul class="md-nav__list" data-md-scrollfix="">
+  </ul>
+</nav>
+              </div>
+            </div>
+          </div>
+        
+        <div class="md-content">
+          <article class="md-content__inner md-typeset" role="main">
+            
+  <h1 id="modules-yolort-v5-models-yolo--page-root">Source code for yolort.v5.models.yolo</h1><div class="highlight"><pre>
+<span></span><span class="c1"># YOLOv5 🚀 by Ultralytics, GPL-3.0 license</span>
+<span class="sd">"""</span>
+<span class="sd">YOLO-specific modules</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    $ python path/to/models/yolo.py --cfg yolov5s.yaml</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">yolort.v5.utils.autoanchor</span> <span class="kn">import</span> <span class="n">check_anchor_order</span>
+<span class="kn">from</span> <span class="nn">yolort.v5.utils.general</span> <span class="kn">import</span> <span class="n">make_divisible</span>
+<span class="kn">from</span> <span class="nn">yolort.v5.utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">time_sync</span><span class="p">,</span>
+    <span class="n">fuse_conv_and_bn</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="p">,</span>
+    <span class="n">scale_img</span><span class="p">,</span>
+    <span class="n">initialize_weights</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Conv</span><span class="p">,</span>
+    <span class="n">Bottleneck</span><span class="p">,</span>
+    <span class="n">SPP</span><span class="p">,</span>
+    <span class="n">SPPF</span><span class="p">,</span>
+    <span class="n">DWConv</span><span class="p">,</span>
+    <span class="n">Focus</span><span class="p">,</span>
+    <span class="n">BottleneckCSP</span><span class="p">,</span>
+    <span class="n">C3</span><span class="p">,</span>
+    <span class="n">Concat</span><span class="p">,</span>
+    <span class="n">GhostConv</span><span class="p">,</span>
+    <span class="n">GhostBottleneck</span><span class="p">,</span>
+    <span class="n">Contract</span><span class="p">,</span>
+    <span class="n">Expand</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.experimental</span> <span class="kn">import</span> <span class="n">CrossConv</span><span class="p">,</span> <span class="n">MixConv2d</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">thop</span>  <span class="c1"># for FLOPs computation</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">thop</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Model"</span><span class="p">,</span> <span class="s2">"Detect"</span><span class="p">]</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Detect"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.Detect">[docs]</a><span class="k">class</span> <span class="nc">Detect</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">stride</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># strides computed during build</span>
+    <span class="n">onnx_dynamic</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># ONNX export parameter</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">anchors</span><span class="o">=</span><span class="p">(),</span> <span class="n">ch</span><span class="o">=</span><span class="p">(),</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>  <span class="c1"># detection layer</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nc</span> <span class="o">=</span> <span class="n">nc</span>  <span class="c1"># number of classes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no</span> <span class="o">=</span> <span class="n">nc</span> <span class="o">+</span> <span class="mi">5</span>  <span class="c1"># number of outputs per anchor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nl</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span>  <span class="c1"># number of detection layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">na</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># number of anchors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl</span>  <span class="c1"># init grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchor_grid</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl</span>  <span class="c1"># init anchor grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">"anchors"</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">no</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ch</span><span class="p">)</span>  <span class="c1"># output conv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span> <span class="o">=</span> <span class="n">inplace</span>  <span class="c1"># use in-place ops (e.g. slice assignment)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># inference output</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>  <span class="c1"># conv</span>
+            <span class="n">bs</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># x(bs,255,20,20) to x(bs,3,20,20,85)</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">no</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>  <span class="c1"># inference</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">onnx_dynamic</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor_grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_grid</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+                <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span><span class="p">:</span>
+                    <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># xy</span>
+                    <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor_grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># wh</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># for YOLOv5 on AWS Inferentia https://github.com/ultralytics/yolov5/pull/2953</span>
+                    <span class="n">xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># xy</span>
+                    <span class="n">wh</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor_grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># wh</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">xy</span><span class="p">,</span> <span class="n">wh</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">4</span><span class="p">:]),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">no</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">x</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">yv</span><span class="p">,</span> <span class="n">xv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">d</span><span class="p">)])</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">xv</span><span class="p">,</span> <span class="n">yv</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">anchor_grid</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="o">.</span><span class="n">view</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">expand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">grid</span><span class="p">,</span> <span class="n">anchor_grid</span></div>
+
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="s2">"yolov5s.yaml"</span><span class="p">,</span> <span class="n">ch</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            cfg (str): model</span>
+<span class="sd">            ch (int): input channels</span>
+<span class="sd">            nc (int): number of classes</span>
+<span class="sd">            anchors: override the anchors to the yaml value is anchors is None</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span> <span class="o">=</span> <span class="n">cfg</span>  <span class="c1"># model dict</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># is *.yaml</span>
+            <span class="kn">import</span> <span class="nn">yaml</span>  <span class="c1"># for torch hub</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">yaml_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  <span class="c1"># model dict</span>
+
+        <span class="c1"># Define model</span>
+        <span class="n">ch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="p">[</span><span class="s2">"ch"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ch"</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>  <span class="c1"># input channels</span>
+        <span class="k">if</span> <span class="n">nc</span> <span class="ow">and</span> <span class="n">nc</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="p">[</span><span class="s2">"nc"</span><span class="p">]:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Overriding model.yaml nc=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="p">[</span><span class="s1">'nc'</span><span class="p">]</span><span class="si">}</span><span class="s2"> with nc=</span><span class="si">{</span><span class="n">nc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="p">[</span><span class="s2">"nc"</span><span class="p">]</span> <span class="o">=</span> <span class="n">nc</span>  <span class="c1"># override yaml value</span>
+        <span class="k">if</span> <span class="n">anchors</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Overriding model.yaml anchors with anchors=</span><span class="si">{</span><span class="n">anchors</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="p">[</span><span class="s2">"anchors"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span>  <span class="c1"># override yaml value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">parse_model</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="p">),</span> <span class="n">ch</span><span class="o">=</span><span class="p">[</span><span class="n">ch</span><span class="p">])</span>  <span class="c1"># model, savelist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="p">[</span><span class="s2">"nc"</span><span class="p">])]</span>  <span class="c1"># default names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yaml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"inplace"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Build strides, anchors</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Detect()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Detect</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="mi">256</span>  <span class="c1"># 2x min stride</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">inplace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">s</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">))])</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">anchors</span> <span class="o">/=</span> <span class="n">m</span><span class="o">.</span><span class="n">stride</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">check_anchor_order</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">stride</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_biases</span><span class="p">()</span>  <span class="c1"># only run once</span>
+
+        <span class="c1"># Init weights, biases</span>
+        <span class="n">initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">augment</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">visualize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">augment</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_augment</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># augmented inference, None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_once</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span> <span class="n">visualize</span><span class="p">)</span>  <span class="c1"># single-scale inference, train</span>
+
+    <span class="k">def</span> <span class="nf">_forward_augment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">img_size</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>  <span class="c1"># height, width</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.83</span><span class="p">,</span> <span class="mf">0.67</span><span class="p">]</span>  <span class="c1"># scales</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># flips (2-ud, 3-lr)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># outputs</span>
+        <span class="k">for</span> <span class="n">si</span><span class="p">,</span> <span class="n">fi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+            <span class="n">xi</span> <span class="o">=</span> <span class="n">scale_img</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">fi</span><span class="p">)</span> <span class="k">if</span> <span class="n">fi</span> <span class="k">else</span> <span class="n">x</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">gs</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+            <span class="n">yi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_once</span><span class="p">(</span><span class="n">xi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># forward</span>
+            <span class="n">yi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_descale_pred</span><span class="p">(</span><span class="n">yi</span><span class="p">,</span> <span class="n">fi</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">img_size</span><span class="p">)</span>
+            <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yi</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clip_augmented</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>  <span class="c1"># clip augmented tails</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="kc">None</span>  <span class="c1"># augmented inference, train</span>
+
+    <span class="k">def</span> <span class="nf">_forward_once</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">visualize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">dt</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>  <span class="c1"># outputs</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">f</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># if not from previous layer</span>
+                <span class="c1"># from earlier layers</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">f</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">x</span> <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">f</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">profile</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_profile_one_layer</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># run</span>
+            <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">save</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># save output</span>
+            <span class="k">if</span> <span class="n">visualize</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">yolort.v5.utils.plots</span> <span class="kn">import</span> <span class="n">feature_visualization</span>
+
+                <span class="n">feature_visualization</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">=</span><span class="n">visualize</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">_descale_pred</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">flips</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">img_size</span><span class="p">):</span>
+        <span class="c1"># de-scale predictions following augmented inference (inverse operation)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inplace</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">/=</span> <span class="n">scale</span>  <span class="c1"># de-scale</span>
+            <span class="k">if</span> <span class="n">flips</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># de-flip ud</span>
+            <span class="k">elif</span> <span class="n">flips</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># de-flip lr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># de-scale</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wh</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="n">scale</span>
+            <span class="k">if</span> <span class="n">flips</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">img_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span>  <span class="c1"># de-flip ud</span>
+            <span class="k">elif</span> <span class="n">flips</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">img_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span>  <span class="c1"># de-flip lr</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wh</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">4</span><span class="p">:]),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+    <span class="k">def</span> <span class="nf">_clip_augmented</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="c1"># Clip YOLOv5 augmented inference tails</span>
+        <span class="n">nl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">nl</span>  <span class="c1"># number of detection layers (P3-P5)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">4</span> <span class="o">**</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nl</span><span class="p">))</span>  <span class="c1"># grid points</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># exclude layer count</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">4</span> <span class="o">**</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>  <span class="c1"># indices</span>
+        <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="p">:</span><span class="o">-</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># large</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">4</span> <span class="o">**</span> <span class="p">(</span><span class="n">nl</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>  <span class="c1"># indices</span>
+        <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:,</span> <span class="n">i</span><span class="p">:]</span>  <span class="c1"># small</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">_profile_one_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Detect</span><span class="p">)</span>  <span class="c1"># is final layer, copy input as inplace fix</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">thop</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span> <span class="k">else</span> <span class="n">x</span><span class="p">,),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">1e9</span> <span class="o">*</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">thop</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">time_sync</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="n">m</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span> <span class="k">else</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">dt</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">time_sync</span><span class="p">()</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'time (ms)'</span><span class="si">:</span><span class="s2">&gt;10s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'GFLOPs'</span><span class="si">:</span><span class="s2">&gt;10s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'params'</span><span class="si">:</span><span class="s2">&gt;10s</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="s1">'module'</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dt</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">o</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">np</span><span class="si">:</span><span class="s2">10.0f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'-'</span><span class="si">:</span><span class="s2">&gt;10s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'-'</span><span class="si">:</span><span class="s2">&gt;10s</span><span class="si">}</span><span class="s2">  Total"</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_biases</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># initialize biases into Detect(), cf is class frequency</span>
+        <span class="c1"># https://arxiv.org/abs/1708.02002 section 3.3</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Detect() module</span>
+        <span class="k">for</span> <span class="n">mi</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">stride</span><span class="p">):</span>  <span class="c1"># from</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">mi</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># conv.bias(255) to (3,85)</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">+=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">8</span> <span class="o">/</span> <span class="p">(</span><span class="mi">640</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># obj (8 objects per 640 image)</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">:]</span> <span class="o">+=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.6</span> <span class="o">/</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">nc</span> <span class="o">-</span> <span class="mf">0.999999</span><span class="p">))</span> <span class="k">if</span> <span class="n">cf</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">cf</span> <span class="o">/</span> <span class="n">cf</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+            <span class="n">mi</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_biases</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Detect() module</span>
+        <span class="k">for</span> <span class="n">mi</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">m</span><span class="p">:</span>  <span class="c1"># from</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">mi</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># conv.bias(255) to (3,85)</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">"</span><span class="si">%6g</span><span class="s2"> Conv2d.bias:"</span> <span class="o">+</span> <span class="s2">"</span><span class="si">%10.3g</span><span class="s2">"</span> <span class="o">*</span> <span class="mi">6</span><span class="p">)</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">mi</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">b</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">b</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+            <span class="p">)</span>
+
+    <span class="c1"># def _print_weights(self):</span>
+    <span class="c1">#     for m in self.model.modules():</span>
+    <span class="c1">#         if type(m) is Bottleneck:</span>
+    <span class="c1">#             LOGGER.info('%10.3g' % (m.w.detach().sigmoid() * 2))  # shortcut weights</span>
+
+<div class="viewcode-block" id="Model.fuse"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.Model.fuse">[docs]</a>    <span class="k">def</span> <span class="nf">fuse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># fuse model Conv2d() + BatchNorm2d() layers</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Fusing layers... "</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">Conv</span><span class="p">,</span> <span class="n">DWConv</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"bn"</span><span class="p">):</span>
+                <span class="n">m</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">fuse_conv_and_bn</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">conv</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">bn</span><span class="p">)</span>  <span class="c1"># update conv</span>
+                <span class="nb">delattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"bn"</span><span class="p">)</span>  <span class="c1"># remove batchnorm</span>
+                <span class="n">m</span><span class="o">.</span><span class="n">forward</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">forward_fuse</span>  <span class="c1"># update forward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Model.info"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.Model.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">img_size</span><span class="o">=</span><span class="mi">640</span><span class="p">):</span>  <span class="c1"># print model information</span>
+        <span class="n">model_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">img_size</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Apply to(), cpu(), cuda(), half() to model tensors that are not</span>
+<span class="sd">        parameters or registered buffers</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Detect()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Detect</span><span class="p">):</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">stride</span><span class="p">)</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">grid</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">anchor_grid</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">m</span><span class="o">.</span><span class="n">anchor_grid</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">anchor_grid</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<span class="k">def</span> <span class="nf">parse_model</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">ch</span><span class="p">):</span>  <span class="c1"># model_dict, input_channels(3)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="s1">''</span><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}{</span><span class="s1">'from'</span><span class="si">:</span><span class="s2">&gt;18</span><span class="si">}{</span><span class="s1">'n'</span><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}{</span><span class="s1">'params'</span><span class="si">:</span><span class="s2">&gt;10</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="s1">'module'</span><span class="si">:</span><span class="s2">&lt;40</span><span class="si">}{</span><span class="s1">'arguments'</span><span class="si">:</span><span class="s2">&lt;30</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">anchors</span><span class="p">,</span> <span class="n">nc</span><span class="p">,</span> <span class="n">gd</span><span class="p">,</span> <span class="n">gw</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">"anchors"</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">"nc"</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">"depth_multiple"</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">"width_multiple"</span><span class="p">]</span>
+    <span class="n">na</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">anchors</span>  <span class="c1"># number of anchors</span>
+    <span class="n">no</span> <span class="o">=</span> <span class="n">na</span> <span class="o">*</span> <span class="p">(</span><span class="n">nc</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># number of outputs = anchors * (classes + 5)</span>
+
+    <span class="n">layers</span><span class="p">,</span> <span class="n">save</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="n">ch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># layers, savelist, ch out</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"backbone"</span><span class="p">]</span> <span class="o">+</span> <span class="n">d</span><span class="p">[</span><span class="s2">"head"</span><span class="p">]):</span>  <span class="c1"># from, number, module, args</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">m</span>  <span class="c1"># eval strings</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">args</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">a</span>  <span class="c1"># eval strings</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">n_</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">gd</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">n</span>  <span class="c1"># depth gain</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">Conv</span><span class="p">,</span>
+            <span class="n">GhostConv</span><span class="p">,</span>
+            <span class="n">Bottleneck</span><span class="p">,</span>
+            <span class="n">GhostBottleneck</span><span class="p">,</span>
+            <span class="n">SPP</span><span class="p">,</span>
+            <span class="n">SPPF</span><span class="p">,</span>
+            <span class="n">DWConv</span><span class="p">,</span>
+            <span class="n">MixConv2d</span><span class="p">,</span>
+            <span class="n">Focus</span><span class="p">,</span>
+            <span class="n">CrossConv</span><span class="p">,</span>
+            <span class="n">BottleneckCSP</span><span class="p">,</span>
+            <span class="n">C3</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">ch</span><span class="p">[</span><span class="n">f</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">c2</span> <span class="o">!=</span> <span class="n">no</span><span class="p">:</span>  <span class="c1"># if not output</span>
+                <span class="n">c2</span> <span class="o">=</span> <span class="n">make_divisible</span><span class="p">(</span><span class="n">c2</span> <span class="o">*</span> <span class="n">gw</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+            <span class="k">if</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="n">BottleneckCSP</span><span class="p">,</span> <span class="n">C3</span><span class="p">]:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>  <span class="c1"># number of repeats</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="ow">is</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">ch</span><span class="p">[</span><span class="n">f</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="ow">is</span> <span class="n">Concat</span><span class="p">:</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ch</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="ow">is</span> <span class="n">Detect</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ch</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>  <span class="c1"># number of anchors</span>
+                <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="ow">is</span> <span class="n">Contract</span><span class="p">:</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">ch</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="ow">is</span> <span class="n">Expand</span><span class="p">:</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">ch</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">//</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">ch</span><span class="p">[</span><span class="n">f</span><span class="p">]</span>
+
+        <span class="n">m_</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">m</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">m</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># module</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="p">)[</span><span class="mi">8</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"__main__."</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>  <span class="c1"># module type</span>
+        <span class="n">np</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">m_</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>  <span class="c1"># number params</span>
+        <span class="n">m_</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">m_</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">m_</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">m_</span><span class="o">.</span><span class="n">np</span> <span class="o">=</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">np</span>  <span class="c1"># attach index, 'from' index, type, number params</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}{</span><span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;18</span><span class="si">}{</span><span class="n">n_</span><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}{</span><span class="n">np</span><span class="si">:</span><span class="s2">10.0f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">t</span><span class="si">:</span><span class="s2">&lt;40</span><span class="si">}{</span><span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;30</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># print</span>
+        <span class="n">save</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">x</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">([</span><span class="n">f</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">f</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># append to savelist</span>
+        <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ch</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">),</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
+</pre></div>
+
+          </article>
+        </div>
+      </div>
+    </main>
+  </div>
+  <footer class="md-footer">
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+          
+          
+        </a>
+        
+      </nav>
+    </div>
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-footer-copyright">
+          <div class="md-footer-copyright__highlight">
+              &#169; Copyright 2022, yolort team.
+              
+          </div>
+            Created using
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+             and
+            <a href="https://github.com/bashtage/sphinx-material/">Material for
+              Sphinx</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script src="../../../../_static/javascripts/application.js"></script>
+  <script>app.initialize({version: "1.0.4", url: {base: ".."}})</script>
+  </body>
+</html>

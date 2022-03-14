@@ -1,0 +1,496 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="lang:clipboard.copy" content="Copy to clipboard">
+  <meta name="lang:clipboard.copied" content="Copied to clipboard">
+  <meta name="lang:search.language" content="en">
+  <meta name="lang:search.pipeline.stopwords" content="True">
+  <meta name="lang:search.pipeline.trimmer" content="True">
+  <meta name="lang:search.result.none" content="No matching documents">
+  <meta name="lang:search.result.one" content="1 matching document">
+  <meta name="lang:search.result.other" content="# matching documents">
+  <meta name="lang:search.tokenizer" content="[\s\-]+">
+
+  
+    <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&display=fallback" rel="stylesheet">
+
+    <style>
+      body,
+      input {
+        font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif
+      }
+
+      code,
+      kbd,
+      pre {
+        font-family: "Roboto Mono", "Courier New", Courier, monospace
+      }
+    </style>
+  
+
+  <link rel="stylesheet" href="../../../../_static/stylesheets/application.css"/>
+  <link rel="stylesheet" href="../../../../_static/stylesheets/application-palette.css"/>
+  <link rel="stylesheet" href="../../../../_static/stylesheets/application-fixes.css"/>
+  
+  <link rel="stylesheet" href="../../../../_static/fonts/material-icons.css"/>
+  
+  <meta name="theme-color" content="#3f51b5">
+  <script src="../../../../_static/javascripts/modernizr.js"></script>
+  
+  
+  
+    <title>yolort.v5.utils.downloads &#8212; yolort  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/material.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  
+   
+
+  </head>
+  <body dir=ltr
+        data-md-color-primary=blue data-md-color-accent=light-blue>
+  
+  <svg class="md-svg">
+    <defs data-children-count="0">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+      
+    </defs>
+  </svg>
+  
+  <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
+  <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
+  <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+  <a href="#_modules/yolort/v5/utils/downloads" tabindex="1" class="md-skip"> Skip to content </a>
+  <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex navheader">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../../../../index.html" title="yolort  documentation"
+           class="md-header-nav__button md-logo">
+          
+              <img src="../../../../_static/yolort_logo_icon.png" height="26"
+                   alt="yolort documentation logo">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          <span class="md-header-nav__topic">YOLOv5 Runtime Stack</span>
+          <span class="md-header-nav__topic"> yolort.v5.utils.downloads </span>
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yolort
+  </div>
+</a>
+          </div>
+        </div>
+      
+      
+  
+  <script src="../../../../_static/javascripts/version_dropdown.js"></script>
+  <script>
+    var json_loc = "../../../../"versions.json"",
+        target_loc = "../../../../../",
+        text = "Versions";
+    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
+  </script>
+  
+
+    </div>
+  </nav>
+</header>
+
+  
+  <div class="md-container">
+    
+    
+    
+  <nav class="md-tabs" data-md-component="tabs">
+    <div class="md-tabs__inner md-grid">
+      <ul class="md-tabs__list">
+          <li class="md-tabs__item"><a href="../../../../index.html" class="md-tabs__link">yolort  documentation</a></li>
+          <li class="md-tabs__item"><a href="../../../index.html" class="md-tabs__link">Module code</a></li>
+      </ul>
+    </div>
+  </nav>
+    <main class="md-main">
+      <div class="md-main__inner md-grid" data-md-component="container">
+        
+          <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../../../../index.html" title="yolort documentation" class="md-nav__button md-logo">
+      
+        <img src="../../../../_static/yolort_logo_icon.png" alt=" logo" width="48" height="48">
+      
+    </a>
+    <a href="../../../../index.html"
+       title="yolort documentation">YOLOv5 Runtime Stack</a>
+  </label>
+    <div class="md-nav__source">
+      <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    yolort
+  </div>
+</a>
+    </div>
+  
+  
+
+  
+  <ul class="md-nav__list">
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Getting Started</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../installation.html" class="md-nav__link">Install yolort</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Tutorials</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/inference-pytorch-export-libtorch.html" class="md-nav__link">Intuition for yolort</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/comparison-between-yolort-vs-yolov5.html" class="md-nav__link">What is the difference between yolort and yolov5</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/how-to-align-with-ultralytics-yolov5.html" class="md-nav__link">How to align with ultralytics yolov5</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/anchor-label-assignment-visualization.html" class="md-nav__link">Visualize the anchor-target assignment</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/model-graph-visualization.html" class="md-nav__link">Visualize model graph</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Deployment</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/export-onnx-inference-onnxruntime.html" class="md-nav__link">Deploying yolort on ONNX Runtime</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/onnx-graphsurgeon-inference-tensorrt.html" class="md-nav__link">Deploying yolort on TensorRT</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../notebooks/export-relay-inference-tvm.html" class="md-nav__link">Deploying yolort on TVM</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">API Reference</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../models.html" class="md-nav__link">yolort.models</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../models.html#models-structure" class="md-nav__link">Models structure</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../models.html#pre-trained-weights" class="md-nav__link">Pre-trained weights</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../../../../yolov5.html" class="md-nav__link">Modules and utils for YOLOv5</a>
+      
+    
+    </li>
+  </ul>
+  
+
+</nav>
+              </div>
+            </div>
+          </div>
+          <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                
+<nav class="md-nav md-nav--secondary">
+  <ul class="md-nav__list" data-md-scrollfix="">
+  </ul>
+</nav>
+              </div>
+            </div>
+          </div>
+        
+        <div class="md-content">
+          <article class="md-content__inner md-typeset" role="main">
+            
+  <h1 id="modules-yolort-v5-utils-downloads--page-root">Source code for yolort.v5.utils.downloads</h1><div class="highlight"><pre>
+<span></span><span class="c1"># YOLOv5 🚀 by Ultralytics, GPL-3.0 license</span>
+<span class="sd">"""</span>
+<span class="sd">Download utils</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">torch.hub</span> <span class="kn">import</span> <span class="n">download_url_to_file</span>
+
+
+<span class="k">def</span> <span class="nf">gsutil_getsize</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+    <span class="c1"># gs://bucket/file size https://cloud.google.com/storage/docs/gsutil/commands/du</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="sa">f</span><span class="s2">"gsutil du </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">" "</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>  <span class="c1"># bytes</span>
+
+
+<span class="k">def</span> <span class="nf">safe_download</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">url2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_bytes</span><span class="o">=</span><span class="mf">1e0</span><span class="p">,</span> <span class="n">error_msg</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Attempts to download file from url or url2, checks</span>
+<span class="sd">    and removes incomplete downloads &lt; min_bytes</span>
+<span class="sd">    """</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">assert_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Downloaded file '</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">' does not exist or size is &lt; min_bytes=</span><span class="si">{</span><span class="n">min_bytes</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">try</span><span class="p">:</span>  <span class="c1"># url1</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Downloading </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+        <span class="n">download_url_to_file</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">),</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="n">hash_prefix</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="n">min_bytes</span><span class="p">,</span> <span class="n">assert_msg</span>  <span class="c1"># check</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># url2</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># remove partial downloads</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ERROR: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s2">Re-attempting </span><span class="si">{</span><span class="n">url2</span> <span class="ow">or</span> <span class="n">url</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+        <span class="c1"># curl download, retry and resume on fail</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"curl -L '</span><span class="si">{</span><span class="n">url2</span> <span class="ow">or</span> <span class="n">url</span><span class="si">}</span><span class="s2">' -o '</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">' --retry 3 -C -"</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&lt;</span> <span class="n">min_bytes</span><span class="p">:</span>  <span class="c1"># check</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># remove partial downloads</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ERROR: </span><span class="si">{</span><span class="n">assert_msg</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">error_msg</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="attempt_download"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.attempt_download">[docs]</a><span class="k">def</span> <span class="nf">attempt_download</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="s2">"ultralytics/yolov5"</span><span class="p">,</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Attempt file download if does not exist</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"'"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="c1"># URL specified</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)))</span><span class="o">.</span><span class="n">name</span>  <span class="c1"># decode '%2F' to '/' etc.</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"http:/"</span><span class="p">,</span> <span class="s2">"https:/"</span><span class="p">)):</span>  <span class="c1"># download</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">":/"</span><span class="p">,</span> <span class="s2">"://"</span><span class="p">)</span>  <span class="c1"># Pathlib turns :// -&gt; :/</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"?"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># parse authentication https://url.com/file.txt?auth...</span>
+            <span class="n">safe_download</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">min_bytes</span><span class="o">=</span><span class="mf">1e5</span><span class="p">,</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="n">hash_prefix</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">name</span>
+
+        <span class="c1"># GitHub assets</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># github api</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"https://api.github.com/repos/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/releases/latest"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="n">assets</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">]]</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">"tag_name"</span><span class="p">]</span>  <span class="c1"># i.e. 'v1.0'</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># fallback plan</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrong when calling GitHub API: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">assets</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">"yolov5n.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5s.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5m.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5l.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5x.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5n6.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5s6.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5m6.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5l6.pt"</span><span class="p">,</span>
+                <span class="s2">"yolov5x6.pt"</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tag</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="s2">"git tag"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+                    <span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrong when getting GitHub tag: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">tag</span> <span class="o">=</span> <span class="s2">"v6.0"</span>  <span class="c1"># current release</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+            <span class="n">safe_download</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">url</span><span class="o">=</span><span class="sa">f</span><span class="s2">"https://github.com/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/releases/download/</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">min_bytes</span><span class="o">=</span><span class="mf">1e5</span><span class="p">,</span>
+                <span class="n">error_msg</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> missing, try downloading from https://github.com/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/releases/"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">gdrive_download</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"16TiPfZj7htmTyhntwcZyEEAejOUxuT6m"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">"tmp.zip"</span><span class="p">):</span>
+    <span class="c1"># Downloads a file from Google Drive.</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">cookie</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"cookie"</span><span class="p">)</span>  <span class="c1"># gdrive cookie</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Downloading https://drive.google.com/uc?export=download&amp;id=</span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s2"> as </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">... "</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># remove existing file</span>
+    <span class="n">cookie</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># remove existing cookie</span>
+
+    <span class="c1"># Attempt file download</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="s2">"NUL"</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"Windows"</span> <span class="k">else</span> <span class="s2">"/dev/null"</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">'curl -c ./cookie -s -L "drive.google.com/uc?export=download&amp;id=</span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s1">" &gt; </span><span class="si">{</span><span class="n">out</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"cookie"</span><span class="p">):</span>  <span class="c1"># large file</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"curl -Lb ./cookie 'drive.google.com/uc?export=download&amp;confirm=</span><span class="si">{</span><span class="n">get_token</span><span class="p">()</span><span class="si">}</span><span class="s2">&amp;id=</span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s2">'"</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># small file</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'curl -s -L "drive.google.com/uc?export=download&amp;id=</span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s1">"'</span>
+    <span class="n">download_excute</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2"> -o </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">download_excute</span><span class="p">)</span>
+    <span class="n">cookie</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># remove existing cookie</span>
+
+    <span class="c1"># Error check</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># remove partial</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Download error "</span><span class="p">)</span>  <span class="c1"># raise Exception('Download error')</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="c1"># Unzip if archive</span>
+    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".zip"</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"unzipping... "</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+        <span class="n">ZipFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">file</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>  <span class="c1"># unzip</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>  <span class="c1"># remove zip</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Done (</span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s)"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span>
+
+
+<span class="k">def</span> <span class="nf">get_token</span><span class="p">(</span><span class="n">cookie</span><span class="o">=</span><span class="s2">"./cookie"</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cookie</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"download"</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="s2">""</span>
+</pre></div>
+
+          </article>
+        </div>
+      </div>
+    </main>
+  </div>
+  <footer class="md-footer">
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+          
+          
+        </a>
+        
+      </nav>
+    </div>
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-footer-copyright">
+          <div class="md-footer-copyright__highlight">
+              &#169; Copyright 2022, yolort team.
+              
+          </div>
+            Created using
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+             and
+            <a href="https://github.com/bashtage/sphinx-material/">Material for
+              Sphinx</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script src="../../../../_static/javascripts/application.js"></script>
+  <script>app.initialize({version: "1.0.4", url: {base: ".."}})</script>
+  </body>
+</html>
