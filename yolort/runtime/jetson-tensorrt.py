@@ -1,22 +1,24 @@
 import os
-import torch
-import cv2
-import tensorrt as trt
 import subprocess
 from collections import OrderedDict, namedtuple
-import numpy as np
 from pathlib import Path
+
+import cv2
+import numpy as np
+import tensorrt as trt
+import torch
 
 
 class jetsonTrt:
     def __init__(
-            self,
-            onnx_path="yolov5n.onnx",
-            engine_path="yolov5n.engine",
-            imgsz = (1,3,320,320),
-            workspace=8192,
-            device=torch.device("cuda"),
-            fp16=False):
+        self,
+        onnx_path="yolov5n.onnx",
+        engine_path="yolov5n.engine",
+        imgsz=(1, 3, 320, 320),
+        workspace=8192,
+        device=torch.device("cuda"),
+        fp16=False,
+    ):
         self.device = device
         self.fp16 = fp16
         if not Path(engine_path).exists():
@@ -27,10 +29,10 @@ class jetsonTrt:
         self.warmup(imgsz)
 
     def read_engine(self):
-        Binding = namedtuple('Binding', ('name', 'dtype', 'shape', 'data', 'ptr'))
+        Binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
         logger = trt.Logger(trt.Logger.INFO)
         trt.init_libnvinfer_plugins(logger, namespace="")
-        with open(self.engine_path, 'rb') as f, trt.Runtime(logger) as runtime:
+        with open(self.engine_path, "rb") as f, trt.Runtime(logger) as runtime:
             model = runtime.deserialize_cuda_engine(f.read())
         bindings = OrderedDict()
         for index in range(model.num_bindings):
@@ -45,9 +47,8 @@ class jetsonTrt:
         self.binding_addrs = OrderedDict((n, d.ptr) for n, d in bindings.items())
         self.context = model.create_execution_context()
 
-
     def infer(self, im):
-        self.binding_addrs['images'] = int(im.data_ptr())
+        self.binding_addrs["images"] = int(im.data_ptr())
         self.context.execute_v2(list(self.binding_addrs.values()))
         num_dets = self.bindings["num_detections"].data
         boxes = self.bindings["detection_boxes"].data
@@ -65,8 +66,7 @@ class jetsonTrt:
     @staticmethod
     def parse_output(all_boxes, all_scores, all_labels, all_num_dets):
         detections = []
-        for boxes, scores, labels, \
-            num_dets in zip(all_boxes, all_scores, all_labels, all_num_dets):
+        for boxes, scores, labels, num_dets in zip(all_boxes, all_scores, all_labels, all_num_dets):
             keep = num_dets.item()
             boxes, scores, labels = boxes[:keep], scores[:keep], labels[:keep]
             detections.append({"scores": scores, "labels": labels, "boxes": boxes})
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = cuda_visible
 
     assert torch.cuda.is_available()
-    device = torch.device('cuda')
+    device = torch.device("cuda")
     print(f"We're using TensorRT: {trt.__version__} on {device} device: {cuda_visible}.")
 
     onnx_path = "../../yolov5n.onnx"
@@ -87,11 +87,13 @@ if __name__ == "__main__":
     batchsize = 1
     img_size = 320
 
-    trtexport = jetsonTrt(onnx_path=onnx_path,
-                          engine_path=engine_path,
-                          imgsz= (batchsize,3,img_size,img_size),
-                          workspace=8192,
-                          device=device)
+    trtexport = jetsonTrt(
+        onnx_path=onnx_path,
+        engine_path=engine_path,
+        imgsz=(batchsize, 3, img_size, img_size),
+        workspace=8192,
+        device=device,
+    )
 
     img_path = "../../test/assets/bus.jpg"
     img = cv2.imread(img_path)
