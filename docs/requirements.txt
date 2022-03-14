@@ -4,3 +4,4 @@ ipython
 sphinx
 sphinx-material
 nbsphinx
+PyYAML>=5.3.1

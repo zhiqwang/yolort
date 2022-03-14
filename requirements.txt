@@ -13,6 +13,7 @@
 matplotlib>=3.2.2
 numpy>=1.18.5
 Pillow>=8.0.0
+PyYAML>=5.3.1
 scipy>=1.4.1
 tqdm>=4.41.0
 
