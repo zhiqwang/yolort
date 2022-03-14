@@ -18,6 +18,7 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
    ```bash
    export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/  # Optional
    ```
 
 1. Don't forget to compile `LibTorchVision` using the following scripts.
