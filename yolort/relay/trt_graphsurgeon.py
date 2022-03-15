@@ -10,8 +10,8 @@ import torch
 from onnx import shape_inference
 from torch import Tensor
 
-import yolort.utils.module_utils as _mod_utils
-if _mod_utils.is_module_available("onnx_graphsurgeon"):
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("onnx_graphsurgeon"):
     import onnx_graphsurgeon as gs
 
 from .trt_inference import YOLOTRTInference
@@ -23,7 +23,7 @@ logger = logging.getLogger("YOLOTRTGraphSurgeon")
 __all__ = ["YOLOTRTGraphSurgeon"]
 
 
-@_mod_utils.requires_module("onnx_graphsurgeon")
+@_dependency.requires_module("onnx_graphsurgeon")
 class YOLOTRTGraphSurgeon:
     """
     YOLOv5 Graph Surgeon for TensorRT inference.
