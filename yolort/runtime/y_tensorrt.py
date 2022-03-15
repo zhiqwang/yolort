@@ -11,16 +11,16 @@ from torchvision.io import read_image
 from yolort.models.transform import YOLOTransform
 from yolort.utils import contains_any_tensor
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("tensorrt"):
     import tensorrt as trt
-except ImportError:
-    trt = None
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("PredictorTRT").setLevel(logging.INFO)
 logger = logging.getLogger("PredictorTRT")
 
 
+@_dependency.requires_module("tensorrt")
 class PredictorTRT:
     """
     Create a simple end-to-end predictor with the given checkpoint that runs on

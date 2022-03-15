@@ -16,10 +16,9 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("tensorrt"):
     import tensorrt as trt
-except ImportError:
-    trt = None
 
 from yolort.relay.trt_graphsurgeon import YOLOTRTGraphSurgeon
 
@@ -89,6 +88,7 @@ def export_tensorrt_engine(
     engine_builder.create_engine(engine_path)
 
 
+@_dependency.requires_module("tensorrt")
 class EngineBuilder:
     """
     Parses an ONNX graph and builds a TensorRT engine from it.
