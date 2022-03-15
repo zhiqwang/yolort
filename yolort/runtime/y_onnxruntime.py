@@ -6,14 +6,14 @@ from typing import Any, Dict, List, Callable, Optional
 import numpy as np
 from yolort.utils import contains_any_tensor
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("onnxruntime"):
     import onnxruntime as ort
-except ImportError:
-    ort = None
 
 logger = logging.getLogger(__name__)
 
 
+@_dependency.requires_module("onnxruntime")
 class PredictorORT:
     """
     Create a simple end-to-end predictor with the given checkpoint that runs on
