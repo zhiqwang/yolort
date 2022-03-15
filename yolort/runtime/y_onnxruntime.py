@@ -7,6 +7,7 @@ import numpy as np
 from yolort.utils import contains_any_tensor
 
 import yolort.utils.dependency as _dependency
+
 if _dependency.is_module_available("onnxruntime"):
     import onnxruntime as ort
 

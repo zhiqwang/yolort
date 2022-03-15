@@ -6,12 +6,12 @@ from typing import Any, Dict, List, Callable, Optional, Tuple
 
 import numpy as np
 import torch
+import yolort.utils.dependency as _dependency
 from torch import Tensor
 from torchvision.io import read_image
 from yolort.models.transform import YOLOTransform
 from yolort.utils import contains_any_tensor
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("tensorrt"):
     import tensorrt as trt
 

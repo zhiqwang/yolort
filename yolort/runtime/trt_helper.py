@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Optional
 
 import torch
+import yolort.utils.dependency as _dependency
 from torch import Tensor
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("tensorrt"):
     import tensorrt as trt
 

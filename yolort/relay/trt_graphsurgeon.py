@@ -7,10 +7,10 @@ from typing import Optional
 import numpy as np
 import onnx
 import torch
+import yolort.utils.dependency as _dependency
 from onnx import shape_inference
 from torch import Tensor
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("onnx_graphsurgeon"):
     import onnx_graphsurgeon as gs
 

@@ -4,10 +4,9 @@ from pathlib import Path
 from typing import Callable, List, Any, Optional
 
 import torch.utils.data
+import yolort.utils.dependency as _dependency
 from torch.utils.data.dataset import Dataset
 
-
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("pytorch_lightning"):
     from pytorch_lightning import LightningDataModule
 

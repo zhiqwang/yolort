@@ -1,11 +1,10 @@
-import logging
-
-import pkg_resources as pkg
-
 import importlib.util
+import logging
 import warnings
 from functools import wraps
 from typing import Optional
+
+import pkg_resources as pkg
 
 logger = logging.getLogger(__name__)
 
