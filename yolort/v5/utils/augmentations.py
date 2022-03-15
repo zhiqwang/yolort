@@ -10,10 +10,9 @@ from typing import Tuple
 
 import numpy as np
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("cv2"):
     import cv2
-except ImportError:
-    cv2 = None
 
 from .general import colorstr, segment2box, resample_segments, check_version
 from .metrics import bbox_ioa
@@ -50,6 +49,7 @@ class Albumentations:
         return im, labels
 
 
+@_dependency.requires_module("cv2")
 def augment_hsv(im, hgain=0.5, sgain=0.5, vgain=0.5):
     # HSV color-space augmentation
     if hgain or sgain or vgain:
@@ -66,6 +66,7 @@ def augment_hsv(im, hgain=0.5, sgain=0.5, vgain=0.5):
         cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR, dst=im)  # no return needed
 
 
+@_dependency.requires_module("cv2")
 def hist_equalize(im, clahe=True, bgr=False):
     # Equalize histogram on BGR image 'im' with im.shape(n,m,3) and range 0-255
     yuv = cv2.cvtColor(im, cv2.COLOR_BGR2YUV if bgr else cv2.COLOR_RGB2YUV)
@@ -94,6 +95,7 @@ def replicate(im, labels):
     return im, labels
 
 
+@_dependency.requires_module("cv2")
 def letterbox(
     im: np.ndarray,
     new_shape: Tuple[int, int] = (640, 640),
@@ -135,6 +137,7 @@ def letterbox(
     return im, ratio, (dw, dh)
 
 
+@_dependency.requires_module("cv2")
 def random_perspective(
     im,
     targets=(),
@@ -241,6 +244,7 @@ def random_perspective(
     return im, targets
 
 
+@_dependency.requires_module("cv2")
 def copy_paste(im, labels, segments, p=0.5):
     # Implement Copy-Paste augmentation https://arxiv.org/abs/2012.07177,
     # labels as nx5 np.array(cls, xyxy)

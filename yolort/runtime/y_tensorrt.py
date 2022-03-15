@@ -105,11 +105,7 @@ class PredictorTRT:
     @_dependency.requires_module("tensorrt")
     def _build_engine(self):
         logger.info(f"Loading {self._engine_path} for TensorRT inference...")
-        if trt is not None:
-            trt_logger = trt.Logger(trt.Logger.INFO)
-        else:
-            trt_logger = None
-            raise ImportError("TensorRT is not installed, please install trt firstly.")
+        trt_logger = trt.Logger(trt.Logger.INFO)
 
         trt.init_libnvinfer_plugins(trt_logger, namespace="")
         with open(self._engine_path, "rb") as f, trt.Runtime(trt_logger) as runtime:

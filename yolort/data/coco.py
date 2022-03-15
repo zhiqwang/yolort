@@ -6,10 +6,9 @@ Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references
 import torch
 import torchvision
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("pycocotools"):
     from pycocotools import mask as coco_mask
-except ImportError:
-    coco_mask = None
 
 
 class COCODetection(torchvision.datasets.CocoDetection):
@@ -98,6 +97,7 @@ class ConvertCocoPolysToMask:
         return image, target
 
 
+@_dependency.requires_module("pycocotools")
 def convert_coco_poly_to_mask(segmentations, height, width):
     masks = []
     for polygons in segmentations:

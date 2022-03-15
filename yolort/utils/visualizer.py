@@ -8,12 +8,12 @@ from PIL import Image
 from torch import Tensor
 from yolort.v5.utils.plots import Colors
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("cv2"):
     import cv2
-except ImportError:
-    cv2 = None
 
 
+@_dependency.requires_module("cv2")
 class Visualizer:
     """
     Visualizer that draws data about detection on images.
@@ -89,9 +89,6 @@ class Visualizer:
         Returns:
             np.ndarray: image object with visualizations.
         """
-
-        if cv2 is None:
-            raise ImportError("OpenCV is not installed, please install it first.")
 
         boxes = self._convert_boxes(predictions["boxes"])
         labels = predictions["labels"].tolist()

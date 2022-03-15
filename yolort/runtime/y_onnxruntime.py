@@ -49,10 +49,7 @@ class PredictorORT:
 
     def _set_providers(self):
         logger.info("Providers was initialized.")
-        if ort is not None:
-            ort_device = ort.get_device()
-        else:
-            raise ImportError("ONNXRuntime is not installed, please install onnxruntime firstly.")
+        ort_device = ort.get_device()
         providers = None
 
         enable_gpu = True if self.device == "cuda" else False

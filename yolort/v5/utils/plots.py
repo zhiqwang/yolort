@@ -15,10 +15,9 @@ import pandas as pd
 import torch
 from PIL import Image, ImageDraw, ImageFont
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("cv2"):
     import cv2
-except ImportError:
-    cv2 = None
 
 from .general import (
     LOGGER,
@@ -95,6 +94,7 @@ def check_font(font="Arial.ttf", size=10):
         torch.hub.download_url_to_file(url, str(font), progress=False)
 
 
+@_dependency.requires_module("cv2")
 class Annotator:
     if RANK in (-1, 0):
         check_font()  # download TTF if necessary
@@ -231,6 +231,7 @@ def output_to_target(output):
     return np.array(targets)
 
 
+@_dependency.requires_module("cv2")
 def plot_images(images, targets, paths=None, fname="images.jpg", names=None, max_size=1920, max_subplots=16):
     # Plot image grid with labels
     if isinstance(images, torch.Tensor):
@@ -540,6 +541,7 @@ def profile_idetection(start=0, stop=0, labels=(), save_dir=""):
     plt.savefig(Path(save_dir) / "idetection_profile.png", dpi=200)
 
 
+@_dependency.requires_module("cv2")
 def save_one_box(xyxy, im, file="image.jpg", gain=1.02, pad=10, square=False, BGR=False, save=True):
     # Save image crop as {file} with crop size multiple {gain} and {pad} pixels. Save and/or return crop
     xyxy = torch.tensor(xyxy).view(-1, 4)

@@ -40,10 +40,9 @@ from .common import (
 )
 from .experimental import CrossConv, MixConv2d
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("thop"):
     import thop  # for FLOPs computation
-except ImportError:
-    thop = None
 
 __all__ = ["Model", "Detect"]
 
@@ -102,6 +101,7 @@ class Detect(nn.Module):
         return grid, anchor_grid
 
 
+@_dependency.requires_module("thop")
 class Model(nn.Module):
     def __init__(self, cfg="yolov5s.yaml", ch=3, nc=None, anchors=None):
         """
@@ -214,7 +214,7 @@ class Model(nn.Module):
 
     def _profile_one_layer(self, m, x, dt):
         c = isinstance(m, Detect)  # is final layer, copy input as inplace fix
-        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2 if thop else 0
+        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2
         t = time_sync()
         for _ in range(10):
             m(x.copy() if c else x)

@@ -20,10 +20,9 @@ import torch.nn.functional as F
 
 from .general import LOGGER
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("thop"):
     import thop  # for FLOPs computation
-except ImportError:
-    thop = None
 
 
 @contextmanager

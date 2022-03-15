@@ -11,12 +11,12 @@ import numpy as np
 from tabulate import tabulate
 from torchvision.ops import box_convert
 
-try:
+import yolort.utils.dependency as _dependency
+if _dependency.is_module_available("pycocotools"):
     from pycocotools.coco import COCO
     from pycocotools.cocoeval import COCOeval
+if _dependency.is_module_available("torchmetrics"):
     from torchmetrics import Metric
-except ImportError:
-    COCO, COCOeval, Metric = None, None, None
 
 from typing import Any, List, Callable, Optional, Union
 
@@ -24,6 +24,7 @@ from ._helper import create_small_table
 from .distributed import all_gather
 
 
+@_dependency.requires_module("pycocotools", "torchmetrics")
 class COCOEvaluator(Metric):
     """
     Evaluate AP for instance detection using COCO's metrics that works in distributed mode.
