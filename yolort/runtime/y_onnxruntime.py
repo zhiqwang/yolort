@@ -4,9 +4,8 @@ import logging
 from typing import Any, Dict, List, Callable, Optional
 
 import numpy as np
-from yolort.utils import contains_any_tensor
-
 import yolort.utils.dependency as _dependency
+from yolort.utils import contains_any_tensor
 
 if _dependency.is_module_available("onnxruntime"):
     import onnxruntime as ort
