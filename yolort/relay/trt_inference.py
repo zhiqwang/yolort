@@ -6,9 +6,9 @@ from typing import Optional, Tuple, Union
 import torch
 from torch import nn, Tensor
 from yolort.models import YOLO
+from yolort.models._utils import load_from_ultralytics
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
-from yolort.utils import load_from_ultralytics
 
 from .logits_decoder import LogitsDecoder
 
