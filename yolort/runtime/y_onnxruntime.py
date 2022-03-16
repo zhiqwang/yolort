@@ -4,7 +4,7 @@ import logging
 from typing import Any, Dict, List, Callable, Optional
 
 import numpy as np
-from yolort.data import contains_any_tensor
+from yolort.utils import contains_any_tensor
 
 try:
     import onnxruntime as ort
