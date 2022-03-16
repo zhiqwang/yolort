@@ -7,7 +7,8 @@ from torch import Tensor
 from torchvision.io import read_image
 from yolort import models
 from yolort.models import YOLOv5
-from yolort.utils import get_image_from_url, load_from_ultralytics, read_image_to_tensor
+from yolort.models._utils import load_from_ultralytics
+from yolort.utils import get_image_from_url, read_image_to_tensor
 from yolort.utils.image_utils import box_cxcywh_to_xyxy
 from yolort.v5 import letterbox, scale_coords, attempt_download
 

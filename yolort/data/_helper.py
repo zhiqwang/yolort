@@ -2,12 +2,10 @@
 
 import logging
 from pathlib import Path, PosixPath
-from typing import Type, Any
 from zipfile import ZipFile
 
 import torch
 from tabulate import tabulate
-from torch import Tensor
 
 from .coco import COCODetection
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
@@ -47,19 +45,6 @@ def get_coco_api_from_dataset(dataset):
         return dataset.coco
     else:
         raise NotImplementedError("Currently only supports COCO datasets")
-
-
-def contains_any_tensor(value: Any, dtype: Type = Tensor) -> bool:
-    """
-    Determine whether or not a list contains any Type
-    """
-    if isinstance(value, dtype):
-        return True
-    if isinstance(value, (list, tuple)):
-        return any(contains_any_tensor(v, dtype=dtype) for v in value)
-    elif isinstance(value, dict):
-        return any(contains_any_tensor(v, dtype=dtype) for v in value.values())
-    return False
 
 
 def prepare_coco128(

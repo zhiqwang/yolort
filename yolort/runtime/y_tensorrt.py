@@ -8,8 +8,8 @@ import numpy as np
 import torch
 from torch import Tensor
 from torchvision.io import read_image
-from yolort.data import contains_any_tensor
 from yolort.models.transform import YOLOTransform
+from yolort.utils import contains_any_tensor
 
 try:
     import tensorrt as trt

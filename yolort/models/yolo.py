@@ -5,8 +5,9 @@ from typing import Any, List, Dict, Callable, Tuple, Optional
 
 import torch
 from torch import nn, Tensor
-from yolort.utils import load_from_ultralytics, load_state_dict_from_url
+from yolort.utils import load_state_dict_from_url
 
+from ._utils import load_from_ultralytics
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead, SetCriterion, PostProcess
