@@ -7,13 +7,12 @@ from typing import Optional
 import numpy as np
 import onnx
 import torch
+import yolort.utils.dependency as _dependency
 from onnx import shape_inference
 from torch import Tensor
 
-try:
+if _dependency.is_module_available("onnx_graphsurgeon"):
     import onnx_graphsurgeon as gs
-except ImportError:
-    gs = None
 
 from .trt_inference import YOLOTRTInference
 
@@ -24,6 +23,7 @@ logger = logging.getLogger("YOLOTRTGraphSurgeon")
 __all__ = ["YOLOTRTGraphSurgeon"]
 
 
+@_dependency.requires_module("onnx_graphsurgeon")
 class YOLOTRTGraphSurgeon:
     """
     YOLOv5 Graph Surgeon for TensorRT inference.
