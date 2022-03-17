@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
+import yolort.utils.dependency as _dependency
 from PIL import Image
 from torch import Tensor
 from torchvision.ops.boxes import box_convert
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("cv2"):
     import cv2
 

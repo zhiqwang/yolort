@@ -4,11 +4,11 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
+import yolort.utils.dependency as _dependency
 from PIL import Image
 from torch import Tensor
 from yolort.v5.utils.plots import Colors
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("cv2"):
     import cv2
 

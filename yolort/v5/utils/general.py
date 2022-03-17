@@ -22,8 +22,8 @@ import pkg_resources as pkg
 import torch
 import torchvision
 import yaml
-
 import yolort.utils.dependency as _dependency
+
 if _dependency.is_module_available("cv2"):
     import cv2
 

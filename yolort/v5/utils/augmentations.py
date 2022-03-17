@@ -9,8 +9,8 @@ import random
 from typing import Tuple
 
 import numpy as np
-
 import yolort.utils.dependency as _dependency
+
 if _dependency.is_module_available("cv2"):
     import cv2
 

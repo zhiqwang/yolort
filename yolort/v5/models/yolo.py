@@ -12,6 +12,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
+import yolort.utils.dependency as _dependency
 from torch import nn
 from yolort.v5.utils.autoanchor import check_anchor_order
 from yolort.v5.utils.general import make_divisible
@@ -40,7 +41,6 @@ from .common import (
 )
 from .experimental import CrossConv, MixConv2d
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("thop"):
     import thop  # for FLOPs computation
 

@@ -8,10 +8,10 @@ import logging
 from pathlib import PosixPath
 
 import numpy as np
+import yolort.utils.dependency as _dependency
 from tabulate import tabulate
 from torchvision.ops import box_convert
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("pycocotools"):
     from pycocotools.coco import COCO
     from pycocotools.cocoeval import COCOeval

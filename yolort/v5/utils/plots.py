@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+import yolort.utils.dependency as _dependency
 from PIL import Image, ImageDraw, ImageFont
 
-import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("cv2"):
     import cv2
 

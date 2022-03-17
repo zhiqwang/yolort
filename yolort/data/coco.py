@@ -5,8 +5,8 @@ Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references
 """
 import torch
 import torchvision
-
 import yolort.utils.dependency as _dependency
+
 if _dependency.is_module_available("pycocotools"):
     from pycocotools import mask as coco_mask
 

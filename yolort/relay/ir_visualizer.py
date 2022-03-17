@@ -12,6 +12,7 @@ blog post) with the attribution notice.
 from collections import OrderedDict
 
 import yolort.utils.dependency as _dependency
+
 if _dependency.is_module_available("graphviz"):
     from graphviz import Digraph
 
