@@ -88,12 +88,12 @@ def export_tensorrt_engine(
     engine_builder.create_engine(engine_path)
 
 
-@_dependency.requires_module("tensorrt")
 class EngineBuilder:
     """
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
 
+    @_dependency.requires_module("tensorrt")
     def __init__(
         self,
         verbose: bool = False,
