@@ -23,7 +23,6 @@ logger = logging.getLogger("YOLOTRTGraphSurgeon")
 __all__ = ["YOLOTRTGraphSurgeon"]
 
 
-@_dependency.requires_module("onnx_graphsurgeon")
 class YOLOTRTGraphSurgeon:
     """
     YOLOv5 Graph Surgeon for TensorRT inference.
@@ -46,6 +45,7 @@ class YOLOTRTGraphSurgeon:
         precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
     """
 
+    @_dependency.requires_module("onnx_graphsurgeon")
     def __init__(
         self,
         checkpoint_path: str,

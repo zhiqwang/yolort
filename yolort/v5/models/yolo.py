@@ -12,6 +12,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
+import yolort.utils.dependency as _dependency
 from torch import nn
 from yolort.v5.utils.autoanchor import check_anchor_order
 from yolort.v5.utils.general import make_divisible
@@ -40,10 +41,8 @@ from .common import (
 )
 from .experimental import CrossConv, MixConv2d
 
-try:
+if _dependency.is_module_available("thop"):
     import thop  # for FLOPs computation
-except ImportError:
-    thop = None
 
 __all__ = ["Model", "Detect"]
 
@@ -212,9 +211,10 @@ class Model(nn.Module):
         y[-1] = y[-1][:, i:]  # small
         return y
 
+    @_dependency.requires_module("thop")
     def _profile_one_layer(self, m, x, dt):
         c = isinstance(m, Detect)  # is final layer, copy input as inplace fix
-        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2 if thop else 0
+        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2
         t = time_sync()
         for _ in range(10):
             m(x.copy() if c else x)

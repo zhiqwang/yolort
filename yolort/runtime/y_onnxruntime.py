@@ -13,7 +13,6 @@ if _dependency.is_module_available("onnxruntime"):
 logger = logging.getLogger(__name__)
 
 
-@_dependency.requires_module("onnxruntime")
 class PredictorORT:
     """
     Create a simple end-to-end predictor with the given checkpoint that runs on
@@ -47,12 +46,10 @@ class PredictorORT:
         self._runtime = self._build_runtime()
         self._input_names = self._runtime.get_inputs()[0].name
 
+    @_dependency.requires_module("onnxruntime")
     def _set_providers(self):
         logger.info("Providers was initialized.")
-        if ort is not None:
-            ort_device = ort.get_device()
-        else:
-            raise ImportError("ONNXRuntime is not installed, please install onnxruntime firstly.")
+        ort_device = ort.get_device()
         providers = None
 
         enable_gpu = True if self.device == "cuda" else False
@@ -67,6 +64,7 @@ class PredictorORT:
 
         return providers
 
+    @_dependency.requires_module("onnxruntime")
     def _build_runtime(self):
         runtime = ort.InferenceSession(self.engine_path, providers=self._providers)
         return runtime
