@@ -94,7 +94,6 @@ def check_font(font="Arial.ttf", size=10):
         torch.hub.download_url_to_file(url, str(font), progress=False)
 
 
-@_dependency.requires_module("cv2")
 class Annotator:
     if RANK in (-1, 0):
         check_font()  # download TTF if necessary
@@ -116,6 +115,7 @@ class Annotator:
             self.im = im
         self.lw = line_width or max(round(sum(im.shape) / 2 * 0.003), 2)  # line width
 
+    @_dependency.requires_module("cv2")
     def box_label(self, box, label="", color=(128, 128, 128), txt_color=(255, 255, 255)):
         # Add one xyxy box to image with label
         if self.pil or not is_ascii(label):

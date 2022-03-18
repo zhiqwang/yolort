@@ -13,7 +13,6 @@ if _dependency.is_module_available("cv2"):
     import cv2
 
 
-@_dependency.requires_module("cv2")
 class Visualizer:
     """
     Visualizer that draws data about detection on images.
@@ -99,6 +98,7 @@ class Visualizer:
         self.overlay_instances(boxes=boxes, labels=labels, colors=colors)
         return self.output
 
+    @_dependency.requires_module("cv2")
     def imshow(self, scale: Optional[float] = None):
         """
         A replacement of cv2.imshow() for using in Jupyter notebooks.
@@ -169,6 +169,7 @@ class Visualizer:
 
         return self.output
 
+    @_dependency.requires_module("cv2")
     def draw_box(
         self,
         pt1: Tuple[int, int],
@@ -190,6 +191,7 @@ class Visualizer:
         cv2.rectangle(self.output, pt1, pt2, color, thickness=self.line_width, lineType=cv2.LINE_AA)
         return self.output
 
+    @_dependency.requires_module("cv2")
     def draw_text(
         self,
         text: str,

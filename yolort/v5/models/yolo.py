@@ -101,7 +101,6 @@ class Detect(nn.Module):
         return grid, anchor_grid
 
 
-@_dependency.requires_module("thop")
 class Model(nn.Module):
     def __init__(self, cfg="yolov5s.yaml", ch=3, nc=None, anchors=None):
         """
@@ -212,6 +211,7 @@ class Model(nn.Module):
         y[-1] = y[-1][:, i:]  # small
         return y
 
+    @_dependency.requires_module("thop")
     def _profile_one_layer(self, m, x, dt):
         c = isinstance(m, Detect)  # is final layer, copy input as inplace fix
         o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2

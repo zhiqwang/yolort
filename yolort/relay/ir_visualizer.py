@@ -17,7 +17,6 @@ if _dependency.is_module_available("graphviz"):
     from graphviz import Digraph
 
 
-@_dependency.requires_module("graphviz")
 class TorchScriptVisualizer:
     def __init__(self, module):
 
@@ -48,6 +47,7 @@ class TorchScriptVisualizer:
         # probably also partially absorbing ops. :/
         self.absorbing_ops = ("aten::size", "aten::_shape_as_tensor")
 
+    @_dependency.requires_module("graphviz")
     def render(
         self,
         classes_to_visit={"YOLO", "YOLOHead"},
