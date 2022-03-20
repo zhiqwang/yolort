@@ -1,13 +1,13 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import warnings
-from typing import Any, List, Dict, Callable, Tuple, Optional
+from typing import Any, Dict, List, Callable, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
 from yolort.utils import load_state_dict_from_url
 
-from ._utils import load_from_ultralytics
+from ._checkpoint import load_from_ultralytics
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead, SetCriterion, PostProcess
@@ -32,7 +32,6 @@ __all__ = [
     "yolov5_darknet_pan_x_r60",
     "yolov5_darknet_pan_x6_r60",
     "yolov5_darknet_tan_s_r40",
-    "build_model",
 ]
 
 
