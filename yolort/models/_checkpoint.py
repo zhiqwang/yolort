@@ -9,6 +9,8 @@ from yolort.v5 import get_yolov5_size, load_yolov5_model
 from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead
 
+__all__ = ["load_from_ultralytics"]
+
 
 def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     """

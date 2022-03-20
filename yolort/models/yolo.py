@@ -207,11 +207,7 @@ class YOLO(nn.Module):
         width_multiple = model_info["width_multiple"]
         use_p6 = model_info["use_p6"]
         backbone = darknet_pan_backbone(
-            backbone_name,
-            depth_multiple,
-            width_multiple,
-            version=version,
-            use_p6=use_p6,
+            backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
         )
         model = cls(
             backbone,
