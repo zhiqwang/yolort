@@ -6,8 +6,6 @@ from typing import Optional, Tuple
 import torch
 from torch import nn, Tensor
 
-from typing import Optional, Tuple
-
 
 def _make_divisible(v: float, divisor: int, min_value: Optional[int] = None) -> int:
     """
