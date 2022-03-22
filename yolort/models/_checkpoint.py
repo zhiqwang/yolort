@@ -23,7 +23,11 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
 
-    assert version in ["r3.1", "r4.0", "r6.0"], "Currently does not support this version."
+    if version not in ["r3.1", "r4.0", "r6.0"]:
+        raise NotImplementedError(
+            f"Currently does not support version: {version}. Feel free to file an issue "
+            "labeled enhancement to us."
+        )
 
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
@@ -89,7 +93,7 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     }
 
 
-class Wrapper(nn.Module):
+class ModelWrapper(nn.Module):
     def __init__(self, backbone, head):
         super().__init__()
         self.backbone = backbone
@@ -137,7 +141,8 @@ class CheckpointConverter:
         )
         num_anchors = len(anchor_grids[0]) // 2
         head = YOLOHead(backbone.out_channels, num_anchors, strides, num_classes)
-        self.model = Wrapper(backbone, head)
+        # Only backbone and head contain parameters inside, so we only wrap them both here.
+        self.model = ModelWrapper(backbone, head)
 
     def updating(self, state_dict):
         # Obtain module state
