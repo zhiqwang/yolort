@@ -235,22 +235,6 @@ def _create_yolo(
     use_p6: bool = False,
     **kwargs: Any,
 ) -> YOLO:
-    """
-    Constructs a YOLO model.
-
-    Example::
-
-        >>> model = yolov5(pretrained=True)
-        >>> model.eval()
-        >>> x = torch.rand(4, 3, 416, 320)
-        >>> predictions = model(x)
-
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on COCO train2017
-        progress (bool): If True, displays a progress bar of the download to stderr
-        version (str): Module version released by ultralytics. Possible values
-            are ["r3.1", "r4.0", "r6.0"].
-    """
     backbone = darknet_pan_backbone(
         backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
     )

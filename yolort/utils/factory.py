@@ -1,3 +1,5 @@
+# Copyright (c) 2022, yolort team. All rights reserved.
+
 import enum
 from typing import Sequence, TypeVar, Type
 

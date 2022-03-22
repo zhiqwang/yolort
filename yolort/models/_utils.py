@@ -1,17 +1,16 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
+import math
 import functools
 import inspect
-import math
-
 import warnings
-from typing import Any, Dict, Callable, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Optional, TypeVar, Callable, Tuple, Union
 
 import torch
 from torch import nn, Tensor
+from yolort.utils.factory import sequence_to_str
 
 from ._api import WeightsEnum
-from ._str_enum import sequence_to_str
 
 
 def _make_divisible(v: float, divisor: int, min_value: Optional[int] = None) -> int:
@@ -160,11 +159,11 @@ D = TypeVar("D")
 
 def kwonly_to_pos_or_kw(fn: Callable[..., D]) -> Callable[..., D]:
     """
-    Decorates a function that uses keyword only parameters to also allow them
-    being passed as positionals.
+    Decorates a function that uses keyword only parameters to also allow them being
+    passed as positionals.
 
-    For example, consider the use case of changing the signature of ``old_fn``
-    into the one from ``new_fn``:
+    For example, consider the use case of changing the signature of ``old_fn`` into
+    the one from ``new_fn``:
 
     .. code::
 
@@ -174,9 +173,9 @@ def kwonly_to_pos_or_kw(fn: Callable[..., D]) -> Callable[..., D]:
         def new_fn(foo, *, bar, baz=None):
             ...
 
-    Calling ``old_fn("foo", "bar, "baz")`` was valid, but the same call is no
-    longer valid with ``new_fn``. To keep BC and at the same time warn the user
-    of the deprecation, this decorator can be used:
+    Calling ``old_fn("foo", "bar, "baz")`` was valid, but the same call is no longer valid
+    with ``new_fn``. To keep BC and at the same time warn the user of the deprecation, this
+    decorator can be used:
 
     .. code::
 
@@ -219,25 +218,24 @@ V = TypeVar("V")
 
 
 def handle_legacy_interface(
-    **weights: Tuple[str, Union[Optional[W], Callable[[Dict[str, Any]], Optional[W]]]]
+    **weights: Tuple[str, Union[Optional[W], Callable[[Dict[str, Any]], Optional[W]]]],
 ):
     """Decorates a model builder with the new interface to make it compatible with the old.
 
     In particular this handles two things:
 
-    1. Allows positional parameters again, but emits a deprecation warning in case they are
-        used. See :func:`torchvision.prototype.utils._internal.kwonly_to_pos_or_kw` for details.
-    2. Handles the default value change from ``pretrained=False`` to ``weights=None`` and
-        ``pretrained=True`` to ``weights=Weights`` and emits a deprecation warning with
-        instructions for the new interface.
+    1. Allows positional parameters again, but emits a deprecation warning in case they
+        are used. See :func:`torchvision.prototype.utils._internal.kwonly_to_pos_or_kw` for details.
+    2. Handles the default value change from ``pretrained=False`` to ``weights=None``
+        and ``pretrained=True`` to ``weights=Weights`` and emits a deprecation warning
+        with instructions for the new interface.
 
     Args:
-        **weights (Tuple[str, Union[Optional[W], Callable[[Dict[str, Any]], Optional[W]]]]):
-            Deprecated parameter name and default value for the legacy ``pretrained=True``.
-            The default value can be a callable in which case it will be called with a dictionary
-            of the keyword arguments. The only key that is guaranteed to be in the dictionary is
-            the deprecated parameter name passed as first element in the tuple. All other
-            parameters should be accessed with :meth:`~dict.get`.
+        **weights (Tuple[str, Union[Optional[W], Callable[[Dict[str, Any]], Optional[W]]]]): Deprecated
+            parameter name and default value for the legacy ``pretrained=True``. The default value can
+            be a callable in which case it will be called with a dictionary of the keyword arguments. The
+            only key that is guaranteed to be in the dictionary is the deprecated parameter name passed
+            as first element in the tuple. All other parameters should be accessed with :meth:`~dict.get`.
     """
 
     def outer_wrapper(builder: Callable[..., M]) -> Callable[..., M]:
@@ -265,8 +263,7 @@ def handle_legacy_interface(
                 pretrained_positional = weights_arg is not sentinel
                 if pretrained_positional:
                     # We put the pretrained argument under its legacy name in the keyword argument
-                    # dictionary to have a unified access to the value if the default value is a
-                    # callable.
+                    # dictionary to have a unified access to the value if the default value is a callable.
                     kwargs[pretrained_param] = pretrained_arg = kwargs.pop(weights_param)
                 else:
                     pretrained_arg = kwargs[pretrained_param]
@@ -280,20 +277,19 @@ def handle_legacy_interface(
 
                 if not pretrained_positional:
                     warnings.warn(
-                        f"The parameter '{pretrained_param}' is deprecated, "
-                        f"please use '{weights_param}' instead."
+                        f"The parameter '{pretrained_param}' is deprecated, please use "
+                        f"'{weights_param}' instead."
                     )
 
                 msg = (
                     f"Arguments other than a weight enum or `None` for '{weights_param}' are "
-                    "deprecated. The current behavior is equivalent to passing "
-                    f"`{weights_param}={default_weights_arg}`."
+                    "deprecated. The current behavior is equivalent to "
+                    f"passing `{weights_param}={default_weights_arg}`."
                 )
                 if pretrained_arg:
                     msg = (
-                        f"{msg} You can also use "
-                        f"`{weights_param}={type(default_weights_arg).__name__}.DEFAULT` "
-                        f"to get the most up-to-date weights."
+                        f"{msg} You can also use `{weights_param}={type(default_weights_arg).__name__}."
+                        "DEFAULT` to get the most up-to-date weights."
                     )
                 warnings.warn(msg)
 
@@ -311,7 +307,7 @@ def _ovewrite_named_param(kwargs: Dict[str, Any], param: str, new_value: V) -> N
     if param in kwargs:
         if kwargs[param] != new_value:
             raise ValueError(
-                f"The parameter '{param}' expected value '{new_value}' but got '{kwargs[param]}' instead."
+                f"The parameter '{param}' expected value {new_value} but got {kwargs[param]} instead."
             )
     else:
         kwargs[param] = new_value
@@ -320,7 +316,5 @@ def _ovewrite_named_param(kwargs: Dict[str, Any], param: str, new_value: V) -> N
 def _ovewrite_value_param(param: Optional[V], new_value: V) -> V:
     if param is not None:
         if param != new_value:
-            raise ValueError(
-                f"The parameter '{param}' expected value '{new_value}' but got '{param}' instead."
-            )
+            raise ValueError(f"The parameter '{param}' expected value {new_value} but got {param} instead.")
     return new_value

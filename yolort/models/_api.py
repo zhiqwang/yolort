@@ -6,8 +6,7 @@ from dataclasses import dataclass, fields
 from typing import Any, Callable, Dict
 
 from yolort.utils import load_state_dict_from_url
-
-from ._str_enum import StrEnum
+from yolort.utils.factory import StrEnum
 
 
 __all__ = ["WeightsEnum", "Weights", "get_weight"]
@@ -26,9 +25,9 @@ class Weights:
             memory and thus we want to delay initialization until needed.
         meta (Dict[str, Any]): Stores meta-data related to the weights of the model and its
             configuration. These can be informative attributes (for example the number of
-            parameters/flops, recipe link/methods used in training etc), configuration parameters
-            (for example the `num_classes`) needed to construct the model or important meta-data
-            (for example the `classes` of a classification model) needed to use the model.
+            parameters/flops, recipe link/methods used in training etc), configuration
+            parameters (for example the `num_classes`) needed to construct the model or important
+            meta-data (for example the `classes` of a classification model) needed to use the model.
     """
 
     url: str
