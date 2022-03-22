@@ -1,7 +1,6 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import torch
-from yolort.models._utils import load_from_ultralytics
 
 
 def convert_yolov5_to_yolort(
@@ -22,6 +21,8 @@ def convert_yolov5_to_yolort(
         prefix (str): The prefix string of the saved model. Default: "yolov5_darknet_pan".
         postfix (str): The postfix string of the saved model. Default: "custom.pt".
     """
+
+    from yolort.models._checkpoint import load_from_ultralytics
 
     model_info = load_from_ultralytics(checkpoint_path, version=version)
     model_state_dict = model_info["state_dict"]
