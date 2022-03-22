@@ -1,13 +1,14 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
-from typing import Any, Callable, List, Optional
+from typing import Any, List, Callable, Optional
 
 import torch
 from torch import nn, Tensor
-from yolort.utils import load_state_dict_from_url
+
 from yolort.v5 import Conv, C3
 
-from ._utils import _make_divisible
+from ._api import WeightsEnum
+from ._utils import _make_divisible, _ovewrite_named_param
 
 
 __all__ = [
@@ -18,14 +19,6 @@ __all__ = [
     "darknet_l_r6_0",
     "darknet_x_r6_0",
 ]
-
-model_urls = {
-    "darknet_n_r6.0": None,
-    "darknet_s_r6.0": None,
-    "darknet_m_r6.0": None,
-    "darknet_l_r6.0": None,
-    "darknet_x_r6.0": None,
-}  # TODO: add checkpoint weights
 
 
 class DarkNetV6(nn.Module):
@@ -60,7 +53,11 @@ class DarkNetV6(nn.Module):
     ) -> None:
         super().__init__()
 
-        assert version == "r4.0", "Currently the module version used in DarkNetV6 is r4.0."
+        if version != "r4.0":
+            raise NotImplementedError(
+                f"Currently does not support version: {version}. Feel free to file an issue "
+                "labeled enhancement to us."
+            )
 
         if block is None:
             block = C3
@@ -99,7 +96,7 @@ class DarkNetV6(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.classifier = nn.Sequential(
             nn.Linear(last_channel, last_channel),
-            nn.Hardswish(inplace=True),
+            nn.SiLU(inplace=True),
             nn.Dropout(p=0.2, inplace=True),
             nn.Linear(last_channel, num_classes),
         )
@@ -110,7 +107,7 @@ class DarkNetV6(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.eps = 1e-3
                 m.momentum = 0.03
-            elif isinstance(m, (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
+            elif isinstance(m, (nn.SiLU, nn.LeakyReLU, nn.ReLU, nn.ReLU6)):
                 m.inplace = True
 
     def _forward_impl(self, x: Tensor) -> Tensor:
@@ -127,73 +124,78 @@ class DarkNetV6(nn.Module):
         return self._forward_impl(x)
 
 
-def _darknet_v6_conf(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV6:
-    """
-    Build a DarkNetV6 model.
-    """
-    model = DarkNetV6(*args, **kwargs)
+def _darknet_v6_conf(weights: Optional[WeightsEnum], progress: bool, **kwargs: Any) -> DarkNetV6:
+    if weights is not None:
+        _ovewrite_named_param(kwargs, "num_classes", len(weights.meta["categories"]))
 
-    if pretrained:
-        model_url = model_urls[arch]
-        if model_url is None:
-            raise NotImplementedError(f"pretrained {arch} is not supported as of now")
-        else:
-            state_dict = load_state_dict_from_url(model_url, progress=progress)
-            model.load_state_dict(state_dict)
+    model = DarkNetV6(**kwargs)
+
+    if weights is not None:
+        model.load_state_dict(weights.get_state_dict(progress=progress))
 
     return model
 
 
-def darknet_n_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
+def darknet_n_r6_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV6:
     """
     Constructs the DarkNet release 6.0 model with nano channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v6_conf("darknet_n_r6.0", pretrained, progress, 0.33, 0.25, **kwargs)
+    return _darknet_v6_conf(weights, progress, 0.33, 0.25, **kwargs)
 
 
-def darknet_s_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
+def darknet_s_r6_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV6:
     """
     Constructs the DarkNet release 6.0 model with small channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v6_conf("darknet_s_r6.0", pretrained, progress, 0.33, 0.5, **kwargs)
+    return _darknet_v6_conf(weights, progress, 0.33, 0.5, **kwargs)
 
 
-def darknet_m_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
+def darknet_m_r6_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV6:
     """
     Constructs the DarkNet release 6.0 model with medium channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v6_conf("darknet_m_r6.0", pretrained, progress, 0.67, 0.75, **kwargs)
+    return _darknet_v6_conf(weights, progress, 0.67, 0.75, **kwargs)
 
 
-def darknet_l_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
+def darknet_l_r6_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV6:
     """
     Constructs the DarkNet release 6.0 model with large channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v6_conf("darknet_l_r6.0", pretrained, progress, 1.0, 1.0, **kwargs)
+    return _darknet_v6_conf(weights, progress, 1.0, 1.0, **kwargs)
 
 
-def darknet_x_r6_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV6:
+def darknet_x_r6_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV6:
     """
     Constructs the DarkNet release 6.0 model with X large channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v6_conf("darknet_x_r6.0", pretrained, progress, 1.33, 1.25, **kwargs)
+    return _darknet_v6_conf(weights, progress, 1.33, 1.25, **kwargs)

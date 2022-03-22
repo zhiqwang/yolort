@@ -19,13 +19,7 @@ class IntermediateLevelP6(nn.Module):
             of the PAN
     """
 
-    def __init__(
-        self,
-        depth_multiple: float,
-        in_channel: int,
-        out_channel: int,
-        version: str = "r4.0",
-    ):
+    def __init__(self, depth_multiple: float, in_channel: int, out_channel: int, version: str = "r4.0"):
         super().__init__()
 
         block = _block[version]
@@ -90,10 +84,7 @@ class PathAggregationNetwork(nn.Module):
         if use_p6:
             assert len(in_channels) == 4, "Length of in channels should be 4."
             intermediate_blocks = IntermediateLevelP6(
-                depth_multiple,
-                in_channels[2],
-                in_channels[3],
-                version=module_version,
+                depth_multiple, in_channels[2], in_channels[3], version=module_version
             )
         else:
             assert len(in_channels) == 3, "Length of in channels should be 3."

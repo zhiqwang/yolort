@@ -8,6 +8,7 @@ from torch import nn, Tensor
 from yolort.utils import load_state_dict_from_url
 
 from ._checkpoint import load_from_ultralytics
+from ._utils import _ovewrite_value_param
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
 from .box_head import YOLOHead, SetCriterion, PostProcess
@@ -224,27 +225,29 @@ class YOLO(nn.Module):
 
 
 def _create_yolo(
+    *,
     backbone_name: str,
     depth_multiple: float,
     width_multiple: float,
     version: str,
-    weights_name: Optional[str] = None,
-    pretrained: bool = False,
-    progress: bool = True,
-    num_classes: int = 80,
-    use_p6: bool = False,
+    progress: bool,
+    num_classes: int,
+    use_p6: bool,
+    weights,
     **kwargs: Any,
 ) -> YOLO:
+    if weights is not None:
+        num_classes = _ovewrite_value_param(num_classes, len(weights.meta["categories"]))
+    elif num_classes is None:
+        num_classes = 80
     backbone = darknet_pan_backbone(
         backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
     )
 
     model = YOLO(backbone, num_classes, **kwargs)
-    if pretrained:
-        if model_urls.get(weights_name, None) is None:
-            raise ValueError(f"No checkpoint is available for model {weights_name}")
-        state_dict = load_state_dict_from_url(model_urls[weights_name], progress=progress)
-        model.load_state_dict(state_dict)
+
+    if weights is not None:
+        model.load_state_dict(weights.get_state_dict(progress=progress))
 
     return model
 

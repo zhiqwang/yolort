@@ -1,13 +1,13 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
-from typing import Callable, List, Optional, Any
+from typing import Any, List, Callable, Optional
 
 import torch
 from torch import nn, Tensor
-from yolort.utils import load_state_dict_from_url
 from yolort.v5 import Conv, Focus, BottleneckCSP, C3, SPP
 
-from ._utils import _make_divisible
+from ._api import WeightsEnum
+from ._utils import _make_divisible, _ovewrite_named_param
 
 
 __all__ = [
@@ -19,15 +19,6 @@ __all__ = [
     "darknet_m_r4_0",
     "darknet_l_r4_0",
 ]
-
-model_urls = {
-    "darknet_s_r3.1": None,
-    "darknet_m_r3.1": None,
-    "darknet_l_r3.1": None,
-    "darknet_s_r4.0": None,
-    "darknet_m_r4.0": None,
-    "darknet_l_r4.0": None,
-}  # TODO: add checkpoint weights
 
 
 class DarkNetV4(nn.Module):
@@ -62,9 +53,11 @@ class DarkNetV4(nn.Module):
     ) -> None:
         super().__init__()
 
-        assert version in ["r3.1", "r4.0"], (
-            "Currently the module version used in DarkNetV4 is r3.1 or r4.0",
-        )
+        if version not in ["r3.1", "r4.0"]:
+            raise NotImplementedError(
+                f"Currently does not support version: {version}. Feel free to file an issue "
+                "labeled enhancement to us."
+            )
 
         if block is None:
             block = _block[version]
@@ -136,84 +129,91 @@ _block = {
 }
 
 
-def _darknet_v4_conf(arch: str, pretrained: bool, progress: bool, *args: Any, **kwargs: Any) -> DarkNetV4:
-    """
-    Build a DarkNetV4 model.
-    """
-    model = DarkNetV4(*args, **kwargs)
+def _darknet_v4_conf(weights: Optional[WeightsEnum], progress: bool, **kwargs: Any) -> DarkNetV4:
+    if weights is not None:
+        _ovewrite_named_param(kwargs, "num_classes", len(weights.meta["categories"]))
 
-    if pretrained:
-        model_url = model_urls[arch]
-        if model_url is None:
-            raise NotImplementedError(f"pretrained {arch} is not supported as of now")
-        else:
-            state_dict = load_state_dict_from_url(model_url, progress=progress)
-            model.load_state_dict(state_dict)
+    model = DarkNetV4(**kwargs)
+
+    if weights is not None:
+        model.load_state_dict(weights.get_state_dict(progress=progress))
 
     return model
 
 
-def darknet_s_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV4:
+def darknet_s_r3_1(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV4:
     """
     Constructs the DarkNet release 3.1 model with small channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v4_conf("darknet_s_r3.1", pretrained, progress, 0.33, 0.5, version="r3.1", **kwargs)
+    return _darknet_v4_conf(weights, progress, 0.33, 0.5, version="r3.1", **kwargs)
 
 
-def darknet_m_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV4:
+def darknet_m_r3_1(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV4:
     """
     Constructs the DarkNet release 3.1 model with medium channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v4_conf("darknet_m_r3.1", pretrained, progress, 0.67, 0.75, version="r3.1", **kwargs)
+    return _darknet_v4_conf(weights, progress, 0.67, 0.75, version="r3.1", **kwargs)
 
 
-def darknet_l_r3_1(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV4:
+def darknet_l_r3_1(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV4:
     """
     Constructs the DarkNet release 3.1 model with large channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v4_conf("darknet_l_r3.1", pretrained, progress, 1.0, 1.0, version="r3.1", **kwargs)
+    return _darknet_v4_conf(weights, progress, 1.0, 1.0, version="r3.1", **kwargs)
 
 
-def darknet_s_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV4:
+def darknet_s_r4_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV4:
     """
     Constructs the DarkNet release 4.0 model with small channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v4_conf("darknet_s_r4.0", pretrained, progress, 0.33, 0.5, version="r4.0", **kwargs)
+    return _darknet_v4_conf(weights, progress, 0.33, 0.5, version="r4.0", **kwargs)
 
 
-def darknet_m_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV4:
+def darknet_m_r4_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV4:
     """
     Constructs the DarkNet release 4.0 model with medium channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v4_conf("darknet_m_r4.0", pretrained, progress, 0.67, 0.75, version="r4.0", **kwargs)
+    return _darknet_v4_conf(weights, progress, 0.67, 0.75, version="r4.0", **kwargs)
 
 
-def darknet_l_r4_0(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> DarkNetV4:
+def darknet_l_r4_0(
+    *, weights: Optional[WeightsEnum] = None, progress: bool = True, **kwargs: Any
+) -> DarkNetV4:
     """
     Constructs the DarkNet release 4.0 model with large channels.
 
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        weights (WeightsEnum, optional): The pretrained weights for the model
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _darknet_v4_conf("darknet_l_r4.0", pretrained, progress, 1.0, 1.0, version="r4.0", **kwargs)
+    return _darknet_v4_conf(weights, progress, 1.0, 1.0, version="r4.0", **kwargs)
