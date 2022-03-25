@@ -9,27 +9,16 @@ from yolort.models._checkpoint import convert_yolov5_checkpoint
 def get_parser():
     parser = argparse.ArgumentParser("Convert checkpoints from yolov5 to yolort", add_help=True)
 
-    parser.add_argument(
-        "--checkpoint_path",
-        type=str,
-        required=True,
-        help="Path of the checkpoint weights",
-    )
+    parser.add_argument("--checkpoint_path", type=str, required=True, help="Path of the checkpoints")
     parser.add_argument(
         "--version",
         type=str,
         default="r6.0",
-        help="Upstream version released by the ultralytics/yolov5, Possible "
-        "values are ['r3.1', 'r4.0', 'r6.0']. Default: 'r6.0'.",
+        choices=["r3.1", "r4.0", "r6.0"],
+        help="Upstream version released by the ultralytics/yolov5 (default: 'r6.0').",
     )
     # Dataset Configuration
-    parser.add_argument(
-        "--image_path",
-        type=str,
-        default="./test/assets/zidane.jpg",
-        help="Path of the test image",
-    )
-
+    parser.add_argument("--image_path", type=str, default="zidane.jpg", help="Path of the test image")
     parser.add_argument("--output_path", type=str, default=None, help="Path where to save")
     return parser
 
