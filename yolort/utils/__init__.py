@@ -1,6 +1,6 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
-from typing import Any, Callable, Dict, Mapping, Sequence, Type, Union
+from typing import Any, Dict, Callable, Mapping, Sequence, Type, Union
 
 from torch import Tensor
 
@@ -12,7 +12,6 @@ except ImportError:
 from .dependency import check_version
 from .hooks import FeatureExtractor
 from .image_utils import cv2_imshow, get_image_from_url, read_image_to_tensor
-from .update_module_state import convert_yolov5_to_yolort
 from .visualizer import Visualizer
 
 
@@ -22,7 +21,6 @@ __all__ = [
     "cv2_imshow",
     "get_image_from_url",
     "get_callable_dict",
-    "convert_yolov5_to_yolort",
     "load_state_dict_from_url",
     "read_image_to_tensor",
     "FeatureExtractor",
