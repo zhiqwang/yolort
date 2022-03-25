@@ -1,8 +1,9 @@
-# Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+# Copyright (c) 2021, yolort team. All rights reserved.
+
 import argparse
 from pathlib import Path
 
-from yolort.utils import convert_yolov5_to_yolort
+from yolort.models._checkpoint import convert_yolov5_checkpoint
 
 
 def get_parser():
@@ -45,7 +46,7 @@ def cli_main():
     output_path = Path(args.output_path)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    convert_yolov5_to_yolort(checkpoint_path, output_path, version=args.version)
+    convert_yolov5_checkpoint(checkpoint_path, output_path, version=args.version)
 
 
 if __name__ == "__main__":
