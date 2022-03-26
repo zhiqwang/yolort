@@ -11,7 +11,7 @@ import pkg_resources as pkg
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from yolort.v5.utils.general import colorstr, emojis
-from yolort.v5.utils.loggers.wandb.wandb_utils import WandbLogger
+#from yolort.v5.utils.loggers.wandb.wandb_utils import WandbLogger
 from yolort.v5.utils.plots import plot_images, plot_results
 from yolort.v5.utils.torch_utils import de_parallel
 
@@ -97,7 +97,8 @@ class Loggers:
                 else None
             )
             self.opt.hyp = self.hyp  # add hyperparameters
-            self.wandb = WandbLogger(self.opt, run_id)
+            # self.wandb = WandbLogger(self.opt, run_id)
+            self.wandb = None
         else:
             self.wandb = None
 
