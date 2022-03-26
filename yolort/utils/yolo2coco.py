@@ -1,4 +1,4 @@
-# Copyright (c) 2020, yolort team. All Rights Reserved.
+# Copyright (c) 2020, yolort team. All rights reserved.
 
 import argparse
 import json
@@ -20,7 +20,7 @@ class YOLO2COCO:
             {
                 "id": 1,
                 "name": "GNU General Public License v3.0",
-                "url": "https://github.com/zhiqwang/yolov5-rt-stack/blob/master/LICENSE",
+                "url": "https://github.com/zhiqwang/yolov5-rt-stack/blob/main/LICENSE",
             }
         ]
         self.type = "instances"
