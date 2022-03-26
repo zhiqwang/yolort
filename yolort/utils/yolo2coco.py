@@ -1,20 +1,46 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
-import argparse
 import json
 from pathlib import Path
+from typing import List, Union
 
+import numpy as np
 from PIL import Image
-from yolort.data.builtin_meta import COCO_CATEGORIES
 
 
 class YOLO2COCO:
-    def __init__(self, root, split):
+    """
+    Convert YOLO labels to MSCOCO JSON labels.
+
+    Args:
+        root (string): Root directory of the Sintel Dataset
+        metalabels (string | List[string]): Concrete label names of different classes
+        split (string, optional): The dataset split, either "train" (default) or "test"
+        year (int, optional): The year of the dataset. Default: 2021
+    """
+
+    def __init__(
+        self,
+        root: str,
+        metalabels: Union[str, List[str]],
+        split: str = "train",
+        year: int = 2021,
+    ) -> None:
+
+        self._year = year
+        self.type = "instances"
+        self.split = split
+        self.root_path = Path(root)
+        self.label_path = self.root_path / "labels"
+        self.annotation_root = self.root_path / "annotations"
+        Path(self.annotation_root).mkdir(parents=True, exist_ok=True)
+        self.metadata = self._set_metadata(metalabels)
+
         self.info = {
-            "year": 2021,
+            "year": year,
             "version": "1.0",
             "description": "For object detection",
-            "date_created": "2021",
+            "date_created": f"{year}",
         }
         self.licenses = [
             {
@@ -23,21 +49,24 @@ class YOLO2COCO:
                 "url": "https://github.com/zhiqwang/yolov5-rt-stack/blob/main/LICENSE",
             }
         ]
-        self.type = "instances"
-        self.split = split
-        self.root_path = Path(root)
-        self.label_path = self.root_path / "labels"
-        self.annotation_root = self.root_path / "annotations"
-        Path(self.annotation_root).mkdir(parents=True, exist_ok=True)
-
         self.categories = [
             {
                 "id": coco_category["id"],
                 "name": coco_category["name"],
                 "supercategory": coco_category["supercategory"],
             }
-            for coco_category in COCO_CATEGORIES
+            for coco_category in self.metadata
         ]
+
+    @staticmethod
+    def _set_metadata(metalabels: Union[str, List[str]]):
+        if isinstance(metalabels, list):
+            return metalabels
+
+        if isinstance(metalabels, str):
+            return np.loadtxt(metalabels, dtype="str", delimiter="\n")
+
+        raise TypeError(f"path of metalabels of list of strings expected, got {type(metalabels)}")
 
     def generate(self, coco_type="instances", annotation_format="bbox"):
         label_paths = sorted(self.label_path.rglob("*.txt"))
@@ -68,7 +97,7 @@ class YOLO2COCO:
 
             images.append(
                 {
-                    "date_captured": "2021",
+                    "date_captured": f"{self._year}",
                     "file_name": str(Path(img_path).relative_to(self.root_path)),
                     "id": img_id,
                     "license": 1,
@@ -121,19 +150,3 @@ class YOLO2COCO:
 
         bbox = [x, y, w, h]
         return segmentation, bbox, area
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Datasets converter from yolo to coco", add_help=False)
-
-    parser.add_argument("--data_path", default="../coco128", help="Dataset root path")
-    parser.add_argument(
-        "--split",
-        default="train2017",
-        help="Dataset split part, optional: [train2017, val2017]",
-    )
-
-    args = parser.parse_args()
-
-    converter = YOLO2COCO(args.data_path, args.split)
-    converter.generate()
