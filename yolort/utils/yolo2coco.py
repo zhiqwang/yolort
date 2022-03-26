@@ -16,7 +16,7 @@ class YOLO2COCO:
         root (string): Root directory of the Sintel Dataset
         metalabels (string | List[string]): Concrete label names of different classes
         split (string, optional): The dataset split, either "train" (default) or "test"
-        year (int, optional): The year of the dataset. Default: 2021
+        year (int, optional): The year of the dataset. Default: 2017
     """
 
     def __init__(
@@ -24,12 +24,12 @@ class YOLO2COCO:
         root: str,
         metalabels: Union[str, List[str]],
         split: str = "train",
-        year: int = 2021,
+        year: int = 2017,
     ) -> None:
 
         self._year = year
         self.type = "instances"
-        self.split = split
+        self.split = f"{split}{year}"
         self.root_path = Path(root)
         self.label_path = self.root_path / "labels"
         self.annotation_root = self.root_path / "annotations"
@@ -50,12 +50,7 @@ class YOLO2COCO:
             }
         ]
         self.categories = [
-            {
-                "id": coco_category["id"],
-                "name": coco_category["name"],
-                "supercategory": coco_category["supercategory"],
-            }
-            for coco_category in self.metadata
+            {"id": coco_category["id"], "name": coco_category["name"]} for coco_category in self.metadata
         ]
 
     @staticmethod
