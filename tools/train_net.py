@@ -34,7 +34,7 @@ from torch.optim import SGD, Adam, AdamW, lr_scheduler
 from tqdm import tqdm
 
 FILE = Path(__file__).resolve()
-#import val_net as val  # for end-of-epoch mAP
+import val_net as val  # for end-of-epoch mAP
 from yolort.v5.models.experimental import attempt_load
 from yolort.v5.models.yolo import Model
 from yolort.v5.utils.autoanchor import check_anchors
