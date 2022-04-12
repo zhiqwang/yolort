@@ -38,10 +38,6 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 from yolort.v5.models.common import DetectMultiBackend
 from yolort.v5.utils.callbacks import Callbacks
 from yolort.v5.utils.datasets import create_dataloader
-
-# from yolort.v5.utils.general import (LOGGER, box_iou, check_dataset, check_img_size, check_requirements, check_yaml,
-#                            coco80_to_coco91_class, colorstr, increment_path, non_max_suppression, print_args,
-#                            scale_coords, xywh2xyxy, xyxy2xywh)
 from yolort.v5.utils.general import (
     LOGGER,
     box_iou,
@@ -73,7 +69,8 @@ def save_one_txt(predn, save_conf, shape, file):
 
 
 def save_one_json(predn, jdict, path, class_map):
-    # Save one JSON result {"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}
+    # Save one JSON result
+    # {"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}
     image_id = int(path.stem) if path.stem.isnumeric() else path.stem
     box = xyxy2xywh(predn[:, :4])  # xywh
     box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner
