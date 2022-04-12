@@ -34,8 +34,7 @@ from torch.optim import SGD, Adam, AdamW, lr_scheduler
 from tqdm import tqdm
 
 FILE = Path(__file__).resolve()
-
-import val  # for end-of-epoch mAP
+import val_net as val  # for end-of-epoch mAP
 from yolort.v5.models.experimental import attempt_load
 from yolort.v5.models.yolo import Model
 from yolort.v5.utils.autoanchor import check_anchors
@@ -66,7 +65,8 @@ from yolort.v5.utils.general import (
     strip_optimizer,
 )
 from yolort.v5.utils.loggers import Loggers
-from yolort.v5.utils.loggers.wandb.wandb_utils import check_wandb_resume
+
+# from yolort.v5.utils.loggers.wandb.wandb_utils import check_wandb_resume
 from yolort.v5.utils.loss import ComputeLoss
 from yolort.v5.utils.metrics import fitness
 from yolort.v5.utils.plots import plot_evolve, plot_labels
@@ -160,6 +160,7 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
     # Model
     check_suffix(weights, ".pt")  # check weights
     pretrained = weights.endswith(".pt")
+    print(pretrained)
     if pretrained:
         with torch_distributed_zero_first(LOCAL_RANK):
             weights = attempt_download(weights)  # download if not found locally
@@ -555,17 +556,15 @@ def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--weights", type=str, default="../yolov5s.pt", help="initial weights path")
-    parser.add_argument("--cfg", type=str, default="", help="model.yaml path")
+    parser.add_argument("--weights", type=str, default="", help="initial weights path")
+    parser.add_argument("--cfg", type=str, default="yolort/v5/models/yolov5s.yaml", help="model.yaml path")
+    parser.add_argument("--data", type=str, default="yolort/v5/data/coco128.yaml", help="dataset.yaml path")
     parser.add_argument(
-        "--data", type=str, default="../yolort/v5/data/coco128.yaml", help="dataset.yaml path"
+        "--hyp", type=str, default="yolort/v5/data/hyps/hyp.scratch.yaml", help="hyperparameters path"
     )
+    parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument(
-        "--hyp", type=str, default="../yolort/v5/data/hyps/hyp.scratch.yaml", help="hyperparameters path"
-    )
-    parser.add_argument("--epochs", type=int, default=300)
-    parser.add_argument(
-        "--batch-size", type=int, default=16, help="total batch size for all GPUs, -1 for autobatch"
+        "--batch-size", type=int, default=8, help="total batch size for all GPUs, -1 for autobatch"
     )
     parser.add_argument(
         "--imgsz", "--img", "--img-size", type=int, default=640, help="train, val image size (pixels)"
@@ -638,7 +637,8 @@ def main(opt, callbacks=Callbacks()):
         check_requirements(exclude=["thop"])
 
     # Resume
-    if opt.resume and not check_wandb_resume(opt) and not opt.evolve:  # resume an interrupted run
+    # if opt.resume and not check_wandb_resume(opt) and not opt.evolve:  # resume an interrupted run
+    if opt.resume and not opt.evolve:  # resume an interrupted run
         ckpt = (
             opt.resume if isinstance(opt.resume, str) else get_latest_run()
         )  # specified or most recent path

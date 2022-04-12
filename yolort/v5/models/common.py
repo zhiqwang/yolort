@@ -264,6 +264,55 @@ class Concat(nn.Module):
         return torch.cat(prev_features, self.d)
 
 
+class DetectMultiBackend(nn.Module):
+    # YOLOv5 MultiBackend class for python inference on various backends
+    def __init__(self, weights="yolov5s.pt", device=None, dnn=False, data=None):
+        # Usage:
+        #   PyTorch:              weights = *.pt
+        #   TorchScript:                    *.torchscript
+        #   ONNX Runtime:                   *.onnx
+        #   ONNX OpenCV DNN:                *.onnx with --dnn
+        #   OpenVINO:                       *.xml
+        #   CoreML:                         *.mlmodel
+        #   TensorRT:                       *.engine
+        #   TensorFlow SavedModel:          *_saved_model
+        #   TensorFlow GraphDef:            *.pb
+        #   TensorFlow Lite:                *.tflite
+        #   TensorFlow Edge TPU:            *_edgetpu.tflite
+        import yaml
+        from yolort.v5.models.experimental import (
+            attempt_download,
+            attempt_load,
+        )  # scoped to avoid circular import
+
+        super().__init__()
+        w = str(weights[0] if isinstance(weights, list) else weights)
+        stride, names = 64, [f"class{i}" for i in range(1000)]  # assign defaults
+        w = attempt_download(w)  # download if not local
+        if data:  # data.yaml path (optional)
+            with open(data, errors="ignore") as f:
+                names = yaml.safe_load(f)["names"]  # class names
+        model = attempt_load(weights if isinstance(weights, list) else w, map_location=device)
+        stride = max(int(model.stride.max()), 32)  # model stride
+        names = model.module.names if hasattr(model, "module") else model.names  # get class names
+        self.model = model  # explicitly assign for to(), cpu(), cuda(), half()
+
+        self.__dict__.update(locals())  # assign all variables to self
+
+    def forward(self, im, augment=False, visualize=False, val=False):
+        # YOLOv5 MultiBackend inference
+        b, ch, h, w = im.shape  # batch, channel, height, width
+        y = self.model(im) if self.jit else self.model(im, augment=augment, visualize=visualize)
+        return y if val else y[0]
+
+    def warmup(self, imgsz=(1, 3, 640, 640), half=False):
+        # Warmup model by running inference once
+
+        if isinstance(self.device, torch.device) and self.device.type != "cpu":  # only warmup GPU models
+            im = torch.zeros(*imgsz).to(self.device).type(torch.half if half else torch.float)  # input image
+            self.forward(im)  # warmup
+
+
 class Flatten(nn.Module):
     # Use after nn.AdaptiveAvgPool2d(1) to remove last 2 dimensions
     @staticmethod

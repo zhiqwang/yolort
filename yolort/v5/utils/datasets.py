@@ -15,7 +15,7 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image
+from PIL import ExifTags, Image, ImageOps
 from torch.utils.data import DataLoader, Dataset, dataloader, distributed
 from tqdm import tqdm
 
@@ -33,12 +33,33 @@ VID_FORMATS = ["mov", "avi", "mp4", "mpg", "mpeg", "m4v", "wmv", "mkv"]
 WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))  # DPP
 
 
+# Get orientation exif tag
+for orientation in ExifTags.TAGS.keys():
+    if ExifTags.TAGS[orientation] == "Orientation":
+        break
+
+
 def get_hash(paths):
     # Returns a single hash value of a list of paths (files or dirs)
     size = sum(os.path.getsize(p) for p in paths if os.path.exists(p))  # sizes
     h = hashlib.md5(str(size).encode())  # hash sizes
     h.update("".join(paths).encode())  # hash paths
     return h.hexdigest()  # return hash
+
+
+def exif_size(img):
+    # Returns exif-corrected PIL size
+    s = img.size  # (width, height)
+    try:
+        rotation = dict(img._getexif().items())[orientation]
+        if rotation == 6:  # rotation 270
+            s = (s[1], s[0])
+        elif rotation == 8:  # rotation 90
+            s = (s[1], s[0])
+    except Exception:
+        pass
+
+    return s
 
 
 def exif_transpose(image):
@@ -323,6 +344,7 @@ class LoadImagesAndLabels(Dataset):
         cache_path = (p if p.is_file() else Path(self.label_files[0]).parent).with_suffix(".cache")
         try:
             cache, exists = np.load(cache_path, allow_pickle=True).item(), True  # load dict
+
             assert cache["version"] == self.cache_version  # same version
             assert cache["hash"] == get_hash(self.label_files + self.img_files)  # same hash
         except Exception:

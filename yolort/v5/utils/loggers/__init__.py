@@ -11,7 +11,8 @@ import pkg_resources as pkg
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from yolort.v5.utils.general import colorstr, emojis
-from yolort.v5.utils.loggers.wandb.wandb_utils import WandbLogger
+
+# from yolort.v5.utils.loggers.wandb.wandb_utils import WandbLogger
 from yolort.v5.utils.plots import plot_images, plot_results
 from yolort.v5.utils.torch_utils import de_parallel
 
@@ -91,13 +92,14 @@ class Loggers:
             wandb_artifact_resume = isinstance(self.opt.resume, str) and self.opt.resume.startswith(
                 "wandb-artifact://"
             )
-            run_id = (
+            _ = (
                 torch.load(self.weights).get("wandb_id")
                 if self.opt.resume and not wandb_artifact_resume
                 else None
             )
             self.opt.hyp = self.hyp  # add hyperparameters
-            self.wandb = WandbLogger(self.opt, run_id)
+            # self.wandb = WandbLogger(self.opt, run_id)
+            self.wandb = None
         else:
             self.wandb = None
 
