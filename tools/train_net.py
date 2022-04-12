@@ -65,6 +65,7 @@ from yolort.v5.utils.general import (
     strip_optimizer,
 )
 from yolort.v5.utils.loggers import Loggers
+
 # from yolort.v5.utils.loggers.wandb.wandb_utils import check_wandb_resume
 from yolort.v5.utils.loss import ComputeLoss
 from yolort.v5.utils.metrics import fitness
@@ -557,9 +558,7 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", type=str, default="", help="initial weights path")
     parser.add_argument("--cfg", type=str, default="yolort/v5/models/yolov5s.yaml", help="model.yaml path")
-    parser.add_argument(
-        "--data", type=str, default="yolort/v5/data/coco128.yaml", help="dataset.yaml path"
-    )
+    parser.add_argument("--data", type=str, default="yolort/v5/data/coco128.yaml", help="dataset.yaml path")
     parser.add_argument(
         "--hyp", type=str, default="yolort/v5/data/hyps/hyp.scratch.yaml", help="hyperparameters path"
     )

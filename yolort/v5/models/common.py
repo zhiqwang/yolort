@@ -280,7 +280,10 @@ class DetectMultiBackend(nn.Module):
         #   TensorFlow Lite:                *.tflite
         #   TensorFlow Edge TPU:            *_edgetpu.tflite
         import yaml
-        from yolort.v5.models.experimental import attempt_download, attempt_load  # scoped to avoid circular import
+        from yolort.v5.models.experimental import (
+            attempt_download,
+            attempt_load,
+        )  # scoped to avoid circular import
 
         super().__init__()
         w = str(weights[0] if isinstance(weights, list) else weights)
@@ -306,9 +309,7 @@ class DetectMultiBackend(nn.Module):
         # Warmup model by running inference once
 
         if isinstance(self.device, torch.device) and self.device.type != "cpu":  # only warmup GPU models
-            im = (
-                torch.zeros(*imgsz).to(self.device).type(torch.half if half else torch.float)
-            )  # input image
+            im = torch.zeros(*imgsz).to(self.device).type(torch.half if half else torch.float)  # input image
             self.forward(im)  # warmup
 
 
