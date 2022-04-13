@@ -14,7 +14,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-[![Python Version](https://img.shields.io/badge/Python-3.6--3.10-FFD43B?logo=python&logoColor=blue)](https://pypi.org/project/yolort/)
+[![Python Version](https://img.shields.io/badge/Python-3.6--3.10-E3C29B?logo=python)](https://pypi.org/project/yolort/)
 [![PyPI version](https://img.shields.io/pypi/v/yolort?color=3775A9&logo=PyPI&logoColor=white)](https://badge.fury.io/py/yolort)
 [![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?label=Model%20downloads&logo=PyTorch&color=2088FF&logoColor=EE4C2C)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=violet&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
