@@ -16,7 +16,7 @@ ______________________________________________________________________
 
 [![Python Version](https://img.shields.io/badge/Python-3.6--3.10-34A853?logo=python&logoColor=white&color=FFD43B)](https://pypi.org/project/yolort/)
 [![PyPI version](https://img.shields.io/pypi/v/yolort?color=3775A9&logo=PyPI&logoColor=white)](https://badge.fury.io/py/yolort)
-[![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=2088FF&label=downloads&logo=github&logoColor=lightgrey)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
+[![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?label=Model%20downloads&logo=PyTorch&color=2088FF&logoColor=EE4C2C)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=violet&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
 [![Slack](https://img.shields.io/badge/Slack%20chat-4A154B?logo=slack&logoColor=white)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
 [![PRs Welcome](https://img.shields.io/badge/PRs%20welcome-4D97FF?logo=GitHub-Sponsors&logoColor=#white)](https://github.com/zhiqwang/yolov5-rt-stack/blob/update-dependencies/.github/CONTRIBUTING.md)
