@@ -19,7 +19,7 @@ ______________________________________________________________________
 [![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=2088FF&label=downloads&logo=github&logoColor=lightgrey)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=violet&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
 [![Slack](https://img.shields.io/badge/Slack%20chat-4A154B?logo=slack&logoColor=white)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
-[![PRs Welcome](https://img.shields.io/badge/PRs%20welcome-4D97FF?logo=GitHub-Sponsors&logoColor=#white)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
+[![PRs Welcome](https://img.shields.io/badge/PRs%20welcome-4D97FF?logo=GitHub-Sponsors&logoColor=#white)](https://github.com/zhiqwang/yolov5-rt-stack/blob/update-dependencies/.github/CONTRIBUTING.md)
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml)
 [![Build & deploy docs](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/tree/gh-pages)
