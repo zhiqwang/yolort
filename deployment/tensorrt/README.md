@@ -42,17 +42,30 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
 1. Create build directory and build project.
 
    ```bash
+   #for linux
    mkdir -p build && cd build
-   cmake .. -DTENSORRT_DIR={path/to/your/TensorRT/install/director}
+   cmake -DTENSORRT_DIR={path/to/your/TensorRT/install/directory} ..
    cmake --build .
+   
+   #for windows visual studio 2017/2019
+   1.download TensorRT, CUDA and cudnn
+   2.build OpenCV libraries
+   3.mkdir -p build && cd build
+     cmake -DTENSORRT_DIR={path/to/your/TensorRT/install/directory} -DOpenCV_DIR={path/to/your/OpenCV_BUILD_DIR} ..
+     cmake --build . (or use yolort_trt.sln to build)
+   4.copy CUDA, cudnn and OpenCV dynamic link libraries(xxx.dll) which will be used to Release/Debug Directory
+   tips:1.CUDA, cudnn dynamic link libraries: cudnn_cnn_infer64_8.dll, cudnn_ops_infer64_8.dll, cudnn64_8.dll, nvinfer.dll, 
+   	   nvinfer_plugin.dll, nvonnxparser.dll, zlibwapi.dll
+   	 2.you can use OpenCV for Static Library or copy opencv_corexxx.dll opencv_imgcodecsxxx.dll opencv_imgprocxxx.dll to 	
+   	   Release/Debug Directory
    ```
 
 1. Now, you can infer your own images.
 
    ```bash
-   ./yolort_trt --image ../../../test/assets/zidane.jpg
-                --model_path ../../../notebooks/best.engine
-                --class_names ../../../notebooks/assets/coco.names
+   ./yolort_trt --image {path/to/your/yolort}/test/assets/zidane.jpg
+                --model_path {path/to/your/yolort}/notebooks/best.engine
+                --class_names {path/to/your/yolort}/notebooks/assets/coco.names
    ```
 
    The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.
