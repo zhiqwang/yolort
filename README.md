@@ -14,7 +14,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-[![PRs Welcome](https://img.shields.io/badge/PRs%20welcome-792EE5?logo=GitHub-Sponsors&logoColor=#white)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
+[![PRs Welcome](https://img.shields.io/badge/PRs%20welcome-4D97FF?logo=GitHub-Sponsors&logoColor=#white)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 [![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=ccf&label=downloads&logo=github&logoColor=lightgrey)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=pink&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
 [![Slack](https://img.shields.io/badge/slack-chat-ffa.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
