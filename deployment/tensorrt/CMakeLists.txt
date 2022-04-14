@@ -15,7 +15,7 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# cuda
+# For CUDA
 find_package(CUDA)
 message(STATUS "CUDA_DIR: ${CUDA_TOOLKIT_ROOT_DIR}")
 
@@ -28,7 +28,7 @@ else()
     link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib64)
 endif()
 
-# tensorrt
+# For TensorRT
 if(EXISTS ${TENSORRT_DIR})
     message(STATUS "TensorRT DIR: " ${TENSORRT_DIR})
 else()
