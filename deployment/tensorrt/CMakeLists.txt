@@ -6,11 +6,11 @@ message(STATUS "TENSORRT_DIR: ${TENSORRT_DIR}")
 
 find_package(OpenCV REQUIRED)
 
-IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	add_compile_options(-Wall -O2)
-ELSE()
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	add_compile_options(-Wall)
+else()
 	add_compile_options(-Wextra -Wall -Wno-unused -Wno-deprecated-declarations)
-ENDIF()
+endif()
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,16 +18,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # cuda
 find_package(CUDA)
 message(STATUS "CUDA_DIR: ${CUDA_TOOLKIT_ROOT_DIR}")
+
 include_directories(${CUDA_TOOLKIT_ROOT_DIR}/include)
-IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 	link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib64)
-ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
 	link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
-ELSE()
+else()
 	link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib64)
-ENDIF()
+endif()
 
 # tensorrt
+if(EXISTS ${TENSORRT_DIR})
+	message(STATUS "TensorRT DIR: " ${TENSORRT_DIR})
+else()
+	message(STATUS "TensorRT directory is unable to use, Please use correct TensorRT directory")
+endif()
+
 include_directories(${TENSORRT_DIR}/include)
 link_directories(${TENSORRT_DIR}/lib)
 
