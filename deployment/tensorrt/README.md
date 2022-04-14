@@ -51,16 +51,17 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
 
    - Build yolort TensorRT executable files
 
-      ```bash
-      mkdir -p build && cd build
-      # Add `-G "Visual Studio 16 2019"` below to specify the compile version of VS on Windows System
-      cmake -DTENSORRT_DIR={path/to/your/TensorRT/install/directory} -DOpenCV_DIR={path/to/your/OpenCV_BUILD_DIR} ..
-      cmake --build .  # Can also use the yolort_trt.sln to build on Windows System
-      ```
+     ```bash
+     mkdir -p build && cd build
+     # Add `-G "Visual Studio 16 2019"` below to specify the compile version of VS on Windows System
+     cmake -DTENSORRT_DIR={path/to/your/TensorRT/install/directory} -DOpenCV_DIR={path/to/your/OpenCV_BUILD_DIR} ..
+     cmake --build .  # Can also use the yolort_trt.sln to build on Windows System
+     ```
 
    - \[Windows System Only\] Copy following dependent dynamic link libraries (xxx.dll) to Release/Debug directory
-      - cudnn_cnn_infer64_8.dll, cudnn_ops_infer64_8.dll, cudnn64_8.dll, nvinfer.dll, nvinfer_plugin.dll, nvonnxparser.dll, zlibwapi.dll (On which CUDA and cudnn depend)
-      - opencv_corexxx.dll opencv_imgcodecsxxx.dll opencv_imgprocxxx.dll (Subsequent dependencies by OpenCV or you can also use Static OpenCV Library)
+
+     - cudnn_cnn_infer64_8.dll, cudnn_ops_infer64_8.dll, cudnn64_8.dll, nvinfer.dll, nvinfer_plugin.dll, nvonnxparser.dll, zlibwapi.dll (On which CUDA and cudnn depend)
+     - opencv_corexxx.dll opencv_imgcodecsxxx.dll opencv_imgprocxxx.dll (Subsequent dependencies by OpenCV or you can also use Static OpenCV Library)
 
 1. Now, you can infer your own images.
 
