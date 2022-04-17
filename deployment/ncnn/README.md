@@ -1,12 +1,13 @@
 # Ncnn Inference
 
+![OpenCV](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
+
 The ncnn inference for `yolort`, both GPU and CPU are supported.
 
 ## Dependencies
 
-- Ubuntu 18.04
 - ncnn
-- OpenCV 3.4+
+- OpenCV
 
 ## Usage
 
