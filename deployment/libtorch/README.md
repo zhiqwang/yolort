@@ -1,13 +1,16 @@
 # LibTorch Inference
 
+![yolort](https://img.shields.io/badge/yolort-792EE5?style=for-the-badge&logo=GitHub-Sponsors) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/NVIDIA-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
+
+![OpenCV](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white)
+
 The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
 ## Dependencies
 
-- Ubuntu / Windows / macOS
 - LibTorch 1.8.0+ together with corresponding TorchVision 0.9.0+
-- OpenCV 3.4+
-- CUDA 10.2 \[Optional\]
+- OpenCV
+- CUDA 10.2+ \[Optional\]
 
 *We didn't impose too strong restrictions on the version of CUDA.*
 
