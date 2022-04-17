@@ -1,12 +1,13 @@
 # ONNX Runtime Inference
 
+![OpenCV](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
+
 The ONNX Runtime inference for `yolort`, both CPU and GPU are supported.
 
 ## Dependencies
 
-- Ubuntu 20.04 / Windows 10 / macOS
-- ONNX Runtime 1.7 +
-- OpenCV 4.5 +
+- ONNX Runtime 1.7+
+- OpenCV
 - CUDA \[Optional\]
 
 *We didn't impose too strong restrictions on the versions of dependencies.*
