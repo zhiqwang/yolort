@@ -15,7 +15,7 @@ ______________________________________________________________________
 ______________________________________________________________________
 
 [![Python Version](https://img.shields.io/badge/Python-3.6--3.10-FFD43B?logo=python)](https://pypi.org/project/yolort/)
-[![PyPI version](https://img.shields.io/pypi/v/yolort?color=3775A9&logo=PyPI&logoColor=white)](https://badge.fury.io/py/yolort)
+[![PyPI version](https://img.shields.io/pypi/v/yolort?color=3775A9&logo=PyPI)](https://badge.fury.io/py/yolort)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=violet&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
 [![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?label=Model%20downloads&logo=PyTorch&color=FF6F00&logoColor=EE4C2C)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
 [![Slack](https://img.shields.io/badge/Slack%20chat-4A154B?logo=slack&logoColor=white)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
@@ -177,7 +177,7 @@ Now, `yolort` can draw the model graph directly, checkout our [tutorial](https:/
 
 We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors! If you like this project please consider ⭐ this repo, as it is the simplest way to support us.
 
-[![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
+[![Contributors](https://opencollective.com/yolort/contributors.svg?width=890&button=false)](https://opencollective.com/yolort/contributors.svg?width=890&button=true)
 
 ## 📖 Citing yolort
 
