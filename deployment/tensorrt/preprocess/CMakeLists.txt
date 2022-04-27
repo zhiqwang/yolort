@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.18.0)
+find_package(CUDA)
+find_package(OpenCV REQUIRED)
+cuda_add_library(preprocess SHARED preprocess.cu)
+target_link_libraries(preprocess cudart ${OpenCV_LIBS}) 

@@ -5,6 +5,12 @@ option(TENSORRT_DIR "Path to built TensorRT directory." STRING)
 message(STATUS "TENSORRT_DIR: ${TENSORRT_DIR}")
 
 find_package(OpenCV REQUIRED)
+# build the library of GPU preprocess
+add_subdirectory(preprocess)
+include_directories(./preprocess)
+# set the link library
+message(${CMAKE_BINARY_DIR}/preprocess)
+link_directories(${CMAKE_BINARY_DIR}/preprocess)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     add_compile_options(-Wall)
@@ -39,4 +45,4 @@ include_directories(${TENSORRT_DIR}/include)
 link_directories(${TENSORRT_DIR}/lib)
 
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} nvinfer cudart nvonnxparser nvinfer_plugin)
+target_link_libraries(${PROJECT_NAME} preprocess ${OpenCV_LIBS} nvinfer cudart nvonnxparser nvinfer_plugin)
