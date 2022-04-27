@@ -13,12 +13,20 @@ The TensorRT inference example of `yolort`.
 
 Here we will mainly discuss how to use the C++ interface, we recommend that you check out our [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) first.
 
+Gpu preprocess reference code :[tensorrtx](https://github.com/wang-xinyu/tensorrtx/tree/master/yolov5)
+
 1. Export your custom model to TensorRT format
 
    We provide a CLI tool to export the custom model checkpoint trained from yolov5 to TensorRT serialized engine.
 
    ```bash
    python tools/export_model.py --checkpoint_path {path/to/your/best.pt} --include engine
+   ```
+
+   if you wanna inference in the mulitple batch just like 8 use this command
+
+   ```bash
+   python tools/export_model.py --checkpoint_path {path/to/your/best.pt} --include engine --batch_size 8
    ```
 
    Note: This CLI will output a pair of ONNX model and TensorRT serialized engine if you have the full TensorRT's Python environment, otherwise it will only output an ONNX models with suffixes ".trt.onnx". And then you can also use the [`trtexct`](https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#trtexec) provided by TensorRT to export the serialized engine as below:
@@ -62,6 +70,7 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
 
      - cudnn_cnn_infer64_8.dll, cudnn_ops_infer64_8.dll, cudnn64_8.dll, nvinfer.dll, nvinfer_plugin.dll, nvonnxparser.dll, zlibwapi.dll (On which CUDA and cudnn depend)
      - opencv_corexxx.dll opencv_imgcodecsxxx.dll opencv_imgprocxxx.dll (Subsequent dependencies by OpenCV or you can also use Static OpenCV Library)
+     - Caculate time use the **sys/time.h** you should don;t use in the windows ,otherwise you will complie failed .
 
 1. Now, you can infer your own images.
 
@@ -69,6 +78,17 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
    ./yolort_trt --image {path/to/your/image}
                 --model_path {path/to/your/serialized/tensorrt/engine}
                 --class_names {path/to/your/class/names}
+                --batch 1
    ```
-
+   
+   if you wanna inference in 8 batch，you should use images_folder
+   
+   ```bash
+   ./yolort_trt --images_folder {path/to/your/imagefolder}
+                --model_path {path/to/your/serialized/tensorrt/engine}
+                --class_names {path/to/your/class/names}
+                --batch 8
+   ```
+   
    The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.
+

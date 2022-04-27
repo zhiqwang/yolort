@@ -1,5 +1,7 @@
 #include <cuda_runtime_api.h>
+#include <dirent.h>
 #include <opencv2/opencv.hpp>
+#include <sys/time.h>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -8,10 +10,38 @@
 #include "NvInferPlugin.h"
 #include "NvOnnxParser.h"
 #include "cmdline.h"
+#include "preprocess.h"
+
+#define MAX_IMAGE_INPUT_SIZE_THRESH 3000 * 3000
+#define BATCH_SIZE 8
 
 using namespace nvonnxparser;
 using namespace nvinfer1;
+double cpuSecond() {
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  return ((double)tp.tv_sec + (double)tp.tv_usec * 1e-6);
+}
+static inline int read_files_in_dir(const char* p_dir_name, std::vector<std::string>& file_names) {
+  DIR* p_dir = opendir(p_dir_name);
+  if (p_dir == nullptr) {
+    return -1;
+  }
 
+  struct dirent* p_file = nullptr;
+  while ((p_file = readdir(p_dir)) != nullptr) {
+    if (strcmp(p_file->d_name, ".") != 0 && strcmp(p_file->d_name, "..") != 0) {
+      // std::string cur_file_name(p_dir_name);
+      // cur_file_name += "/";
+      // cur_file_name += p_file->d_name;
+      std::string cur_file_name(p_file->d_name);
+      file_names.push_back(cur_file_name);
+    }
+  }
+
+  closedir(p_dir);
+  return 0;
+}
 #define CHECK(status)                                                \
   do {                                                               \
     auto ret = (status);                                             \
@@ -284,6 +314,8 @@ class YOLOv5Detector {
 
   std::vector<Detection> detect(cv::Mat& image);
   std::vector<std::vector<Detection>> detect(std::vector<cv::Mat>& images);
+  std::vector<Detection> detect_preprocessgpu(cv::Mat& images);
+  std::vector<std::vector<Detection>> batch_inference_gpu(std::vector<cv::Mat>& imagess);
 
  private:
   MyLogger logger;
@@ -307,6 +339,272 @@ YOLOv5Detector::~YOLOv5Detector() {
   if (stream) {
     CHECK(cudaStreamDestroy(stream));
   }
+}
+std::vector<Detection> YOLOv5Detector::detect_preprocessgpu(cv::Mat& image) {
+  std::vector<Detection> result;
+  // void* 用于指向int* float*
+  std::vector<void*> buffers(engine->getNbBindings());
+  std::size_t batch_size = 1;
+  int num_detections_index = engine->getBindingIndex("num_detections");
+  int detection_boxes_index = engine->getBindingIndex("detection_boxes");
+  int detection_scores_index = engine->getBindingIndex("detection_scores");
+  int detection_labels_index = engine->getBindingIndex("detection_classes");
+
+  int32_t num_detections = 0;
+  std::vector<float> detection_boxes;
+  std::vector<float> detection_scores;
+  std::vector<int> detection_labels;
+
+  Dims dim = engine->getBindingDimensions(0);
+  dim.d[0] = batch_size;
+  context->setBindingDimensions(0, dim);
+
+  cv::Size shape = image.size();
+
+  /* prepare the host mem alloc */
+  for (int32_t i = 0; i < engine->getNbBindings(); i++) {
+    {
+      std::cout << "  Bind[" << i << "] {"
+                << "Name:" << engine->getBindingName(i)
+                << ", Datatype:" << static_cast<int>(engine->getBindingDataType(i)) << ",Shape:(";
+      for (int j = 0; j < engine->getBindingDimensions(i).nbDims; j++) {
+        std::cout << engine->getBindingDimensions(i).d[j] << ",";
+      }
+      std::cout << ")"
+                << "}" << std::endl;
+    }
+    size_t buffer_size = 1;
+    for (int j = 0; j < engine->getBindingDimensions(i).nbDims; j++) {
+      buffer_size *= engine->getBindingDimensions(i).d[j];
+    }
+    // void* buffers[i] op&--> void**
+    CHECK(cudaMalloc(&buffers[i], buffer_size * getElementSize(engine->getBindingDataType(i))));
+    if (i == detection_boxes_index) {
+      detection_boxes.resize(buffer_size);
+    } else if (i == detection_scores_index) {
+      detection_scores.resize(buffer_size);
+    } else if (i == detection_labels_index) {
+      detection_labels.resize(buffer_size);
+    }
+  }
+  uint8_t* img_host = nullptr;
+  uint8_t* img_device = nullptr;
+  // yolov5 malloc the device but this yolort has malloc in the upper loop
+
+  // CUDA_CHECK(cudaMalloc((void**)&buffers[0], 3 * net_img_height * net_img_width *
+  // sizeof(float))); CUDA_CHECK(cudaMalloc((void**)&buffers[1], OUTPUT_SIZE * sizeof(float))); this
+  // malloc the mem to shuffle the device and host
+  CHECK(cudaMallocHost((void**)&img_host, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
+  CHECK(cudaMalloc((void**)&img_device, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
+  size_t size_image = image.cols * image.rows * 3;
+  memcpy(img_host, image.data, size_image);
+  // binding indices inputshape (1,3,640,640)
+  int32_t input_h = engine->getBindingDimensions(0).d[2];
+  int32_t input_w = engine->getBindingDimensions(0).d[3];
+  // float *buffer_idx = (float*)buffers[0];
+  // buffer_idx point float* buffers()
+  float scale =
+      1 / (std::min((float)input_h / (float)shape.height, (float)input_w / (float)shape.width));
+  CHECK(cudaMemcpyAsync(img_device, img_host, size_image, cudaMemcpyHostToDevice, stream));
+
+  preprocess_kernel_img(
+      img_device, image.cols, image.rows, (float*)buffers[0], input_h, input_w, stream);
+  context->enqueueV2(buffers.data(), stream, nullptr);
+  for (int32_t i = 1; i < engine->getNbBindings(); i++) {
+    if (i == detection_boxes_index) {
+      CHECK(cudaMemcpy(
+          detection_boxes.data(),
+          buffers[detection_boxes_index],
+          detection_boxes.size() * getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    } else if (i == detection_scores_index) {
+      CHECK(cudaMemcpy(
+          detection_scores.data(),
+          buffers[detection_scores_index],
+          detection_scores.size() * getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    } else if (i == detection_labels_index) {
+      CHECK(cudaMemcpy(
+          detection_labels.data(),
+          buffers[detection_labels_index],
+          detection_labels.size() * getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    } else if (i == num_detections_index) {
+      CHECK(cudaMemcpy(
+          &num_detections,
+          buffers[num_detections_index],
+          getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    }
+  }
+
+  for (int i = 0; i < engine->getNbBindings(); ++i) {
+    CHECK(cudaFree(buffers[i]));
+  }
+  /* Convert box fromat from LTRB to LTWH */
+  int x_offset = (input_w * scale - image.cols) / 2;
+  int y_offset = (input_h * scale - image.rows) / 2;
+  for (int32_t i = 0; i < num_detections; i++) {
+    result.emplace_back();
+    // reference address
+    Detection& detection = result.back();
+    detection.box.x = detection_boxes[4 * i] * scale - x_offset;
+    detection.box.y = detection_boxes[4 * i + 1] * scale - y_offset;
+    detection.box.width = detection_boxes[4 * i + 2] * scale - x_offset - detection.box.x;
+    detection.box.height = detection_boxes[4 * i + 3] * scale - y_offset - detection.box.y;
+    detection.classId = detection_labels[i];
+    detection.conf = detection_scores[i];
+  }
+
+  return result;
+}
+std::vector<std::vector<Detection>> YOLOv5Detector::batch_inference_gpu(
+    std::vector<cv::Mat>& images) {
+  int images_len = images.size();
+
+  // use for temp
+  cv::Mat image;
+  // the mem allocate
+  std::vector<int32_t> num_detections;
+  std::vector<float> detection_boxes;
+  std::vector<float> detection_scores;
+  std::vector<int> detection_labels;
+
+  std::vector<std::vector<Detection>> result(images_len);
+  std::vector<float> ratio_list(images_len);
+
+  std::vector<void*> buffers(engine->getNbBindings());
+  std::size_t batch_size = BATCH_SIZE;
+  // getBindingDimensions [BCHW] get the input  H W
+  int32_t input_h = engine->getBindingDimensions(0).d[2];
+  int32_t input_w = engine->getBindingDimensions(0).d[3];
+  // get the different scale
+  for (int i = 0; i < images_len; ++i) {
+    cv::Size shape = images[i].size();
+    ratio_list[i] =
+        1 / (std::min((float)input_h / (float)shape.height, (float)input_w / (float)shape.width));
+  }
+  int inputIndex = engine->getBindingIndex("images");
+  int num_detections_index = engine->getBindingIndex("num_detections");
+  int detection_boxes_index = engine->getBindingIndex("detection_boxes");
+  int detection_scores_index = engine->getBindingIndex("detection_scores");
+  int detection_labels_index = engine->getBindingIndex("detection_classes");
+
+  for (int32_t i = 0; i < engine->getNbBindings(); i++) {
+    {
+      std::cout << "  Bind[" << i << "] {"
+                << "Name:" << engine->getBindingName(i)
+                << ", Datatype:" << static_cast<int>(engine->getBindingDataType(i)) << ",Shape:(";
+      for (int j = 0; j < engine->getBindingDimensions(i).nbDims; j++) {
+        std::cout << engine->getBindingDimensions(i).d[j] << ",";
+      }
+      std::cout << ")"
+                << "}" << std::endl;
+    }
+    int buffer_size = 1;
+    for (int j = 0; j < engine->getBindingDimensions(i).nbDims; j++) {
+      buffer_size *= engine->getBindingDimensions(i).d[j];
+    }
+    // malloc all the data
+    CHECK(cudaMalloc(&buffers[i], buffer_size * getElementSize(engine->getBindingDataType(i))));
+    if (i == detection_boxes_index) {
+      detection_boxes.resize(buffer_size);
+    } else if (i == detection_scores_index) {
+      detection_scores.resize(buffer_size);
+    } else if (i == detection_labels_index) {
+      detection_labels.resize(buffer_size);
+    } else if (i == num_detections_index) {
+      num_detections.resize(buffer_size);
+    }
+  }
+
+  uint8_t* img_host = nullptr;
+  uint8_t* img_device = nullptr;
+  // init the store space except out of the mem boudary
+  CHECK(cudaMallocHost((void**)&img_host, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
+  CHECK(cudaMalloc((void**)&img_device, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
+  // std::cout<<buffer_size<<std::endl;
+  float* buffer_idx = (float*)buffers[0];
+
+  for (int i = 0; i < images_len; ++i) {
+    image = images[i];
+    // yolov5 malloc the device but this yolort has malloc in the upper loop
+
+    // CUDA_CHECK(cudaMalloc((void**)&buffers[0], 3 * net_img_height * net_img_width *
+    // sizeof(float))); CUDA_CHECK(cudaMalloc((void**)&buffers[1], OUTPUT_SIZE *
+    // sizeof(float))); this malloc the mem to shuffle the device and host
+    // the mem allocate
+    size_t size_image = image.cols * image.rows * 3;
+    // the memory address shifting
+    size_t size_image_dst = input_h * input_w * 3;
+    // copy the imagedata to the img_host
+    memcpy(img_host, image.data, size_image);
+    // copy data to device memory
+    CHECK(cudaMemcpyAsync(img_device, img_host, size_image, cudaMemcpyHostToDevice, stream));
+    preprocess_kernel_img(img_device, image.cols, image.rows, buffer_idx, input_h, input_w, stream);
+    buffer_idx += size_image_dst;
+  }
+
+  // context->enqueueV2(buffers.data(), stream, nullptr);
+  // inference in batch
+  context->enqueue(8, (void**)buffers.data(), stream, nullptr);
+
+  // buffers contain 8batch result can copy by the cudaMemcpy (DevicetoHost)
+  for (int32_t i = 1; i < engine->getNbBindings(); i++) {
+    if (i == detection_boxes_index) {
+      CHECK(cudaMemcpy(
+          detection_boxes.data(),
+          buffers[detection_boxes_index],
+          detection_boxes.size() * getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    } else if (i == detection_scores_index) {
+      CHECK(cudaMemcpy(
+          detection_scores.data(),
+          buffers[detection_scores_index],
+          detection_scores.size() * getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    } else if (i == detection_labels_index) {
+      CHECK(cudaMemcpy(
+          detection_labels.data(),
+          buffers[detection_labels_index],
+          detection_labels.size() * getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    } else if (i == num_detections_index) {
+      CHECK(cudaMemcpy(
+          num_detections.data(),
+          buffers[num_detections_index],
+          num_detections.size() * getElementSize(engine->getBindingDataType(i)),
+          cudaMemcpyDeviceToHost));
+    }
+  }
+
+  //  free the buffers
+  for (int i = 0; i < engine->getNbBindings(); ++i) {
+    CHECK(cudaFree(buffers[i]));
+  }
+
+  // number j pic
+  for (int j = 0; j < images_len; ++j) {
+    image = images[j];
+    int x_offset = (input_w * ratio_list[j] - image.cols) / 2;
+    int y_offset = (input_h * ratio_list[j] - image.rows) / 2;
+
+    for (int32_t i = 0; i < num_detections[j]; ++i) {
+      result[j].emplace_back();
+      Detection& detection = result[j].back();
+      detection.box.x = detection_boxes[j * 100 * 4 + 4 * i] * ratio_list[j] - x_offset;
+      detection.box.y = detection_boxes[j * 100 * 4 + 4 * i + 1] * ratio_list[j] - y_offset;
+      detection.box.width =
+          detection_boxes[j * 100 * 4 + 4 * i + 2] * ratio_list[j] - x_offset - detection.box.x;
+      detection.box.height =
+          detection_boxes[j * 100 * 4 + 4 * i + 3] * ratio_list[j] - y_offset - detection.box.y;
+      detection.classId = detection_labels[j * 100 + i];
+      detection.conf = detection_scores[j * 100 + i];
+    }
+  }
+
+  std::cout << result.size() << std::endl;
+  return result;
 }
 
 std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
@@ -430,31 +728,75 @@ std::vector<Detection> YOLOv5Detector::detect(cv::Mat& image) {
 
 int main(int argc, char* argv[]) {
   cmdline::parser cmd;
+  double iStart, iElaps;
   cmd.add("int8", '\0', "Enable INT8 inference.");
   cmd.add("fp16", '\0', "Enable FP16 inference.");
   cmd.add<std::string>("model_path", 'm', "Path to onnx model.", true, "yolov5.onnx");
-  cmd.add<std::string>("image", 'i', "Image source to be detected.", true, "bus.jpg");
+  cmd.add<std::string>("image", 'i', "Image source to be detected.", false, "bus.jpg");
   cmd.add<std::string>("class_names", 'c', "Path of dataset labels.", true, "coco.names");
+  cmd.add<std::string>("images_folder", 'f', "Image file store folder", false, "images");
+  cmd.add<int>("batch", 'b', "batch or not", true, 1);
 
   cmd.parse_check(argc, argv);
   std::string imagePath = cmd.get<std::string>("image");
   std::string modelPath = cmd.get<std::string>("model_path");
   std::string classNamesPath = cmd.get<std::string>("class_names");
   std::vector<std::string> classNames = loadNames(classNamesPath);
+  std::string images_folder = cmd.get<std::string>("images_folder");
+  int batch_infer = cmd.get<int>("batch");
+  if (batch_infer == 1) {
+    cv::Mat image = cv::imread(imagePath);
+    if (image.empty()) {
+      std::cerr << "Read image file fail: " << imagePath << std::endl;
+      return -1;
+    }
+    YOLOv5Detector yolo_detector(modelPath.c_str(), cmd.exist("int8"), cmd.exist("fp16"));
+    iStart = cpuSecond();
+    std::vector<Detection> result = yolo_detector.detect(image);
+    iElaps = cpuSecond() - iStart;
+    printf("Time elapsed cpu %f sec\n", iElaps);
+    std::cout << "Detected " << result.size() << " objects." << std::endl;
 
-  cv::Mat image = cv::imread(imagePath);
-  if (image.empty()) {
-    std::cerr << "Read image file fail: " << imagePath << std::endl;
-    return -1;
+    visualizeDetection(image, result, classNames);
+
+    cv::imwrite("result.jpg", image);
+
+    return 0;
+  } else {
+    YOLOv5Detector yolo_detector_batch(modelPath.c_str(), cmd.exist("int8"), cmd.exist("fp16"));
+    std::vector<cv::Mat> imgs_buffer(BATCH_SIZE);
+    std::vector<std::string> file_names;
+    if (read_files_in_dir(images_folder.c_str(), file_names) < 0) {
+      std::cerr << "read_files_in_dir failed." << std::endl;
+      return -1;
+    }
+    printf("read success");
+    int fcount = 0;
+    if ((int)file_names.size() < BATCH_SIZE) {
+      for (int i = 0; i < BATCH_SIZE - (int)file_names.size(); ++i) {
+        file_names.push_back(file_names[0]);
+      }
+    }
+    for (int f = 0; f < BATCH_SIZE; f++) {
+      cv::Mat img = cv::imread(images_folder + "/" + file_names[f]);
+      if (img.empty()) {
+        printf("there was some error in read picture");
+        std::cout << images_folder + "/" + file_names[f] << std::endl;
+        continue;
+      }
+      imgs_buffer[f] = img;
+    }
+    std::cout << imgs_buffer.size() << std::endl;
+    std::vector<std::vector<Detection>> batch_result;
+
+    iStart = cpuSecond();
+    batch_result = yolo_detector_batch.batch_inference_gpu(imgs_buffer);
+    iElaps = cpuSecond() - iStart;
+    printf("Time elapsed batch %d gpu %f sec\n", BATCH_SIZE,iElaps);
+    for (int i = 0; i < BATCH_SIZE; i++) {
+      visualizeDetection(imgs_buffer[i], batch_result[i], classNames);
+      std::string Name = "result" + std::to_string(i) + ".jpg";
+      cv::imwrite(Name, imgs_buffer[i]);
+    }
   }
-  YOLOv5Detector yolo_detector(modelPath.c_str(), cmd.exist("int8"), cmd.exist("fp16"));
-  std::vector<Detection> result = yolo_detector.detect(image);
-
-  std::cout << "Detected " << result.size() << " objects." << std::endl;
-
-  visualizeDetection(image, result, classNames);
-
-  cv::imwrite("result.jpg", image);
-
-  return 0;
 }
