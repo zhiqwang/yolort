@@ -80,15 +80,14 @@ Gpu preprocess reference code :[tensorrtx](https://github.com/wang-xinyu/tensorr
                 --class_names {path/to/your/class/names}
                 --batch 1
    ```
-   
+
    if you wanna inference in 8 batch，you should use images_folder
-   
+
    ```bash
    ./yolort_trt --images_folder {path/to/your/imagefolder}
                 --model_path {path/to/your/serialized/tensorrt/engine}
                 --class_names {path/to/your/class/names}
                 --batch 8
    ```
-   
-   The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.
 
+   The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.
