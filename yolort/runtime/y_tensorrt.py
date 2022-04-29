@@ -3,14 +3,15 @@
 import logging
 from collections import OrderedDict, namedtuple
 from typing import Any, Dict, List, Callable, Optional, Tuple
-#import yolort before pytorch: this may cause issue in python inference on windows
+
+# import yolort before pytorch: this may cause issue in python inference on windows
 import yolort.utils.dependency as _dependency
+
 if _dependency.is_module_available("tensorrt"):
     import tensorrt as trt
 
 import numpy as np
 import torch
-
 from torch import Tensor
 from torchvision.io import read_image
 from yolort.models.transform import YOLOTransform
