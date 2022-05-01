@@ -2,11 +2,11 @@
 
 import argparse
 
-from yolort.utils.yolo2coco import YOLO2COCO
+from yolort.utils import AnnotationsConverter
 
 
 def get_parser():
-    parser = argparse.ArgumentParser("Datasets converter from yolo to coco", add_help=True)
+    parser = argparse.ArgumentParser("Annotations converter from yolo to coco", add_help=True)
 
     parser.add_argument("--data_source", default="./coco128", help="Dataset root path")
     parser.add_argument("--class_names", default="./coco.name", help="Path of the label names")
@@ -21,7 +21,7 @@ def cli_main():
     args = parser.parse_args()
     print(f"Command Line Args: {args}")
 
-    converter = YOLO2COCO(args.data_source, args.class_names, split=args.split, year=args.year)
+    converter = AnnotationsConverter(args.data_source, args.class_names, split=args.split, year=args.year)
     converter.generate()
 
 

@@ -8,9 +8,9 @@ import numpy as np
 from PIL import Image
 
 
-class YOLO2COCO:
+class AnnotationsConverter:
     """
-    Convert YOLO labels to MSCOCO JSON labels.
+    Make a MSCOCO JSON format annotations from YOLO format.
 
     Args:
         root (string): Root directory of the Sintel Dataset
