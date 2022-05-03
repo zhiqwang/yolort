@@ -9,6 +9,7 @@ try:
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
+from .annotations_converter import AnnotationsConverter
 from .dependency import check_version
 from .hooks import FeatureExtractor
 from .image_utils import cv2_imshow, get_image_from_url, read_image_to_tensor
@@ -16,6 +17,9 @@ from .visualizer import Visualizer
 
 
 __all__ = [
+    "AnnotationsConverter",
+    "FeatureExtractor",
+    "Visualizer",
     "check_version",
     "contains_any_tensor",
     "cv2_imshow",
@@ -23,8 +27,6 @@ __all__ = [
     "get_callable_dict",
     "load_state_dict_from_url",
     "read_image_to_tensor",
-    "FeatureExtractor",
-    "Visualizer",
 ]
 
 
