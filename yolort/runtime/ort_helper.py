@@ -20,7 +20,7 @@ def export_onnx(
     skip_preprocess: bool = False,
     opset_version: int = 11,
     batch_size: int = 1,
-    half:bool = False
+    half: bool = False,
 ) -> None:
     """
     Export to ONNX models that can be used for ONNX Runtime inferencing.
@@ -96,7 +96,7 @@ class ONNXBuilder:
         skip_preprocess: bool = False,
         opset_version: int = 11,
         batch_size: int = 1,
-        half:bool = False
+        half: bool = False,
     ) -> None:
 
         super().__init__()
@@ -224,10 +224,10 @@ class ONNXBuilder:
                 import onnxmltools
                 from onnxmltools.utils.float16_converter import convert_float_to_float16
             except Exception as e:
-                print(f"onnxmltools dependency should be installed,do not build fp16 onnx,error message is {e}")
+                print(
+                    f"onnxmltools dependency should be installed,do not build fp16 onnx,error message is {e}"
+                )
             else:
                 onnxFP32 = onnxmltools.utils.load_model(onnx_path)
                 onnxFP16 = convert_float_to_float16(onnxFP32)
                 onnxmltools.utils.save_model(onnxFP16, onnx_path)
-
-
