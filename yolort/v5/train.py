@@ -34,7 +34,6 @@ from torch.optim import SGD, Adam, AdamW, lr_scheduler
 from tqdm import tqdm
 
 FILE = Path(__file__).resolve()
-from . import val  # for end-of-epoch mAP
 from yolort.v5.models.experimental import attempt_load
 from yolort.v5.models.yolo import Model
 from yolort.v5.utils.autoanchor import check_anchors
@@ -77,6 +76,8 @@ from yolort.v5.utils.torch_utils import (
     select_device,
     torch_distributed_zero_first,
 )
+
+from . import val  # for end-of-epoch mAP
 
 LOCAL_RANK = int(os.getenv("LOCAL_RANK", -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv("RANK", -1))
@@ -629,6 +630,7 @@ def parse_opt(known=False):
 
     opt = parser.parse_known_args()[0] if known else parser.parse_args()
     return opt
+
 
 def main(opt, callbacks=Callbacks()):
     # Checks
