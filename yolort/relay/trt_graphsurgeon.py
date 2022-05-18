@@ -7,13 +7,12 @@ from typing import Optional
 import numpy as np
 import onnx
 import torch
+import yolort.utils.dependency as _dependency
 from onnx import shape_inference
 from torch import Tensor
 
-try:
+if _dependency.is_module_available("onnx_graphsurgeon"):
     import onnx_graphsurgeon as gs
-except ImportError:
-    gs = None
 
 from .trt_inference import YOLOTRTInference
 
@@ -46,6 +45,7 @@ class YOLOTRTGraphSurgeon:
         precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
     """
 
+    @_dependency.requires_module("onnx_graphsurgeon")
     def __init__(
         self,
         checkpoint_path: str,
@@ -148,7 +148,7 @@ class YOLOTRTGraphSurgeon:
 
         self.infer()
         # Find the concat node at the end of the network
-        nms_inputs = self.graph.outputs
+        op_inputs = self.graph.outputs
 
         op = "EfficientNMS_TRT"
         attrs = {
@@ -190,19 +190,13 @@ class YOLOTRTGraphSurgeon:
             shape=[self.batch_size, detections_per_img],
         )
 
-        nms_outputs = [output_num_detections, output_boxes, output_scores, output_labels]
+        op_outputs = [output_num_detections, output_boxes, output_scores, output_labels]
 
         # Create the NMS Plugin node with the selected inputs. The outputs of the node will also
         # become the final outputs of the graph.
-        self.graph.layer(
-            op=op,
-            name="batched_nms",
-            inputs=nms_inputs,
-            outputs=nms_outputs,
-            attrs=attrs,
-        )
+        self.graph.layer(op=op, name="batched_nms", inputs=op_inputs, outputs=op_outputs, attrs=attrs)
         logger.info(f"Created NMS plugin '{op}' with attributes: {attrs}")
 
-        self.graph.outputs = nms_outputs
+        self.graph.outputs = op_outputs
 
         self.infer()

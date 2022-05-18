@@ -100,7 +100,7 @@ def attempt_download(file, repo="ultralytics/yolov5", hash_prefix=None):
 
 
 def gdrive_download(id="16TiPfZj7htmTyhntwcZyEEAejOUxuT6m", file="tmp.zip"):
-    # Downloads a file from Google Drive. from yolov5.utils.downloads import *; gdrive_download()
+    # Downloads a file from Google Drive.
     t = time.time()
     file = Path(file)
     cookie = Path("cookie")  # gdrive cookie
@@ -112,10 +112,11 @@ def gdrive_download(id="16TiPfZj7htmTyhntwcZyEEAejOUxuT6m", file="tmp.zip"):
     out = "NUL" if platform.system() == "Windows" else "/dev/null"
     os.system(f'curl -c ./cookie -s -L "drive.google.com/uc?export=download&id={id}" > {out}')
     if os.path.exists("cookie"):  # large file
-        s = f'curl -Lb ./cookie "drive.google.com/uc?export=download&confirm={get_token()}&id={id}" -o {file}'
+        s = f"curl -Lb ./cookie 'drive.google.com/uc?export=download&confirm={get_token()}&id={id}'"
     else:  # small file
-        s = f'curl -s -L -o {file} "drive.google.com/uc?export=download&id={id}"'
-    r = os.system(s)  # execute, capture return
+        s = f'curl -s -L "drive.google.com/uc?export=download&id={id}"'
+    download_excute = f"{s} -o {file}"
+    r = os.system(download_excute)
     cookie.unlink(missing_ok=True)  # remove existing cookie
 
     # Error check

@@ -99,6 +99,7 @@ if __name__ == "__main__":
             "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
             # Specify the Python versions you support here.
             "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
@@ -116,7 +117,7 @@ if __name__ == "__main__":
         # 'Programming Language' classifiers above, 'pip install' will check this
         # and refuse to install the project if the version does not match. See
         # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-        python_requires=">=3.7",
+        python_requires=">=3.6",
         # List additional URLs that are relevant to your project as a dict.
         #
         # This field corresponds to the "Project-URL" metadata fields:

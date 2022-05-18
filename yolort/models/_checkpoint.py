@@ -5,36 +5,12 @@ from typing import Dict, List, Optional
 
 import torch
 from torch import nn
-from yolort.models import yolo
-from yolort.v5 import load_yolov5_model, get_yolov5_size
+from yolort.v5 import get_yolov5_size, load_yolov5_model
 
+from .backbone_utils import darknet_pan_backbone
+from .box_head import YOLOHead
 
-def convert_yolov5_to_yolort(
-    checkpoint_path: str,
-    output_path: str,
-    version: str = "r6.0",
-    prefix: str = "yolov5_darknet_pan",
-    postfix: str = "custom.pt",
-):
-    """
-    Convert model checkpoint trained with ultralytics/yolov5 to yolort.
-
-    Args:
-        checkpoint_path (str): Path of the YOLOv5 checkpoint model.
-        output_path (str): Path of the converted yolort checkpoint model.
-        version (str): upstream version released by the ultralytics/yolov5, Possible
-            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
-        prefix (str): The prefix string of the saved model. Default: "yolov5_darknet_pan".
-        postfix (str): The postfix string of the saved model. Default: "custom.pt".
-    """
-
-    model_info = load_from_ultralytics(checkpoint_path, version=version)
-    model_state_dict = model_info["state_dict"]
-
-    size = model_info["size"]
-    use_p6 = "6" if model_info["use_p6"] else ""
-    output_postfix = f"{prefix}_{size}{use_p6}_{version.replace('.', '')}_{postfix}"
-    torch.save(model_state_dict, output_path / output_postfix)
+__all__ = ["convert_yolov5_checkpoint", "load_from_ultralytics"]
 
 
 def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
@@ -48,7 +24,11 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
     """
 
-    assert version in ["r3.1", "r4.0", "r6.0"], "Currently does not support this version."
+    if version not in ["r3.1", "r4.0", "r6.0"]:
+        raise NotImplementedError(
+            f"Currently does not support version: {version}. Feel free to file an issue "
+            "labeled enhancement to us."
+        )
 
     checkpoint_yolov5 = load_yolov5_model(checkpoint_path)
     num_classes = checkpoint_yolov5.yaml["nc"]
@@ -83,7 +63,7 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
         head_ind = 24
         head_name = "m"
 
-    module_state_updater = ModuleStateUpdate(
+    convert_yolo_checkpoint = CheckpointConverter(
         depth_multiple,
         width_multiple,
         inner_block_maps=inner_block_maps,
@@ -97,8 +77,8 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
         version=version,
         use_p6=use_p6,
     )
-    module_state_updater.updating(checkpoint_yolov5)
-    state_dict = module_state_updater.model.half().state_dict()
+    convert_yolo_checkpoint.updating(checkpoint_yolov5)
+    state_dict = convert_yolo_checkpoint.model.half().state_dict()
 
     size = get_yolov5_size(depth_multiple, width_multiple)
 
@@ -114,7 +94,42 @@ def load_from_ultralytics(checkpoint_path: str, version: str = "r6.0"):
     }
 
 
-class ModuleStateUpdate:
+def convert_yolov5_checkpoint(
+    checkpoint_path: str,
+    output_path: str,
+    version: str = "r6.0",
+    prefix: str = "yolov5_darknet_pan",
+    postfix: str = "custom.pt",
+):
+    """
+    Convert model checkpoint trained with ultralytics/yolov5 to yolort.
+
+    Args:
+        checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+        output_path (str): Path of the converted yolort checkpoint model.
+        version (str): upstream version released by the ultralytics/yolov5, Possible
+            values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
+        prefix (str): The prefix string of the saved model. Default: "yolov5_darknet_pan".
+        postfix (str): The postfix string of the saved model. Default: "custom.pt".
+    """
+
+    model_info = load_from_ultralytics(checkpoint_path, version=version)
+    model_state_dict = model_info["state_dict"]
+
+    size = model_info["size"]
+    use_p6 = "6" if model_info["use_p6"] else ""
+    output_postfix = f"{prefix}_{size}{use_p6}_{version.replace('.', '')}_{postfix}"
+    torch.save(model_state_dict, output_path / output_postfix)
+
+
+class ModelWrapper(nn.Module):
+    def __init__(self, backbone, head):
+        super().__init__()
+        self.backbone = backbone
+        self.head = head
+
+
+class CheckpointConverter:
     """
     Update checkpoint from ultralytics yolov5.
     """
@@ -149,16 +164,14 @@ class ModuleStateUpdate:
         # Set model
         yolov5_size = get_yolov5_size(depth_multiple, width_multiple)
         backbone_name = f"darknet_{yolov5_size}_{version.replace('.', '_')}"
-        self.model = yolo.build_model(
-            backbone_name,
-            depth_multiple,
-            width_multiple,
-            version,
-            num_classes=num_classes,
-            use_p6=use_p6,
-            strides=strides,
-            anchor_grids=anchor_grids,
+
+        backbone = darknet_pan_backbone(
+            backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
         )
+        num_anchors = len(anchor_grids[0]) // 2
+        head = YOLOHead(backbone.out_channels, num_anchors, strides, num_classes)
+        # Only backbone and head contain parameters inside, so we only wrap them both here.
+        self.model = ModelWrapper(backbone, head)
 
     def updating(self, state_dict):
         # Obtain module state
