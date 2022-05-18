@@ -3,4 +3,6 @@ jupyterlab
 ipython
 sphinx
 sphinx-material
+jinja2==3.0.3
 nbsphinx
+PyYAML>=5.3.1

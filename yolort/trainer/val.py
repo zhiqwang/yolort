@@ -21,7 +21,6 @@ Usage - formats:
 import argparse
 import json
 import os
-import sys
 from pathlib import Path
 from threading import Thread
 
@@ -29,33 +28,23 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # YOLOv5 root directory
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))  # add ROOT to PATH
-ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+# FILE = Path(__file__).resolve()
+# ROOT = FILE.parents[0]  # YOLOv5 root directory
+# if str(ROOT) not in sys.path:
+#     sys.path.append(str(ROOT))  # add ROOT to PATH
+# ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+ROOT = Path('.')
 
-from yolort.v5.models.common import DetectMultiBackend
-from yolort.v5.utils.callbacks import Callbacks
-from yolort.v5.utils.datasets import create_dataloader
-from yolort.v5.utils.general import (
-    LOGGER,
-    box_iou,
-    check_dataset,
-    check_img_size,
-    check_requirements,
-    check_yaml,
-    colorstr,
-    increment_path,
-    non_max_suppression,
-    print_args,
-    scale_coords,
-    xywh2xyxy,
-    xyxy2xywh,
-)
-from yolort.v5.utils.metrics import ConfusionMatrix, ap_per_class
+from yolort.v5.utils.general import (LOGGER, box_iou, check_img_size,
+                                     check_yaml, colorstr, increment_path,
+                                     non_max_suppression, print_args,
+                                     scale_coords, xywh2xyxy, xyxy2xywh)
+from yolort.v5.utils.metrics import ConfusionMatrix
 from yolort.v5.utils.plots import output_to_target, plot_images, plot_val_study
 from yolort.v5.utils.torch_utils import select_device, time_sync
+
+from .utils import (DetectMultiBackend, check_dataset, check_requirements,
+                    create_dataloader, Callbacks, ap_per_class)
 
 
 def save_one_txt(predn, save_conf, shape, file):

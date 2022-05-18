@@ -1,7 +1,7 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import math
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import torch
 from torch import nn, Tensor

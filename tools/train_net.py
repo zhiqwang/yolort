@@ -1,7 +1,4 @@
-import argparse
-
-from yolort.v5 import run
-
+from yolort.trainer import run
 
 def main():
 

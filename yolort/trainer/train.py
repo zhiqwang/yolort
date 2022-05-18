@@ -23,6 +23,8 @@ from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
+import sys
+sys.path.insert(0, './yolov5')
 import numpy as np
 import torch
 import torch.distributed as dist
@@ -34,55 +36,35 @@ from torch.optim import SGD, Adam, AdamW, lr_scheduler
 from tqdm import tqdm
 
 FILE = Path(__file__).resolve()
-from yolort.v5.models.experimental import attempt_load
 from yolort.v5.models.yolo import Model
 from yolort.v5.utils.autoanchor import check_anchors
-from yolort.v5.utils.autobatch import check_train_batch_size
-from yolort.v5.utils.callbacks import Callbacks
-from yolort.v5.utils.datasets import create_dataloader
 from yolort.v5.utils.downloads import attempt_download
-from yolort.v5.utils.general import (
-    LOGGER,
-    check_dataset,
-    check_file,
-    check_git_status,
-    check_img_size,
-    check_requirements,
-    check_suffix,
-    check_yaml,
-    colorstr,
-    get_latest_run,
-    increment_path,
-    init_seeds,
-    intersect_dicts,
-    labels_to_class_weights,
-    labels_to_image_weights,
-    methods,
-    one_cycle,
-    print_args,
-    print_mutation,
-    strip_optimizer,
-)
-from yolort.v5.utils.loggers import Loggers
-
+from yolort.v5.utils.general import (LOGGER, check_file, check_img_size,
+                                     check_suffix, check_yaml, colorstr,
+                                     get_latest_run, increment_path,
+                                     init_seeds, intersect_dicts,
+                                     labels_to_class_weights,
+                                     labels_to_image_weights, methods,
+                                     one_cycle, print_args, print_mutation,
+                                     strip_optimizer)
 # from yolort.v5.utils.loggers.wandb.wandb_utils import check_wandb_resume
 from yolort.v5.utils.loss import ComputeLoss
 from yolort.v5.utils.metrics import fitness
 from yolort.v5.utils.plots import plot_evolve, plot_labels
-from yolort.v5.utils.torch_utils import (
-    EarlyStopping,
-    ModelEMA,
-    de_parallel,
-    select_device,
-    torch_distributed_zero_first,
-)
+from yolort.v5.utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel,
+                                         select_device,
+                                         torch_distributed_zero_first)
 
 from . import val  # for end-of-epoch mAP
+from .utils import (Loggers, attempt_load, check_dataset, check_git_status,
+                    check_requirements, check_train_batch_size,
+                    create_dataloader, Callbacks)
 
 LOCAL_RANK = int(os.getenv("LOCAL_RANK", -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv("RANK", -1))
 WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))
 
+sys.path.insert(0, 'yolort/v5')
 
 def train(hyp, opt, device, callbacks):  # path/to/hyp.yaml or hyp dictionary
     (
