@@ -1,16 +1,16 @@
 # LibTorch Inference
 
+![OpenCV](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white) ![LibTorch](https://img.shields.io/badge/LibTorch-EE4C2C?style=for-the-badge&logo=PyTorch&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) ![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
+
 The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
 ## Dependencies
 
-- Ubuntu 18.04
-- LibTorch 1.8.0 / 1.9.0
-- TorchVision 0.9.0 / 0.10.0
-- OpenCV 3.4+
-- CUDA 10.2 \[Optional\]
+- LibTorch 1.8.0+ together with corresponding TorchVision 0.9.0+
+- OpenCV
+- CUDA 10.2+ \[Optional\]
 
-*We didn't impose too strong restrictions on the version of CUDA and Ubuntu systems.*
+*We didn't impose too strong restrictions on the version of CUDA.*
 
 ## Usage
 
@@ -18,6 +18,7 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
    ```bash
    export TORCH_PATH=$(dirname $(python -c "import torch; print(torch.__file__)"))
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TORCH_PATH/lib/  # Optional
    ```
 
 1. Don't forget to compile `LibTorchVision` using the following scripts.

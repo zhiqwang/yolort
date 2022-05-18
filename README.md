@@ -14,12 +14,12 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-9cf.svg)](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
-[![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?color=ccf&label=downloads&logo=github&logoColor=lightgrey)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
-[![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=pink&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
-[![Slack](https://img.shields.io/badge/slack-chat-ffa.svg?logo=slack)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
-[![PyPI version](https://img.shields.io/pypi/v/yolort?color=aff)](https://badge.fury.io/py/yolort)
-[![Python Version](https://img.shields.io/pypi/pyversions/yolort?color=dfd)](https://pypi.org/project/yolort/)
+[![Python Version](https://img.shields.io/badge/Python-3.6--3.10-FFD43B?logo=python)](https://pypi.org/project/yolort/)
+[![PyPI version](https://img.shields.io/pypi/v/yolort?color=4D97FF&logo=PyPI)](https://badge.fury.io/py/yolort)
+[![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=violet&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
+[![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?label=Model%20downloads&logo=PyTorch&color=FF6F00&logoColor=EE4C2C)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
+[![Slack](https://img.shields.io/badge/Slack%20chat-4A154B?logo=slack&logoColor=white)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
+[![PRs Welcome](https://img.shields.io/badge/PRs%20welcome-792EE5?logo=GitHub-Sponsors&logoColor=#white)](.github/CONTRIBUTING.md)
 
 [![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml)
 [![Build & deploy docs](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/tree/gh-pages)
@@ -177,7 +177,7 @@ Now, `yolort` can draw the model graph directly, checkout our [tutorial](https:/
 
 We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors! If you like this project please consider ⭐ this repo, as it is the simplest way to support us.
 
-[![Contributors](https://opencollective.com/yolort/contributors.svg?width=950)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
+[![Contributors](https://opencollective.com/yolort/contributors.svg?width=890&button=false)](https://opencollective.com/yolort/contributors.svg?width=890&button=true)
 
 ## 📖 Citing yolort
 

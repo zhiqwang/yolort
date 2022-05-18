@@ -12,9 +12,10 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
+import yolort.utils.dependency as _dependency
 from torch import nn
 from yolort.v5.utils.autoanchor import check_anchor_order
-from yolort.v5.utils.general import check_version, make_divisible
+from yolort.v5.utils.general import make_divisible
 from yolort.v5.utils.torch_utils import (
     time_sync,
     fuse_conv_and_bn,
@@ -40,10 +41,8 @@ from .common import (
 )
 from .experimental import CrossConv, MixConv2d
 
-try:
+if _dependency.is_module_available("thop"):
     import thop  # for FLOPs computation
-except ImportError:
-    thop = None
 
 __all__ = ["Model", "Detect"]
 
@@ -91,10 +90,7 @@ class Detect(nn.Module):
 
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
-        if check_version(torch.__version__, "1.10.0"):  # torch>=1.10.0 meshgrid workaround
-            yv, xv = torch.meshgrid([torch.arange(ny, device=d), torch.arange(nx, device=d)], indexing="ij")
-        else:
-            yv, xv = torch.meshgrid([torch.arange(ny, device=d), torch.arange(nx, device=d)])
+        yv, xv = torch.meshgrid([torch.arange(ny).to(d), torch.arange(nx).to(d)])
         grid = torch.stack((xv, yv), 2).expand((1, self.na, ny, nx, 2)).float()
         anchor_grid = (
             (self.anchors[i].clone() * self.stride[i])
@@ -215,9 +211,10 @@ class Model(nn.Module):
         y[-1] = y[-1][:, i:]  # small
         return y
 
+    @_dependency.requires_module("thop")
     def _profile_one_layer(self, m, x, dt):
         c = isinstance(m, Detect)  # is final layer, copy input as inplace fix
-        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2 if thop else 0
+        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2
         t = time_sync()
         for _ in range(10):
             m(x.copy() if c else x)

@@ -7,7 +7,7 @@ import torch
 import torchvision
 from torch import nn, Tensor
 from torchvision.io import read_image
-from yolort.data import contains_any_tensor
+from yolort.utils import contains_any_tensor
 
 from . import yolo
 from .transform import YOLOTransform, _get_shape_onnx

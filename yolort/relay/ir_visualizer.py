@@ -11,10 +11,10 @@ blog post) with the attribution notice.
 """
 from collections import OrderedDict
 
-try:
+import yolort.utils.dependency as _dependency
+
+if _dependency.is_module_available("graphviz"):
     from graphviz import Digraph
-except ImportError:
-    Digraph = None
 
 
 class TorchScriptVisualizer:
@@ -47,6 +47,7 @@ class TorchScriptVisualizer:
         # probably also partially absorbing ops. :/
         self.absorbing_ops = ("aten::size", "aten::_shape_as_tensor")
 
+    @_dependency.requires_module("graphviz")
     def render(
         self,
         classes_to_visit={"YOLO", "YOLOHead"},
@@ -58,14 +59,10 @@ class TorchScriptVisualizer:
 
         model_input = next(self.module.graph.inputs())
         model_type = self.get_node_names(model_input)[-1]
-        if Digraph is not None:
-            dot = Digraph(
-                format=format,
-                graph_attr={"label": model_type, "labelloc": labelloc},
-            )
-        else:
-            dot = None
-            raise ImportError("Graphviz is not installed, please install graphviz firstly.")
+        dot = Digraph(
+            format=format,
+            graph_attr={"label": model_type, "labelloc": labelloc},
+        )
 
         self.make_graph(self.module, dot=dot, classes_to_visit=classes_to_visit)
 

@@ -39,7 +39,7 @@ def test_test_epoch_end(arch, version, map5095, map50):
 
     # test step
     trainer = pl.Trainer(max_epochs=1)
-    trainer.test(model, test_dataloaders=val_dataloader)
+    trainer.test(model, dataloaders=val_dataloader)
     # test epoch end
     results = model.evaluator.compute()
     assert results["AP"] > map5095

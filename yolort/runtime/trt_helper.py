@@ -14,12 +14,11 @@ from pathlib import Path
 from typing import Optional
 
 import torch
+import yolort.utils.dependency as _dependency
 from torch import Tensor
 
-try:
+if _dependency.is_module_available("tensorrt"):
     import tensorrt as trt
-except ImportError:
-    trt = None
 
 from yolort.relay.trt_graphsurgeon import YOLOTRTGraphSurgeon
 
@@ -94,6 +93,7 @@ class EngineBuilder:
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
 
+    @_dependency.requires_module("tensorrt")
     def __init__(
         self,
         verbose: bool = False,
