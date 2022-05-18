@@ -6,7 +6,6 @@ Auto-batch utils
 import contextlib
 import glob
 import hashlib
-import math
 import os
 import platform
 import random
@@ -19,35 +18,41 @@ from subprocess import check_output
 from threading import Thread
 from zipfile import ZipFile
 
-import matplotlib.pyplot as plt
 import cv2
-import sys
+import matplotlib.pyplot as plt
 import numpy as np
 import pkg_resources as pkg
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 import yaml
-from PIL import ExifTags, Image, ImageOps
+from PIL import Image, ImageOps
 from torch.cuda import amp
 from torch.utils.data import DataLoader, Dataset, dataloader, distributed
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from yolort.v5.models.common import Conv
 from yolort.v5.models.experimental import Ensemble
-from yolort.v5.utils.augmentations import (Albumentations, augment_hsv,
-                                           copy_paste, letterbox, mixup,
-                                           random_perspective)
+from yolort.v5.utils.augmentations import (
+    Albumentations,
+    augment_hsv,
+    copy_paste,
+    letterbox,
+    mixup,
+    random_perspective,
+)
 from yolort.v5.utils.downloads import attempt_download
-from yolort.v5.utils.general import (LOGGER, check_version, colorstr,
-                                     resample_segments, segment2box,
-                                     segments2boxes, xyn2xy, xywhn2xyxy,
-                                     xyxy2xywhn)
-from yolort.v5.utils.metrics import bbox_ioa
+from yolort.v5.utils.general import (
+    LOGGER,
+    check_version,
+    colorstr,
+    segments2boxes,
+    xyn2xy,
+    xywhn2xyxy,
+    xyxy2xywhn,
+)
 from yolort.v5.utils.plots import plot_images, plot_results
-from yolort.v5.utils.torch_utils import (de_parallel, profile,
-                                         torch_distributed_zero_first)
+from yolort.v5.utils.torch_utils import de_parallel, profile, torch_distributed_zero_first
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # YOLOv5 root directory
@@ -62,7 +67,6 @@ WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))  # DPP
 
 LOGGERS = ("csv", "tb", "wandb")  # text-file, TensorBoard, Weights & Biases
 RANK = int(os.getenv("RANK", -1))
-
 
 
 try:
@@ -186,6 +190,7 @@ def create_dataloader(
         dataset,
     )
 
+
 def exif_size(img):
     # Returns exif-corrected PIL size
     s = img.size  # (width, height)
@@ -200,10 +205,12 @@ def exif_size(img):
 
     return s
 
+
 def img2label_paths(img_paths):
     # Define label paths as a function of image paths
     sa, sb = os.sep + "images" + os.sep, os.sep + "labels" + os.sep  # /images/, /labels/ substrings
     return [sb.join(x.rsplit(sa, 1)).rsplit(".", 1)[0] + ".txt" for x in img_paths]
+
 
 def get_hash(paths):
     # Returns a single hash value of a list of paths (files or dirs)
@@ -211,6 +218,7 @@ def get_hash(paths):
     h = hashlib.md5(str(size).encode())  # hash sizes
     h.update("".join(paths).encode())  # hash paths
     return h.hexdigest()  # return hash
+
 
 def verify_image_label(args):
     # Verify one image-label pair
@@ -267,6 +275,7 @@ def verify_image_label(args):
         nc = 1
         msg = f"{prefix}WARNING: {im_file}: ignoring corrupt image/label: {e}"
         return [None, None, None, None, nm, nf, ne, nc, msg]
+
 
 class LoadImagesAndLabels(Dataset):
     # YOLOv5 train_loader/val_loader, loads images and labels for training and validation
@@ -771,6 +780,7 @@ class LoadImagesAndLabels(Dataset):
 
         return torch.stack(img4, 0), torch.cat(label4, 0), path4, shapes4
 
+
 class InfiniteDataLoader(dataloader.DataLoader):
     """Dataloader that reuses workers
 
@@ -788,6 +798,7 @@ class InfiniteDataLoader(dataloader.DataLoader):
     def __iter__(self):
         for i in range(len(self)):
             yield next(self.iterator)
+
 
 class _RepeatSampler:
     """Sampler that repeats forever
@@ -837,6 +848,7 @@ def attempt_load(weights, map_location=None, inplace=True, fuse=True):
             torch.argmax(torch.tensor([m.stride.max() for m in model])).int()
         ].stride  # max stride
         return model  # return ensemble
+
 
 def check_dataset(data, autodownload=True):
     # Download and/or unzip dataset if not found locally
@@ -894,6 +906,7 @@ def check_dataset(data, autodownload=True):
 
     return data  # dictionary
 
+
 def download(url, dir=".", unzip=True, delete=True, curl=False, threads=1):
     # Multi-threaded file download and unzip function, used in data.yaml for autodownload
     def download_one(url, dir):
@@ -929,6 +942,7 @@ def download(url, dir=".", unzip=True, delete=True, curl=False, threads=1):
         for u in [url] if isinstance(url, (str, Path)) else url:
             download_one(u, dir)
 
+
 class WorkingDirectory(contextlib.ContextDecorator):
     # Usage: @WorkingDirectory(dir) decorator or 'with WorkingDirectory(dir):' context manager
     def __init__(self, new_dir):
@@ -941,6 +955,7 @@ class WorkingDirectory(contextlib.ContextDecorator):
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.cwd)
 
+
 def try_except(func):
     # try-except function. Usage: @try_except decorator
     def handler(*args, **kwargs):
@@ -951,9 +966,11 @@ def try_except(func):
 
     return handler
 
+
 def is_docker():
     # Is environment a Docker container?
     return Path("/workspace").exists()  # or Path('/.dockerenv').exists()
+
 
 def check_online():
     # Check internet connectivity
@@ -965,9 +982,11 @@ def check_online():
     except OSError:
         return False
 
+
 def emojis(str=""):
     # Return platform-dependent emoji-safe version of string
     return str.encode().decode("ascii", "ignore") if platform.system() == "Windows" else str
+
 
 @try_except
 @WorkingDirectory(ROOT)
@@ -992,9 +1011,11 @@ def check_git_status():
         s += f"up to date with {url} ✅"
     LOGGER.info(emojis(s))  # emoji-safe
 
+
 def check_python(minimum="3.6.2"):
     # Check current python version vs. required python version
     check_version(platform.python_version(), minimum, name="Python ", hard=True)
+
 
 @try_except
 def check_requirements(requirements=ROOT / "requirements.txt", exclude=(), install=True):
@@ -1228,7 +1249,9 @@ class DetectMultiBackend(nn.Module):
         #   TensorFlow Edge TPU:            *_edgetpu.tflite
         import yaml
         from yolort.v5.models.experimental import (  # scoped to avoid circular import
-            attempt_download, attempt_load)
+            attempt_download,
+            attempt_load,
+        )
 
         super().__init__()
         w = str(weights[0] if isinstance(weights, list) else weights)
@@ -1256,7 +1279,6 @@ class DetectMultiBackend(nn.Module):
         if isinstance(self.device, torch.device) and self.device.type != "cpu":  # only warmup GPU models
             im = torch.zeros(*imgsz).to(self.device).type(torch.half if half else torch.float)  # input image
             self.forward(im)  # warmup
-
 
 
 class Callbacks:
@@ -1329,6 +1351,7 @@ class Callbacks:
         for logger in self._callbacks[hook]:
             logger["callback"](*args, **kwargs)
 
+
 def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir=".", names=(), eps=1e-16):
     """Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
@@ -1396,6 +1419,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir=".", names
     fp = (tp / (p + eps) - tp).round()  # false positives
     return tp, fp, p, r, f1, ap, unique_classes.astype("int32")
 
+
 def compute_ap(recall, precision):
     """Compute the average precision, given the recall and precision curves
     # Arguments
@@ -1423,6 +1447,7 @@ def compute_ap(recall, precision):
 
     return ap, mpre, mrec
 
+
 def plot_pr_curve(px, py, ap, save_dir="pr_curve.png", names=()):
     # Precision-recall curve
     fig, ax = plt.subplots(1, 1, figsize=(9, 6), tight_layout=True)
@@ -1443,6 +1468,7 @@ def plot_pr_curve(px, py, ap, save_dir="pr_curve.png", names=()):
     fig.savefig(Path(save_dir), dpi=250)
     plt.close()
 
+
 def plot_mc_curve(px, py, save_dir="mc_curve.png", names=(), xlabel="Confidence", ylabel="Metric"):
     # Metric-confidence curve
     fig, ax = plt.subplots(1, 1, figsize=(9, 6), tight_layout=True)
@@ -1462,3 +1488,8 @@ def plot_mc_curve(px, py, save_dir="mc_curve.png", names=(), xlabel="Confidence"
     plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
     fig.savefig(Path(save_dir), dpi=250)
     plt.close()
+
+
+def linear_lr(lrf, epochs):
+    # lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf
+    return lambda x: (1 - x / (epochs - 1)) * (1.0 - lrf) + lrf
