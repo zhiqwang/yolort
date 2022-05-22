@@ -199,6 +199,8 @@ class EngineBuilder:
         else:
             raise NotImplementedError(f"Currently hasn't been implemented: {precision}.")
 
-        with self.builder.build_serialized_network(self.network, self.config) as engine, open(engine_path, "wb") as f:
+        with self.builder.build_serialized_network(self.network, self.config) as engine, open(
+            engine_path, "wb"
+        ) as f:
             f.write(engine)
             logger.info(f"Serialize engine success, saved as {engine_path}")
