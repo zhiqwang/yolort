@@ -193,11 +193,12 @@ class EngineBuilder:
                 logger.warning("FP16 is not supported natively on this platform/device")
             else:
                 self.config.set_flag(trt.BuilderFlag.FP16)
+                self.config.set_flag(trt.BuilderFlag.STRICT_TYPES)
         elif precision == "fp32":
             logger.info("Using fp32 mode.")
         else:
             raise NotImplementedError(f"Currently hasn't been implemented: {precision}.")
 
-        with self.builder.build_engine(self.network, self.config) as engine, open(engine_path, "wb") as f:
-            f.write(engine.serialize())
+        with self.builder.build_serialized_network(self.network, self.config) as engine, open(engine_path, "wb") as f:
+            f.write(engine)
             logger.info(f"Serialize engine success, saved as {engine_path}")
