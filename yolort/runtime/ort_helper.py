@@ -3,9 +3,10 @@
 from typing import Optional, Tuple
 
 import torch
-from torch import nn, Tensor
+from torch import nn
 from yolort.models import YOLO, YOLOv5
-from yolort.relay import NonMaxSupressionOp
+from yolort.relay import FakeYOLO
+from yolort.v5 import load_yolov5_model
 
 
 def export_onnx(
@@ -21,6 +22,7 @@ def export_onnx(
     skip_preprocess: bool = False,
     opset_version: int = 11,
     batch_size: int = 1,
+    vanilla: bool = False,
 ) -> None:
     """
     Export to ONNX models that can be used for ONNX Runtime inferencing.
@@ -43,20 +45,34 @@ def export_onnx(
         batch_size (int): Only used for models that include pre-processing, you need to specify
             the batch sizes and ensure that the number of input images is the same as the batches
             when inferring if you want to export multiple batches ONNX models. Default: 1
+        vanilla (bool, optional): Whether to export a vanilla ONNX models. Default to False
     """
 
-    onnx_builder = ONNXBuilder(
-        checkpoint_path=checkpoint_path,
-        model=model,
-        size=size,
-        size_divisible=size_divisible,
-        score_thresh=score_thresh,
-        nms_thresh=nms_thresh,
-        version=version,
-        skip_preprocess=skip_preprocess,
-        opset_version=opset_version,
-        batch_size=batch_size,
-    )
+    if vanilla:
+        onnx_builder = VanillaONNXBuilder(
+            checkpoint_path=checkpoint_path,
+            size=size,
+            size_divisible=size_divisible,
+            score_thresh=score_thresh,
+            nms_thresh=nms_thresh,
+            version=version,
+            skip_preprocess=skip_preprocess,
+            opset_version=opset_version,
+            batch_size=batch_size,
+        )
+    else:
+        onnx_builder = ONNXBuilder(
+            checkpoint_path=checkpoint_path,
+            model=model,
+            size=size,
+            size_divisible=size_divisible,
+            score_thresh=score_thresh,
+            nms_thresh=nms_thresh,
+            version=version,
+            skip_preprocess=skip_preprocess,
+            opset_version=opset_version,
+            batch_size=batch_size,
+        )
 
     onnx_builder.to_onnx(onnx_path)
 
@@ -218,39 +234,69 @@ class ONNXBuilder:
         )
 
 
-class VanillaONNXBuilder(nn.Module):
-    def __init__(self, max_obj=100, iou_thres=0.45, score_thres=0.35, device=None, max_wh=640):
+class VanillaONNXBuilder:
+    def __init__(
+        self,
+        checkpoint_path: Optional[str] = None,
+        size: int = 640,
+        iou_thresh: float = 0.45,
+        score_thresh: float = 0.35,
+        detections_per_img: int = 100,
+        opset_version: int = 12,
+        enable_dynamic: bool = False,
+    ):
         super().__init__()
-        self.device = device if device else torch.device("cpu")
-        self.max_obj = torch.tensor([max_obj]).to(device)
-        self.iou_threshold = torch.tensor([iou_thres]).to(device)
-        self.score_threshold = torch.tensor([score_thres]).to(device)
-        self.max_wh = max_wh
-        self.convert_matrix = torch.tensor(
-            [[1, 0, 1, 0], [0, 1, 0, 1], [-0.5, 0, 0.5, 0], [0, -0.5, 0, 0.5]],
-            dtype=torch.float32,
-            device=self.device,
-        )
+        self._checkpoint_path = checkpoint_path
+        self._opset_version = opset_version
 
-    def forward(self, x: Tensor):
-        box = x[:, :, :4]
-        conf = x[:, :, 4:5]
-        score = x[:, :, 5:]
-        score *= conf
-        box @= self.convert_matrix
-        objScore, objCls = score.max(2, keepdim=True)
-        dis = objCls.float() * self.max_wh
-        nmsbox = box + dis
-        objScore1 = objScore.transpose(1, 2).contiguous()
-        selected_indices = NonMaxSupressionOp.apply(
-            nmsbox, objScore1, self.max_obj, self.iou_threshold, self.score_threshold
+        self.model = self._build_model(size, iou_thresh, score_thresh, detections_per_img)
+        self.input_sample = self._set_input_sample()
+        self.input_names = self._set_input_names()
+        self.output_names = self._set_output_names()
+        self.dynamic_axes = self._set_dynamic_axes(enable_dynamic)
+
+    def _build_model(self, size, iou_thresh, score_thresh, detections_per_img):
+        yolo_stem = load_yolov5_model(self._checkpoint_path)
+        model = FakeYOLO(
+            yolo_stem,
+            size=size,
+            iou_thresh=iou_thresh,
+            score_thresh=score_thresh,
+            detections_per_img=detections_per_img,
         )
-        X, Y = selected_indices[:, 0], selected_indices[:, 2]
-        resBoxes = box[X, Y, :]
-        resClasses = objCls[X, Y, :]
-        resScores = objScore[X, Y, :]
-        X = X.unsqueeze(1)
-        X = X.float()
-        resClasses = resClasses.float()
-        out = torch.concat([X, resBoxes, resClasses, resScores], 1)
-        return out
+        model = model.eval()
+        return model
+
+    def _set_input_sample(self):
+        return torch.rand(1, 3, 640, 640)
+
+    def _set_input_names(self):
+        return ["images"]
+
+    def _set_output_names(self):
+        return ["outputs"]
+
+    def _set_dynamic_axes(self, enable_dynamic):
+        return {"images": {0: "batch"}, "outputs": {0: "batch"}} if enable_dynamic else None
+
+    @torch.no_grad()
+    def to_onnx(self, onnx_path: str, **kwargs):
+        """
+        Saves the model in ONNX format.
+
+        Args:
+            onnx_path (string): The path to the ONNX graph to be exported.
+            **kwargs: Will be passed to torch.onnx.export function.
+        """
+
+        torch.onnx.export(
+            self.model,
+            self.input_sample,
+            onnx_path,
+            training=torch.onnx.TrainingMode.EVAL,
+            opset_version=self._opset_version,
+            input_names=self.input_names,
+            output_names=self.output_names,
+            dynamic_axes=self.dynamic_axes,
+            **kwargs,
+        )
