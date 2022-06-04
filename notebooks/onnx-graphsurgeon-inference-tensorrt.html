@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -53,6 +53,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="../_static/mathjax/tex-chtml.js"></script>
@@ -635,7 +636,7 @@ div.rendered_html tbody tr:hover {
         display: none;
     }
 </style><section id="Deploying-yolort-on-TensorRT">
-<h1 id="notebooks-onnx-graphsurgeon-inference-tensorrt--page-root">Deploying yolort on TensorRT<a class="headerlink" href="#notebooks-onnx-graphsurgeon-inference-tensorrt--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="notebooks-onnx-graphsurgeon-inference-tensorrt--page-root">Deploying yolort on TensorRT<a class="headerlink" href="#notebooks-onnx-graphsurgeon-inference-tensorrt--page-root" title="Permalink to this heading">¶</a></h1>
 <p>Unlike other pipelines that deal with yolov5 on TensorRT, we embed the whole post-processing into the Graph with <code class="docutils literal notranslate"><span class="pre">onnx-graghsurgeon</span></code>. We gain a lot with this whole pipeline. The ablation experiment results are below. The first one is the result without running <code class="docutils literal notranslate"><span class="pre">EfficientNMS_TRT</span></code>, and the second one is the result with <code class="docutils literal notranslate"><span class="pre">EfficientNMS_TRT</span></code> embedded. As you can see, the inference time is even reduced, we guess it is because the data copied to the device will be much less after doing
 <code class="docutils literal notranslate"><span class="pre">EfficientNMS_TRT</span></code>. (The mean Latency of D2H is reduced from <code class="docutils literal notranslate"><span class="pre">0.868048</span> <span class="pre">ms</span></code> to <code class="docutils literal notranslate"><span class="pre">0.0102295</span> <span class="pre">ms</span></code>, running on Nivdia Geforce GTX 1080ti, using TensorRT 8.2 with yolov5n6 and scaling images to <code class="docutils literal notranslate"><span class="pre">512x640</span></code>.)</p>
 <p>And <code class="docutils literal notranslate"><span class="pre">onnx-graphsurgeon</span></code> is easy to install, you can just use their prebuilt wheels:</p>
@@ -674,7 +675,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <section id="TensorRT-Installation-Instructions">
-<h2 id="TensorRT-Installation-Instructions">TensorRT Installation Instructions<a class="headerlink" href="#TensorRT-Installation-Instructions" title="Permalink to this headline">¶</a></h2>
+<h2 id="TensorRT-Installation-Instructions">TensorRT Installation Instructions<a class="headerlink" href="#TensorRT-Installation-Instructions" title="Permalink to this heading">¶</a></h2>
 <p>For us to unfold the subsequent story, TensorRT should be installed and the minimal version of TensorRT to run this demo is 8.2.0. Check out the TensorRT installation guides at <a class="reference external" href="https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html">https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html</a>. You can use the Python wheels provided by TensorRT if you only want to use the Python interface:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pip install -U nvidia-tensorrt --index-url https://pypi.ngc.nvidia.com
 </pre></div>
@@ -722,7 +723,7 @@ We're using TensorRT: 8.2.4.2 on cuda device: 0.
 </div>
 </section>
 <section id="Prepare-image-and-model-weights-to-test">
-<h2 id="Prepare-image-and-model-weights-to-test">Prepare image and model weights to test<a class="headerlink" href="#Prepare-image-and-model-weights-to-test" title="Permalink to this headline">¶</a></h2>
+<h2 id="Prepare-image-and-model-weights-to-test">Prepare image and model weights to test<a class="headerlink" href="#Prepare-image-and-model-weights-to-test" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -789,7 +790,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg t
 </div>
 </section>
 <section id="Export-to-ONNX-and-TensorRT-model">
-<h2 id="Export-to-ONNX-and-TensorRT-model">Export to ONNX and TensorRT model<a class="headerlink" href="#Export-to-ONNX-and-TensorRT-model" title="Permalink to this headline">¶</a></h2>
+<h2 id="Export-to-ONNX-and-TensorRT-model">Export to ONNX and TensorRT model<a class="headerlink" href="#Export-to-ONNX-and-TensorRT-model" title="Permalink to this heading">¶</a></h2>
 <p>We provide a utilization tool <code class="docutils literal notranslate"><span class="pre">export_tensorrt_engine</span></code> for exporting TensorRT engines.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -925,7 +926,7 @@ Serialize engine success, saved as yolov5s.engine
 </div>
 </section>
 <section id="Test-the-exported-TensorRT-engine">
-<h2 id="Test-the-exported-TensorRT-engine">Test the exported TensorRT engine<a class="headerlink" href="#Test-the-exported-TensorRT-engine" title="Permalink to this headline">¶</a></h2>
+<h2 id="Test-the-exported-TensorRT-engine">Test the exported TensorRT engine<a class="headerlink" href="#Test-the-exported-TensorRT-engine" title="Permalink to this heading">¶</a></h2>
 <p>Actually the above exported TensorRT engine only contains the post-processing (<code class="docutils literal notranslate"><span class="pre">nms</span></code>). And we wrap the pre-processing named <code class="docutils literal notranslate"><span class="pre">YOLOTransform</span></code> into a new module <code class="docutils literal notranslate"><span class="pre">PredictorTRT</span></code> for easy of use.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -976,7 +977,7 @@ Loading yolov5s.engine for TensorRT inference...
 </div>
 </div>
 <section id="Inferencing-with-TensorRT">
-<h3 id="Inferencing-with-TensorRT">Inferencing with TensorRT<a class="headerlink" href="#Inferencing-with-TensorRT" title="Permalink to this headline">¶</a></h3>
+<h3 id="Inferencing-with-TensorRT">Inferencing with TensorRT<a class="headerlink" href="#Inferencing-with-TensorRT" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -1028,7 +1029,7 @@ Loading yolov5s.engine for TensorRT inference...
 </section>
 </section>
 <section id="Predict-as-yolort">
-<h2 id="Predict-as-yolort">Predict as yolort<a class="headerlink" href="#Predict-as-yolort" title="Permalink to this headline">¶</a></h2>
+<h2 id="Predict-as-yolort">Predict as yolort<a class="headerlink" href="#Predict-as-yolort" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -1056,7 +1057,7 @@ Loading yolov5s.engine for TensorRT inference...
 </div>
 </div>
 <section id="Inferencing-with-PyTorch">
-<h3 id="Inferencing-with-PyTorch">Inferencing with PyTorch<a class="headerlink" href="#Inferencing-with-PyTorch" title="Permalink to this headline">¶</a></h3>
+<h3 id="Inferencing-with-PyTorch">Inferencing with PyTorch<a class="headerlink" href="#Inferencing-with-PyTorch" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1123,7 +1124,7 @@ Loading yolov5s.engine for TensorRT inference...
 </section>
 </section>
 <section id="Verify-the-detection-results-between-yolort-and-TensorRT">
-<h2 id="Verify-the-detection-results-between-yolort-and-TensorRT">Verify the detection results between yolort and TensorRT<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-TensorRT" title="Permalink to this headline">¶</a></h2>
+<h2 id="Verify-the-detection-results-between-yolort-and-TensorRT">Verify the detection results between yolort and TensorRT<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-TensorRT" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
@@ -1155,7 +1156,7 @@ Exported model has been tested, and the result looks good!
 </div>
 </section>
 <section id="Visualize-the-TensorRT-detections">
-<h2 id="Visualize-the-TensorRT-detections">Visualize the TensorRT detections<a class="headerlink" href="#Visualize-the-TensorRT-detections" title="Permalink to this headline">¶</a></h2>
+<h2 id="Visualize-the-TensorRT-detections">Visualize the TensorRT detections<a class="headerlink" href="#Visualize-the-TensorRT-detections" title="Permalink to this heading">¶</a></h2>
 <p>Get label names first.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
@@ -1260,7 +1261,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.name
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

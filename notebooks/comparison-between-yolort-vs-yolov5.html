@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -53,6 +53,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="../_static/mathjax/tex-chtml.js"></script>
@@ -607,14 +608,14 @@ div.rendered_html tbody tr:hover {
         display: none;
     }
 </style><section id="What-is-the-difference-between-yolort-and-yolov5">
-<h1 id="notebooks-comparison-between-yolort-vs-yolov5--page-root">What is the difference between yolort and yolov5<a class="headerlink" href="#notebooks-comparison-between-yolort-vs-yolov5--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="notebooks-comparison-between-yolort-vs-yolov5--page-root">What is the difference between yolort and yolov5<a class="headerlink" href="#notebooks-comparison-between-yolort-vs-yolov5--page-root" title="Permalink to this heading">¶</a></h1>
 <p>Now <code class="docutils literal notranslate"><span class="pre">yolort</span></code> adopts the same model structure as the official <code class="docutils literal notranslate"><span class="pre">yolov5</span></code>. The main difference between yolort and YOLOv5 is the strategy in pre-processing and post-processing. The main reason we have adopted a different strategy from the official one is to enable the pre-processing and post-processing modules to be jit traceable and scriptable. From this we can gain an end-to-end Graph for inferencing on <code class="docutils literal notranslate"><span class="pre">LibTorch</span></code>, <code class="docutils literal notranslate"><span class="pre">ONNX</span> <span class="pre">Runtime</span></code> and <code class="docutils literal notranslate"><span class="pre">TVM</span></code>.</p>
 <p>For pre-processing, YOLOv5 uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Letterboxing_(filming)">letterboxing (padding)</a> resizing that maintains the aspect ratio. The error arises from the <code class="docutils literal notranslate"><span class="pre">interpolate</span></code> operator used in resizing. YOLOv5 uses the <a class="reference external" href="https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html#ga47a974309e9102f5f08231edc7e7529d">cv2.resize</a> operator on the input <code class="docutils literal notranslate"><span class="pre">uint8</span> <span class="pre">[0-255]</span></code> images, the operators in OpenCV are not traceable or scriptable, so we use
 <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.functional.interpolate.html#torch-nn-functional-interpolate">torch.nn.functional.interpolate</a> in yolort. Fortunately, the <code class="docutils literal notranslate"><span class="pre">interpolation</span></code> operator of PyTorch is <a class="reference external" href="https://github.com/pytorch/vision/issues/2950#issuecomment-723038041">aligned</a> with that of OpenCV, however PyTorch’s <code class="docutils literal notranslate"><span class="pre">interpolate</span></code> <a class="reference external" href="https://github.com/pytorch/pytorch/issues/5580">only supports</a> the float data type now, we can only operate with images cast to float types,
 and therefore there will introduce some errors.</p>
 <p>YOLOv5 provides a very powerful function to do the post-processing, of which we implement only a non-agnostic version, but the accuracy here should be able to be consistent with the original version. See our <a class="reference external" href="https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html">doc</a> for more details.</p>
 <section id="Prepare-environment,-image-and-model-weights-to-test">
-<h2 id="Prepare-environment,-image-and-model-weights-to-test">Prepare environment, image and model weights to test<a class="headerlink" href="#Prepare-environment,-image-and-model-weights-to-test" title="Permalink to this headline">¶</a></h2>
+<h2 id="Prepare-environment,-image-and-model-weights-to-test">Prepare environment, image and model weights to test<a class="headerlink" href="#Prepare-environment,-image-and-model-weights-to-test" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -699,7 +700,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jp
 </div>
 </section>
 <section id="Load-model-as-ultralytics-and-inference">
-<h2 id="Load-model-as-ultralytics-and-inference">Load model as ultralytics and inference<a class="headerlink" href="#Load-model-as-ultralytics-and-inference" title="Permalink to this headline">¶</a></h2>
+<h2 id="Load-model-as-ultralytics-and-inference">Load model as ultralytics and inference<a class="headerlink" href="#Load-model-as-ultralytics-and-inference" title="Permalink to this heading">¶</a></h2>
 <p>YOLOv5 provides an input-robust model wrapper named <code class="docutils literal notranslate"><span class="pre">AutoShape</span></code> for passing cv2/np/PIL/torch inputs, which includes pre-processing, inference and post-processing (NMS). This wrapper is currently only valid for pytorch inference. To peel back the essence of what’s inside, we use a vanilla interface to call yolov5. We do the pre-processing part first.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -836,7 +837,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.name
 <p>At that moment we have completed the whole inference process of yolov5.</p>
 </section>
 <section id="Use-yolort’s-approach-to-inferencing">
-<h2 id="Use-yolort’s-approach-to-inferencing">Use yolort’s approach to inferencing<a class="headerlink" href="#Use-yolort’s-approach-to-inferencing" title="Permalink to this headline">¶</a></h2>
+<h2 id="Use-yolort’s-approach-to-inferencing">Use yolort’s approach to inferencing<a class="headerlink" href="#Use-yolort’s-approach-to-inferencing" title="Permalink to this heading">¶</a></h2>
 <p>yolort now supports loading models trained by yolov5. Here is also an end-to-end inference pipeline, and this pipeline supports both jit tracing and scripting modes. This model can be used to export ONNX and torchscript graph and to inference on ONNX Runtime, LibTorch and TVM VirtualMachine backends.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -877,7 +878,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.name
 </div>
 </section>
 <section id="Verify-the-detection-results-between-yolort-and-ultralytics">
-<h2 id="Verify-the-detection-results-between-yolort-and-ultralytics">Verify the detection results between yolort and ultralytics<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-ultralytics" title="Permalink to this headline">¶</a></h2>
+<h2 id="Verify-the-detection-results-between-yolort-and-ultralytics">Verify the detection results between yolort and ultralytics<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-ultralytics" title="Permalink to this heading">¶</a></h2>
 <p>We print out the results of both inferencing.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
@@ -1023,7 +1024,7 @@ Exported model has been tested, and the result looks good!
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

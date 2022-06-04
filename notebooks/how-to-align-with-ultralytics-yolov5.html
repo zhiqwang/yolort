@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -53,6 +53,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="../_static/mathjax/tex-chtml.js"></script>
@@ -611,10 +612,10 @@ div.rendered_html tbody tr:hover {
         display: none;
     }
 </style><section id="How-to-align-with-ultralytics-yolov5">
-<h1 id="notebooks-how-to-align-with-ultralytics-yolov5--page-root">How to align with ultralytics yolov5<a class="headerlink" href="#notebooks-how-to-align-with-ultralytics-yolov5--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="notebooks-how-to-align-with-ultralytics-yolov5--page-root">How to align with ultralytics yolov5<a class="headerlink" href="#notebooks-how-to-align-with-ultralytics-yolov5--page-root" title="Permalink to this heading">¶</a></h1>
 <p>As described in the above <a class="reference external" href="https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html">document</a>, the model inference and post-processing parts of our implementation are consistent with the official version except for the pre-processing part, where we provide a way to load the trained checkpoints of YOLOv5 without the pre-processing.</p>
 <section id="Prepare-environment,-image-and-model-weights-to-test">
-<h2 id="Prepare-environment,-image-and-model-weights-to-test">Prepare environment, image and model weights to test<a class="headerlink" href="#Prepare-environment,-image-and-model-weights-to-test" title="Permalink to this headline">¶</a></h2>
+<h2 id="Prepare-environment,-image-and-model-weights-to-test">Prepare environment, image and model weights to test<a class="headerlink" href="#Prepare-environment,-image-and-model-weights-to-test" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -681,7 +682,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Load-model-as-ultralytics-and-inference">
-<h2 id="Load-model-as-ultralytics-and-inference">Load model as ultralytics and inference<a class="headerlink" href="#Load-model-as-ultralytics-and-inference" title="Permalink to this headline">¶</a></h2>
+<h2 id="Load-model-as-ultralytics-and-inference">Load model as ultralytics and inference<a class="headerlink" href="#Load-model-as-ultralytics-and-inference" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -715,7 +716,7 @@ Model Summary: 280 layers, 3239884 parameters, 0 gradients, 4.6 GFLOPs
 </div>
 </section>
 <section id="Updating-model-weights-from-ultralytics-to-yolort-and-inference">
-<h2 id="Updating-model-weights-from-ultralytics-to-yolort-and-inference">Updating model weights from ultralytics to yolort and inference<a class="headerlink" href="#Updating-model-weights-from-ultralytics-to-yolort-and-inference" title="Permalink to this headline">¶</a></h2>
+<h2 id="Updating-model-weights-from-ultralytics-to-yolort-and-inference">Updating model weights from ultralytics to yolort and inference<a class="headerlink" href="#Updating-model-weights-from-ultralytics-to-yolort-and-inference" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -798,7 +799,7 @@ tensor([0, 0, 5, 0, 0], device='cuda:0')
 </div>
 </section>
 <section id="Verify-the-detection-results-between-yolort-and-ultralytics">
-<h2 id="Verify-the-detection-results-between-yolort-and-ultralytics">Verify the detection results between yolort and ultralytics<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-ultralytics" title="Permalink to this headline">¶</a></h2>
+<h2 id="Verify-the-detection-results-between-yolort-and-ultralytics">Verify the detection results between yolort and ultralytics<a class="headerlink" href="#Verify-the-detection-results-between-yolort-and-ultralytics" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -824,7 +825,7 @@ Exported model has been tested, and the result looks good!
 </div>
 </section>
 <section id="Detection-output-visualisation">
-<h2 id="Detection-output-visualisation">Detection output visualisation<a class="headerlink" href="#Detection-output-visualisation" title="Permalink to this headline">¶</a></h2>
+<h2 id="Detection-output-visualisation">Detection output visualisation<a class="headerlink" href="#Detection-output-visualisation" title="Permalink to this heading">¶</a></h2>
 <p>Hah, that’s the trick to rescale the box correctly. We need to scale the inference results back to the original scale of the image.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -918,7 +919,7 @@ tensor([[ 48.50578, 391.76025, 238.01727, 908.10779],
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

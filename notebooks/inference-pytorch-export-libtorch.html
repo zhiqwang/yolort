@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -53,6 +53,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="../_static/mathjax/tex-chtml.js"></script>
@@ -627,7 +628,7 @@ div.rendered_html tbody tr:hover {
         display: none;
     }
 </style><section id="Intuition-for-yolort">
-<h1 id="notebooks-inference-pytorch-export-libtorch--page-root">Intuition for yolort<a class="headerlink" href="#notebooks-inference-pytorch-export-libtorch--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="notebooks-inference-pytorch-export-libtorch--page-root">Intuition for yolort<a class="headerlink" href="#notebooks-inference-pytorch-export-libtorch--page-root" title="Permalink to this heading">¶</a></h1>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -654,7 +655,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <section id="Read-an-image">
-<h2 id="Read-an-image">Read an image<a class="headerlink" href="#Read-an-image" title="Permalink to this headline">¶</a></h2>
+<h2 id="Read-an-image">Read an image<a class="headerlink" href="#Read-an-image" title="Permalink to this heading">¶</a></h2>
 <p>Let’s request and pre-process the images that to be detected.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -672,7 +673,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Model-Definition-and-Initialization">
-<h2 id="Model-Definition-and-Initialization">Model Definition and Initialization<a class="headerlink" href="#Model-Definition-and-Initialization" title="Permalink to this headline">¶</a></h2>
+<h2 id="Model-Definition-and-Initialization">Model Definition and Initialization<a class="headerlink" href="#Model-Definition-and-Initialization" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -728,7 +729,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Verify-the-PyTorch-backend-inference-results">
-<h2 id="Verify-the-PyTorch-backend-inference-results">Verify the PyTorch backend inference results<a class="headerlink" href="#Verify-the-PyTorch-backend-inference-results" title="Permalink to this headline">¶</a></h2>
+<h2 id="Verify-the-PyTorch-backend-inference-results">Verify the PyTorch backend inference results<a class="headerlink" href="#Verify-the-PyTorch-backend-inference-results" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -800,7 +801,7 @@ tensor([5, 0, 0, 0])
 </div>
 </section>
 <section id="Detection-output-visualisation">
-<h2 id="Detection-output-visualisation">Detection output visualisation<a class="headerlink" href="#Detection-output-visualisation" title="Permalink to this headline">¶</a></h2>
+<h2 id="Detection-output-visualisation">Detection output visualisation<a class="headerlink" href="#Detection-output-visualisation" title="Permalink to this heading">¶</a></h2>
 <p>First let’s get the labels of COCO datasets.</p>
 <p>Get label names first.</p>
 <div class="nbinput docutils container">
@@ -855,7 +856,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.name
 </div>
 </section>
 <section id="Scripting-YOLOv5">
-<h2 id="Scripting-YOLOv5">Scripting YOLOv5<a class="headerlink" href="#Scripting-YOLOv5" title="Permalink to this headline">¶</a></h2>
+<h2 id="Scripting-YOLOv5">Scripting YOLOv5<a class="headerlink" href="#Scripting-YOLOv5" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
@@ -895,7 +896,7 @@ Starting TorchScript export with torch 1.10.2+cu113...
 </div>
 </section>
 <section id="Inference-on-TorchScript-Backend">
-<h2 id="Inference-on-TorchScript-Backend">Inference on TorchScript Backend<a class="headerlink" href="#Inference-on-TorchScript-Backend" title="Permalink to this headline">¶</a></h2>
+<h2 id="Inference-on-TorchScript-Backend">Inference on TorchScript Backend<a class="headerlink" href="#Inference-on-TorchScript-Backend" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -918,7 +919,7 @@ Starting TorchScript export with torch 1.10.2+cu113...
 </div>
 </section>
 <section id="Verify-the-Inference-Output-on-LibTorch-backend">
-<h2 id="Verify-the-Inference-Output-on-LibTorch-backend">Verify the Inference Output on LibTorch backend<a class="headerlink" href="#Verify-the-Inference-Output-on-LibTorch-backend" title="Permalink to this headline">¶</a></h2>
+<h2 id="Verify-the-Inference-Output-on-LibTorch-backend">Verify the Inference Output on LibTorch backend<a class="headerlink" href="#Verify-the-Inference-Output-on-LibTorch-backend" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
@@ -939,7 +940,7 @@ Exported model has been tested with libtorch, and the result looks good!
 </pre></div></div>
 </div>
 <section id="Comparing-Inference-Time-between-pytorch-and-libtorch">
-<h3 id="Comparing-Inference-Time-between-pytorch-and-libtorch">Comparing Inference Time between <code class="docutils literal notranslate"><span class="pre">pytorch</span></code> and <code class="docutils literal notranslate"><span class="pre">libtorch</span></code><a class="headerlink" href="#Comparing-Inference-Time-between-pytorch-and-libtorch" title="Permalink to this headline">¶</a></h3>
+<h3 id="Comparing-Inference-Time-between-pytorch-and-libtorch">Comparing Inference Time between <code class="docutils literal notranslate"><span class="pre">pytorch</span></code> and <code class="docutils literal notranslate"><span class="pre">libtorch</span></code><a class="headerlink" href="#Comparing-Inference-Time-between-pytorch-and-libtorch" title="Permalink to this heading">¶</a></h3>
 <p><strong>Time consumed on PyTorch backend</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
@@ -1042,7 +1043,7 @@ Exported model has been tested with libtorch, and the result looks good!
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

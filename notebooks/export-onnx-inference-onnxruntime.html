@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -53,6 +53,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="../_static/mathjax/tex-chtml.js"></script>
@@ -627,7 +628,7 @@ div.rendered_html tbody tr:hover {
         display: none;
     }
 </style><section id="Deploying-yolort-on-ONNX-Runtime">
-<h1 id="notebooks-export-onnx-inference-onnxruntime--page-root">Deploying yolort on ONNX Runtime<a class="headerlink" href="#notebooks-export-onnx-inference-onnxruntime--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="notebooks-export-onnx-inference-onnxruntime--page-root">Deploying yolort on ONNX Runtime<a class="headerlink" href="#notebooks-export-onnx-inference-onnxruntime--page-root" title="Permalink to this heading">¶</a></h1>
 <p>The ONNX model exported by yolort differs from other pipeline in the following three ways.</p>
 <ul class="simple">
 <li><p>We embed the pre-processing into the graph (mainly composed of <code class="docutils literal notranslate"><span class="pre">letterbox</span></code>). and the exported model expects a <code class="docutils literal notranslate"><span class="pre">Tensor[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>, which is in <code class="docutils literal notranslate"><span class="pre">RGB</span></code> channel and is rescaled to range <code class="docutils literal notranslate"><span class="pre">float32</span> <span class="pre">[0-1]</span></code>.</p></li>
@@ -635,7 +636,7 @@ div.rendered_html tbody tr:hover {
 <li><p>We adopt the dynamic shape mechanism to export the ONNX models.</p></li>
 </ul>
 <section id="Set-up-environment-and-function-utilities">
-<h2 id="Set-up-environment-and-function-utilities">Set up environment and function utilities<a class="headerlink" href="#Set-up-environment-and-function-utilities" title="Permalink to this headline">¶</a></h2>
+<h2 id="Set-up-environment-and-function-utilities">Set up environment and function utilities<a class="headerlink" href="#Set-up-environment-and-function-utilities" title="Permalink to this heading">¶</a></h2>
 <p>First you should install ONNX Runtime first to run this tutorial. See the ONNX Runtime <a class="reference external" href="https://onnxruntime.ai">installation matrix</a> for recommended instructions for desired combinations of target operating system, hardware, accelerator, and language.</p>
 <p>A quick solution is to install via pip on X64:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install onnxruntime
@@ -704,7 +705,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Load-the-model-trained-from-yolov5">
-<h2 id="Load-the-model-trained-from-yolov5">Load the model trained from yolov5<a class="headerlink" href="#Load-the-model-trained-from-yolov5" title="Permalink to this headline">¶</a></h2>
+<h2 id="Load-the-model-trained-from-yolov5">Load the model trained from yolov5<a class="headerlink" href="#Load-the-model-trained-from-yolov5" title="Permalink to this heading">¶</a></h2>
 <p>The model used below is officially released by yolov5 and trained on COCO 2017 datasets.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -782,7 +783,7 @@ Model Summary: 355 layers, 3246940 parameters, 3246940 gradients, 4.6 GFLOPs
 </pre></div></div>
 </div>
 <section id="Inference-on-PyTorch-backend">
-<h3 id="Inference-on-PyTorch-backend">Inference on PyTorch backend<a class="headerlink" href="#Inference-on-PyTorch-backend" title="Permalink to this headline">¶</a></h3>
+<h3 id="Inference-on-PyTorch-backend">Inference on PyTorch backend<a class="headerlink" href="#Inference-on-PyTorch-backend" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -876,7 +877,7 @@ tensor([5, 0, 0, 0])
 </section>
 </section>
 <section id="Export-the-model-to-ONNX">
-<h2 id="Export-the-model-to-ONNX">Export the model to ONNX<a class="headerlink" href="#Export-the-model-to-ONNX" title="Permalink to this headline">¶</a></h2>
+<h2 id="Export-the-model-to-ONNX">Export the model to ONNX<a class="headerlink" href="#Export-the-model-to-ONNX" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -948,7 +949,7 @@ We are using opset version: 11
 </div>
 </section>
 <section id="Inference-on-ONNX-Runtime-backend">
-<h2 id="Inference-on-ONNX-Runtime-backend">Inference on ONNX Runtime backend<a class="headerlink" href="#Inference-on-ONNX-Runtime-backend" title="Permalink to this headline">¶</a></h2>
+<h2 id="Inference-on-ONNX-Runtime-backend">Inference on ONNX Runtime backend<a class="headerlink" href="#Inference-on-ONNX-Runtime-backend" title="Permalink to this heading">¶</a></h2>
 <p>Check the version of ONNX Runtime first.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
@@ -1038,7 +1039,7 @@ Set inference device to CPU
 </pre></div></div>
 </div>
 <section id="Verify-whether-the-inference-results-are-consistent-with-PyTorch’s">
-<h3 id="Verify-whether-the-inference-results-are-consistent-with-PyTorch’s">Verify whether the inference results are consistent with PyTorch’s<a class="headerlink" href="#Verify-whether-the-inference-results-are-consistent-with-PyTorch’s" title="Permalink to this headline">¶</a></h3>
+<h3 id="Verify-whether-the-inference-results-are-consistent-with-PyTorch’s">Verify whether the inference results are consistent with PyTorch’s<a class="headerlink" href="#Verify-whether-the-inference-results-are-consistent-with-PyTorch’s" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
@@ -1060,7 +1061,7 @@ Exported model has been tested with ONNXRuntime, and the result looks good!
 </div>
 </section>
 <section id="Verify-another-image">
-<h3 id="Verify-another-image">Verify another image<a class="headerlink" href="#Verify-another-image" title="Permalink to this headline">¶</a></h3>
+<h3 id="Verify-another-image">Verify another image<a class="headerlink" href="#Verify-another-image" title="Permalink to this heading">¶</a></h3>
 <p>When using dynamic shape inference in trace mode, the shape inference mechanism for some operators may not work, so we verify it once for another image with a different shape as well.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
@@ -1198,7 +1199,7 @@ Exported model has been tested with ONNXRuntime, and the result looks good!
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

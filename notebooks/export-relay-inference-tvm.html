@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -53,6 +53,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="../_static/mathjax/tex-chtml.js"></script>
@@ -619,7 +620,7 @@ div.rendered_html tbody tr:hover {
         display: none;
     }
 </style><section id="Deploying-yolort-on-TVM">
-<h1 id="notebooks-export-relay-inference-tvm--page-root">Deploying yolort on TVM<a class="headerlink" href="#notebooks-export-relay-inference-tvm--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="notebooks-export-relay-inference-tvm--page-root">Deploying yolort on TVM<a class="headerlink" href="#notebooks-export-relay-inference-tvm--page-root" title="Permalink to this heading">¶</a></h1>
 <p>This article is an introductory tutorial to deploy PyTorch YOLOv5 models with Relay VM.</p>
 <p>For us to begin with, PyTorch should be installed. TorchVision is also required since we will be using it as our model zoo.</p>
 <p>A quick solution is to install via pip</p>
@@ -652,7 +653,7 @@ pip install <span class="nv">torchvision</span><span class="o">==</span><span cl
 </div>
 </div>
 <section id="Load-pre-trained-yolov5n-from-yolort-and-do-tracing">
-<h2 id="Load-pre-trained-yolov5n-from-yolort-and-do-tracing">Load pre-trained <code class="docutils literal notranslate"><span class="pre">yolov5n</span></code> from yolort and do tracing<a class="headerlink" href="#Load-pre-trained-yolov5n-from-yolort-and-do-tracing" title="Permalink to this headline">¶</a></h2>
+<h2 id="Load-pre-trained-yolov5n-from-yolort-and-do-tracing">Load pre-trained <code class="docutils literal notranslate"><span class="pre">yolov5n</span></code> from yolort and do tracing<a class="headerlink" href="#Load-pre-trained-yolov5n-from-yolort-and-do-tracing" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -736,7 +737,7 @@ graph(%self.1 : __torch__.yolort.relay.trace_wrapper.TraceWrapper,
 </div>
 </section>
 <section id="Download-a-test-image-and-pre-process">
-<h2 id="Download-a-test-image-and-pre-process">Download a test image and pre-process<a class="headerlink" href="#Download-a-test-image-and-pre-process" title="Permalink to this headline">¶</a></h2>
+<h2 id="Download-a-test-image-and-pre-process">Download a test image and pre-process<a class="headerlink" href="#Download-a-test-image-and-pre-process" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -757,7 +758,7 @@ graph(%self.1 : __torch__.yolort.relay.trace_wrapper.TraceWrapper,
 </div>
 </section>
 <section id="Import-the-graph-to-Relay">
-<h2 id="Import-the-graph-to-Relay">Import the graph to Relay<a class="headerlink" href="#Import-the-graph-to-Relay" title="Permalink to this headline">¶</a></h2>
+<h2 id="Import-the-graph-to-Relay">Import the graph to Relay<a class="headerlink" href="#Import-the-graph-to-Relay" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -863,7 +864,7 @@ Using injective.cpu for round based on highest priority (10)
 </div>
 </section>
 <section id="Compile-with-Relay-VM">
-<h2 id="Compile-with-Relay-VM">Compile with Relay VM<a class="headerlink" href="#Compile-with-Relay-VM" title="Permalink to this headline">¶</a></h2>
+<h2 id="Compile-with-Relay-VM">Compile with Relay VM<a class="headerlink" href="#Compile-with-Relay-VM" title="Permalink to this heading">¶</a></h2>
 <p>Note: Currently only CPU target is supported. For x86 target, it is highly recommended to build TVM with Intel MKL and Intel OpenMP to get best performance, due to the existence of large dense operator in torchvision rcnn models.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -2215,7 +2216,7 @@ Using reduce.cpu for prod based on highest priority (10)
 </div>
 </section>
 <section id="Inference-with-Relay-VM">
-<h2 id="Inference-with-Relay-VM">Inference with Relay VM<a class="headerlink" href="#Inference-with-Relay-VM" title="Permalink to this headline">¶</a></h2>
+<h2 id="Inference-with-Relay-VM">Inference with Relay VM<a class="headerlink" href="#Inference-with-Relay-VM" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -2247,7 +2248,7 @@ Using reduce.cpu for prod based on highest priority (10)
 </div>
 </section>
 <section id="Get-boxes-with-score-larger-than-0.6">
-<h2 id="Get-boxes-with-score-larger-than-0.6">Get boxes with score larger than 0.6<a class="headerlink" href="#Get-boxes-with-score-larger-than-0.6" title="Permalink to this headline">¶</a></h2>
+<h2 id="Get-boxes-with-score-larger-than-0.6">Get boxes with score larger than 0.6<a class="headerlink" href="#Get-boxes-with-score-larger-than-0.6" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -2275,7 +2276,7 @@ Get 4 valid boxes
 </div>
 </section>
 <section id="Verify-the-Inference-Output-on-TVM-backend">
-<h2 id="Verify-the-Inference-Output-on-TVM-backend">Verify the Inference Output on TVM backend<a class="headerlink" href="#Verify-the-Inference-Output-on-TVM-backend" title="Permalink to this headline">¶</a></h2>
+<h2 id="Verify-the-Inference-Output-on-TVM-backend">Verify the Inference Output on TVM backend<a class="headerlink" href="#Verify-the-Inference-Output-on-TVM-backend" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -2357,7 +2358,7 @@ Exported model has been tested with TVM Runtime, and the result looks good!
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
