@@ -3,8 +3,9 @@
 from typing import Optional, Tuple
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 from yolort.models import YOLO, YOLOv5
+from yolort.relay import NonMaxSupressionOp
 
 
 def export_onnx(
@@ -215,3 +216,41 @@ class ONNXBuilder:
             dynamic_axes=self.dynamic_axes,
             **kwargs,
         )
+
+
+class VanillaONNXBuilder(nn.Module):
+    def __init__(self, max_obj=100, iou_thres=0.45, score_thres=0.35, device=None, max_wh=640):
+        super().__init__()
+        self.device = device if device else torch.device("cpu")
+        self.max_obj = torch.tensor([max_obj]).to(device)
+        self.iou_threshold = torch.tensor([iou_thres]).to(device)
+        self.score_threshold = torch.tensor([score_thres]).to(device)
+        self.max_wh = max_wh
+        self.convert_matrix = torch.tensor(
+            [[1, 0, 1, 0], [0, 1, 0, 1], [-0.5, 0, 0.5, 0], [0, -0.5, 0, 0.5]],
+            dtype=torch.float32,
+            device=self.device,
+        )
+
+    def forward(self, x: Tensor):
+        box = x[:, :, :4]
+        conf = x[:, :, 4:5]
+        score = x[:, :, 5:]
+        score *= conf
+        box @= self.convert_matrix
+        objScore, objCls = score.max(2, keepdim=True)
+        dis = objCls.float() * self.max_wh
+        nmsbox = box + dis
+        objScore1 = objScore.transpose(1, 2).contiguous()
+        selected_indices = NonMaxSupressionOp.apply(
+            nmsbox, objScore1, self.max_obj, self.iou_threshold, self.score_threshold
+        )
+        X, Y = selected_indices[:, 0], selected_indices[:, 2]
+        resBoxes = box[X, Y, :]
+        resClasses = objCls[X, Y, :]
+        resScores = objScore[X, Y, :]
+        X = X.unsqueeze(1)
+        X = X.float()
+        resClasses = resClasses.float()
+        out = torch.concat([X, resBoxes, resClasses, resScores], 1)
+        return out
