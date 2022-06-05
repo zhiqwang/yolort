@@ -461,7 +461,7 @@ class AutoShape(nn.Module):
 
         t = [time_sync()]
         p = next(self.model.parameters())  # for device and type
-        if isinstance(imgs, torch.Tensor):  # torch
+        if isinstance(imgs, Tensor):  # torch
             with amp.autocast(enabled=p.device.type != "cpu"):
                 return self.model(imgs.to(p.device).type_as(p), augment, profile)  # inference
 
@@ -499,7 +499,7 @@ class AutoShape(nn.Module):
 
         with amp.autocast(enabled=p.device.type != "cpu"):
             # Inference
-            y = self.model(x, augment, profile)[0]  # forward
+            y = self.model(x, augment, profile)  # forward
             t.append(time_sync())
 
             # Post-process
