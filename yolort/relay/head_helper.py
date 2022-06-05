@@ -4,6 +4,7 @@ import random
 
 import torch
 from torch import nn, Tensor
+from yolort.models.box_head import _decode_pred_logits
 
 
 class FakeYOLO(nn.Module):
@@ -14,7 +15,6 @@ class FakeYOLO(nn.Module):
     def __init__(
         self,
         model: nn.Module,
-        size: int = 640,
         iou_thresh: float = 0.45,
         score_thresh: float = 0.35,
         detections_per_img: int = 100,
@@ -23,7 +23,6 @@ class FakeYOLO(nn.Module):
 
         self.model = model
         self.post_process = FakePostProcess(
-            size,
             iou_thresh=iou_thresh,
             score_thresh=score_thresh,
             detections_per_img=detections_per_img,
@@ -40,7 +39,6 @@ class FakePostProcess(nn.Module):
     Fake PostProcess used to export an ONNX models containing NMS for ONNX Runtime and OpenVINO.
 
     Args:
-        size (int): width and height of the images.
         iou_thresh (float, optional): NMS threshold used for postprocessing the detections.
             Default to 0.45
         score_thresh (float, optional): Score threshold used for postprocessing the detections.
@@ -51,7 +49,6 @@ class FakePostProcess(nn.Module):
 
     def __init__(
         self,
-        size: int,
         iou_thresh: float = 0.45,
         score_thresh: float = 0.35,
         detections_per_img: int = 100,
@@ -60,40 +57,28 @@ class FakePostProcess(nn.Module):
         self.detections_per_img = detections_per_img
         self.iou_thresh = iou_thresh
         self.score_thresh = score_thresh
-        self.size = size
-        self.convert_matrix = [[1, 0, 1, 0], [0, 1, 0, 1], [-0.5, 0, 0.5, 0], [0, -0.5, 0, 0.5]]
+        self.nms_func = NonMaxSupressionOp.apply
 
     def forward(self, x: Tensor):
         device = x.device
-        box = x[:, :, :4]
-        conf = x[:, :, 4:5]
-        score = x[:, :, 5:]
-        score *= conf
-        convert_matrix = torch.tensor(self.convert_matrix, dtype=torch.float32, device=device)
-        box @= convert_matrix
-        obj_scores, obj_classes = score.max(2, keepdim=True)
-        dis = obj_classes.float() * self.size
-        rel_boxes = box + dis
-        obj_scores_t = obj_scores.transpose(1, 2).contiguous()
+        boxes, scores = _decode_pred_logits(x)
+        scores, classes = scores.max(2, keepdim=True)
+        scores_t = scores.transpose(1, 2).contiguous()
 
+        # Prepare parameters of NMS for exporting ONNX
         detections_per_img = torch.tensor([self.detections_per_img]).to(device)
         iou_thresh = torch.tensor([self.iou_thresh]).to(device)
         score_thresh = torch.tensor([self.score_thresh]).to(device)
-        selected_indices = NonMaxSupressionOp.apply(
-            rel_boxes,
-            obj_scores_t,
-            detections_per_img,
-            iou_thresh,
-            score_thresh,
-        )
+        selected_indices = self.nms_func(boxes, scores_t, detections_per_img, iou_thresh, score_thresh)
+
         X, Y = selected_indices[:, 0], selected_indices[:, 2]
-        res_boxes = box[X, Y, :]
-        res_classes = obj_classes[X, Y, :]
-        res_scores = obj_scores[X, Y, :]
+        pred_boxes = boxes[X, Y, :]
+        pred_classes = classes[X, Y, :]
+        pred_scores = scores[X, Y, :]
         X = X.unsqueeze(1)
         X = X.float()
-        res_classes = res_classes.float()
-        out = torch.concat([X, res_boxes, res_classes, res_scores], 1)
+        pred_classes = pred_classes.float()
+        out = torch.concat([X, pred_boxes, pred_classes, pred_scores], 1)
         return out
 
 
