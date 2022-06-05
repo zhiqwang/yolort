@@ -13,7 +13,7 @@ class FakeYOLO(nn.Module):
 
     def __init__(
         self,
-        yolo_stem: nn.Module,
+        model: nn.Module,
         size: int = 640,
         iou_thresh: float = 0.45,
         score_thresh: float = 0.35,
@@ -21,7 +21,7 @@ class FakeYOLO(nn.Module):
     ):
         super().__init__()
 
-        self.yolo_stem = yolo_stem
+        self.model = model
         self.post_process = FakePostProcess(
             size,
             iou_thresh=iou_thresh,
@@ -30,7 +30,7 @@ class FakeYOLO(nn.Module):
         )
 
     def forward(self, x):
-        x = self.yolo_stem(x)
+        x = self.model(x)
         out = self.post_process(x)
         return out
 
@@ -99,26 +99,25 @@ class FakePostProcess(nn.Module):
 
 class NonMaxSupressionOp(torch.autograd.Function):
     @staticmethod
-    def forward(
-        ctx,
-        boxes: Tensor,
-        scores: Tensor,
-        max_output_boxes_per_class: Tensor = torch.tensor([100]),
-        iou_thresh: Tensor = torch.tensor([0.45]),
-        score_thresh: Tensor = torch.tensor([0.35]),
-    ):
+    def forward(ctx, boxes, scores, detections_per_class, iou_thresh, score_thresh):
         """
+        Symbolic method to export an NonMaxSupression ONNX models.
+
         Args:
             boxes (Tensor): An input tensor with shape [num_batches, spatial_dimension, 4].
                 have been multiplied original size here.
             scores (Tensor): An input tensor with shape [num_batches, num_classes, spatial_dimension].
                 only one class score here.
-            max_output_boxes_per_class (Tensor, optional): Integer representing the maximum number of
+            detections_per_class (Tensor, optional): Integer representing the maximum number of
                 boxes to be selected per batch per class. It is a scalar.
             iou_thresh (Tensor, optional): Float representing the threshold for deciding whether
                 boxes overlap too much with respect to IOU. It is scalar. Value range [0, 1].
             score_thresh (Tensor, optional): Float representing the threshold for deciding when to
                 remove boxes based on score. It is a scalar.
+
+        Returns:
+            Tensor(int64): selected indices from the boxes tensor. [num_selected_indices, 3],
+                the selected index format is [batch_index, class_index, box_index].
         """
         batch = scores.shape[0]
         num_det = random.randint(0, 100)
@@ -130,22 +129,8 @@ class NonMaxSupressionOp(torch.autograd.Function):
         return selected_indices
 
     @staticmethod
-    def symbolic(
-        g,
-        boxes: Tensor,
-        scores: Tensor,
-        max_output_boxes_per_class: Tensor,
-        iou_thresh: Tensor,
-        score_thresh: Tensor,
-    ):
-        return g.op(
-            "NonMaxSuppression",
-            boxes,
-            scores,
-            max_output_boxes_per_class,
-            iou_thresh,
-            score_thresh,
-        )
+    def symbolic(g, boxes, scores, detections_per_class, iou_thresh, score_thresh):
+        return g.op("NonMaxSuppression", boxes, scores, detections_per_class, iou_thresh, score_thresh)
 
 
 class EfficientNMSOp(torch.autograd.Function):
