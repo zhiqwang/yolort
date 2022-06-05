@@ -51,7 +51,6 @@ def export_onnx(
     if vanilla:
         onnx_builder = VanillaONNXBuilder(
             checkpoint_path=checkpoint_path,
-            size=size[0],
             score_thresh=score_thresh,
             iou_thresh=nms_thresh,
             opset_version=opset_version,
@@ -234,28 +233,26 @@ class VanillaONNXBuilder:
     def __init__(
         self,
         checkpoint_path: Optional[str] = None,
-        size: int = 640,
         iou_thresh: float = 0.45,
         score_thresh: float = 0.35,
         detections_per_img: int = 100,
-        opset_version: int = 12,
+        opset_version: int = 11,
         enable_dynamic: bool = True,
     ):
         super().__init__()
         self._checkpoint_path = checkpoint_path
         self._opset_version = opset_version
 
-        self.model = self._build_model(size, iou_thresh, score_thresh, detections_per_img)
+        self.model = self._build_model(iou_thresh, score_thresh, detections_per_img)
         self.input_sample = self._set_input_sample()
         self.input_names = self._set_input_names()
         self.output_names = self._set_output_names()
         self.dynamic_axes = self._set_dynamic_axes(enable_dynamic)
 
-    def _build_model(self, size, iou_thresh, score_thresh, detections_per_img):
+    def _build_model(self, iou_thresh, score_thresh, detections_per_img):
         yolo_stem = load_yolov5_model(self._checkpoint_path)
         model = FakeYOLO(
             yolo_stem,
-            size=size,
             iou_thresh=iou_thresh,
             score_thresh=score_thresh,
             detections_per_img=detections_per_img,
