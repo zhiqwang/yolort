@@ -71,14 +71,14 @@ class FakePostProcess(nn.Module):
         score_thresh = torch.tensor([self.score_thresh]).to(device)
         selected_indices = self.nms_func(boxes, scores_t, detections_per_img, iou_thresh, score_thresh)
 
-        X, Y = selected_indices[:, 0], selected_indices[:, 2]
-        pred_boxes = boxes[X, Y, :]
-        pred_classes = classes[X, Y, :]
-        pred_scores = scores[X, Y, :]
-        X = X.unsqueeze(1)
-        X = X.float()
-        pred_classes = pred_classes.float()
-        out = torch.concat([X, pred_boxes, pred_classes, pred_scores], 1)
+        i, k = selected_indices[:, 0], selected_indices[:, 2]
+        boxes_keep = boxes[i, k, :]
+        classes_keep = classes[i, k, :]
+        scores_keep = scores[i, k, :]
+        i = i.unsqueeze(1)
+        i = i.float()
+        classes_keep = classes_keep.float()
+        out = torch.concat([i, boxes_keep, classes_keep, scores_keep], 1)
         return out
 
 
