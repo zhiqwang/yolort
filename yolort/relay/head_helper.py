@@ -58,13 +58,13 @@ class FakePostProcess(nn.Module):
     ):
         super().__init__()
         self.detections_per_img = detections_per_img
-        self.iou_threshold = iou_thresh
-        self.score_threshold = score_thresh
+        self.iou_thresh = iou_thresh
+        self.score_thresh = score_thresh
         self.size = size
         self.convert_matrix = [[1, 0, 1, 0], [0, 1, 0, 1], [-0.5, 0, 0.5, 0], [0, -0.5, 0, 0.5]]
 
     def forward(self, x: Tensor):
-        device = x.device()
+        device = x.device
         box = x[:, :, :4]
         conf = x[:, :, 4:5]
         score = x[:, :, 5:]
@@ -77,14 +77,14 @@ class FakePostProcess(nn.Module):
         obj_scores_t = obj_scores.transpose(1, 2).contiguous()
 
         detections_per_img = torch.tensor([self.detections_per_img]).to(device)
-        iou_threshold = torch.tensor([self.iou_thresh]).to(device)
-        score_threshold = torch.tensor([self.score_thresh]).to(device)
+        iou_thresh = torch.tensor([self.iou_thresh]).to(device)
+        score_thresh = torch.tensor([self.score_thresh]).to(device)
         selected_indices = NonMaxSupressionOp.apply(
             rel_boxes,
             obj_scores_t,
             detections_per_img,
-            iou_threshold,
-            score_threshold,
+            iou_thresh,
+            score_thresh,
         )
         X, Y = selected_indices[:, 0], selected_indices[:, 2]
         res_boxes = box[X, Y, :]
@@ -104,8 +104,8 @@ class NonMaxSupressionOp(torch.autograd.Function):
         boxes: Tensor,
         scores: Tensor,
         max_output_boxes_per_class: Tensor = torch.tensor([100]),
-        iou_threshold: Tensor = torch.tensor([0.45]),
-        score_threshold: Tensor = torch.tensor([0.35]),
+        iou_thresh: Tensor = torch.tensor([0.45]),
+        score_thresh: Tensor = torch.tensor([0.35]),
     ):
         """
         Args:
@@ -115,9 +115,9 @@ class NonMaxSupressionOp(torch.autograd.Function):
                 only one class score here.
             max_output_boxes_per_class (Tensor, optional): Integer representing the maximum number of
                 boxes to be selected per batch per class. It is a scalar.
-            iou_threshold (Tensor, optional): Float representing the threshold for deciding whether
+            iou_thresh (Tensor, optional): Float representing the threshold for deciding whether
                 boxes overlap too much with respect to IOU. It is scalar. Value range [0, 1].
-            score_threshold (Tensor, optional): Float representing the threshold for deciding when to
+            score_thresh (Tensor, optional): Float representing the threshold for deciding when to
                 remove boxes based on score. It is a scalar.
         """
         batch = scores.shape[0]
@@ -135,16 +135,16 @@ class NonMaxSupressionOp(torch.autograd.Function):
         boxes: Tensor,
         scores: Tensor,
         max_output_boxes_per_class: Tensor,
-        iou_threshold: Tensor,
-        score_threshold: Tensor,
+        iou_thresh: Tensor,
+        score_thresh: Tensor,
     ):
         return g.op(
             "NonMaxSuppression",
             boxes,
             scores,
             max_output_boxes_per_class,
-            iou_threshold,
-            score_threshold,
+            iou_thresh,
+            score_thresh,
         )
 
 
@@ -156,11 +156,11 @@ class EfficientNMSOp(torch.autograd.Function):
         scores: Tensor,
         background_class: int = -1,
         box_coding: int = 0,
-        iou_threshold: float = 0.45,
+        iou_thresh: float = 0.45,
+        score_thresh: float = 0.35,
         max_output_boxes: int = 100,
         plugin_version: str = "1",
         score_activation: int = 0,
-        score_threshold: float = 0.35,
     ):
         batch_size, num_boxes, num_classes = scores.shape
         num_det = torch.randint(0, max_output_boxes, (batch_size, 1))
@@ -177,11 +177,11 @@ class EfficientNMSOp(torch.autograd.Function):
         scores: Tensor,
         background_class: int = -1,
         box_coding: int = 0,
-        iou_threshold: float = 0.45,
+        iou_thresh: float = 0.45,
+        score_thresh: float = 0.35,
         max_output_boxes: int = 100,
         plugin_version: str = "1",
         score_activation: int = 0,
-        score_threshold: float = 0.35,
     ):
 
         return g.op(
@@ -190,10 +190,10 @@ class EfficientNMSOp(torch.autograd.Function):
             scores,
             background_class_i=background_class,
             box_coding_i=box_coding,
-            iou_threshold_f=iou_threshold,
+            iou_threshold_f=iou_thresh,
+            score_threshold_f=score_thresh,
             max_output_boxes_i=max_output_boxes,
             plugin_version_s=plugin_version,
             score_activation_i=score_activation,
-            score_threshold_f=score_threshold,
             outputs=4,
         )

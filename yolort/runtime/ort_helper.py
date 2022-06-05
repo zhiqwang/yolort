@@ -51,14 +51,10 @@ def export_onnx(
     if vanilla:
         onnx_builder = VanillaONNXBuilder(
             checkpoint_path=checkpoint_path,
-            size=size,
-            size_divisible=size_divisible,
+            size=size[0],
             score_thresh=score_thresh,
-            nms_thresh=nms_thresh,
-            version=version,
-            skip_preprocess=skip_preprocess,
+            iou_thresh=nms_thresh,
             opset_version=opset_version,
-            batch_size=batch_size,
         )
     else:
         onnx_builder = ONNXBuilder(
@@ -243,7 +239,7 @@ class VanillaONNXBuilder:
         score_thresh: float = 0.35,
         detections_per_img: int = 100,
         opset_version: int = 12,
-        enable_dynamic: bool = False,
+        enable_dynamic: bool = True,
     ):
         super().__init__()
         self._checkpoint_path = checkpoint_path
