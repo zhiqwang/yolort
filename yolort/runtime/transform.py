@@ -1,20 +1,28 @@
+# Copyright (c) 2022, yolort team. All rights reserved.
+
 from typing import List, Optional, Tuple
 
 import cv2
 import numpy as np
 import torch
 from torch import Tensor
+from yolort.v5 import letterbox
 
 
 class YOLOTransform:
     def __init__(
         self,
+        height: int,
+        width: int,
+        *,
         size_divisible: int = 32,
         fixed_shape: Optional[Tuple[int, int]] = None,
-        fill_color: int = 114,
+        fill_color: Tuple[int, int, int] = (114, 114, 114),
         device: torch.device = torch.device("cpu"),
     ) -> None:
 
+        self.height = height
+        self.width = width
         self.size_divisible = size_divisible
         self.fixed_shape = fixed_shape
         self.fill_color = fill_color
@@ -39,24 +47,12 @@ class YOLOTransform:
     def read_one_img(self, image: str):
         image = cv2.imread(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image, ratio, dwh = self.resize(image, self.fixed_shape)
+        image, ratio, dwh = self.resize(image)
         return image, ratio, dwh
 
-    def resize(self, image: np.ndarray, new_shape: Tuple[int, int] = (320, 320)):
-        shape = image.shape[:2]
-        if isinstance(new_shape, int):
-            new_shape = (new_shape, new_shape)
-        r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
-        ratio = r, r
-        new_unpad = int(np.round(shape[1] * r)), int(np.round(shape[0] * r))
-        dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]
-        dw /= 2
-        dh /= 2
-        if shape[::-1] != new_unpad:
-            image = cv2.resize(image, new_unpad, interpolation=cv2.INTER_LINEAR)
-        top, bottom = int(np.round(dh - 0.1)), int(np.round(dh + 0.1))
-        left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-        image = cv2.copyMakeBorder(
-            image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(self.fill_color,) * 3
-        )
-        return image, ratio, (dw, dh)
+    def resize(self, image: np.ndarray):
+        new_shape = (self.height, self.width)
+        color = self.fill_color
+        auto = not self.fixed_shape
+        size_divisible = self.size_divisible
+        return letterbox(image, new_shape, color=color, auto=auto, stride=size_divisible)
