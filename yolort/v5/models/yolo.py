@@ -61,6 +61,7 @@ class Detect(nn.Module):
         self.na = len(anchors[0]) // 2  # number of anchors
         self.grid = [torch.zeros(1)] * self.nl  # init grid
         self.anchor_grid = [torch.zeros(1)] * self.nl  # init anchor grid
+        # shape(nl,na,2)
         self.register_buffer("anchors", torch.tensor(anchors).float().view(self.nl, -1, 2))
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
         self.inplace = inplace  # use in-place ops (e.g. slice assignment)
@@ -78,26 +79,27 @@ class Detect(nn.Module):
 
                 y = x[i].sigmoid()
                 if self.inplace:
-                    y[..., 0:2] = (y[..., 0:2] * 2 - 0.5 + self.grid[i]) * self.stride[i]  # xy
+                    y[..., 0:2] = (y[..., 0:2] * 2 + self.grid[i]) * self.stride[i]  # xy
                     y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 else:  # for YOLOv5 on AWS Inferentia https://github.com/ultralytics/yolov5/pull/2953
-                    xy = (y[..., 0:2] * 2 - 0.5 + self.grid[i]) * self.stride[i]  # xy
-                    wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-                    y = torch.cat((xy, wh, y[..., 4:]), -1)
+                    # y.tensor_split((2, 4, 5), 4)  # torch 1.8.0
+                    xy, wh, conf = y.split((2, 2, self.nc + 1), 4)
+                    xy = (xy * 2 + self.grid[i]) * self.stride[i]  # xy
+                    wh = (wh * 2) ** 2 * self.anchor_grid[i]  # wh
+                    y = torch.cat((xy, wh, conf), 4)
                 z.append(y.view(bs, -1, self.no))
 
-        return x if self.training else (torch.cat(z, 1), x)
+        return x if self.training else torch.cat(z, 1)
 
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
-        yv, xv = torch.meshgrid([torch.arange(ny).to(d), torch.arange(nx).to(d)])
-        grid = torch.stack((xv, yv), 2).expand((1, self.na, ny, nx, 2)).float()
-        anchor_grid = (
-            (self.anchors[i].clone() * self.stride[i])
-            .view((1, self.na, 1, 1, 2))
-            .expand((1, self.na, ny, nx, 2))
-            .float()
-        )
+        t = self.anchors[i].dtype
+        shape = 1, self.na, ny, nx, 2  # grid shape
+        y, x = torch.arange(ny, device=d, dtype=t), torch.arange(nx, device=d, dtype=t)
+        yv, xv = torch.meshgrid(y, x)
+        # add grid offset, i.e. y = 2.0 * x - 0.5
+        grid = torch.stack((xv, yv), 2).expand(shape) - 0.5
+        anchor_grid = (self.anchors[i] * self.stride[i]).view((1, self.na, 1, 1, 2)).expand(shape)
         return grid, anchor_grid
 
 

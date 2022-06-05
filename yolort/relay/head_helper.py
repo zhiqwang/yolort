@@ -13,7 +13,7 @@ class FakeYOLO(nn.Module):
 
     def __init__(
         self,
-        yolo_stem: nn.Module,
+        model: nn.Module,
         size: int = 640,
         iou_thresh: float = 0.45,
         score_thresh: float = 0.35,
@@ -21,7 +21,7 @@ class FakeYOLO(nn.Module):
     ):
         super().__init__()
 
-        self.yolo_stem = yolo_stem
+        self.model = model
         self.post_process = FakePostProcess(
             size,
             iou_thresh=iou_thresh,
@@ -30,7 +30,7 @@ class FakeYOLO(nn.Module):
         )
 
     def forward(self, x):
-        x = self.yolo_stem(x)[0]
+        x = self.model(x)
         out = self.post_process(x)
         return out
 
@@ -99,26 +99,25 @@ class FakePostProcess(nn.Module):
 
 class NonMaxSupressionOp(torch.autograd.Function):
     @staticmethod
-    def forward(
-        ctx,
-        boxes: Tensor,
-        scores: Tensor,
-        max_output_boxes_per_class: Tensor = torch.tensor([100]),
-        iou_thresh: Tensor = torch.tensor([0.45]),
-        score_thresh: Tensor = torch.tensor([0.35]),
-    ):
+    def forward(ctx, boxes, scores, detections_per_class, iou_thresh, score_thresh):
         """
+        Symbolic method to export an NonMaxSupression ONNX models.
+
         Args:
             boxes (Tensor): An input tensor with shape [num_batches, spatial_dimension, 4].
                 have been multiplied original size here.
             scores (Tensor): An input tensor with shape [num_batches, num_classes, spatial_dimension].
                 only one class score here.
-            max_output_boxes_per_class (Tensor, optional): Integer representing the maximum number of
+            detections_per_class (Tensor, optional): Integer representing the maximum number of
                 boxes to be selected per batch per class. It is a scalar.
             iou_thresh (Tensor, optional): Float representing the threshold for deciding whether
                 boxes overlap too much with respect to IOU. It is scalar. Value range [0, 1].
             score_thresh (Tensor, optional): Float representing the threshold for deciding when to
                 remove boxes based on score. It is a scalar.
+
+        Returns:
+            Tensor(int64): selected indices from the boxes tensor. [num_selected_indices, 3],
+                the selected index format is [batch_index, class_index, box_index].
         """
         batch = scores.shape[0]
         num_det = random.randint(0, 100)
@@ -130,70 +129,5 @@ class NonMaxSupressionOp(torch.autograd.Function):
         return selected_indices
 
     @staticmethod
-    def symbolic(
-        g,
-        boxes: Tensor,
-        scores: Tensor,
-        max_output_boxes_per_class: Tensor,
-        iou_thresh: Tensor,
-        score_thresh: Tensor,
-    ):
-        return g.op(
-            "NonMaxSuppression",
-            boxes,
-            scores,
-            max_output_boxes_per_class,
-            iou_thresh,
-            score_thresh,
-        )
-
-
-class EfficientNMSOp(torch.autograd.Function):
-    @staticmethod
-    def forward(
-        ctx,
-        boxes: Tensor,
-        scores: Tensor,
-        background_class: int = -1,
-        box_coding: int = 0,
-        iou_thresh: float = 0.45,
-        score_thresh: float = 0.35,
-        max_output_boxes: int = 100,
-        plugin_version: str = "1",
-        score_activation: int = 0,
-    ):
-        batch_size, num_boxes, num_classes = scores.shape
-        num_det = torch.randint(0, max_output_boxes, (batch_size, 1))
-        det_boxes = torch.randn(batch_size, max_output_boxes, 4)
-        det_scores = torch.randn(batch_size, max_output_boxes)
-        det_classes = torch.randint(0, num_classes, (batch_size, max_output_boxes))
-
-        return num_det, det_boxes, det_scores, det_classes
-
-    @staticmethod
-    def symbolic(
-        g,
-        boxes: Tensor,
-        scores: Tensor,
-        background_class: int = -1,
-        box_coding: int = 0,
-        iou_thresh: float = 0.45,
-        score_thresh: float = 0.35,
-        max_output_boxes: int = 100,
-        plugin_version: str = "1",
-        score_activation: int = 0,
-    ):
-
-        return g.op(
-            "TRT::EfficientNMS_TRT",
-            boxes,
-            scores,
-            background_class_i=background_class,
-            box_coding_i=box_coding,
-            iou_threshold_f=iou_thresh,
-            score_threshold_f=score_thresh,
-            max_output_boxes_i=max_output_boxes,
-            plugin_version_s=plugin_version,
-            score_activation_i=score_activation,
-            outputs=4,
-        )
+    def symbolic(g, boxes, scores, detections_per_class, iou_thresh, score_thresh):
+        return g.op("NonMaxSuppression", boxes, scores, detections_per_class, iou_thresh, score_thresh)
