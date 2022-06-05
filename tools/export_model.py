@@ -77,6 +77,7 @@ def get_parser():
     parser.add_argument("--batch_size", default=1, type=int, help="Batch size for pre-processing.")
     parser.add_argument("--opset", default=11, type=int, help="Opset version for exporing ONNX models")
     parser.add_argument("--simplify", action="store_true", help="ONNX: simplify model.")
+    parser.add_argument("--vanilla", action="store_true", help="Export a vanilla ONNX model.")
 
     return parser
 
@@ -93,6 +94,7 @@ def export_onnxruntime(
     skip_preprocess: bool = False,
     opset_version: int = 11,
     batch_size: int = 1,
+    vanilla: bool = False,
 ):
     from yolort.runtime.ort_helper import export_onnx
 
@@ -107,6 +109,7 @@ def export_onnxruntime(
         skip_preprocess=skip_preprocess,
         opset_version=opset_version,
         batch_size=batch_size,
+        vanilla=vanilla,
     )
 
     return onnx_path
@@ -158,7 +161,7 @@ def cli_main():
 
         exported_paths[0] = export_onnxruntime(
             onnx_path,
-            checkpoint_path=checkpoint_path,
+            checkpoint_path,
             size=tuple(args.image_size),
             size_divisible=args.size_divisible,
             score_thresh=args.score_thresh,
@@ -167,6 +170,7 @@ def cli_main():
             skip_preprocess=args.skip_preprocess,
             opset_version=args.opset,
             batch_size=args.batch_size,
+            vanilla=args.vanilla,
         )
 
     if "engine" in include:
