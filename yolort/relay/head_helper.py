@@ -30,7 +30,7 @@ class FakeYOLO(nn.Module):
         )
 
     def forward(self, x):
-        x = self.yolo_stem(x)[0]
+        x = self.yolo_stem(x)
         out = self.post_process(x)
         return out
 
