@@ -45,6 +45,7 @@ class FakePostProcess(nn.Module):
             Default to 0.35
         detections_per_img (int, optional): Number of best detections to keep after NMS.
             Default to 100
+        export_type (str, optional): Export onnx backend support onnxruntime and openvino
     """
 
     def __init__(
@@ -52,11 +53,13 @@ class FakePostProcess(nn.Module):
         iou_thresh: float = 0.45,
         score_thresh: float = 0.35,
         detections_per_img: int = 100,
+        export_type = 'onnxruntime'
     ):
         super().__init__()
         self.detections_per_img = detections_per_img
         self.iou_thresh = iou_thresh
         self.score_thresh = score_thresh
+        self.export_type = export_type
         self.nms_func = NonMaxSupressionOp.apply
 
     def forward(self, x: Tensor):
@@ -72,6 +75,8 @@ class FakePostProcess(nn.Module):
         selected_indices = self.nms_func(boxes, scores_t, detections_per_img, iou_thresh, score_thresh)
 
         i, k = selected_indices[:, 0], selected_indices[:, 2]
+        if self.export_type == 'openvino':
+            i,k = i[i>=0],k=[k>=0]
         boxes_keep = boxes[i, k, :]
         classes_keep = classes[i, k, :]
         scores_keep = scores[i, k, :]
