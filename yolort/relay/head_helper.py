@@ -53,7 +53,7 @@ class FakePostProcess(nn.Module):
         iou_thresh: float = 0.45,
         score_thresh: float = 0.35,
         detections_per_img: int = 100,
-        export_type = 'onnxruntime'
+        export_type="onnxruntime",
     ):
         super().__init__()
         self.detections_per_img = detections_per_img
@@ -75,8 +75,8 @@ class FakePostProcess(nn.Module):
         selected_indices = self.nms_func(boxes, scores_t, detections_per_img, iou_thresh, score_thresh)
 
         i, k = selected_indices[:, 0], selected_indices[:, 2]
-        if self.export_type == 'openvino':
-            i,k = i[i>=0],k=[k>=0]
+        if self.export_type == "openvino":
+            i, k = i[i >= 0], k = k[k >= 0]
         boxes_keep = boxes[i, k, :]
         classes_keep = classes[i, k, :]
         scores_keep = scores[i, k, :]
