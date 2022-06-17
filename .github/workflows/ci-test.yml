@@ -117,7 +117,7 @@ jobs:
 
       - name: Export torchscript model
         run: |
-          python -m test.tracing.trace_model
+          python test/tracing/trace_model.py
 
       - name: Test libtorch tracing
         run: |
