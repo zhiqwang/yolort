@@ -67,12 +67,12 @@ def get_parser():
         help="The frequency of printing the logging",
     )
     parser.add_argument("--output_dir", default=".", help="Path where to save")
-    
+
     # Weights and Biases arguments
-    parser.add_argument("--use_wandb", default=True, type = bool, help = "Whether to use W&B for metric logging")
+    parser.add_argument("--use_wandb", default=True, type=bool, help="Whether to use W&B for metric logging")
     parser.add_argument("--wandb_project", default="yolov5-rt", type=str, help="Name of the W&B Project")
     parser.add_argument("--wandb_entity", default=None, type=str, help="entity to use for W&B logging")
-    
+
     return parser
 
 
