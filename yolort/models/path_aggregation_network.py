@@ -1,10 +1,10 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
-from typing import Dict, List, Callable, Optional
+from typing import Callable, Dict, List, Optional
 
 import torch
 from torch import nn, Tensor
-from yolort.v5 import Conv, BottleneckCSP, C3, SPP
+from yolort.v5 import BottleneckCSP, C3, Conv, SPP
 
 
 class IntermediateLevelP6(nn.Module):

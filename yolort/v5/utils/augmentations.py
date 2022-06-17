@@ -14,7 +14,7 @@ import yolort.utils.dependency as _dependency
 if _dependency.is_module_available("cv2"):
     import cv2
 
-from .general import colorstr, segment2box, resample_segments, check_version
+from .general import check_version, colorstr, resample_segments, segment2box
 from .metrics import bbox_ioa
 
 

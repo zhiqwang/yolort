@@ -18,7 +18,7 @@ if _dependency.is_module_available("pycocotools"):
 if _dependency.is_module_available("torchmetrics"):
     from torchmetrics import Metric
 
-from typing import Any, List, Callable, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 
 from ._helper import create_small_table
 from .distributed import all_gather

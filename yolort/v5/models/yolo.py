@@ -16,28 +16,22 @@ import yolort.utils.dependency as _dependency
 from torch import nn
 from yolort.v5.utils.autoanchor import check_anchor_order
 from yolort.v5.utils.general import make_divisible
-from yolort.v5.utils.torch_utils import (
-    time_sync,
-    fuse_conv_and_bn,
-    model_info,
-    scale_img,
-    initialize_weights,
-)
+from yolort.v5.utils.torch_utils import fuse_conv_and_bn, initialize_weights, model_info, scale_img, time_sync
 
 from .common import (
-    Conv,
     Bottleneck,
-    SPP,
-    SPPF,
-    DWConv,
-    Focus,
     BottleneckCSP,
     C3,
     Concat,
-    GhostConv,
-    GhostBottleneck,
     Contract,
+    Conv,
+    DWConv,
     Expand,
+    Focus,
+    GhostBottleneck,
+    GhostConv,
+    SPP,
+    SPPF,
 )
 from .experimental import CrossConv, MixConv2d
 
@@ -205,9 +199,9 @@ class Model(nn.Module):
     def _clip_augmented(self, y):
         # Clip YOLOv5 augmented inference tails
         nl = self.model[-1].nl  # number of detection layers (P3-P5)
-        g = sum(4 ** x for x in range(nl))  # grid points
+        g = sum(4**x for x in range(nl))  # grid points
         e = 1  # exclude layer count
-        i = (y[0].shape[1] // g) * sum(4 ** x for x in range(e))  # indices
+        i = (y[0].shape[1] // g) * sum(4**x for x in range(e))  # indices
         y[0] = y[0][:, :-i]  # large
         i = (y[-1].shape[1] // g) * sum(4 ** (nl - 1 - x) for x in range(e))  # indices
         y[-1] = y[-1][:, i:]  # small

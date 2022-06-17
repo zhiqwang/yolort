@@ -1,6 +1,6 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
-from typing import Any, Dict, Callable, Mapping, Sequence, Type, Union
+from typing import Any, Callable, Dict, Mapping, Sequence, Type, Union
 
 from torch import Tensor
 

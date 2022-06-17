@@ -95,13 +95,13 @@ def bbox_iou(box1: Tensor, box2: Tensor, x1y1x2y2: bool = True, eps: float = 1e-
     # convex height
     ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)
     # Complete IoU https://arxiv.org/abs/1911.08287v1
-    c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
+    c2 = cw**2 + ch**2 + eps  # convex diagonal squared
     rho2 = (
         (b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2
     ) / 4  # center distance squared
 
     # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
-    v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
+    v = (4 / math.pi**2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
     with torch.no_grad():
         alpha = v / (v - iou + (1 + eps))
     return iou - (rho2 / c2 + v * alpha)  # CIoU

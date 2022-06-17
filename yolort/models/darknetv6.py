@@ -5,7 +5,7 @@ from typing import Any, Callable, List, Optional
 import torch
 from torch import nn, Tensor
 from yolort.utils import load_state_dict_from_url
-from yolort.v5 import Conv, C3
+from yolort.v5 import C3, Conv
 
 from ._utils import _make_divisible
 

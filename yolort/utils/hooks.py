@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, Callable
+from typing import Callable, Dict, Iterable
 
 import torch
 from torch import nn, Tensor

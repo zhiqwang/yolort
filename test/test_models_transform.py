@@ -4,7 +4,7 @@ import copy
 import numpy as np
 import pytest
 import torch
-from yolort.models.transform import YOLOTransform, NestedTensor
+from yolort.models.transform import NestedTensor, YOLOTransform
 
 
 def test_yolo_transform():

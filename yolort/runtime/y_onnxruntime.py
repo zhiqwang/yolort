@@ -1,7 +1,7 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
 import logging
-from typing import Any, Dict, List, Callable, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 import yolort.utils.dependency as _dependency

@@ -1,7 +1,7 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
 from pathlib import Path
-from typing import Callable, List, Any, Optional
+from typing import Any, Callable, List, Optional
 
 import torch.utils.data
 import yolort.utils.dependency as _dependency

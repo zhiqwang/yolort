@@ -1,4 +1,4 @@
-from typing import Dict, List, Callable, Optional
+from typing import Callable, Dict, List, Optional
 
 from torch import nn
 from torchvision.models import mobilenet

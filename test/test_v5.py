@@ -2,7 +2,7 @@
 import hashlib
 
 from torch import Tensor
-from yolort.v5 import AutoShape, attempt_download, load_yolov5_model
+from yolort.v5 import attempt_download, AutoShape, load_yolov5_model
 
 
 def test_attempt_download():
