@@ -1,8 +1,8 @@
 # Copyright (c) 2022, yolort team. All rights reserved.
 
 import logging
-from collections import OrderedDict, namedtuple
-from typing import Any, Dict, List, Callable, Optional, Tuple
+from collections import namedtuple, OrderedDict
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # import yolort before pytorch: this may cause issue in python inference on windows
 import yolort.utils.dependency as _dependency

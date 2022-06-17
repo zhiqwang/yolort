@@ -1,7 +1,7 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import warnings
-from typing import Any, Dict, List, Callable, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
@@ -10,7 +10,7 @@ from yolort.utils import load_state_dict_from_url
 from ._checkpoint import load_from_ultralytics
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
-from .box_head import YOLOHead, SetCriterion, PostProcess
+from .box_head import PostProcess, SetCriterion, YOLOHead
 from .transformer import darknet_tan_backbone
 
 __all__ = [

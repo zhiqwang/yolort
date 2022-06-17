@@ -1,5 +1,5 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
-from typing import Dict, Tuple, Callable
+from typing import Callable, Dict, Tuple
 
 import torch
 from torch import nn, Tensor

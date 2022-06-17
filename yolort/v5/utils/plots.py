@@ -20,12 +20,12 @@ if _dependency.is_module_available("cv2"):
     import cv2
 
 from .general import (
-    LOGGER,
-    Timeout,
     clip_coords,
     increment_path,
     is_ascii,
     is_chinese,
+    LOGGER,
+    Timeout,
     try_except,
     user_config_dir,
     xywh2xyxy,
@@ -242,7 +242,7 @@ def plot_images(images, targets, paths=None, fname="images.jpg", names=None, max
         images *= 255  # de-normalise (optional)
     bs, _, h, w = images.shape  # batch size, _, height, width
     bs = min(bs, max_subplots)  # limit plot images
-    ns = np.ceil(bs ** 0.5)  # number of subplots (square)
+    ns = np.ceil(bs**0.5)  # number of subplots (square)
 
     # Build Image
     mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)  # init

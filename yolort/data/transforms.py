@@ -1,17 +1,16 @@
-from typing import List, Dict, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 import torch
 import torchvision
 from torch import nn, Tensor
-from torchvision.transforms import functional as F
-from torchvision.transforms import transforms as T
+from torchvision.transforms import functional as F, transforms as T
 
 try:
-    from torchvision.transforms.functional import get_image_size, get_image_num_channels
+    from torchvision.transforms.functional import get_image_num_channels, get_image_size
 except ImportError:
     from torchvision.transforms.functional import (
-        _get_image_size as get_image_size,
         _get_image_num_channels as get_image_num_channels,
+        _get_image_size as get_image_size,
     )
 
 
