@@ -163,7 +163,7 @@ def eval_metric(args):
 @torch.no_grad()
 def evaluate(model, data_loader, coco_evaluator, device, print_freq, use_wandb, wandb_project, wandb_entity):
     # COCO evaluation
-    metric_logger = MetricLogger(args, delimiter="  ")
+    metric_logger = MetricLogger(delimiter="  ", use_wandb, wandb_project, wandb_entity)
     header = "Test:"
     for images, targets in metric_logger.log_every(data_loader, print_freq, header):
         images = list(image.to(device) for image in images)
