@@ -77,12 +77,12 @@ class SmoothedValue:
 
 
 class MetricLogger:
-    def __init__(self, args, delimiter="\t"):
+    def __init__(self, delimiter="\t", use_wandb = True, wandb_project="yolov5-rt", wandb_entity=None):
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
-        self.use_wandb = args.use_wandb
+        self.use_wandb = use_wandb
         if is_main_process() and self.use_wandb:
-            self.wandb_run = wandb.init(project=args.wandb_project, entity=args.wandb_entity, config=args)
+            self.wandb_run = wandb.init(project=wandb_project, entity=wandb_entity)
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
