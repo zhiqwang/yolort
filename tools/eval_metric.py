@@ -142,7 +142,7 @@ def eval_metric(args):
     model = model.to(device)
 
     print("Computing the mAP...")
-    results = evaluate(model, data_loader, coco_evaluator, device, args.print_freq, args)
+    results = evaluate(model, data_loader, coco_evaluator, device, args.print_freq, args.use_wandb, args.wandb_project, args.wandb_entity)
 
     # mAP results
     print(
@@ -152,7 +152,7 @@ def eval_metric(args):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, coco_evaluator, device, print_freq, args):
+def evaluate(model, data_loader, coco_evaluator, device, print_freq, use_wandb, wandb_project, wandb_entity):
     # COCO evaluation
     metric_logger = MetricLogger(args, delimiter="  ")
     header = "Test:"
