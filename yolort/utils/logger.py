@@ -5,6 +5,13 @@ from collections import defaultdict, deque
 import torch
 import torch.distributed as dist
 
+try:
+    import wandb
+
+    assert hasattr(wandb, "__version__")  # verify package import not local dir
+except (ImportError, AssertionError):
+    wandb = None
+
 
 class SmoothedValue:
     """Track a series of values and provide access to smoothed values over a
@@ -70,9 +77,12 @@ class SmoothedValue:
 
 
 class MetricLogger:
-    def __init__(self, delimiter="\t"):
+    def __init__(self, delimiter="\t", use_wandb=True, wandb_project="yolov5-rt", wandb_entity=None):
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
+        self.use_wandb = use_wandb
+        if is_main_process() and self.use_wandb:
+            self.wandb_run = wandb.init(project=wandb_project, entity=wandb_entity)
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
@@ -80,6 +90,8 @@ class MetricLogger:
                 v = v.item()
             assert isinstance(v, (float, int))
             self.meters[k].update(v)
+            if is_main_process() and self.wandb_run:
+                wandb.log({k: v})
 
     def __getattr__(self, attr):
         if attr in self.meters:
@@ -177,3 +189,13 @@ def is_dist_avail_and_initialized():
     if not dist.is_initialized():
         return False
     return True
+
+
+def get_rank():
+    if not is_dist_avail_and_initialized():
+        return 0
+    return dist.get_rank()
+
+
+def is_main_process():
+    return get_rank() == 0

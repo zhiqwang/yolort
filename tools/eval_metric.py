@@ -67,6 +67,12 @@ def get_parser():
         help="The frequency of printing the logging",
     )
     parser.add_argument("--output_dir", default=".", help="Path where to save")
+
+    # Weights and Biases arguments
+    parser.add_argument("--use_wandb", default=True, type=bool, help="Whether to use W&B for metric logging")
+    parser.add_argument("--wandb_project", default="yolov5-rt", type=str, help="Name of the W&B Project")
+    parser.add_argument("--wandb_entity", default=None, type=str, help="entity to use for W&B logging")
+
     return parser
 
 
@@ -136,7 +142,16 @@ def eval_metric(args):
     model = model.to(device)
 
     print("Computing the mAP...")
-    results = evaluate(model, data_loader, coco_evaluator, device, args.print_freq)
+    results = evaluate(
+        model,
+        data_loader,
+        coco_evaluator,
+        device,
+        args.print_freq,
+        args.use_wandb,
+        args.wandb_project,
+        args.wandb_entity,
+    )
 
     # mAP results
     print(
@@ -146,9 +161,11 @@ def eval_metric(args):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, coco_evaluator, device, print_freq):
+def evaluate(model, data_loader, coco_evaluator, device, print_freq, use_wandb, wandb_project, wandb_entity):
     # COCO evaluation
-    metric_logger = MetricLogger(delimiter="  ")
+    metric_logger = MetricLogger(
+        delimiter="  ", use_wandb=use_wandb, wandb_project=wandb_project, wandb_entity=wandb_entity
+    )
     header = "Test:"
     for images, targets in metric_logger.log_every(data_loader, print_freq, header):
         images = list(image.to(device) for image in images)
