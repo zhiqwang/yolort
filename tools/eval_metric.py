@@ -142,7 +142,16 @@ def eval_metric(args):
     model = model.to(device)
 
     print("Computing the mAP...")
-    results = evaluate(model, data_loader, coco_evaluator, device, args.print_freq, args.use_wandb, args.wandb_project, args.wandb_entity)
+    results = evaluate(
+        model,
+        data_loader,
+        coco_evaluator,
+        device,
+        args.print_freq,
+        args.use_wandb,
+        args.wandb_project,
+        args.wandb_entity,
+    )
 
     # mAP results
     print(
