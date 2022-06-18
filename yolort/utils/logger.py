@@ -77,7 +77,7 @@ class SmoothedValue:
 
 
 class MetricLogger:
-    def __init__(self, delimiter="\t", use_wandb = True, wandb_project="yolov5-rt", wandb_entity=None):
+    def __init__(self, delimiter="\t", use_wandb=True, wandb_project="yolov5-rt", wandb_entity=None):
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
         self.use_wandb = use_wandb
