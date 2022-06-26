@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 
-project(solo) # 1
+project(build_model) # 1
 
 set(OpenCV_DIR "D:\\OpenCV4.1.1\\opencv\\build")  #2
-set(OpenCV_INCLUDE_DIRS ${OpenCV_DIR}\\include) #3 
+set(OpenCV_INCLUDE_DIRS ${OpenCV_DIR}\\include) #3
 set(OpenCV_LIB_DIRS ${OpenCV_DIR}\\x64\\vc15\\lib) #4
 set(TRT_DIR "D:\\TensorRT-8.4.0.6")  #3
 set(TensorRT_LIBS ${TRT_DIR}\\lib)  #3

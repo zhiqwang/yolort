@@ -54,8 +54,8 @@ link_directories(${OpenCV_LIB_DIRS}) #15
 include_directories(${Dirent_INCLUDE_DIRS}) #16
 link_directories(${TRT_DIR}\\lib)
 
-#ADD_LIBRARY(yolov6 SHARED yolov6.cpp trt_dep.cpp)
-add_executable(yolov6 yolov6.cpp trt_dep.cpp)
+#ADD_LIBRARY(yolov6 SHARED main.cpp trt_dep.cpp)
+add_executable(yolov6 main.cpp trt_dep.cpp)
 target_include_directories(
     yolov6 PUBLIC ${CUDA_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
