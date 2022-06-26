@@ -20,7 +20,7 @@
 
 1. 从 YOLOv6 官方地址下载 ONNX 模型，如 [yolov6n.onnx](https://github.com/meituan/YOLOv6/releases/download/0.1.0/yolov6n.onnx).
 
-1. 生成序列化的 TensorRT 文件。
+1. 生成序列化的 TensorRT 文件:
 
    ```sh
    cd build_model
@@ -29,12 +29,18 @@
    cmake --build .
    ```
 
+   并执行如下命令生成序列化的 TensorRT 文件:
+
+   ```sh
+   build_model.exe yolov6n.onnx yolov6n.plan
+   ```
+
    注: 您也可以直接使用 `trtexec` 来生成。
 
 1. 编译 YOLOv6 的 TensorRT 可执行文件:
 
    ```sh
-   cd ..
+   cd ../..
    mkdir build && cd build
    cmake .. -G "Visual Studio 16 2019"
    cmake --build .
@@ -43,5 +49,5 @@
 1. 现在您可以使用上面的可执行文件来做推理啦！
 
    ```sh
-   ./yolov6.exe -model_path ./output.trt -image_path ./demo1.jpg
+   ./yolov6.exe -model_path ./yolov6n.plan -image_path ./demo1.jpg
    ```
