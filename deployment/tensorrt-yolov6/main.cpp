@@ -404,7 +404,7 @@ int main(int argc, char** argv) {
 
   } else {
     std::cerr << "--> arguments not right!" << std::endl;
-    std::cerr << "--> segment.exe -model_path ./output.trt -image_path ./demo1.jpg" << std::endl;
+    std::cerr << "--> yolov6.exe -model_path ./output.trt -image_path ./demo1.jpg" << std::endl;
     return -1;
   }
 }
