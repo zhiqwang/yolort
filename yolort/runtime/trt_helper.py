@@ -13,12 +13,13 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-import torch
-import yolort.utils.dependency as _dependency
-from torch import Tensor
+from yolort.utils import is_module_available, requires_module
 
-if _dependency.is_module_available("tensorrt"):
+if is_module_available("tensorrt"):
     import tensorrt as trt
+
+import torch
+from torch import Tensor
 
 from yolort.relay.trt_graphsurgeon import YOLOTRTGraphSurgeon
 
@@ -93,7 +94,7 @@ class EngineBuilder:
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
 
-    @_dependency.requires_module("tensorrt")
+    @requires_module("tensorrt")
     def __init__(
         self,
         verbose: bool = False,

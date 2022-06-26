@@ -12,8 +12,8 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
-import yolort.utils.dependency as _dependency
 from torch import nn
+from yolort.utils import is_module_available, requires_module
 from yolort.v5.utils.autoanchor import check_anchor_order
 from yolort.v5.utils.general import make_divisible
 from yolort.v5.utils.torch_utils import fuse_conv_and_bn, initialize_weights, model_info, scale_img, time_sync
@@ -35,7 +35,7 @@ from .common import (
 )
 from .experimental import CrossConv, MixConv2d
 
-if _dependency.is_module_available("thop"):
+if is_module_available("thop"):
     import thop  # for FLOPs computation
 
 __all__ = ["Model", "Detect"]
@@ -207,7 +207,7 @@ class Model(nn.Module):
         y[-1] = y[-1][:, i:]  # small
         return y
 
-    @_dependency.requires_module("thop")
+    @requires_module("thop")
     def _profile_one_layer(self, m, x, dt):
         c = isinstance(m, Detect)  # is final layer, copy input as inplace fix
         o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2

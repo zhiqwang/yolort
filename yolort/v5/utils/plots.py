@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-import yolort.utils.dependency as _dependency
 from PIL import Image, ImageDraw, ImageFont
+from yolort.utils import is_module_available, requires_module
 
-if _dependency.is_module_available("cv2"):
+if is_module_available("cv2"):
     import cv2
 
 from .general import (
@@ -115,7 +115,7 @@ class Annotator:
             self.im = im
         self.lw = line_width or max(round(sum(im.shape) / 2 * 0.003), 2)  # line width
 
-    @_dependency.requires_module("cv2")
+    @requires_module("cv2")
     def box_label(self, box, label="", color=(128, 128, 128), txt_color=(255, 255, 255)):
         # Add one xyxy box to image with label
         if self.pil or not is_ascii(label):
@@ -231,7 +231,7 @@ def output_to_target(output):
     return np.array(targets)
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def plot_images(images, targets, paths=None, fname="images.jpg", names=None, max_size=1920, max_subplots=16):
     # Plot image grid with labels
     if isinstance(images, torch.Tensor):
@@ -541,7 +541,7 @@ def profile_idetection(start=0, stop=0, labels=(), save_dir=""):
     plt.savefig(Path(save_dir) / "idetection_profile.png", dpi=200)
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def save_one_box(xyxy, im, file="image.jpg", gain=1.02, pad=10, square=False, BGR=False, save=True):
     # Save image crop as {file} with crop size multiple {gain} and {pad} pixels. Save and/or return crop
     xyxy = torch.tensor(xyxy).view(-1, 4)

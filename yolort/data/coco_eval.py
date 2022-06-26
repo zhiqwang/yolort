@@ -8,14 +8,14 @@ import logging
 from pathlib import PosixPath
 
 import numpy as np
-import yolort.utils.dependency as _dependency
 from tabulate import tabulate
 from torchvision.ops import box_convert
+from yolort.utils import is_module_available, requires_module
 
-if _dependency.is_module_available("pycocotools"):
+if is_module_available("pycocotools"):
     from pycocotools.coco import COCO
     from pycocotools.cocoeval import COCOeval
-if _dependency.is_module_available("torchmetrics"):
+if is_module_available("torchmetrics"):
     from torchmetrics import Metric
 
 from typing import Any, Callable, List, Optional, Union
@@ -24,7 +24,7 @@ from ._helper import create_small_table
 from .distributed import all_gather
 
 
-@_dependency.requires_module("pycocotools", "torchmetrics")
+@requires_module("pycocotools", "torchmetrics")
 class COCOEvaluator(Metric):
     """
     Evaluate AP for instance detection using COCO's metrics that works in distributed mode.

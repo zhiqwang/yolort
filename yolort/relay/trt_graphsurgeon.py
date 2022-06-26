@@ -7,11 +7,11 @@ from typing import Optional
 import numpy as np
 import onnx
 import torch
-import yolort.utils.dependency as _dependency
 from onnx import shape_inference
 from torch import Tensor
+from yolort.utils import is_module_available, requires_module
 
-if _dependency.is_module_available("onnx_graphsurgeon"):
+if is_module_available("onnx_graphsurgeon"):
     import onnx_graphsurgeon as gs
 
 from .trt_inference import YOLOTRTInference
@@ -45,7 +45,7 @@ class YOLOTRTGraphSurgeon:
         precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
     """
 
-    @_dependency.requires_module("onnx_graphsurgeon")
+    @requires_module("onnx_graphsurgeon")
     def __init__(
         self,
         checkpoint_path: str,

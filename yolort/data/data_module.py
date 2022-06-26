@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Any, Callable, List, Optional
 
 import torch.utils.data
-import yolort.utils.dependency as _dependency
 from torch.utils.data.dataset import Dataset
+from yolort.utils import is_module_available, requires_module
 
-if _dependency.is_module_available("pytorch_lightning"):
+if is_module_available("pytorch_lightning"):
     from pytorch_lightning import LightningDataModule
 
 from .coco import COCODetection
@@ -15,7 +15,7 @@ from .transforms import collate_fn, default_train_transforms, default_val_transf
 from .voc import VOCDetection
 
 
-@_dependency.requires_module("pytorch_lightning")
+@requires_module("pytorch_lightning")
 class DetectionDataModule(LightningDataModule):
     """
     Wrapper of Datasets in LightningDataModule

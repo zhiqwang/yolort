@@ -4,12 +4,12 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-import yolort.utils.dependency as _dependency
 from PIL import Image
 from torch import Tensor
+from yolort.utils import is_module_available, requires_module
 from yolort.v5.utils.plots import Colors
 
-if _dependency.is_module_available("cv2"):
+if is_module_available("cv2"):
     import cv2
 
 
@@ -98,7 +98,7 @@ class Visualizer:
         self.overlay_instances(boxes=boxes, labels=labels, colors=colors)
         return self.output
 
-    @_dependency.requires_module("cv2")
+    @requires_module("cv2")
     def imshow(self, scale: Optional[float] = None):
         """
         A replacement of cv2.imshow() for using in Jupyter notebooks.
@@ -169,7 +169,7 @@ class Visualizer:
 
         return self.output
 
-    @_dependency.requires_module("cv2")
+    @requires_module("cv2")
     def draw_box(
         self,
         pt1: Tuple[int, int],
@@ -191,7 +191,7 @@ class Visualizer:
         cv2.rectangle(self.output, pt1, pt2, color, thickness=self.line_width, lineType=cv2.LINE_AA)
         return self.output
 
-    @_dependency.requires_module("cv2")
+    @requires_module("cv2")
     def draw_text(
         self,
         text: str,
