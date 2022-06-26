@@ -73,7 +73,7 @@ class Visualizer:
             return metalabels
 
         if isinstance(metalabels, str):
-            return np.loadtxt(metalabels, dtype="str", delimiter="\n")
+            return np.loadtxt(metalabels, dtype="str", usecols=(0,))
 
         raise TypeError(f"path of metalabels of list of strings expected, got {type(metalabels)}")
 
