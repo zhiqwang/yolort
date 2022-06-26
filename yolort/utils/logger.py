@@ -5,12 +5,10 @@ from collections import defaultdict, deque
 import torch
 import torch.distributed as dist
 
-try:
-    import wandb
+from yolort.utils import is_module_available
 
-    assert hasattr(wandb, "__version__")  # verify package import not local dir
-except (ImportError, AssertionError):
-    wandb = None
+if is_module_available("cv2"):
+    import wandb
 
 
 class SmoothedValue:

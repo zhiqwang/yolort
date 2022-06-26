@@ -22,9 +22,9 @@ import pkg_resources as pkg
 import torch
 import torchvision
 import yaml
-import yolort.utils.dependency as _dependency
+from yolort.utils import is_module_available, requires_module
 
-if _dependency.is_module_available("cv2"):
+if is_module_available("cv2"):
     import cv2
 
 from .metrics import box_iou, fitness
@@ -35,7 +35,7 @@ torch.set_printoptions(linewidth=320, precision=5, profile="long")
 np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})
 pd.options.display.max_columns = 10
 # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
-if _dependency.is_module_available("cv2"):
+if is_module_available("cv2"):
     cv2.setNumThreads(0)
 os.environ["NUMEXPR_MAX_THREADS"] = str(min(os.cpu_count(), 8))  # NumExpr max threads
 
@@ -687,7 +687,7 @@ def print_mutation(results, hyp, save_dir, bucket):
         os.system(f"gsutil cp {evolve_csv} {evolve_yaml} gs://{bucket}")  # upload
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def apply_classifier(x, model, img, im0):
     # Apply a second stage classifier to YOLO outputs
     im0 = [im0] if isinstance(im0, np.ndarray) else im0

@@ -4,10 +4,10 @@ import logging
 from collections import namedtuple, OrderedDict
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-# import yolort before pytorch: this may cause issue in python inference on windows
-import yolort.utils.dependency as _dependency
+# import yolort before pytorch, otherwise, it may cause problems on some systems
+from yolort.utils import contains_any_tensor, is_module_available, requires_module
 
-if _dependency.is_module_available("tensorrt"):
+if is_module_available("tensorrt"):
     import tensorrt as trt
 
 import numpy as np
@@ -15,7 +15,6 @@ import torch
 from torch import Tensor
 from torchvision.io import read_image
 from yolort.models.transform import YOLOTransform
-from yolort.utils import contains_any_tensor
 
 
 logging.basicConfig(level=logging.INFO)
@@ -105,7 +104,7 @@ class PredictorTRT:
         # Visualization
         self._names = [f"class{i}" for i in range(1000)]  # assign defaults
 
-    @_dependency.requires_module("tensorrt")
+    @requires_module("tensorrt")
     def _build_engine(self):
         logger.info(f"Loading {self._engine_path} for TensorRT inference...")
         trt_logger = trt.Logger(trt.Logger.INFO)
@@ -116,7 +115,7 @@ class PredictorTRT:
 
         return engine
 
-    @_dependency.requires_module("tensorrt")
+    @requires_module("tensorrt")
     def _set_context(self):
         for index in range(self.engine.num_bindings):
             name = self.engine.get_binding_name(index)

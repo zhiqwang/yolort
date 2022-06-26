@@ -4,10 +4,9 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
-import yolort.utils.dependency as _dependency
-from yolort.utils import contains_any_tensor
+from yolort.utils import contains_any_tensor, is_module_available, requires_module
 
-if _dependency.is_module_available("onnxruntime"):
+if is_module_available("onnxruntime"):
     import onnxruntime as ort
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ class PredictorORT:
         self._runtime = self._build_runtime()
         self._input_names = self._runtime.get_inputs()[0].name
 
-    @_dependency.requires_module("onnxruntime")
+    @requires_module("onnxruntime")
     def _set_providers(self):
         logger.info("Providers was initialized.")
         ort_device = ort.get_device()
@@ -64,7 +63,7 @@ class PredictorORT:
 
         return providers
 
-    @_dependency.requires_module("onnxruntime")
+    @requires_module("onnxruntime")
     def _build_runtime(self):
         runtime = ort.InferenceSession(self.engine_path, providers=self._providers)
         return runtime

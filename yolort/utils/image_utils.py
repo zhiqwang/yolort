@@ -9,18 +9,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
-import yolort.utils.dependency as _dependency
 from PIL import Image
 from torch import Tensor
 from torchvision.ops.boxes import box_convert
+from yolort.utils import is_module_available, requires_module
 
-if _dependency.is_module_available("cv2"):
+if is_module_available("cv2"):
     import cv2
 
 logger = logging.getLogger(__name__)
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def plot_one_box(box, img, color=None, label=None, line_thickness=None):
     # Plots one bounding box on image img
     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
@@ -48,7 +48,7 @@ def plot_one_box(box, img, color=None, label=None, line_thickness=None):
     return img
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def cv2_imshow(
     img_bgr: np.ndarray,
     imshow_scale: Optional[float] = None,
@@ -89,7 +89,7 @@ def color_list():
     return [hex2rgb(h) for h in plt.rcParams["axes.prop_cycle"].by_key()["color"]]
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def get_image_from_url(url: str, flags: int = 1) -> np.ndarray:
     """
     Generates an image directly from an URL
@@ -109,7 +109,7 @@ def get_image_from_url(url: str, flags: int = 1) -> np.ndarray:
     return image
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def read_image_to_tensor(image: np.ndarray, is_half: bool = False) -> Tensor:
     """
     Parse an image to Tensor.
@@ -134,7 +134,7 @@ def load_names(category_path):
     return names
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 @torch.no_grad()
 def overlay_boxes(detections, path, time_consume, args):
 
@@ -314,7 +314,7 @@ def anchor_match_visualize(images, targets, indices, anchors, pred):
     return images_with_anchor
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def overlay_bbox(image, bboxes_list, color=None, thickness=2, font_scale=0.3, with_mask=False):
     """
     Visualize bbox in object detection by drawing rectangle.
@@ -387,7 +387,7 @@ def merge_images_with_boundary(images_list, row_col_num=(1, -1)):
     return images_merged
 
 
-@_dependency.requires_module("cv2")
+@requires_module("cv2")
 def merge_images(images_list, row_col_num):
     """
     Merges all input images as an image with specified merge format.

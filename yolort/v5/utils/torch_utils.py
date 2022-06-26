@@ -17,11 +17,11 @@ import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-import yolort.utils.dependency as _dependency
+from yolort.utils import is_module_available
 
 from .general import LOGGER
 
-if _dependency.is_module_available("thop"):
+if is_module_available("thop"):
     import thop  # for FLOPs computation
 
 
