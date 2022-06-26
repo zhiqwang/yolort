@@ -185,7 +185,7 @@ If you use yolort in your publication, please cite it by using the following Bib
 
 ```bibtex
 @Misc{yolort2021,
-  author =       {Zhiqiang Wang and Song Lin and Shiquan Yu and Fidan Kharrasov},
+  author =       {Zhiqiang Wang and Song Lin and Shiquan Yu and Wei Zeng and Fidan Kharrasov},
   title =        {YOLORT: A runtime stack for object detection on specialized accelerators},
   howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
   year =         {2021}
