@@ -9,6 +9,8 @@
 
 ## Usage
 
+图文版请查看 [Windows 上基于 TensorRT 的 YOLOv6 部署保姆级教程](https://mp.weixin.qq.com/s/oxWodmYtULp5KznSYI19wQ).
+
 1. 首先需要安装 TensorRT 和 OpenCV, 我们使用的是 TensorRT-8.4.0.6 和 OpenCV-4.1.1, 如果您安装的 TensorRT 和 OpenCV 版本不一致，需要在 CmakeLists 里面修改版本和路径。
 
 1. 下载 yolort 源码:
