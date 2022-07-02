@@ -9,7 +9,7 @@
 
 ## Usage
 
-图文版请查看 [Windows 上基于 TensorRT 的 YOLOv6 部署保姆级教程](https://mp.weixin.qq.com/s/oxWodmYtULp5KznSYI19wQ).
+~图文版请查看 [Windows 上基于 TensorRT 的 YOLOv6 部署保姆级教程](https://mp.weixin.qq.com/s/oxWodmYtULp5KznSYI19wQ).~
 
 1. 首先需要安装 TensorRT 和 OpenCV, 我们使用的是 TensorRT-8.4.0.6 和 OpenCV-4.1.1, 如果您安装的 TensorRT 和 OpenCV 版本不一致，需要在 CmakeLists 里面修改版本和路径。
 
@@ -20,7 +20,7 @@
    cd yolov5-rt-stack/deployment/tensorrt-yolov6
    ```
 
-1. 从 YOLOv6 官方地址下载 ONNX 模型，如 [yolov6n.onnx](https://github.com/meituan/YOLOv6/releases/download/0.1.0/yolov6n.onnx).
+1. 导出 ONNX 的时候请务必包含 EfficientNMS 算子, 稍后我们会加入一个更清晰的流程. ~从 YOLOv6 官方地址下载 ONNX 模型，如 [yolov6n.onnx](https://github.com/meituan/YOLOv6/releases/download/0.1.0/yolov6n.onnx)~.
 
 1. 生成序列化的 TensorRT 文件:
 
