@@ -380,6 +380,7 @@ int main(int argc, char** argv) {
     while (num != 1000) {
       startTime = clock();
       img = cv::imread(image_path);
+      cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
       Infer(yolov6, img.cols, img.rows, img.channels(), img.data, Boxes, ClassIndexs, BboxNum);
       endTime = clock();
       double cur_timae = (double)(endTime - startTime) / CLOCKS_PER_SEC;
