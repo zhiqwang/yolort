@@ -48,7 +48,14 @@ class Logger : public ILogger {
 class Yolov6 {
  public:
   Yolov6();
-  cv::Mat static_resize(cv::Mat& img);
+  float letterbox(
+      const cv::Mat& image,
+      cv::Mat& out_image,
+      const cv::Size& new_shape,
+      int stride,
+      const cv::Scalar& color,
+      bool fixed_shape,
+      bool scale_up);
   float* blobFromImage(cv::Mat& img);
   void draw_objects(const cv::Mat& img, float* Boxes, int* ClassIndexs, int* BboxNum);
   void Init(char* model_path);
@@ -74,15 +81,49 @@ class Yolov6 {
 
 Yolov6::Yolov6() {}
 
-cv::Mat Yolov6::static_resize(cv::Mat& img) {
-  float r = std::min(iW / (img.cols * 1.0), iH / (img.rows * 1.0));
-  int unpad_w = r * img.cols;
-  int unpad_h = r * img.rows;
-  cv::Mat re(unpad_h, unpad_w, CV_8UC3);
-  cv::resize(img, re, re.size());
-  cv::Mat out(iH, iW, CV_8UC3, cv::Scalar(114, 114, 114));
-  re.copyTo(out(cv::Rect(0, 0, re.cols, re.rows)));
-  return out;
+float Yolov6::letterbox(
+    const cv::Mat& image,
+    cv::Mat& out_image,
+    const cv::Size& new_shape = cv::Size(640, 640),
+    int stride = 32,
+    const cv::Scalar& color = cv::Scalar(114, 114, 114),
+    bool fixed_shape = false,
+    bool scale_up = true) {
+  cv::Size shape = image.size();
+  float r = std::min(
+      (float)new_shape.height / (float)shape.height, (float)new_shape.width / (float)shape.width);
+  if (!scale_up) {
+    r = std::min(r, 1.0f);
+  }
+
+  int newUnpad[2]{
+      (int)std::round((float)shape.width * r), (int)std::round((float)shape.height * r)};
+
+  cv::Mat tmp;
+  if (shape.width != newUnpad[0] || shape.height != newUnpad[1]) {
+    cv::resize(image, tmp, cv::Size(newUnpad[0], newUnpad[1]));
+  } else {
+    tmp = image.clone();
+  }
+
+  float dw = new_shape.width - newUnpad[0];
+  float dh = new_shape.height - newUnpad[1];
+
+  if (!fixed_shape) {
+    dw = (float)((int)dw % stride);
+    dh = (float)((int)dh % stride);
+  }
+
+  dw /= 2.0f;
+  dh /= 2.0f;
+
+  int top = int(std::round(dh - 0.1f));
+  int bottom = int(std::round(dh + 0.1f));
+  int left = int(std::round(dw - 0.1f));
+  int right = int(std::round(dw + 0.1f));
+  cv::copyMakeBorder(tmp, out_image, top, bottom, left, right, cv::BORDER_CONSTANT, color);
+
+  return 1.0f / r;
 }
 
 float* Yolov6::blobFromImage(cv::Mat& img) {
@@ -214,7 +255,8 @@ void Yolov6::Infer(
     int* ClassIndexs,
     int* BboxNum) {
   cv::Mat img(aHeight, aWidth, CV_MAKETYPE(CV_8U, aChannel), aBytes);
-  cv::Mat pr_img = static_resize(img);
+  cv::Mat pr_img;
+  float scale = letterbox(img, pr_img, {iW, iH}, 32, {114, 114, 114}, true);
   float* blob = blobFromImage(pr_img);
 
   static int* num_dets = new int[out_size1];
@@ -253,16 +295,16 @@ void Yolov6::Infer(
     cout << "transmit to host failed \n";
     std::abort();
   }
-  float scale = std::min(iW / (img.cols * 1.0), iH / (img.rows * 1.0));
+  BboxNum[0] = num_dets[0];
   int img_w = img.cols;
   int img_h = img.rows;
-  int nums = 0;
-  BboxNum[0] = num_dets[0];
+  int x_offset = (iW * scale - img_w) / 2;
+  int y_offset = (iH * scale - img_h) / 2;
   for (size_t i = 0; i < num_dets[0]; i++) {
-    float x0 = (det_boxes[i * 4]) / scale;
-    float y0 = (det_boxes[i * 4 + 1]) / scale;
-    float x1 = (det_boxes[i * 4 + 2]) / scale;
-    float y1 = (det_boxes[i * 4 + 3]) / scale;
+    float x0 = (det_boxes[i * 4]) * scale - x_offset;
+    float y0 = (det_boxes[i * 4 + 1]) * scale - y_offset;
+    float x1 = (det_boxes[i * 4 + 2]) * scale - x_offset;
+    float y1 = (det_boxes[i * 4 + 3]) * scale - y_offset;
     x0 = std::max(std::min(x0, (float)(img_w - 1)), 0.f);
     y0 = std::max(std::min(y0, (float)(img_h - 1)), 0.f);
     x1 = std::max(std::min(x1, (float)(img_w - 1)), 0.f);
