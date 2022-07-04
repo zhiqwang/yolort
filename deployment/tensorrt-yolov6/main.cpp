@@ -257,6 +257,7 @@ void Yolov6::Infer(
   cv::Mat img(aHeight, aWidth, CV_MAKETYPE(CV_8U, aChannel), aBytes);
   cv::Mat pr_img;
   float scale = letterbox(img, pr_img, {iW, iH}, 32, {114, 114, 114}, true);
+  cv::cvtColor(pr_img, pr_img, cv::COLOR_BGR2RGB);
   float* blob = blobFromImage(pr_img);
 
   static int* num_dets = new int[out_size1];
