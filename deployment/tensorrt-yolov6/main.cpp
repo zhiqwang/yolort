@@ -257,6 +257,7 @@ void Yolov6::Infer(
   cv::Mat img(aHeight, aWidth, CV_MAKETYPE(CV_8U, aChannel), aBytes);
   cv::Mat pr_img;
   float scale = letterbox(img, pr_img, {iW, iH}, 32, {114, 114, 114}, true);
+  cv::cvtColor(pr_img, pr_img, cv::COLOR_BGR2RGB);
   float* blob = blobFromImage(pr_img);
 
   static int* num_dets = new int[out_size1];
@@ -380,7 +381,6 @@ int main(int argc, char** argv) {
     while (num != 1000) {
       startTime = clock();
       img = cv::imread(image_path);
-      cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
       Infer(yolov6, img.cols, img.rows, img.channels(), img.data, Boxes, ClassIndexs, BboxNum);
       endTime = clock();
       double cur_timae = (double)(endTime - startTime) / CLOCKS_PER_SEC;
