@@ -1,21 +1,21 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
 from pathlib import Path
-from typing import Callable, List, Any, Optional
+from typing import Any, Callable, List, Optional
 
 import torch.utils.data
 from torch.utils.data.dataset import Dataset
+from yolort.utils import is_module_available, requires_module
 
-try:
+if is_module_available("pytorch_lightning"):
     from pytorch_lightning import LightningDataModule
-except ImportError:
-    LightningDataModule = None
 
 from .coco import COCODetection
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
 from .voc import VOCDetection
 
 
+@requires_module("pytorch_lightning")
 class DetectionDataModule(LightningDataModule):
     """
     Wrapper of Datasets in LightningDataModule

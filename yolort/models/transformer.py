@@ -3,7 +3,7 @@
 from typing import Callable, List, Optional
 
 from torch import nn
-from yolort.v5 import Conv, C3, C3TR
+from yolort.v5 import C3, C3TR, Conv
 
 from . import darknet
 from .backbone_utils import BackboneWithPAN

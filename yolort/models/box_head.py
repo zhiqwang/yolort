@@ -351,8 +351,8 @@ def _decode_pred_logits(pred_logits: Tensor):
     """
     # Compute conf
     # box_conf x class_conf, w/ shape: num_anchors x num_classes
-    scores = pred_logits[:, 5:] * pred_logits[:, 4:5]
-    boxes = box_convert(pred_logits[:, :4], in_fmt="cxcywh", out_fmt="xyxy")
+    scores = pred_logits[..., 5:] * pred_logits[..., 4:5]
+    boxes = box_convert(pred_logits[..., :4], in_fmt="cxcywh", out_fmt="xyxy")
 
     return boxes, scores
 

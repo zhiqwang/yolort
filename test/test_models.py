@@ -10,10 +10,10 @@ from yolort import models
 from yolort.models import YOLO, YOLOv5
 from yolort.models.anchor_utils import AnchorGenerator
 from yolort.models.backbone_utils import darknet_pan_backbone
-from yolort.models.box_head import YOLOHead, PostProcess, SetCriterion
+from yolort.models.box_head import PostProcess, SetCriterion, YOLOHead
 from yolort.models.transformer import darknet_tan_backbone
 from yolort.models.yolo_lite import yolov5_mobilenet_v3_small_fpn
-from yolort.v5 import get_yolov5_size, attempt_download
+from yolort.v5 import attempt_download, get_yolov5_size
 
 
 @contextlib.contextmanager

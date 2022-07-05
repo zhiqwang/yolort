@@ -4,8 +4,9 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch import Tensor
-from yolort.data import contains_any_tensor, _helper as data_helper
+from yolort.data import _helper as data_helper
 from yolort.data.data_module import DetectionDataModule
+from yolort.utils import contains_any_tensor
 
 
 def test_contains_any_tensor():

@@ -13,13 +13,13 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from yolort.utils import is_module_available, requires_module
+
+if is_module_available("tensorrt"):
+    import tensorrt as trt
+
 import torch
 from torch import Tensor
-
-try:
-    import tensorrt as trt
-except ImportError:
-    trt = None
 
 from yolort.relay.trt_graphsurgeon import YOLOTRTGraphSurgeon
 
@@ -94,6 +94,7 @@ class EngineBuilder:
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
 
+    @requires_module("tensorrt")
     def __init__(
         self,
         verbose: bool = False,
@@ -193,11 +194,13 @@ class EngineBuilder:
                 logger.warning("FP16 is not supported natively on this platform/device")
             else:
                 self.config.set_flag(trt.BuilderFlag.FP16)
+                self.config.set_flag(trt.BuilderFlag.STRICT_TYPES)
         elif precision == "fp32":
             logger.info("Using fp32 mode.")
         else:
             raise NotImplementedError(f"Currently hasn't been implemented: {precision}.")
 
-        with self.builder.build_engine(self.network, self.config) as engine, open(engine_path, "wb") as f:
-            f.write(engine.serialize())
-            logger.info(f"Serialize engine success, saved as {engine_path}")
+        with self.builder.build_serialized_network(self.network, self.config) as engine:
+            with open(engine_path, "wb") as f:
+                f.write(engine)
+                logger.info(f"Serialize engine success, saved as {engine_path}")

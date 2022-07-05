@@ -1,7 +1,7 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import math
-from typing import Dict, List, Optional, Tuple, cast
+from typing import cast, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F

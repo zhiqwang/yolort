@@ -13,37 +13,30 @@ from pathlib import Path
 
 import torch
 from torch import nn
+from yolort.utils import is_module_available, requires_module
 from yolort.v5.utils.autoanchor import check_anchor_order
 from yolort.v5.utils.general import make_divisible
-from yolort.v5.utils.torch_utils import (
-    time_sync,
-    fuse_conv_and_bn,
-    model_info,
-    scale_img,
-    initialize_weights,
-)
+from yolort.v5.utils.torch_utils import fuse_conv_and_bn, initialize_weights, model_info, scale_img, time_sync
 
 from .common import (
-    Conv,
     Bottleneck,
-    SPP,
-    SPPF,
-    DWConv,
-    Focus,
     BottleneckCSP,
     C3,
     Concat,
-    GhostConv,
-    GhostBottleneck,
     Contract,
+    Conv,
+    DWConv,
     Expand,
+    Focus,
+    GhostBottleneck,
+    GhostConv,
+    SPP,
+    SPPF,
 )
 from .experimental import CrossConv, MixConv2d
 
-try:
+if is_module_available("thop"):
     import thop  # for FLOPs computation
-except ImportError:
-    thop = None
 
 __all__ = ["Model", "Detect"]
 
@@ -62,6 +55,7 @@ class Detect(nn.Module):
         self.na = len(anchors[0]) // 2  # number of anchors
         self.grid = [torch.zeros(1)] * self.nl  # init grid
         self.anchor_grid = [torch.zeros(1)] * self.nl  # init anchor grid
+        # shape(nl,na,2)
         self.register_buffer("anchors", torch.tensor(anchors).float().view(self.nl, -1, 2))
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
         self.inplace = inplace  # use in-place ops (e.g. slice assignment)
@@ -79,26 +73,27 @@ class Detect(nn.Module):
 
                 y = x[i].sigmoid()
                 if self.inplace:
-                    y[..., 0:2] = (y[..., 0:2] * 2 - 0.5 + self.grid[i]) * self.stride[i]  # xy
+                    y[..., 0:2] = (y[..., 0:2] * 2 + self.grid[i]) * self.stride[i]  # xy
                     y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
                 else:  # for YOLOv5 on AWS Inferentia https://github.com/ultralytics/yolov5/pull/2953
-                    xy = (y[..., 0:2] * 2 - 0.5 + self.grid[i]) * self.stride[i]  # xy
-                    wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
-                    y = torch.cat((xy, wh, y[..., 4:]), -1)
+                    # y.tensor_split((2, 4, 5), 4)  # torch 1.8.0
+                    xy, wh, conf = y.split((2, 2, self.nc + 1), 4)
+                    xy = (xy * 2 + self.grid[i]) * self.stride[i]  # xy
+                    wh = (wh * 2) ** 2 * self.anchor_grid[i]  # wh
+                    y = torch.cat((xy, wh, conf), 4)
                 z.append(y.view(bs, -1, self.no))
 
-        return x if self.training else (torch.cat(z, 1), x)
+        return x if self.training else torch.cat(z, 1)
 
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
-        yv, xv = torch.meshgrid([torch.arange(ny).to(d), torch.arange(nx).to(d)])
-        grid = torch.stack((xv, yv), 2).expand((1, self.na, ny, nx, 2)).float()
-        anchor_grid = (
-            (self.anchors[i].clone() * self.stride[i])
-            .view((1, self.na, 1, 1, 2))
-            .expand((1, self.na, ny, nx, 2))
-            .float()
-        )
+        t = self.anchors[i].dtype
+        shape = 1, self.na, ny, nx, 2  # grid shape
+        y, x = torch.arange(ny, device=d, dtype=t), torch.arange(nx, device=d, dtype=t)
+        yv, xv = torch.meshgrid(y, x)
+        # add grid offset, i.e. y = 2.0 * x - 0.5
+        grid = torch.stack((xv, yv), 2).expand(shape) - 0.5
+        anchor_grid = (self.anchors[i] * self.stride[i]).view((1, self.na, 1, 1, 2)).expand(shape)
         return grid, anchor_grid
 
 
@@ -204,17 +199,18 @@ class Model(nn.Module):
     def _clip_augmented(self, y):
         # Clip YOLOv5 augmented inference tails
         nl = self.model[-1].nl  # number of detection layers (P3-P5)
-        g = sum(4 ** x for x in range(nl))  # grid points
+        g = sum(4**x for x in range(nl))  # grid points
         e = 1  # exclude layer count
-        i = (y[0].shape[1] // g) * sum(4 ** x for x in range(e))  # indices
+        i = (y[0].shape[1] // g) * sum(4**x for x in range(e))  # indices
         y[0] = y[0][:, :-i]  # large
         i = (y[-1].shape[1] // g) * sum(4 ** (nl - 1 - x) for x in range(e))  # indices
         y[-1] = y[-1][:, i:]  # small
         return y
 
+    @requires_module("thop")
     def _profile_one_layer(self, m, x, dt):
         c = isinstance(m, Detect)  # is final layer, copy input as inplace fix
-        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2 if thop else 0
+        o = thop.profile(m, inputs=(x.copy() if c else x,), verbose=False)[0] / 1e9 * 2
         t = time_sync()
         for _ in range(10):
             m(x.copy() if c else x)

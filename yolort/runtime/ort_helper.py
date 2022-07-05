@@ -5,6 +5,8 @@ from typing import Optional, Tuple
 import torch
 from torch import nn
 from yolort.models import YOLO, YOLOv5
+from yolort.relay import FakeYOLO
+from yolort.v5 import load_yolov5_model
 
 
 def export_onnx(
@@ -20,6 +22,7 @@ def export_onnx(
     skip_preprocess: bool = False,
     opset_version: int = 11,
     batch_size: int = 1,
+    vanilla: bool = False,
 ) -> None:
     """
     Export to ONNX models that can be used for ONNX Runtime inferencing.
@@ -42,20 +45,29 @@ def export_onnx(
         batch_size (int): Only used for models that include pre-processing, you need to specify
             the batch sizes and ensure that the number of input images is the same as the batches
             when inferring if you want to export multiple batches ONNX models. Default: 1
+        vanilla (bool, optional): Whether to export a vanilla ONNX models. Default to False
     """
 
-    onnx_builder = ONNXBuilder(
-        checkpoint_path=checkpoint_path,
-        model=model,
-        size=size,
-        size_divisible=size_divisible,
-        score_thresh=score_thresh,
-        nms_thresh=nms_thresh,
-        version=version,
-        skip_preprocess=skip_preprocess,
-        opset_version=opset_version,
-        batch_size=batch_size,
-    )
+    if vanilla:
+        onnx_builder = VanillaONNXBuilder(
+            checkpoint_path=checkpoint_path,
+            score_thresh=score_thresh,
+            iou_thresh=nms_thresh,
+            opset_version=opset_version,
+        )
+    else:
+        onnx_builder = ONNXBuilder(
+            checkpoint_path=checkpoint_path,
+            model=model,
+            size=size,
+            size_divisible=size_divisible,
+            score_thresh=score_thresh,
+            nms_thresh=nms_thresh,
+            version=version,
+            skip_preprocess=skip_preprocess,
+            opset_version=opset_version,
+            batch_size=batch_size,
+        )
 
     onnx_builder.to_onnx(onnx_path)
 
@@ -209,6 +221,72 @@ class ONNXBuilder:
             self.input_sample,
             onnx_path,
             do_constant_folding=True,
+            opset_version=self._opset_version,
+            input_names=self.input_names,
+            output_names=self.output_names,
+            dynamic_axes=self.dynamic_axes,
+            **kwargs,
+        )
+
+
+class VanillaONNXBuilder:
+    def __init__(
+        self,
+        checkpoint_path: Optional[str] = None,
+        iou_thresh: float = 0.45,
+        score_thresh: float = 0.35,
+        detections_per_img: int = 100,
+        opset_version: int = 11,
+        enable_dynamic: bool = True,
+    ):
+        super().__init__()
+        self._checkpoint_path = checkpoint_path
+        self._opset_version = opset_version
+
+        self.model = self._build_model(iou_thresh, score_thresh, detections_per_img)
+        self.input_sample = self._set_input_sample()
+        self.input_names = self._set_input_names()
+        self.output_names = self._set_output_names()
+        self.dynamic_axes = self._set_dynamic_axes(enable_dynamic)
+
+    def _build_model(self, iou_thresh, score_thresh, detections_per_img):
+        yolo_stem = load_yolov5_model(self._checkpoint_path)
+        model = FakeYOLO(
+            yolo_stem,
+            iou_thresh=iou_thresh,
+            score_thresh=score_thresh,
+            detections_per_img=detections_per_img,
+        )
+        model = model.eval()
+        return model
+
+    def _set_input_sample(self):
+        return torch.rand(1, 3, 640, 640)
+
+    def _set_input_names(self):
+        return ["images"]
+
+    def _set_output_names(self):
+        return ["outputs"]
+
+    def _set_dynamic_axes(self, enable_dynamic):
+        return {"images": {0: "batch"}, "outputs": {0: "batch"}} if enable_dynamic else None
+
+    @torch.no_grad()
+    def to_onnx(self, onnx_path: str, **kwargs):
+        """
+        Saves the model in ONNX format.
+
+        Args:
+            onnx_path (string): The path to the ONNX graph to be exported.
+            **kwargs: Will be passed to torch.onnx.export function.
+        """
+
+        torch.onnx.export(
+            self.model,
+            self.input_sample,
+            onnx_path,
+            training=torch.onnx.TrainingMode.EVAL,
             opset_version=self._opset_version,
             input_names=self.input_names,
             output_names=self.output_names,

@@ -1,20 +1,21 @@
 # Copyright (c) 2022, yolort team. All rights reserved.
 
 import logging
-from collections import OrderedDict, namedtuple
-from typing import Any, Dict, List, Callable, Optional, Tuple
+from collections import namedtuple, OrderedDict
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+# import yolort before pytorch, otherwise, it may cause problems on some systems
+from yolort.utils import contains_any_tensor, is_module_available, requires_module
+
+if is_module_available("tensorrt"):
+    import tensorrt as trt
 
 import numpy as np
 import torch
 from torch import Tensor
 from torchvision.io import read_image
-from yolort.data import contains_any_tensor
 from yolort.models.transform import YOLOTransform
 
-try:
-    import tensorrt as trt
-except ImportError:
-    trt = None
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("PredictorTRT").setLevel(logging.INFO)
@@ -103,13 +104,10 @@ class PredictorTRT:
         # Visualization
         self._names = [f"class{i}" for i in range(1000)]  # assign defaults
 
+    @requires_module("tensorrt")
     def _build_engine(self):
         logger.info(f"Loading {self._engine_path} for TensorRT inference...")
-        if trt is not None:
-            trt_logger = trt.Logger(trt.Logger.INFO)
-        else:
-            trt_logger = None
-            raise ImportError("TensorRT is not installed, please install trt firstly.")
+        trt_logger = trt.Logger(trt.Logger.INFO)
 
         trt.init_libnvinfer_plugins(trt_logger, namespace="")
         with open(self._engine_path, "rb") as f, trt.Runtime(trt_logger) as runtime:
@@ -117,6 +115,7 @@ class PredictorTRT:
 
         return engine
 
+    @requires_module("tensorrt")
     def _set_context(self):
         for index in range(self.engine.num_bindings):
             name = self.engine.get_binding_name(index)

@@ -1,15 +1,13 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
 import logging
-from typing import Any, Dict, List, Callable, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
-from yolort.data import contains_any_tensor
+from yolort.utils import contains_any_tensor, is_module_available, requires_module
 
-try:
+if is_module_available("onnxruntime"):
     import onnxruntime as ort
-except ImportError:
-    ort = None
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +45,10 @@ class PredictorORT:
         self._runtime = self._build_runtime()
         self._input_names = self._runtime.get_inputs()[0].name
 
+    @requires_module("onnxruntime")
     def _set_providers(self):
         logger.info("Providers was initialized.")
-        if ort is not None:
-            ort_device = ort.get_device()
-        else:
-            raise ImportError("ONNXRuntime is not installed, please install onnxruntime firstly.")
+        ort_device = ort.get_device()
         providers = None
 
         enable_gpu = True if self.device == "cuda" else False
@@ -67,6 +63,7 @@ class PredictorORT:
 
         return providers
 
+    @requires_module("onnxruntime")
     def _build_runtime(self):
         runtime = ort.InferenceSession(self.engine_path, providers=self._providers)
         return runtime

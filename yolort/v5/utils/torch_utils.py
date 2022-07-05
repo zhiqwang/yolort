@@ -17,13 +17,12 @@ import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
+from yolort.utils import is_module_available
 
 from .general import LOGGER
 
-try:
+if is_module_available("thop"):
     import thop  # for FLOPs computation
-except ImportError:
-    thop = None
 
 
 @contextmanager

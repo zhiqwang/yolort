@@ -1,16 +1,16 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
 import warnings
-from typing import Any, Dict, List, Callable, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import torch
 import torchvision
 from torch import nn, Tensor
 from torchvision.io import read_image
-from yolort.data import contains_any_tensor
+from yolort.utils import contains_any_tensor
 
 from . import yolo
-from .transform import YOLOTransform, _get_shape_onnx
+from .transform import _get_shape_onnx, YOLOTransform
 from .yolo import YOLO
 
 __all__ = ["YOLOv5"]

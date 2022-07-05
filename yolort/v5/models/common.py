@@ -406,9 +406,9 @@ class Expand(nn.Module):
     def forward(self, x):
         b, c, h, w = x.size()  # assert C / s ** 2 == 0, 'Indivisible gain'
         s = self.gain
-        x = x.view(b, s, s, c // s ** 2, h, w)  # x(1,2,2,16,80,80)
+        x = x.view(b, s, s, c // s**2, h, w)  # x(1,2,2,16,80,80)
         x = x.permute(0, 3, 4, 1, 5, 2).contiguous()  # x(1,16,80,2,80,2)
-        return x.view(b, c // s ** 2, h * s, w * s)  # x(1,16,160,160)
+        return x.view(b, c // s**2, h * s, w * s)  # x(1,16,160,160)
 
 
 class AutoShape(nn.Module):
@@ -461,7 +461,7 @@ class AutoShape(nn.Module):
 
         t = [time_sync()]
         p = next(self.model.parameters())  # for device and type
-        if isinstance(imgs, torch.Tensor):  # torch
+        if isinstance(imgs, Tensor):  # torch
             with amp.autocast(enabled=p.device.type != "cpu"):
                 return self.model(imgs.to(p.device).type_as(p), augment, profile)  # inference
 
@@ -499,7 +499,7 @@ class AutoShape(nn.Module):
 
         with amp.autocast(enabled=p.device.type != "cpu"):
             # Inference
-            y = self.model(x, augment, profile)[0]  # forward
+            y = self.model(x, augment, profile)  # forward
             t.append(time_sync())
 
             # Post-process

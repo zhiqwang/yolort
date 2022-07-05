@@ -1,15 +1,16 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import warnings
-from typing import Any, List, Dict, Callable, Tuple, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
-from yolort.utils import load_from_ultralytics, load_state_dict_from_url
+from yolort.utils import load_state_dict_from_url
 
+from ._checkpoint import load_from_ultralytics
 from .anchor_utils import AnchorGenerator
 from .backbone_utils import darknet_pan_backbone
-from .box_head import YOLOHead, SetCriterion, PostProcess
+from .box_head import PostProcess, SetCriterion, YOLOHead
 from .transformer import darknet_tan_backbone
 
 __all__ = [
@@ -31,7 +32,6 @@ __all__ = [
     "yolov5_darknet_pan_x_r60",
     "yolov5_darknet_pan_x6_r60",
     "yolov5_darknet_tan_s_r40",
-    "build_model",
 ]
 
 
@@ -207,11 +207,7 @@ class YOLO(nn.Module):
         width_multiple = model_info["width_multiple"]
         use_p6 = model_info["use_p6"]
         backbone = darknet_pan_backbone(
-            backbone_name,
-            depth_multiple,
-            width_multiple,
-            version=version,
-            use_p6=use_p6,
+            backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
         )
         model = cls(
             backbone,

@@ -14,19 +14,18 @@ import numpy as np
 import pandas as pd
 import torch
 from PIL import Image, ImageDraw, ImageFont
+from yolort.utils import is_module_available, requires_module
 
-try:
+if is_module_available("cv2"):
     import cv2
-except ImportError:
-    cv2 = None
 
 from .general import (
-    LOGGER,
-    Timeout,
     clip_coords,
     increment_path,
     is_ascii,
     is_chinese,
+    LOGGER,
+    Timeout,
     try_except,
     user_config_dir,
     xywh2xyxy,
@@ -116,6 +115,7 @@ class Annotator:
             self.im = im
         self.lw = line_width or max(round(sum(im.shape) / 2 * 0.003), 2)  # line width
 
+    @requires_module("cv2")
     def box_label(self, box, label="", color=(128, 128, 128), txt_color=(255, 255, 255)):
         # Add one xyxy box to image with label
         if self.pil or not is_ascii(label):
@@ -231,6 +231,7 @@ def output_to_target(output):
     return np.array(targets)
 
 
+@requires_module("cv2")
 def plot_images(images, targets, paths=None, fname="images.jpg", names=None, max_size=1920, max_subplots=16):
     # Plot image grid with labels
     if isinstance(images, torch.Tensor):
@@ -241,7 +242,7 @@ def plot_images(images, targets, paths=None, fname="images.jpg", names=None, max
         images *= 255  # de-normalise (optional)
     bs, _, h, w = images.shape  # batch size, _, height, width
     bs = min(bs, max_subplots)  # limit plot images
-    ns = np.ceil(bs ** 0.5)  # number of subplots (square)
+    ns = np.ceil(bs**0.5)  # number of subplots (square)
 
     # Build Image
     mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)  # init
@@ -540,6 +541,7 @@ def profile_idetection(start=0, stop=0, labels=(), save_dir=""):
     plt.savefig(Path(save_dir) / "idetection_profile.png", dpi=200)
 
 
+@requires_module("cv2")
 def save_one_box(xyxy, im, file="image.jpg", gain=1.02, pad=10, square=False, BGR=False, save=True):
     # Save image crop as {file} with crop size multiple {gain} and {pad} pixels. Save and/or return crop
     xyxy = torch.tensor(xyxy).view(-1, 4)
