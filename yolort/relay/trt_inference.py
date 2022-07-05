@@ -23,11 +23,11 @@ class YOLOTRTInference(nn.Module):
     inference frameworks currently do not support this operator very well.
 
     Args:
-        checkpoint_path (string): Path of the trained YOLOv5 checkpoint.
+        checkpoint_path (Union[string, PosixPath]): Path of the trained YOLOv5 checkpoint.
         version (string): Upstream YOLOv5 version. Default: 'r6.0'
     """
 
-    def __init__(self, checkpoint_path: str, version: str = "r6.0"):
+    def __init__(self, checkpoint_path: Union[str, PosixPath], version: str = "r6.0"):
         super().__init__()
         model_info = load_from_ultralytics(checkpoint_path, version=version)
 

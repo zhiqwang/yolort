@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 from typing import Optional
+from collections import OrderedDict
 
 import numpy as np
 import onnx
@@ -34,7 +35,7 @@ class YOLOTRTGraphSurgeon:
     https://github.com/zhiqwang/yolov5-rt-stack/blob/ba00833/yolort/models/box_head.py#L410-L418
 
     Args:
-        checkpoint_path (string): The path pointing to the PyTorch saved model to load.
+        model_path (string): The path pointing to the PyTorch saved model to load.
         version (str): upstream version released by the ultralytics/yolov5, Possible
             values are ["r3.1", "r4.0", "r6.0"]. Default: "r6.0".
         input_sample (Tensor, optional): Specify the input shape to export ONNX, and the
@@ -48,7 +49,7 @@ class YOLOTRTGraphSurgeon:
     @requires_module("onnx_graphsurgeon")
     def __init__(
         self,
-        checkpoint_path: str,
+        model_path: str,
         *,
         version: str = "r6.0",
         input_sample: Optional[Tensor] = None,
@@ -56,26 +57,30 @@ class YOLOTRTGraphSurgeon:
         device: torch.device = torch.device("cpu"),
         precision: str = "fp32",
     ):
-        checkpoint_path = Path(checkpoint_path)
-        assert checkpoint_path.exists()
+        model_path = Path(model_path)
+        self.suffix = model_path.suffix
+        assert model_path.exists() and self.suffix in ('.onnx','.pt','.pth')
+
 
         # Use YOLOTRTInference to convert saved model to an initial ONNX graph.
-        model = YOLOTRTInference(checkpoint_path, version=version)
-        model = model.eval()
-        model = model.to(device=device)
-        logger.info(f"Loaded saved model from {checkpoint_path}")
+        if model_path.suffix in ('.pt','.pth'):
+            model = YOLOTRTInference(model_path, version=version)
+            model = model.eval()
+            model = model.to(device=device)
+            self.num_classes = model.num_classes
+            logger.info(f"Loaded saved model from {model_path}")
 
-        onnx_model_path = checkpoint_path.with_suffix(".onnx")
-        if input_sample is not None:
-            input_sample = input_sample.to(device=device)
-        model.to_onnx(onnx_model_path, input_sample=input_sample, enable_dynamic=enable_dynamic)
-        self.graph = gs.import_onnx(onnx.load(onnx_model_path))
+            if input_sample is not None:
+                input_sample = input_sample.to(device=device)
+            model_path = model_path.with_suffix(".onnx")
+            model.to_onnx(model_path, input_sample=input_sample, enable_dynamic=enable_dynamic)
+        # Use YOLOTRTInference to modify an existed ONNX graph.
+        self.graph = gs.import_onnx(onnx.load(model_path))
         assert self.graph
         logger.info("PyTorch2ONNX graph created successfully")
 
         # Fold constants via ONNX-GS that PyTorch2ONNX may have missed
         self.graph.fold_constants()
-        self.num_classes = model.num_classes
         self.batch_size = 1
         self.precision = precision
 
@@ -92,6 +97,8 @@ class YOLOTRTGraphSurgeon:
             try:
                 for node in self.graph.nodes:
                     for o in node.outputs:
+                        if o in self.graph.outputs:
+                            continue
                         o.shape = None
                 model = gs.export_onnx(self.graph)
                 model = shape_inference.infer_shapes(model)
@@ -111,6 +118,33 @@ class YOLOTRTGraphSurgeon:
             if count_before == count_after:
                 # No new folding occurred in this iteration, so we can stop for now.
                 break
+
+    def _process(self,dtype):
+        Matrix = np.array([[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0],
+                           [-0.5, 0.0, 0.5, 0.0], [0.0, -0.5, 0.0, 0.5]], dtype=np.float32)
+        Attrs = [[5, 9999, 2, 1], [4, 5, 2, 1], [0, 4, 2, 1]]
+        lastNode = [node for node in self.graph.nodes if node.outputs and node.outputs[0] in self.graph.outputs][0]
+        out_shape = lastNode.outputs[0].shape
+        mul_inputs = []
+        matmul_inputs = [None, gs.Constant(name='AddMatMul', values=Matrix)]
+        for i, attr in enumerate(Attrs):
+            Slice_inp = [lastNode.outputs[0]] + [
+                gs.Constant(name=f'AddSlice_{i}_inp_{j}', values=np.array([val])) for j, val in enumerate(attr)]
+            Slice_out = gs.Variable(name=f'AddSlice_{i}_out')
+            Slice = gs.Node(name=f'AddSlice_{i}', op='Slice', inputs=Slice_inp, outputs=[Slice_out])
+            self.graph.nodes.append(Slice)
+            if i < 2:
+                mul_inputs.append(Slice_out)
+            elif i == 2:
+                matmul_inputs[0] = Slice_out
+        mut_output = gs.Variable(name='NMS_Scores',
+                                 shape=out_shape[:2] + [out_shape[2] - 5],
+                                 dtype=dtype)
+        matmut_output = gs.Variable(name='NMS_Boxes', shape=out_shape[:2] + [4], dtype=dtype)
+        self.graph.layer(name=f'AddMul_0', op='Mul', inputs=mul_inputs, outputs=[mut_output])
+        self.graph.layer(name=f'AddMatMul_0', op='MatMul', inputs=matmul_inputs, outputs=[matmut_output])
+        self.graph.outputs = [matmut_output, mut_output]
+
 
     def save(self, output_path):
         """
@@ -147,19 +181,6 @@ class YOLOTRTGraphSurgeon:
         """
 
         self.infer()
-        # Find the concat node at the end of the network
-        op_inputs = self.graph.outputs
-
-        op = "EfficientNMS_TRT"
-        attrs = {
-            "plugin_version": "1",
-            "background_class": -1,  # no background class
-            "max_output_boxes": detections_per_img,
-            "score_threshold": score_thresh,
-            "iou_threshold": nms_thresh,
-            "score_activation": False,
-            "box_coding": 0,
-        }
 
         if self.precision == "fp32":
             dtype_output = np.float32
@@ -168,33 +189,28 @@ class YOLOTRTGraphSurgeon:
         else:
             raise NotImplementedError(f"Currently not supports precision: {self.precision}")
 
-        # NMS Outputs
-        output_num_detections = gs.Variable(
-            name="num_detections",
-            dtype=np.int32,
-            shape=[self.batch_size, 1],
-        )  # A scalar indicating the number of valid detections per batch image.
-        output_boxes = gs.Variable(
-            name="detection_boxes",
-            dtype=dtype_output,
-            shape=[self.batch_size, detections_per_img, 4],
-        )
-        output_scores = gs.Variable(
-            name="detection_scores",
-            dtype=dtype_output,
-            shape=[self.batch_size, detections_per_img],
-        )
-        output_labels = gs.Variable(
-            name="detection_classes",
-            dtype=np.int32,
-            shape=[self.batch_size, detections_per_img],
+        if self.suffix == '.onnx':
+            self._process(dtype_output)
+
+        op = "EfficientNMS_TRT"
+        attrs = OrderedDict(
+            plugin_version =  "1",
+            background_class = -1,  # no background class
+            max_output_boxes = detections_per_img,
+            score_threshold = score_thresh,
+            iou_threshold = nms_thresh,
+            score_activation = False,
+            box_coding = 0,
         )
 
-        op_outputs = [output_num_detections, output_boxes, output_scores, output_labels]
+        op_outputs = [gs.Variable(name="num_detections",dtype=np.int32,shape=[self.batch_size, 1],),
+                      gs.Variable(name="detection_boxes",dtype=dtype_output,shape=[self.batch_size, detections_per_img, 4],),
+                      gs.Variable(name="detection_scores",dtype=dtype_output,shape=[self.batch_size, detections_per_img],),
+                      gs.Variable(name="detection_classes",dtype=np.int32,shape=[self.batch_size, detections_per_img],)]
 
         # Create the NMS Plugin node with the selected inputs. The outputs of the node will also
         # become the final outputs of the graph.
-        self.graph.layer(op=op, name="batched_nms", inputs=op_inputs, outputs=op_outputs, attrs=attrs)
+        self.graph.layer(op=op, name="batched_nms", inputs=self.graph.outputs, outputs=op_outputs, attrs=attrs)
         logger.info(f"Created NMS plugin '{op}' with attributes: {attrs}")
 
         self.graph.outputs = op_outputs

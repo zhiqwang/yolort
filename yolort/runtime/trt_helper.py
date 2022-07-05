@@ -46,7 +46,7 @@ def export_tensorrt_engine(
     Export ONNX models and TensorRT serialized engines that can be used for TensorRT inferencing.
 
     Args:
-        checkpoint_path (str): Path of the YOLOv5 checkpoint model.
+        checkpoint_path (Union[string, PosixPath]): Path of the YOLOv5 checkpoint model or onnx model.
         score_thresh (float): Score threshold used for postprocessing the detections. Default: 0.25
         nms_thresh (float): NMS threshold used for postprocessing the detections. Default: 0.45
         version (str): upstream version released by the ultralytics/yolov5, Possible
@@ -65,6 +65,7 @@ def export_tensorrt_engine(
 
     if input_sample is None:
         input_sample = torch.rand(1, 3, 640, 640)
+
 
     yolo_gs = YOLOTRTGraphSurgeon(checkpoint_path, version=version, input_sample=input_sample)
 
