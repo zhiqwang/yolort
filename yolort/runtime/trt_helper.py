@@ -66,7 +66,6 @@ def export_tensorrt_engine(
     if input_sample is None:
         input_sample = torch.rand(1, 3, 640, 640)
 
-
     yolo_gs = YOLOTRTGraphSurgeon(checkpoint_path, version=version, input_sample=input_sample)
 
     # Register the `EfficientNMS_TRT` into the graph.
