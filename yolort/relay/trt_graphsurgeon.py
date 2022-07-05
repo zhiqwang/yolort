@@ -96,6 +96,8 @@ class YOLOTRTGraphSurgeon:
             try:
                 for node in self.graph.nodes:
                     for o in node.outputs:
+                        if o in self.graph.outputs:
+                            continue
                         o.shape = None
                 model = gs.export_onnx(self.graph)
                 model = shape_inference.infer_shapes(model)
