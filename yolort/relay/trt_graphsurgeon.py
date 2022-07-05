@@ -121,7 +121,7 @@ class YOLOTRTGraphSurgeon:
 
     def _process(self,dtype):
         Matrix = np.array([[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0],
-                           [-0.5, 0.0, 0.5, 0.0], [0.0, -0.5, 0.0, 0.5]], dtype=np.float32)
+                           [-0.5, 0.0, 0.5, 0.0], [0.0, -0.5, 0.0, 0.5]], dtype=dtype)
         Attrs = [[5, 9999, 2, 1], [4, 5, 2, 1], [0, 4, 2, 1]]
         lastNode = [node for node in self.graph.nodes if node.outputs and node.outputs[0] in self.graph.outputs][0]
         out_shape = lastNode.outputs[0].shape
