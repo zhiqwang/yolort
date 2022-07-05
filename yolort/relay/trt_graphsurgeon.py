@@ -1,9 +1,9 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
 import logging
+from collections import OrderedDict
 from pathlib import Path
 from typing import Optional
-from collections import OrderedDict
 
 import numpy as np
 import onnx
@@ -59,11 +59,10 @@ class YOLOTRTGraphSurgeon:
     ):
         model_path = Path(model_path)
         self.suffix = model_path.suffix
-        assert model_path.exists() and self.suffix in ('.onnx','.pt','.pth')
-
+        assert model_path.exists() and self.suffix in (".onnx", ".pt", ".pth")
 
         # Use YOLOTRTInference to convert saved model to an initial ONNX graph.
-        if model_path.suffix in ('.pt','.pth'):
+        if model_path.suffix in (".pt", ".pth"):
             model = YOLOTRTInference(model_path, version=version)
             model = model.eval()
             model = model.to(device=device)
@@ -119,32 +118,35 @@ class YOLOTRTGraphSurgeon:
                 # No new folding occurred in this iteration, so we can stop for now.
                 break
 
-    def _process(self,dtype):
-        Matrix = np.array([[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0],
-                           [-0.5, 0.0, 0.5, 0.0], [0.0, -0.5, 0.0, 0.5]], dtype=np.float32)
+    def _process(self, dtype):
+        Matrix = np.array(
+            [[1.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0], [-0.5, 0.0, 0.5, 0.0], [0.0, -0.5, 0.0, 0.5]],
+            dtype=np.float32,
+        )
         Attrs = [[5, 9999, 2, 1], [4, 5, 2, 1], [0, 4, 2, 1]]
-        lastNode = [node for node in self.graph.nodes if node.outputs and node.outputs[0] in self.graph.outputs][0]
+        lastNode = [
+            node for node in self.graph.nodes if node.outputs and node.outputs[0] in self.graph.outputs
+        ][0]
         out_shape = lastNode.outputs[0].shape
         mul_inputs = []
-        matmul_inputs = [None, gs.Constant(name='AddMatMul', values=Matrix)]
+        matmul_inputs = [None, gs.Constant(name="AddMatMul", values=Matrix)]
         for i, attr in enumerate(Attrs):
             Slice_inp = [lastNode.outputs[0]] + [
-                gs.Constant(name=f'AddSlice_{i}_inp_{j}', values=np.array([val])) for j, val in enumerate(attr)]
-            Slice_out = gs.Variable(name=f'AddSlice_{i}_out')
-            Slice = gs.Node(name=f'AddSlice_{i}', op='Slice', inputs=Slice_inp, outputs=[Slice_out])
+                gs.Constant(name=f"AddSlice_{i}_inp_{j}", values=np.array([val]))
+                for j, val in enumerate(attr)
+            ]
+            Slice_out = gs.Variable(name=f"AddSlice_{i}_out")
+            Slice = gs.Node(name=f"AddSlice_{i}", op="Slice", inputs=Slice_inp, outputs=[Slice_out])
             self.graph.nodes.append(Slice)
             if i < 2:
                 mul_inputs.append(Slice_out)
             elif i == 2:
                 matmul_inputs[0] = Slice_out
-        mut_output = gs.Variable(name='NMS_Scores',
-                                 shape=out_shape[:2] + [out_shape[2] - 5],
-                                 dtype=dtype)
-        matmut_output = gs.Variable(name='NMS_Boxes', shape=out_shape[:2] + [4], dtype=dtype)
-        self.graph.layer(name=f'AddMul_0', op='Mul', inputs=mul_inputs, outputs=[mut_output])
-        self.graph.layer(name=f'AddMatMul_0', op='MatMul', inputs=matmul_inputs, outputs=[matmut_output])
+        mut_output = gs.Variable(name="NMS_Scores", shape=out_shape[:2] + [out_shape[2] - 5], dtype=dtype)
+        matmut_output = gs.Variable(name="NMS_Boxes", shape=out_shape[:2] + [4], dtype=dtype)
+        self.graph.layer(name=f"AddMul_0", op="Mul", inputs=mul_inputs, outputs=[mut_output])
+        self.graph.layer(name=f"AddMatMul_0", op="MatMul", inputs=matmul_inputs, outputs=[matmut_output])
         self.graph.outputs = [matmut_output, mut_output]
-
 
     def save(self, output_path):
         """
@@ -189,28 +191,48 @@ class YOLOTRTGraphSurgeon:
         else:
             raise NotImplementedError(f"Currently not supports precision: {self.precision}")
 
-        if self.suffix == '.onnx':
+        if self.suffix == ".onnx":
             self._process(dtype_output)
 
         op = "EfficientNMS_TRT"
         attrs = OrderedDict(
-            plugin_version =  "1",
-            background_class = -1,  # no background class
-            max_output_boxes = detections_per_img,
-            score_threshold = score_thresh,
-            iou_threshold = nms_thresh,
-            score_activation = False,
-            box_coding = 0,
+            plugin_version="1",
+            background_class=-1,  # no background class
+            max_output_boxes=detections_per_img,
+            score_threshold=score_thresh,
+            iou_threshold=nms_thresh,
+            score_activation=False,
+            box_coding=0,
         )
 
-        op_outputs = [gs.Variable(name="num_detections",dtype=np.int32,shape=[self.batch_size, 1],),
-                      gs.Variable(name="detection_boxes",dtype=dtype_output,shape=[self.batch_size, detections_per_img, 4],),
-                      gs.Variable(name="detection_scores",dtype=dtype_output,shape=[self.batch_size, detections_per_img],),
-                      gs.Variable(name="detection_classes",dtype=np.int32,shape=[self.batch_size, detections_per_img],)]
+        op_outputs = [
+            gs.Variable(
+                name="num_detections",
+                dtype=np.int32,
+                shape=[self.batch_size, 1],
+            ),
+            gs.Variable(
+                name="detection_boxes",
+                dtype=dtype_output,
+                shape=[self.batch_size, detections_per_img, 4],
+            ),
+            gs.Variable(
+                name="detection_scores",
+                dtype=dtype_output,
+                shape=[self.batch_size, detections_per_img],
+            ),
+            gs.Variable(
+                name="detection_classes",
+                dtype=np.int32,
+                shape=[self.batch_size, detections_per_img],
+            ),
+        ]
 
         # Create the NMS Plugin node with the selected inputs. The outputs of the node will also
         # become the final outputs of the graph.
-        self.graph.layer(op=op, name="batched_nms", inputs=self.graph.outputs, outputs=op_outputs, attrs=attrs)
+        self.graph.layer(
+            op=op, name="batched_nms", inputs=self.graph.outputs, outputs=op_outputs, attrs=attrs
+        )
         logger.info(f"Created NMS plugin '{op}' with attributes: {attrs}")
 
         self.graph.outputs = op_outputs
