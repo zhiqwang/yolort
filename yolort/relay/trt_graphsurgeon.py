@@ -96,8 +96,6 @@ class YOLOTRTGraphSurgeon:
             try:
                 for node in self.graph.nodes:
                     for o in node.outputs:
-                        if o in self.graph.outputs:
-                            continue
                         o.shape = None
                 model = gs.export_onnx(self.graph)
                 model = shape_inference.infer_shapes(model)
@@ -144,8 +142,8 @@ class YOLOTRTGraphSurgeon:
                 matmul_inputs[0] = Slice_out
         mut_output = gs.Variable(name="NMS_Scores", shape=out_shape[:2] + [out_shape[2] - 5], dtype=dtype)
         matmut_output = gs.Variable(name="NMS_Boxes", shape=out_shape[:2] + [4], dtype=dtype)
-        self.graph.layer(name=f"AddMul_0", op="Mul", inputs=mul_inputs, outputs=[mut_output])
-        self.graph.layer(name=f"AddMatMul_0", op="MatMul", inputs=matmul_inputs, outputs=[matmut_output])
+        self.graph.layer(name="AddMul_0", op="Mul", inputs=mul_inputs, outputs=[mut_output])
+        self.graph.layer(name="AddMatMul_0", op="MatMul", inputs=matmul_inputs, outputs=[matmut_output])
         self.graph.outputs = [matmut_output, mut_output]
 
     def save(self, output_path):
