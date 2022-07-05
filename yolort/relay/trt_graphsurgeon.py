@@ -73,10 +73,10 @@ class YOLOTRTGraphSurgeon:
                 input_sample = input_sample.to(device=device)
             model_path = model_path.with_suffix(".onnx")
             model.to_onnx(model_path, input_sample=input_sample, enable_dynamic=enable_dynamic)
+            logger.info("PyTorch2ONNX graph created successfully")
         # Use YOLOTRTInference to modify an existed ONNX graph.
         self.graph = gs.import_onnx(onnx.load(model_path))
         assert self.graph
-        logger.info("PyTorch2ONNX graph created successfully")
 
         # Fold constants via ONNX-GS that PyTorch2ONNX may have missed
         self.graph.fold_constants()
