@@ -41,6 +41,7 @@ def export_tensorrt_engine(
     precision: str = "fp32",
     verbose: bool = False,
     workspace: int = 12,
+    simplify: bool = False,
 ) -> None:
     """
     Export ONNX models and TensorRT serialized engines that can be used for TensorRT inferencing.
@@ -61,12 +62,15 @@ def export_tensorrt_engine(
         verbose (bool): If enabled, a higher verbosity level will be set on the TensorRT
             logger. Default: False
         workspace (int): Max memory workspace to allow, in Gb. Default: 12
+        simplify (bool, optional): Whether to simplify the exported ONNX. Default to False
     """
 
     if input_sample is None:
         input_sample = torch.rand(1, 3, 640, 640)
 
-    yolo_gs = YOLOTRTGraphSurgeon(checkpoint_path, version=version, input_sample=input_sample)
+    yolo_gs = YOLOTRTGraphSurgeon(
+        checkpoint_path, version=version, input_sample=input_sample, simplify=simplify
+    )
 
     # Register the `EfficientNMS_TRT` into the graph.
     yolo_gs.register_nms(
