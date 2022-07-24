@@ -1,5 +1,6 @@
 # Copyright (c) 2022, yolort team. All rights reserved.
 
+import logging
 from io import BytesIO
 from typing import Optional, Tuple
 
