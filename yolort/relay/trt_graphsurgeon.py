@@ -15,6 +15,9 @@ from yolort.utils import is_module_available, requires_module
 if is_module_available("onnx_graphsurgeon"):
     import onnx_graphsurgeon as gs
 
+if is_module_available("onnxsim"):
+    import onnxsim
+
 from .trt_inference import YOLOTRTInference
 
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +47,7 @@ class YOLOTRTGraphSurgeon:
         enable_dynamic (bool): Whether to specify axes of tensors as dynamic. Default: False.
         device (torch.device): The device to be used for importing ONNX. Default: torch.device("cpu").
         precision (string): The datatype to use for the engine, either 'fp32', 'fp16' or 'int8'.
+        simplify (bool, optional): Whether to simplify the exported ONNX. Default to False.
     """
 
     @requires_module("onnx_graphsurgeon")
@@ -56,6 +60,7 @@ class YOLOTRTGraphSurgeon:
         enable_dynamic: bool = False,
         device: torch.device = torch.device("cpu"),
         precision: str = "fp32",
+        simplify: bool = False,
     ):
         model_path = Path(model_path)
         self.suffix = model_path.suffix
@@ -82,6 +87,7 @@ class YOLOTRTGraphSurgeon:
         self.graph.fold_constants()
         self.batch_size = 1
         self.precision = precision
+        self.simplify = simplify
 
     def infer(self):
         """
@@ -148,6 +154,7 @@ class YOLOTRTGraphSurgeon:
         self.graph.layer(name="AddMatMul_0", op="MatMul", inputs=matmul_inputs, outputs=[matmut_output])
         self.graph.outputs = [matmut_output, mut_output]
 
+    @requires_module("onnxsim")
     def save(self, output_path):
         """
         Save the ONNX model to the given location.
@@ -158,6 +165,12 @@ class YOLOTRTGraphSurgeon:
         """
         self.graph.cleanup().toposort()
         model = gs.export_onnx(self.graph)
+        if self.simplify:
+            try:
+                model, check = onnxsim.simplify(model)
+                assert check, "assert check failed, save origin onnx"
+            except Exception as e:
+                logger.info(f"Simplifier failure: {e}")
         onnx.save(model, output_path)
         logger.info(f"Saved ONNX model to {output_path}")
 

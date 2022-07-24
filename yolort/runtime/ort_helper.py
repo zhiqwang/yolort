@@ -1,12 +1,24 @@
 # Copyright (c) 2022, yolort team. All rights reserved.
 
+import logging
+from io import BytesIO
 from typing import Optional, Tuple
+
+import onnx
 
 import torch
 from torch import nn
 from yolort.models import YOLO, YOLOv5
 from yolort.relay import FakeYOLO
+from yolort.utils import is_module_available, requires_module
 from yolort.v5 import load_yolov5_model
+
+if is_module_available("onnxsim"):
+    import onnxsim
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("ORTHelper").setLevel(logging.INFO)
+logger = logging.getLogger("ORTHelper")
 
 
 def export_onnx(
@@ -23,6 +35,7 @@ def export_onnx(
     opset_version: int = 11,
     batch_size: int = 1,
     vanilla: bool = False,
+    simplify: bool = False,
 ) -> None:
     """
     Export to ONNX models that can be used for ONNX Runtime inferencing.
@@ -46,6 +59,7 @@ def export_onnx(
             the batch sizes and ensure that the number of input images is the same as the batches
             when inferring if you want to export multiple batches ONNX models. Default: 1
         vanilla (bool, optional): Whether to export a vanilla ONNX models. Default to False
+        simplify (bool, optional): Whether to simplify the exported ONNX. Default to False
     """
 
     if vanilla:
@@ -69,7 +83,7 @@ def export_onnx(
             batch_size=batch_size,
         )
 
-    onnx_builder.to_onnx(onnx_path)
+    onnx_builder.to_onnx(onnx_path, simplify)
 
 
 class ONNXBuilder:
@@ -206,8 +220,9 @@ class ONNXBuilder:
 
         return [torch.rand(3, 640, 640)] * self._batch_size
 
+    @requires_module("onnxsim")
     @torch.no_grad()
-    def to_onnx(self, onnx_path: str, **kwargs):
+    def to_onnx(self, onnx_path: str, simplify: bool, **kwargs):
         """
         Saves the model in ONNX format.
 
@@ -215,18 +230,28 @@ class ONNXBuilder:
             onnx_path (string): The path to the ONNX graph to be exported.
             **kwargs: Will be passed to torch.onnx.export function.
         """
-
-        torch.onnx.export(
-            self.model,
-            self.input_sample,
-            onnx_path,
-            do_constant_folding=True,
-            opset_version=self._opset_version,
-            input_names=self.input_names,
-            output_names=self.output_names,
-            dynamic_axes=self.dynamic_axes,
-            **kwargs,
-        )
+        with BytesIO() as f:
+            torch.onnx.export(
+                self.model,
+                self.input_sample,
+                f,
+                do_constant_folding=True,
+                opset_version=self._opset_version,
+                input_names=self.input_names,
+                output_names=self.output_names,
+                dynamic_axes=self.dynamic_axes,
+                **kwargs,
+            )
+            f.seek(0)
+            onnx_model = onnx.load(f)  # load onnx model
+        onnx.checker.check_model(onnx_model)  # check onnx model
+        if simplify:
+            try:
+                onnx_model, check = onnxsim.simplify(onnx_model)
+                assert check, "assert check failed, save origin onnx"
+            except Exception as e:
+                logger.info(f"Simplifier failure: {e}")
+        onnx.save(onnx_model, onnx_path)
 
 
 class VanillaONNXBuilder:
@@ -272,8 +297,9 @@ class VanillaONNXBuilder:
     def _set_dynamic_axes(self, enable_dynamic):
         return {"images": {0: "batch"}, "outputs": {0: "batch"}} if enable_dynamic else None
 
+    @requires_module("onnxsim")
     @torch.no_grad()
-    def to_onnx(self, onnx_path: str, **kwargs):
+    def to_onnx(self, onnx_path: str, simplify: bool, **kwargs):
         """
         Saves the model in ONNX format.
 
@@ -281,15 +307,25 @@ class VanillaONNXBuilder:
             onnx_path (string): The path to the ONNX graph to be exported.
             **kwargs: Will be passed to torch.onnx.export function.
         """
-
-        torch.onnx.export(
-            self.model,
-            self.input_sample,
-            onnx_path,
-            training=torch.onnx.TrainingMode.EVAL,
-            opset_version=self._opset_version,
-            input_names=self.input_names,
-            output_names=self.output_names,
-            dynamic_axes=self.dynamic_axes,
-            **kwargs,
-        )
+        with BytesIO() as f:
+            torch.onnx.export(
+                self.model,
+                self.input_sample,
+                f,
+                training=torch.onnx.TrainingMode.EVAL,
+                opset_version=self._opset_version,
+                input_names=self.input_names,
+                output_names=self.output_names,
+                dynamic_axes=self.dynamic_axes,
+                **kwargs,
+            )
+            f.seek(0)
+            onnx_model = onnx.load(f)  # load onnx model
+        onnx.checker.check_model(onnx_model)  # check onnx model
+        if simplify:
+            try:
+                onnx_model, check = onnxsim.simplify(onnx_model)
+                assert check, "assert check failed, save origin onnx"
+            except Exception as e:
+                logger.info(f"Simplifier failure: {e}")
+        onnx.save(onnx_model, onnx_path)
