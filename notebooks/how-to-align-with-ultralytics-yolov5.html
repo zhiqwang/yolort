@@ -717,7 +717,7 @@ Model Summary: 280 layers, 3239884 parameters, 0 gradients, 4.6 GFLOPs
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-    <span class="n">yolov5_dets</span> <span class="o">=</span> <span class="n">model_yolov5</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">yolov5_dets</span> <span class="o">=</span> <span class="n">model_yolov5</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
     <span class="n">yolov5_dets</span> <span class="o">=</span> <span class="n">non_max_suppression</span><span class="p">(</span><span class="n">yolov5_dets</span><span class="p">,</span> <span class="n">score_thresh</span><span class="p">,</span> <span class="n">nms_thresh</span><span class="p">,</span> <span class="n">agnostic</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 </div>
