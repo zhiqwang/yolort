@@ -228,7 +228,7 @@ class PredictorTRT:
         Returns:
             Tensor, processed tensor for prediction.
         """
-        return (read_image(img_path) / 255.0).to(self._device)
+        return read_image(img_path).to(self._device) / 255.0
 
     def collate_images(self, samples: Any, image_loader: Callable) -> List[Tensor]:
         """
