@@ -16,6 +16,7 @@ import torch
 from PIL import Image
 from torch import nn, Tensor
 from torch.cuda import amp
+from torch.nn import functional as F
 from yolort.v5.utils.general import (
     colorstr,
     increment_path,
@@ -264,16 +265,21 @@ class Focus2(nn.Module):
         version (str): Module version released by ultralytics. Possible values
             are ["r3.1", "r4.0"]. Default: "r4.0".
     """
+
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r4.0"):
         super().__init__()
+        self.register_buffer("filter1", torch.tensor([[1, 0], [0, 0]]).float().expand(3, 1, 2, 2))
+        self.register_buffer("filter2", torch.tensor([[0, 0], [1, 0]]).float().expand(3, 1, 2, 2))
+        self.register_buffer("filter3", torch.tensor([[0, 1], [0, 0]]).float().expand(3, 1, 2, 2))
+        self.register_buffer("filter4", torch.tensor([[0, 0], [0, 1]]).float().expand(3, 1, 2, 2))
         self.conv = Conv(c1 * 4, c2, k, s, p, g, act, version=version)
-        self.conv1 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
-        self.conv2 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
-        self.conv3 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
-        self.conv4 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
 
-    def forward(self, x):
-        return self.conv(torch.cat([self.conv1(x), self.conv2(x), self.conv3(x), self.conv4(x)], 1))
+    def forward(self, x: Tensor) -> Tensor:
+        conv1 = F.conv2d(x, self.filter1, stride=2, groups=3)
+        conv2 = F.conv2d(x, self.filter2, stride=2, groups=3)
+        conv3 = F.conv2d(x, self.filter3, stride=2, groups=3)
+        conv4 = F.conv2d(x, self.filter4, stride=2, groups=3)
+        return self.conv(torch.cat([conv1, conv2, conv3, conv4], dim=1))
 
 
 class Concat(nn.Module):
