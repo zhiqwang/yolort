@@ -248,6 +248,34 @@ def space_to_depth(x: Tensor) -> Tensor:
     return y
 
 
+class Focus2(nn.Module):
+    """
+    Is the Focus layer equivalent to a simple Conv layer?
+    https://github.com/ultralytics/yolov5/issues/4825#issue-998038464
+
+    Args:
+        c1 (int): ch_in
+        c2 (int): ch_out
+        k (int): kernel
+        s (int): stride
+        p (Optional[int]): padding
+        g (int): groups
+        act (bool or nn.Module): determine the activation function
+        version (str): Module version released by ultralytics. Possible values
+            are ["r3.1", "r4.0"]. Default: "r4.0".
+    """
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True, version="r4.0"):
+        super().__init__()
+        self.conv = Conv(c1 * 4, c2, k, s, p, g, act, version=version)
+        self.conv1 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
+        self.conv2 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
+        self.conv3 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
+        self.conv4 = nn.Conv2d(3, 3, (2, 2), groups=3, bias=False, stride=(2, 2))
+
+    def forward(self, x):
+        return self.conv(torch.cat([self.conv1(x), self.conv2(x), self.conv3(x), self.conv4(x)], 1))
+
+
 class Concat(nn.Module):
     # Concatenate a list of tensors along dimension
     def __init__(self, dimension: int = 1):
