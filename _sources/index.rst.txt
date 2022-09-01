@@ -77,6 +77,7 @@ Use Cases and Solutions
    :caption: Getting Started
 
    installation
+   notebooks/why-yolort
 
 .. toctree::
    :maxdepth: 2
