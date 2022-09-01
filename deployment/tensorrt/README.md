@@ -70,7 +70,8 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
                 --model_path {path/to/your/serialized/tensorrt/engine}
                 --class_names {path/to/your/class/names}
    ```
+
    Add minimal version of TensorRT
    float32 需要8.2.0+ float16需要8.2.4+
-   
+
    The above `yolort_trt` will determine if it needs to build the serialized engine file from ONNX based on the file suffix, and only do serialization when the argument `--model_path` given are with `.onnx` suffixes, all other suffixes are treated as the TensorRT serialized engine.
