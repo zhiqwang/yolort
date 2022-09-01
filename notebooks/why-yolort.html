@@ -675,7 +675,8 @@ Note: you may need to restart the kernel to use updated packages.
 <section id="Part-of-the-code-details">
 <h2 id="Part-of-the-code-details">Part of the code details<a class="headerlink" href="#Part-of-the-code-details" title="Permalink to this heading">¶</a></h2>
 <ol class="arabic simple">
-<li><p><a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/7cdef76166b2497abf626d12ca74f2c4401f80e2/yolort/models/transform.py#L112">LetterBox</a> is implemented using PyTorch native operators, via torch.nn.functional.interpolate and the pad operator. Easily exported to TorchScript and ONNX formats.</p></li>
+<li><p><a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/7cdef76166b2497abf626d12ca74f2c4401f80e2/yolort/models/transform.py#L112">LetterBox</a> is implemented using PyTorch native operators, via <code class="docutils literal notranslate"><span class="pre">torch.nn.functional.interpolate</span></code> and <code class="docutils literal notranslate"><span class="pre">torch.nn.functional.pad</span></code> operators.</p></li>
+<li><p>Easily exported to TorchScript and ONNX formats.</p></li>
 <li><p>P5/P6-compatible <a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/7cdef76166b2497abf626d12ca74f2c4401f80e2/yolort/models/path_aggregation_network.py#L44">PathAggregationNetwork</a> implementation, which fully captures the symmetry in the PAN structure.</p></li>
 <li><p>Minimalist implementation of <a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/7cdef76166b2497abf626d12ca74f2c4401f80e2/yolort/models/box_head.py#L360">PostProcess</a>.</p></li>
 </ol>
@@ -773,7 +774,7 @@ Note: you may need to restart the kernel to use updated packages.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fx_traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">symbolic_trace</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fx_trace_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">symbolic_trace</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
