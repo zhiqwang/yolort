@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import torch
 import torchvision
 from torch import nn, Tensor
-from torchvision.io import read_image
+from torchvision.io import ImageReadMode, read_image
 from yolort.utils import contains_any_tensor
 
 from . import yolo
@@ -220,7 +220,7 @@ class YOLOv5(nn.Module):
         Returns:
             Tensor, processed tensor for prediction.
         """
-        return read_image(img_path) / 255.0
+        return read_image(img_path, mode=ImageReadMode.RGB) / 255.0
 
     def collate_images(self, samples: Any, image_loader: Callable) -> List[Tensor]:
         """
