@@ -13,7 +13,7 @@ if is_module_available("tensorrt"):
 import numpy as np
 import torch
 from torch import Tensor
-from torchvision.io import read_image
+from torchvision.io import ImageReadMode, read_image
 from yolort.models.transform import YOLOTransform
 
 
@@ -228,7 +228,7 @@ class PredictorTRT:
         Returns:
             Tensor, processed tensor for prediction.
         """
-        return read_image(img_path).to(self._device) / 255.0
+        return read_image(img_path, mode=ImageReadMode.RGB).to(self._device) / 255.0
 
     def collate_images(self, samples: Any, image_loader: Callable) -> List[Tensor]:
         """
