@@ -93,7 +93,7 @@ jobs:
           PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
