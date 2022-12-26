@@ -3,13 +3,15 @@
 from pathlib import Path
 
 import pytest
-import pytorch_lightning as pl
 from yolort.data import _helper as data_helper
 from yolort.data.data_module import DetectionDataModule
 from yolort.trainer import DefaultTask
 
 
+@pytest.mark.skip("The version of protobuf it depends on is too old.")
 def test_training_step():
+    import pytorch_lightning as pl
+
     # Setup the DataModule
     data_path = "data-bin"
     train_dataset = data_helper.get_dataset(data_root=data_path, mode="train")
@@ -23,8 +25,11 @@ def test_training_step():
     trainer.fit(model, data_module)
 
 
+@pytest.mark.skip("The version of protobuf it depends on is too old.")
 @pytest.mark.parametrize("arch, version, map5095, map50", [("yolov5s", "r4.0", 42.5, 65.3)])
 def test_test_epoch_end(arch, version, map5095, map50):
+    import pytorch_lightning as pl
+
     # Acquire the annotation file
     data_path = Path("data-bin")
     coco128_dirname = "coco128"
