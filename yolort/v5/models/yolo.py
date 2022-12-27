@@ -97,7 +97,7 @@ class Detect(nn.Module):
         return grid, anchor_grid
 
 
-class Model(nn.Module):
+class DetectionModel(nn.Module):
     def __init__(self, cfg="yolov5s.yaml", ch=3, nc=None, anchors=None):
         """
         Args:
@@ -272,6 +272,9 @@ class Model(nn.Module):
         return self
 
 
+Model = DetectionModel  # retain YOLOv5 'Model' class for backwards compatibility
+
+
 def parse_model(d, ch):  # model_dict, input_channels(3)
     LOGGER.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
     anchors, nc, gd, gw = d["anchors"], d["nc"], d["depth_multiple"], d["width_multiple"]
@@ -336,5 +339,3 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             ch = []
         ch.append(c2)
     return nn.Sequential(*layers), sorted(save)
-
-DetectionModel = Model
