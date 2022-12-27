@@ -107,11 +107,11 @@ def test_letterbox():
 def test_box_cxcywh_to_xyxy():
     box_cxcywh = np.asarray(
         [[50, 50, 100, 100], [0, 0, 0, 0], [20, 25, 20, 20], [58, 65, 70, 60]],
-        dtype=np.float,
+        dtype=np.float64,
     )
     exp_xyxy = np.asarray(
         [[0, 0, 100, 100], [0, 0, 0, 0], [10, 15, 30, 35], [23, 35, 93, 95]],
-        dtype=np.float,
+        dtype=np.float64,
     )
 
     box_xyxy = box_cxcywh_to_xyxy(box_cxcywh)

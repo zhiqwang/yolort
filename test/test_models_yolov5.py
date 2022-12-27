@@ -5,7 +5,6 @@ import torch
 from torch import Tensor
 from torchvision.io import read_image
 from yolort.data import _helper as data_helper
-from yolort.data.coco_eval import COCOEvaluator
 from yolort.models import yolov5s
 from yolort.models.transform import YOLOTransform
 from yolort.models.yolo import yolov5_darknet_pan_s_r31
@@ -75,8 +74,11 @@ def test_train_with_vanilla_module():
     assert isinstance(out["objectness"], Tensor)
 
 
+@pytest.mark.skip("Remove Lightning dependency")
 @pytest.mark.parametrize("version, map5095, map50", [("r4.0", 42.5, 65.3)])
 def test_vanilla_coco_evaluator(version, map5095, map50):
+    from yolort.data.coco_eval import COCOEvaluator
+
     # Acquire the images and labels from the coco128 dataset
     val_dataloader = data_helper.get_dataloader(data_root="data-bin", mode="val")
     coco = data_helper.get_coco_api_from_dataset(val_dataloader.dataset)

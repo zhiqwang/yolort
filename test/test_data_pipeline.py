@@ -2,10 +2,11 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
+
 from torch import Tensor
 from yolort.data import _helper as data_helper
-from yolort.data.data_module import DetectionDataModule
 from yolort.utils import contains_any_tensor
 
 
@@ -44,7 +45,10 @@ def test_get_dataloader():
     assert isinstance(targets[0]["orig_size"], Tensor)
 
 
+@pytest.mark.skip("Remove Lightning dependency")
 def test_detection_data_module():
+    from yolort.data.data_module import DetectionDataModule
+
     # Setup the DataModule
     batch_size = 4
     train_dataset = data_helper.get_dataset(data_root="data-bin", mode="train")

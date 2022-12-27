@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: '3.8'
 
@@ -72,9 +72,7 @@ jobs:
           pip install --user --progress-bar off pycocotools>=2.0.2
           pip install --user --progress-bar off onnx
           pip install --user --progress-bar off onnxruntime
-          pip install --user --progress-bar off pytorch_lightning
-          pip install --user --progress-bar off torchmetrics
-          pip install --user --progress-bar off onnxruntime
+          pip install --user --progress-bar off requests
           pip install --user onnx_graphsurgeon --index-url https://pypi.ngc.nvidia.com
 
       - name: Lint with flake8
@@ -93,7 +91,7 @@ jobs:
           PYTORCH_TEST_WITH_SLOW=1 pytest ${{ matrix.unittest_type }}
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
