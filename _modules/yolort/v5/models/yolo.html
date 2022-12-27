@@ -714,7 +714,7 @@
 <span class="k">if</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"thop"</span><span class="p">):</span>
     <span class="kn">import</span> <span class="nn">thop</span>  <span class="c1"># for FLOPs computation</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Model"</span><span class="p">,</span> <span class="s2">"Detect"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Model"</span><span class="p">,</span> <span class="s2">"Detect"</span><span class="p">,</span> <span class="s2">"DetectionModel"</span><span class="p">]</span>
 
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -1012,6 +1012,8 @@
             <span class="n">ch</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">ch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">),</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
+
+<span class="n">DetectionModel</span> <span class="o">=</span> <span class="n">Model</span>
 </pre></div>
 
           </article>
