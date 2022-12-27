@@ -38,7 +38,7 @@ from .experimental import CrossConv, MixConv2d
 if is_module_available("thop"):
     import thop  # for FLOPs computation
 
-__all__ = ["Model", "Detect"]
+__all__ = ["Model", "Detect", "DetectionModel"]
 
 LOGGER = logging.getLogger(__name__)
 
@@ -336,3 +336,5 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             ch = []
         ch.append(c2)
     return nn.Sequential(*layers), sorted(save)
+
+DetectionModel = Model
