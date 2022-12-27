@@ -669,7 +669,7 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torchvision</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torchvision.io</span> <span class="kn">import</span> <span class="n">read_image</span>
+<span class="kn">from</span> <span class="nn">torchvision.io</span> <span class="kn">import</span> <span class="n">ImageReadMode</span><span class="p">,</span> <span class="n">read_image</span>
 <span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">contains_any_tensor</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">yolo</span>
@@ -883,7 +883,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Tensor, processed tensor for prediction.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">read_image</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="k">return</span> <span class="n">read_image</span><span class="p">(</span><span class="n">img_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">ImageReadMode</span><span class="o">.</span><span class="n">RGB</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
 
     <span class="k">def</span> <span class="nf">collate_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">image_loader</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
         <span class="sd">"""</span>
