@@ -4,9 +4,11 @@ name: Publish 🐍 to PyPI.org
 
 on:
   push:
-    branches: [ main, 'release/*' ]
+    branches:
+      - release/*
   release:
-    types: [ published ]
+    types:
+      - published
 
 jobs:
   deploy:
