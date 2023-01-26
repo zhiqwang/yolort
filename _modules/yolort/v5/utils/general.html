@@ -50,12 +50,9 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/material.css" />
     <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-    <script src="../../../../_static/jquery.js"></script>
-    <script src="../../../../_static/underscore.js"></script>
-    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../../_static/doctools.js"></script>
     <script src="../../../../_static/sphinx_highlight.js"></script>
-    <link rel="shortcut icon" href="../../../../_static/favicon.svg"/>
+    <link rel="icon" href="../../../../_static/favicon.svg"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
   
@@ -84,8 +81,7 @@
         <a href="../../../../index.html" title="yolort  documentation"
            class="md-header-nav__button md-logo">
           
-              <img src="../../../../_static/yolort_logo_icon.png" height="26"
-                   alt="yolort documentation logo">
+            &nbsp;
           
         </a>
       </div>
@@ -158,7 +154,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="../../../../index.html" title="yolort documentation" class="md-nav__button md-logo">
       
-        <img src="../../../../_static/yolort_logo_icon.png" alt=" logo" width="48" height="48">
+        <img src="../../../../_static/" alt=" logo" width="48" height="48">
       
     </a>
     <a href="../../../../index.html"
@@ -724,7 +720,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Profile results: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">s"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Profile results: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">s"</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">Timeout</span><span class="p">(</span><span class="n">contextlib</span><span class="o">.</span><span class="n">ContextDecorator</span><span class="p">):</span>
@@ -769,7 +765,7 @@
 
 
 <span class="k">def</span> <span class="nf">init_seeds</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Initialize random number generator (RNG) seeds</span>
 <span class="sd">    https://pytorch.org/docs/stable/notes/randomness.html</span>
 
@@ -785,7 +781,7 @@
 
 
 <div class="viewcode-block" id="intersect_dicts"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.intersect_dicts">[docs]</a><span class="k">def</span> <span class="nf">intersect_dicts</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">()):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Dictionary intersection of matching keys and shapes,</span>
 <span class="sd">    omitting 'exclude' keys, using dict1 values</span>
 <span class="sd">    """</span>
@@ -803,7 +799,7 @@
 
 
 <span class="k">def</span> <span class="nf">user_config_dir</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s2">"Ultralytics"</span><span class="p">,</span> <span class="n">env_var</span><span class="o">=</span><span class="s2">"YOLOV5_CONFIG_DIR"</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return path of user configuration directory. Prefer environment</span>
 <span class="sd">    variable if exists. Make dir if required.</span>
 <span class="sd">    """</span>
@@ -825,7 +821,7 @@
 
 
 <span class="k">def</span> <span class="nf">is_writeable</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return True if directory has write permissions, test opening a file</span>
 <span class="sd">    with write permissions if test=True</span>
 <span class="sd">    """</span>
@@ -848,7 +844,7 @@
 
 
 <span class="k">def</span> <span class="nf">is_ascii</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Is string composed of all ASCII (no UTF) characters?</span>
 <span class="sd">    (note str().isascii() introduced in python 3.7)</span>
 <span class="sd">    """</span>
@@ -904,7 +900,7 @@
 
 
 <span class="k">def</span> <span class="nf">check_img_size</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Verify image size is a multiple of stride stride in each dimension</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>  <span class="c1"># integer i.e. img_size=640</span>
@@ -936,7 +932,7 @@
 
 
 <span class="k">def</span> <span class="nf">check_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Search/download file (if necessary) and return path</span>
 <span class="sd">    """</span>
     <span class="n">check_suffix</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>  <span class="c1"># optional</span>
@@ -993,7 +989,7 @@
 
 
 <span class="k">def</span> <span class="nf">colorstr</span><span class="p">(</span><span class="o">*</span><span class="nb">input</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code,</span>
 <span class="sd">    i.e.  colorstr('blue', 'hello world')</span>
 <span class="sd">    """</span>
@@ -1051,7 +1047,7 @@
 
 
 <span class="k">def</span> <span class="nf">xyxy2xywh</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h]</span>
 <span class="sd">    where xy1=top-left, xy2=bottom-right</span>
 <span class="sd">    """</span>
@@ -1064,7 +1060,7 @@
 
 
 <span class="k">def</span> <span class="nf">xywh2xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2]</span>
 <span class="sd">    where xy1=top-left, xy2=bottom-right</span>
 <span class="sd">    """</span>
@@ -1077,7 +1073,7 @@
 
 
 <span class="k">def</span> <span class="nf">xywhn2xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">padw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">padh</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x, y, w, h] normalized to [x1, y1, x2, y2]</span>
 <span class="sd">    where xy1=top-left, xy2=bottom-right</span>
 <span class="sd">    """</span>
@@ -1090,7 +1086,7 @@
 
 
 <span class="k">def</span> <span class="nf">xyxy2xywhn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h]</span>
 <span class="sd">    normalized where xy1=top-left, xy2=bottom-right</span>
 <span class="sd">    """</span>
@@ -1113,7 +1109,7 @@
 
 
 <span class="k">def</span> <span class="nf">segment2box</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">640</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert 1 segment label to 1 box label, applying inside-image</span>
 <span class="sd">    constraint, i.e. (xy1, xy2, ...) to (xyxy)</span>
 <span class="sd">    """</span>
@@ -1185,7 +1181,7 @@
     <span class="n">labels</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">max_det</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Runs Non-Maximum Suppression (NMS) on inference results</span>
 
 <span class="sd">    Returns:</span>
@@ -1283,7 +1279,7 @@
 
 
 <span class="k">def</span> <span class="nf">strip_optimizer</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">"best.pt"</span><span class="p">,</span> <span class="n">saved_path</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Strip optimizer from 'checkpoint_path' to finalize training,</span>
 <span class="sd">    optionally save as 'saved_path'</span>
 <span class="sd">    """</span>
@@ -1386,7 +1382,7 @@
 
 
 <span class="k">def</span> <span class="nf">increment_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">mkdir</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Increment file or directory path.</span>
 <span class="sd">    i.e. runs/exp --&gt; runs/exp{sep}2, runs/exp{sep}3, ... etc.</span>
 <span class="sd">    """</span>
@@ -1421,11 +1417,11 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2022, yolort team.
+              &#169; Copyright 2023, yolort team.
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

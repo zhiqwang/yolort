@@ -50,12 +50,9 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/material.css" />
     <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-    <script src="../../../../_static/jquery.js"></script>
-    <script src="../../../../_static/underscore.js"></script>
-    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../../_static/doctools.js"></script>
     <script src="../../../../_static/sphinx_highlight.js"></script>
-    <link rel="shortcut icon" href="../../../../_static/favicon.svg"/>
+    <link rel="icon" href="../../../../_static/favicon.svg"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
   
@@ -84,8 +81,7 @@
         <a href="../../../../index.html" title="yolort  documentation"
            class="md-header-nav__button md-logo">
           
-              <img src="../../../../_static/yolort_logo_icon.png" height="26"
-                   alt="yolort documentation logo">
+            &nbsp;
           
         </a>
       </div>
@@ -158,7 +154,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="../../../../index.html" title="yolort documentation" class="md-nav__button md-logo">
       
-        <img src="../../../../_static/yolort_logo_icon.png" alt=" logo" width="48" height="48">
+        <img src="../../../../_static/" alt=" logo" width="48" height="48">
       
     </a>
     <a href="../../../../index.html"
@@ -702,7 +698,7 @@
 
 
 <div class="viewcode-block" id="Conv"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.Conv">[docs]</a><span class="k">class</span> <span class="nc">Conv</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Standard convolution</span>
 
 <span class="sd">    Args:</span>
@@ -736,7 +732,7 @@
 
 
 <div class="viewcode-block" id="DWConv"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.DWConv">[docs]</a><span class="k">class</span> <span class="nc">DWConv</span><span class="p">(</span><span class="n">Conv</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Depth-wise convolution class.</span>
 
 <span class="sd">    Args:</span>
@@ -754,7 +750,7 @@
 
 
 <div class="viewcode-block" id="Bottleneck"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.Bottleneck">[docs]</a><span class="k">class</span> <span class="nc">Bottleneck</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Standard bottleneck</span>
 
 <span class="sd">    Args:</span>
@@ -779,7 +775,7 @@
 
 
 <div class="viewcode-block" id="BottleneckCSP"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.BottleneckCSP">[docs]</a><span class="k">class</span> <span class="nc">BottleneckCSP</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks</span>
 
 <span class="sd">    Args:</span>
@@ -809,7 +805,7 @@
 
 
 <div class="viewcode-block" id="C3"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.C3">[docs]</a><span class="k">class</span> <span class="nc">C3</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    CSP Bottleneck with 3 convolutions</span>
 
 <span class="sd">    Args:</span>
@@ -850,7 +846,7 @@
 
 
 <div class="viewcode-block" id="SPPF"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.SPPF">[docs]</a><span class="k">class</span> <span class="nc">SPPF</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher</span>
 <span class="sd">    """</span>
 
@@ -870,7 +866,7 @@
 
 
 <div class="viewcode-block" id="Focus"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.Focus">[docs]</a><span class="k">class</span> <span class="nc">Focus</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Focus wh information into c-space</span>
 
 <span class="sd">    Args:</span>
@@ -897,13 +893,13 @@
 
 
 <div class="viewcode-block" id="focus_transform"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.focus_transform">[docs]</a><span class="k">def</span> <span class="nf">focus_transform</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-    <span class="sd">"""x(b,c,w,h) -&gt; y(b,4c,w/2,h/2)"""</span>
+<span class="w">    </span><span class="sd">"""x(b,c,w,h) -&gt; y(b,4c,w/2,h/2)"""</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]],</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">y</span></div>
 
 
 <div class="viewcode-block" id="space_to_depth"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.space_to_depth">[docs]</a><span class="k">def</span> <span class="nf">space_to_depth</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-    <span class="sd">"""x(b,c,w,h) -&gt; y(b,4c,w/2,h/2)"""</span>
+<span class="w">    </span><span class="sd">"""x(b,c,w,h) -&gt; y(b,4c,w/2,h/2)"""</span>
     <span class="n">N</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">W</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
@@ -912,7 +908,7 @@
 
 
 <span class="k">class</span> <span class="nc">Focus2</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Is the Focus layer equivalent to a simple Conv layer?</span>
 <span class="sd">    https://github.com/ultralytics/yolov5/issues/4825#issue-998038464</span>
 
@@ -968,7 +964,7 @@
 
 
 <span class="k">class</span> <span class="nc">TransformerLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Transformer layer &lt;https://arxiv.org/abs/2010.11929&gt;.</span>
 <span class="sd">    Remove the LayerNorm layers for better performance</span>
 
@@ -994,7 +990,7 @@
 
 
 <span class="k">class</span> <span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Vision Transformer &lt;https://arxiv.org/abs/2010.11929&gt;.</span>
 
 <span class="sd">    Args:</span>
@@ -1108,7 +1104,7 @@
 
 
 <div class="viewcode-block" id="AutoShape"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.AutoShape">[docs]</a><span class="k">class</span> <span class="nc">AutoShape</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    YOLOv5 input-robust model wrapper for passing cv2/np/PIL/torch inputs.</span>
 <span class="sd">    Includes preprocessing, inference and NMS</span>
 <span class="sd">    """</span>
@@ -1128,7 +1124,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Apply to(), cpu(), cuda(), half() to model tensors that</span>
 <span class="sd">        are not parameters or registered buffers</span>
 <span class="sd">        """</span>
@@ -1142,7 +1138,7 @@
 
 <div class="viewcode-block" id="AutoShape.forward"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.AutoShape.forward">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imgs</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">augment</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">"""</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Inference from various sources. For height=640, width=1280, RGB images example inputs are:</span>
 <span class="sd">            - file: imgs = 'data/images/zidane.jpg'  # str or PosixPath</span>
 <span class="sd">            - URI: = 'https://ultralytics.com/images/zidane.jpg'</span>
@@ -1245,11 +1241,11 @@
     <span class="p">):</span>
         <span class="n">crops</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">imgs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="p">)):</span>
-            <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"image </span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"image </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> "</span>
             <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
                     <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">pred</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># detections per class</span>
-                    <span class="nb">str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span><span class="si">}{</span><span class="s1">'s'</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>  <span class="c1"># add to string</span>
+                    <span class="nb">str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span><span class="si">}{</span><span class="s1">'s'</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>  <span class="c1"># add to string</span>
                 <span class="k">if</span> <span class="n">show</span> <span class="ow">or</span> <span class="n">save</span> <span class="ow">or</span> <span class="n">render</span> <span class="ow">or</span> <span class="n">crop</span><span class="p">:</span>
                     <span class="n">annotator</span> <span class="o">=</span> <span class="n">Annotator</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">pil</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ascii</span><span class="p">)</span>
                     <span class="k">for</span> <span class="o">*</span><span class="n">box</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">pred</span><span class="p">):</span>  <span class="c1"># xyxy, confidence, class</span>
@@ -1280,7 +1276,7 @@
                 <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                 <span class="n">im</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">/</span> <span class="n">f</span><span class="p">)</span>  <span class="c1"># save</span>
                 <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Saved </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="si">}</span><span class="s2"> image</span><span class="si">{</span><span class="s1">'s'</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">colorstr</span><span class="p">(</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Saved </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="si">}</span><span class="s2"> image</span><span class="si">{</span><span class="s1">'s'</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">colorstr</span><span class="p">(</span><span class="s1">'bold'</span><span class="p">,</span><span class="w"> </span><span class="n">save_dir</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">imgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">im</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">crop</span><span class="p">:</span>
@@ -1369,11 +1365,11 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2022, yolort team.
+              &#169; Copyright 2023, yolort team.
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

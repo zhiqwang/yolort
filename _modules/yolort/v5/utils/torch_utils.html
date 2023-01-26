@@ -50,12 +50,9 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/material.css" />
     <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-    <script src="../../../../_static/jquery.js"></script>
-    <script src="../../../../_static/underscore.js"></script>
-    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../../_static/doctools.js"></script>
     <script src="../../../../_static/sphinx_highlight.js"></script>
-    <link rel="shortcut icon" href="../../../../_static/favicon.svg"/>
+    <link rel="icon" href="../../../../_static/favicon.svg"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
   
@@ -84,8 +81,7 @@
         <a href="../../../../index.html" title="yolort  documentation"
            class="md-header-nav__button md-logo">
           
-              <img src="../../../../_static/yolort_logo_icon.png" height="26"
-                   alt="yolort documentation logo">
+            &nbsp;
           
         </a>
       </div>
@@ -158,7 +154,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="../../../../index.html" title="yolort documentation" class="md-nav__button md-logo">
       
-        <img src="../../../../_static/yolort_logo_icon.png" alt=" logo" width="48" height="48">
+        <img src="../../../../_static/" alt=" logo" width="48" height="48">
       
     </a>
     <a href="../../../../index.html"
@@ -689,7 +685,7 @@
 
 <span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">torch_distributed_zero_first</span><span class="p">(</span><span class="n">local_rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Decorator to make all processes in distributed training</span>
 <span class="sd">    wait for each local_master to do something.</span>
 <span class="sd">    """</span>
@@ -707,7 +703,7 @@
 
 
 <span class="k">def</span> <span class="nf">git_describe</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return human-readable git description,</span>
 <span class="sd">    i.e. v5.0-5-g3e25f1e https://git-scm.com/docs/git-describe</span>
 <span class="sd">    """</span>
@@ -721,7 +717,7 @@
 
 <div class="viewcode-block" id="select_device"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.select_device">[docs]</a><span class="k">def</span> <span class="nf">select_device</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="c1"># device = 'cpu' or '0' or '0,1,2,3'</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"YOLOv5 🚀 </span><span class="si">{</span><span class="n">git_describe</span><span class="p">()</span> <span class="ow">or</span> <span class="n">date_modified</span><span class="p">()</span><span class="si">}</span><span class="s2"> torch </span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2"> "</span>  <span class="c1"># string</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"YOLOv5 🚀 </span><span class="si">{</span><span class="n">git_describe</span><span class="p">()</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">date_modified</span><span class="p">()</span><span class="si">}</span><span class="s2"> torch </span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2"> "</span>  <span class="c1"># string</span>
     <span class="n">device</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"cuda:"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>  <span class="c1"># to string, 'cuda:0' to '0'</span>
     <span class="n">cpu</span> <span class="o">=</span> <span class="n">device</span> <span class="o">==</span> <span class="s2">"cpu"</span>
     <span class="k">if</span> <span class="n">cpu</span><span class="p">:</span>
@@ -742,7 +738,7 @@
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">devices</span><span class="p">):</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">get_device_properties</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
             <span class="c1"># bytes to MB</span>
-            <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">''</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">space</span><span class="si">}</span><span class="s2">CUDA:</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">total_memory</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">**</span> <span class="mi">2</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">MiB)</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">''</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">space</span><span class="si">}</span><span class="s2">CUDA:</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">total_memory</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="mi">2</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">MiB)</span><span class="se">\n</span><span class="s2">"</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">"CPU</span><span class="se">\n</span><span class="s2">"</span>
 
@@ -761,7 +757,7 @@
 
 
 <span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">ops</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    YOLOv5 speed/memory/FLOPs profiler</span>
 
 <span class="sd">    Example:</span>
@@ -833,7 +829,7 @@
 
 
 <span class="k">def</span> <span class="nf">de_parallel</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    De-parallelize a model: returns single-GPU model if model is of type DP or DDP</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">module</span> <span class="k">if</span> <span class="n">is_parallel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">else</span> <span class="n">model</span>
@@ -878,7 +874,7 @@
 
 
 <span class="k">def</span> <span class="nf">fuse_conv_and_bn</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">bn</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Fuse convolution and batchnorm layers</span>
 <span class="sd">    https://tehnokv.com/posts/fusing-batchnorm-and-conv/</span>
 <span class="sd">    """</span>
@@ -948,7 +944,7 @@
 
 
 <span class="k">def</span> <span class="nf">scale_img</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">same_shape</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gs</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Scales img(bs,3,y,x) by ratio constrained to gs-multiple</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">ratio</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
@@ -999,7 +995,7 @@
 
 
 <span class="k">class</span> <span class="nc">ModelEMA</span><span class="p">:</span>
-    <span class="sd">"""</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Model Exponential Moving Average from</span>
 <span class="sd">    https://github.com/rwightman/pytorch-image-models</span>
 
@@ -1059,11 +1055,11 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2022, yolort team.
+              &#169; Copyright 2023, yolort team.
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
