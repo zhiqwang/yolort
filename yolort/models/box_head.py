@@ -238,7 +238,7 @@ class SetCriterion(nn.Module):
 
         num_targets = targets.shape[0]
 
-        gain = torch.ones(7, device=device)  # normalized to gridspace gain
+        gain = torch.ones(7, device=device).long()  # normalized to gridspace gain
         # same as .repeat_interleave(num_targets)
         ai = torch.arange(num_anchors, device=device).float().view(num_anchors, 1).repeat(1, num_targets)
         # append anchor indices
