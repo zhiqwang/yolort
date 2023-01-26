@@ -68,6 +68,7 @@ class TestONNXExporter:
     def get_test_images(self):
         return self.get_image("bus.jpg"), self.get_image("zidane.jpg")
 
+    @pytest.mark.xfail(reason="PyTorch 1.12 and 1.13 does not work.")
     @pytest.mark.parametrize(
         "arch, fixed_size, upstream_version",
         [
