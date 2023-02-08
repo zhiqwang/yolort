@@ -1,7 +1,8 @@
 # Copyright (c) 2020, yolort team. All rights reserved.
 
 import math
-from typing import cast, Dict, List, Optional, Tuple
+
+from typing import cast, Dict, List, NamedTuple, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -10,7 +11,7 @@ from torch import nn, Tensor
 from torchvision.ops import box_convert
 
 
-class NestedTensor:
+class NestedTensor(NamedTuple):
     """
     Structure that holds a list of images (of possibly varying sizes) as
     a single tensor.
@@ -19,21 +20,8 @@ class NestedTensor:
     field the original sizes of each image.
     """
 
-    def __init__(self, tensors: Tensor, image_sizes: List[Tuple[int, int]]):
-        """
-        Args:
-            tensors (Tensor)
-            image_sizes (list[tuple[int, int]])
-        """
-        self.tensors = tensors
-        self.image_sizes = image_sizes
-
-    def to(self, device) -> "NestedTensor":
-        cast_tensor = self.tensors.to(device)
-        return NestedTensor(cast_tensor, self.image_sizes)
-
-    def __repr__(self):
-        return str(self.tensors)
+    tensors: Tensor
+    image_sizes: List[Tuple[int, int]]
 
 
 @torch.jit.unused
@@ -212,7 +200,7 @@ class YOLOTransform(nn.Module):
             assert len(image_size) == 2
             image_sizes_list.append((image_size[0], image_size[1]))
 
-        image_list = NestedTensor(images, image_sizes_list)
+        image_list = NestedTensor(tensors=images, image_sizes=image_sizes_list)
 
         if targets is not None:
             targets_batched = []

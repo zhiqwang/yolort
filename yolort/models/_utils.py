@@ -102,8 +102,9 @@ def bbox_iou(box1: Tensor, box2: Tensor, x1y1x2y2: bool = True, eps: float = 1e-
 
     # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
     v = (4 / math.pi**2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
-    with torch.no_grad():
-        alpha = v / (v - iou + (1 + eps))
+    torch.set_grad_enabled(False)
+    alpha = v / (v - iou + (1 + eps))
+    torch.set_grad_enabled(True)
     return iou - (rho2 / c2 + v * alpha)  # CIoU
 
 
