@@ -1,39 +1,42 @@
 import torch
-from torch.ao.quantization import get_default_qconfig
-from torch.ao.quantization.quantize_fx import prepare_fx, convert_fx
-from torch.ao.quantization import QConfigMapping
-from torchvision import datasets, transforms
-from torch.utils.data import Dataset
-from torch import ao
+from torch.utils.data import DataLoader
 import torchvision
 import onnx
 from onnxsim import simplify
+from onnx import version_converter, helper
+
+from ppq import BaseGraph, QuantizationSettingFactory, TargetPlatform
+from ppq.api import export_ppq_graph, quantize_onnx_model
+import ppq.lib as PFL
+from ppq import TargetPlatform, TorchExecutor, graphwise_error_analyse
+from ppq.api import ENABLE_CUDA_KERNEL, export_ppq_graph, load_torch_model, load_onnx_graph
+from ppq.quantization.optim import *
+
 
 import os
 from PIL import Image
 import argparse
 from pathlib import Path
 
-from quantization_backup import getDistillData, prepare_data_loaders, calibrate, get_parser, make_model
+from quantization_backup import getDistillData, prepare_data_loaders, calibrate, get_parser, make_model, collate_fn
 from yolort.models import YOLOv5
+
+PLATFORM = TargetPlatform.TRT_INT8
 
 
 def main():
 
-    print("In main 1")
     # parser
     parser = get_parser()
     args = parser.parse_args()
     print(f"Command Line Args: {args}")
 
-    print("In main 2")
     # model initilize
     checkpoint_path = Path(args.checkpoint_path)
     assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
     model = make_model(checkpoint_path, args.version)
     model.eval()
-
-    print("In main 3")
+    
     # distill data
     distilled_data_path = Path(args.distilled_data_path)
     if not os.path.exists(distilled_data_path):
@@ -52,32 +55,13 @@ def main():
             args.num_of_batches
         )
     
-    print("In main 4")
     # dataloader
     dataloader = prepare_data_loaders(distilled_data_path, args.input_size)
 
-    print("In main 5")
-    # prepare model
-    qconfig = get_default_qconfig("fbgemm")
-    qconfig_mapping = QConfigMapping().set_global(qconfig)
-    dummy_inputs = torch.randn(args.input_size)
-    print(f"1 dummy_inputs.shape = {dummy_inputs.shape}")
-    dummy_inputs = dummy_inputs.unsqueeze(0)
-    print(f"2 dummy_inputs.shape = {dummy_inputs.shape}")
-    prepared_model = prepare_fx(model, qconfig_mapping, dummy_inputs)
-
-    print("In main 6")
-    # calibrate
-    calibrate(prepared_model, dataloader)
-
-    print("In main 7")
-    # convert
-    quantized_model = convert_fx(prepared_model)
-
-    print("In main 8")
-    # export quantized model
+    # torch to onnx
+    dummy_inputs = torch.randn([1] + args.input_size, device="cpu")
     torch.onnx.export(
-        quantized_model,
+        model,
         dummy_inputs,
         args.onnx_output_path,
         args.opset_version,
@@ -85,12 +69,94 @@ def main():
         input_names=[args.onnx_input_name],
         output_names=[args.onnx_output_name]
     )
-    print("In main 9")
 
-    # sim and output
-    quantized_onnx = onnx.load(args.onnx_output_path)
-    sim_quantized_onnx, _ = simplify(quantized_onnx)
-    onnx.save(sim_quantized_onnx, args.sim_onnx_output_path)
+    # quantization
+    onnx_model = onnx.load(args.onnx_output_path)
+    simplified, _ = simplify(onnx_model)
+    onnx.save(simplified, args.sim_onnx_output_path)
+    graph = load_onnx_graph(args.sim_onnx_output_path)
+
+    quantizer = PFL.Quantizer(platform=TargetPlatform.TRT_INT8, graph=graph)
+    dispatching = {op.name: TargetPlatform.FP32 for op in graph.operations.values()}
+
+    # 从第一个卷积到最后的卷积中间的所有算子量化，其他算子不量化
+    from ppq.IR import SearchableGraph
+    search_engine = SearchableGraph(graph)
+    for op in search_engine.opset_matching(
+        sp_expr = lambda x: x.type == "Conv",
+        rp_expr = lambda x, y: True,
+        ep_expr = lambda x: x.type == "Conv",
+        direction = "down"):
+        dispatching[op.name] = TargetPlatform.TRT_INT8
+    
+    # 为算子初始化量化信息
+    for op in graph.operations.values():
+        if dispatching[op.name] == TargetPlatform.TRT_INT8:
+            quantizer.quantize_operation(
+                op_name = op.name, platform = dispatching[op.name]
+                )
+    
+    # 初始化执行器
+    collate_fn = lambda x: x.to("cuda")
+    executor = TorchExecutor(graph = graph, device = "cuda")
+    executor.tracing_operation_meta(inputs=torch.zeros(size=[1] + args.input_size).cuda())
+    executor.load_graph(graph = graph)
+
+    # 创建优化管线
+    pipeline = PFL.Pipeline([
+        QuantizeSimplifyPass(),
+        QuantizeFusionPass(activation_type = quantizer.activation_fusion_types),
+        ParameterQuantizePass(),
+        RuntimeCalibrationPass(),
+        PassiveParameterQuantizePass(),
+        QuantAlignmentPass(force_overlap=True),
+
+        # 微调你的网络
+        # LearnedStepSizePass(steps=1500)
+
+        # 如果需要训练网络，训练过程必须发生在ParameterBakingPass之前
+        # ParameterBakingPass()
+    ])
+
+    # 调用管线完成量化
+    pipeline.optimize(
+        graph=graph, dataloader=dataloader, verbose=True,
+        calib_steps=args.calib_steps, collate_fn=collate_fn, executor=executor)
+
+    graphwise_error_analyse(
+        graph=graph, running_device="cuda", dataloader=dataloader,
+        collate_fn=lambda x: x.cuda())
+    
+    if not os.path.exists(args.quantized_onnx_output_path):
+        os.makedirs(args.quantized_onnx_output_path)
+    if not os.path.exists(args.quantized_onnx_json_path):
+        os.makedirs(args.quantized_onnx_json_path)
+
+    export_ppq_graph(
+        graph=graph, platform=TargetPlatform.TRT_INT8,
+        graph_save_to=args.quantized_onnx_output_path,
+        config_save_to=args.quantized_onnx_json_path)
+
+
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -166,8 +166,8 @@ class quantDatasets(Dataset):
         return image
 
 def prepare_data_loaders(data_path, shape):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                                  std=[0.229, 0.224, 0.225])
     # dataset = torchvision.datasets.ImageNet(
     #     data_path, split="train", transform=transforms.Compose([
     #         transforms.RandomResizedCrop(224),
@@ -181,7 +181,8 @@ def prepare_data_loaders(data_path, shape):
                         transforms.Resize(shape[1]),
                         # transforms.CenterCrop(224),
                         transforms.ToTensor(),
-                        normalize,]))
+                        ]))
+                        # normalize,]))
 
     test_sampler = torch.utils.data.SequentialSampler(dataset_test)
 
@@ -241,7 +242,7 @@ def get_parser():
     parser.add_argument(
         "--distill_iterations",
         type=int,
-        default = 10,
+        default = 500,
         help="distill iterations"
     )
     parser.add_argument(
@@ -265,19 +266,43 @@ def get_parser():
     parser.add_argument(
         "--onnx_output_path",
         type=str,
-        default = "./quantized_yolov5.onnx",
+        default = "./float_yolov5.onnx",
         help="onnx output name"
     )
     parser.add_argument(
         "--sim_onnx_output_path",
         type=str,
-        default = "./quantized_yolov5.onnx",
+        default = "./sim_float_yolov5.onnx",
+        help="simed onnx output name"
+    )
+    parser.add_argument(
+        "--quantized_onnx_output_path",
+        type=str,
+        default = "./model/quantized_yolov5.onnx",
+        help="simed onnx output name"
+    )
+    parser.add_argument(
+        "--quantized_onnx_json_path",
+        type=str,
+        default = "./model/quantized_yolov5.json",
         help="simed onnx output name"
     )
     parser.add_argument(
         "--opset_version",
         type=int,
-        default = 13,
+        default = 11,
+        help="opset version"
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default = "cuda",
+        help="opset version"
+    )
+    parser.add_argument(
+        "--calib_steps",
+        type=int,
+        default = 64,
         help="opset version"
     )
 
@@ -345,3 +370,6 @@ def make_model(checkpoint_path, version):
     model = model.eval()
 
     return model
+
+def collate_fn(batch):
+    return batch.to("cuda")
