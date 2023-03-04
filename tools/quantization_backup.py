@@ -1,63 +1,64 @@
-import time
+import argparse
 import datetime
-from scipy import stats
+import os
+import time
+
+import onnx
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn import Module, Parameter
-from torch.autograd import Function, Variable
-from torch.utils.data import Dataset, DataLoader
-from torchvision import datasets, transforms
-import torchvision
-import onnx
 import torch.optim as optim
-import argparse
-import os
+import torchvision
 import tqdm
 from PIL import Image
+from scipy import stats
+from torch.autograd import Function, Variable
+from torch.nn import Module, Parameter
+from torch.utils.data import DataLoader, Dataset
+from torchvision import datasets, transforms
 
 from yolort.models._checkpoint import load_from_ultralytics
 from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead
 
+
 class UniformDataset(Dataset):
     def __init__(self, length, size, transform):
         self.length = length
-        self.transform = transform 
+        self.transform = transform
         self.size = size
+
     def __len__(self):
         return self.length
+
     def __getitem__(self, idx):
         sample = (torch.randint(high=255, size=self.size).float() - 127.5) / 5418.75
         return sample
 
-def getRandomData(size_ = (3, 416, 416), num_data_ = 100, batch_size_ = 4):
-    dataset = UniformDataset(num_data_, size = size_, transform=None)
+
+def getRandomData(size_=(3, 416, 416), num_data_=100, batch_size_=4):
+    dataset = UniformDataset(num_data_, size=size_, transform=None)
     dataloader_ = DataLoader(dataset, batch_size=batch_size_, shuffle=True, num_workers=8)
     return dataloader_
 
+
 def own_loss(A, B):
-    return (A - B).norm()**2 / B.size(0)
+    return (A - B).norm() ** 2 / B.size(0)
+
 
 class output_hook(object):
     def __init__(self):
         super(output_hook, self).__init__()
         self.outputs = None
-    
+
     def hook(self, module, input, output):
         self.outputs = output
-    
+
     def clear(self):
         self.outputs = None
 
-def getDistillData(
-        path,
-        teacher_model,
-        size,
-        batch_size,
-        start_idx,
-        iterations=500,
-        num_batch=1):
+
+def getDistillData(path, teacher_model, size, batch_size, start_idx, iterations=500, num_batch=1):
     # init
     dataloader = getRandomData(size, num_batch, batch_size)
 
@@ -68,10 +69,8 @@ def getDistillData(
     teacher_model = teacher_model.eval()
 
     # get number of BatchNorm layers in the model
-    layers = sum([
-        1 if isinstance(layer, nn.BatchNorm2d) else 0
-        for layer in teacher_model.modules()])
-    
+    layers = sum([1 if isinstance(layer, nn.BatchNorm2d) else 0 for layer in teacher_model.modules()])
+
     for n, m in teacher_model.named_modules():
         if isinstance(m, nn.Conv2d) and len(hook_handles) < layers:
             # register hooks on the conv layers to get the intermediate output after conv and before bn:
@@ -81,8 +80,10 @@ def getDistillData(
         if isinstance(m, nn.BatchNorm2d):
             # get the statistics in bn layers
             bn_stats.append(
-                (m.running_mean.detach().clone().flatten().cuda(),
-                 torch.sqrt(m.running_var + eps).detach().clone().flatten().cuda())
+                (
+                    m.running_mean.detach().clone().flatten().cuda(),
+                    torch.sqrt(m.running_var + eps).detach().clone().flatten().cuda(),
+                )
             )
 
     assert len(hooks) == len(bn_stats)
@@ -95,10 +96,7 @@ def getDistillData(
         gaussian_data.requires_grad = True
         crit = nn.CrossEntropyLoss().cuda()
         optimizer = optim.Adam([gaussian_data], lr=0.5)
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                        min_lr=1e-4,
-                                                        verbose=False,
-                                                        patience=100)
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, min_lr=1e-4, verbose=False, patience=100)
         input_mean = torch.zeros(1, 3).cuda()
         input_std = torch.ones(1, 3).cuda()
 
@@ -116,11 +114,11 @@ def getDistillData(
             for cnt, (bn_stat, hook) in enumerate(zip(bn_stats, hooks)):
                 tmp_output = hook.outputs
                 bn_mean, bn_std = bn_stat[0], bn_stat[1]
-                tmp_mean = torch.mean(tmp_output.view(tmp_output.size(0),
-                                                    tmp_output.size(1), -1), dim=2)
+                tmp_mean = torch.mean(tmp_output.view(tmp_output.size(0), tmp_output.size(1), -1), dim=2)
                 tmp_std = torch.sqrt(
-                    torch.var(tmp_output.view(tmp_output.size(0), tmp_output.size(1), -1), dim=2) + eps)
-                
+                    torch.var(tmp_output.view(tmp_output.size(0), tmp_output.size(1), -1), dim=2) + eps
+                )
+
                 mean_loss += own_loss(bn_mean, tmp_mean)
                 std_loss += own_loss(bn_std, tmp_std)
             tmp_mean = torch.mean(gaussian_data.view(gaussian_data.size(0), 3, -1), dim=2)
@@ -139,24 +137,24 @@ def getDistillData(
         # print(i)
         torchvision.utils.save_image(gaussian_data, os.path.join(path, f"{start_idx + i}.jpg"))
 
-
         # print(f"gaussian_data.shape = {gaussian_data.shape}")
         # print(f"len(refined_gaussian) = {len(refined_gaussian)}")
-    
+
     for handle in hook_handles:
         handle.remove()
-    
+
     # return refined_gaussian
+
 
 class quantDatasets(Dataset):
     def __init__(self, root, transform):
         self.root = root
         self.images = [os.path.join(self.root, path) for path in os.listdir(self.root)]
         self.transform = transform
-    
+
     def __len__(self):
         return len(self.images)
-    
+
     def __getitem__(self, index):
         image_path = self.images[index]
         image = Image.open(image_path)
@@ -164,6 +162,7 @@ class quantDatasets(Dataset):
         if self.transform:
             image = self.transform(image)
         return image
+
 
 def prepare_data_loaders(data_path, shape):
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -176,22 +175,23 @@ def prepare_data_loaders(data_path, shape):
     #         normalize,
     #     ]))
     dataset_test = quantDatasets(
-                        data_path, 
-                        transform=transforms.Compose([
-                        transforms.Resize(shape[1]),
-                        # transforms.CenterCrop(224),
-                        transforms.ToTensor(),
-                        ]))
-                        # normalize,]))
+        data_path,
+        transform=transforms.Compose(
+            [
+                transforms.Resize(shape[1]),
+                # transforms.CenterCrop(224),
+                transforms.ToTensor(),
+            ]
+        ),
+    )
+    # normalize,]))
 
     test_sampler = torch.utils.data.SequentialSampler(dataset_test)
 
-
-    data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1,
-        sampler=test_sampler)
+    data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, sampler=test_sampler)
 
     return data_loader_test
+
 
 def calibrate(model, data_loader):
     model.eval()
@@ -200,113 +200,48 @@ def calibrate(model, data_loader):
         for image in data_loader:
             model(image)
 
+
 def get_parser():
     parser = argparse.ArgumentParser("ptq tool.", add_help=True)
 
     parser.add_argument(
-        "--checkpoint_path",
-        type=str,
-        default = "./model/yolov5s.pt",
-        help="The path of checkpoint weights"
+        "--checkpoint_path", type=str, default="./model/yolov5s.pt", help="The path of checkpoint weights"
+    )
+    parser.add_argument("--version", type=str, default="r6.0", help="opset version")
+    parser.add_argument("--threshold", type=float, default=0.25, help="threshold")
+    parser.add_argument(
+        "--distilled_data_path", type=str, default="./distilled_data/", help="The path of distilled data"
+    )
+    parser.add_argument("--batch_size", type=int, default=1, help="batch size")
+    parser.add_argument("--num_of_batches", type=int, default=100, help="num of batches")
+    parser.add_argument("--distill_iterations", type=int, default=500, help="distill iterations")
+    parser.add_argument("--input_size", default=[3, 640, 640], type=int, help="input size")
+    parser.add_argument("--onnx_input_name", type=str, default="dummy_input", help="onnx input name")
+    parser.add_argument("--onnx_output_name", type=str, default="dummy_output", help="onnx output name")
+    parser.add_argument(
+        "--onnx_output_path", type=str, default="./float_yolov5.onnx", help="onnx output name"
     )
     parser.add_argument(
-        "--version",
-        type=str,
-        default = "r6.0",
-        help="opset version"
-    )
-    parser.add_argument(
-        "--threshold",
-        type=float,
-        default = 0.25,
-        help="threshold"
-    )
-    parser.add_argument(
-        "--distilled_data_path",
-        type=str,
-        default = "./distilled_data/",
-        help="The path of distilled data"
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default = 1,
-        help="batch size"
-    )
-    parser.add_argument(
-        "--num_of_batches",
-        type=int,
-        default = 100,
-        help="num of batches"
-    )
-    parser.add_argument(
-        "--distill_iterations",
-        type=int,
-        default = 500,
-        help="distill iterations"
-    )
-    parser.add_argument(
-        "--input_size",
-        default = [3, 640, 640],
-        type = int,
-        help="input size"
-    )
-    parser.add_argument(
-        "--onnx_input_name",
-        type=str,
-        default = "dummy_input",
-        help="onnx input name"
-    )
-    parser.add_argument(
-        "--onnx_output_name",
-        type=str,
-        default = "dummy_output",
-        help="onnx output name"
-    )
-    parser.add_argument(
-        "--onnx_output_path",
-        type=str,
-        default = "./float_yolov5.onnx",
-        help="onnx output name"
-    )
-    parser.add_argument(
-        "--sim_onnx_output_path",
-        type=str,
-        default = "./sim_float_yolov5.onnx",
-        help="simed onnx output name"
+        "--sim_onnx_output_path", type=str, default="./sim_float_yolov5.onnx", help="simed onnx output name"
     )
     parser.add_argument(
         "--quantized_onnx_output_path",
         type=str,
-        default = "./model/quantized_yolov5.onnx",
-        help="simed onnx output name"
+        default="./model/quantized_yolov5.onnx",
+        help="simed onnx output name",
     )
     parser.add_argument(
         "--quantized_onnx_json_path",
         type=str,
-        default = "./model/quantized_yolov5.json",
-        help="simed onnx output name"
+        default="./model/quantized_yolov5.json",
+        help="simed onnx output name",
     )
-    parser.add_argument(
-        "--opset_version",
-        type=int,
-        default = 11,
-        help="opset version"
-    )
-    parser.add_argument(
-        "--device",
-        type=str,
-        default = "cuda",
-        help="opset version"
-    )
-    parser.add_argument(
-        "--calib_steps",
-        type=int,
-        default = 64,
-        help="opset version"
-    )
+    parser.add_argument("--opset_version", type=int, default=11, help="opset version")
+    parser.add_argument("--device", type=str, default="cuda", help="opset version")
+    parser.add_argument("--calib_steps", type=int, default=64, help="opset version")
 
     return parser
+
 
 class YOLO(nn.Module):
     def __init__(self, backbone: nn.Module, strides, num_anchors, num_classes: int):
@@ -322,6 +257,7 @@ class YOLO(nn.Module):
         # compute the yolo heads outputs using the features
         head_outputs = self.head(features)
         return head_outputs
+
 
 class ModelWrapper(torch.nn.Module):
     """
@@ -350,6 +286,7 @@ class ModelWrapper(torch.nn.Module):
 
         return data
 
+
 def make_model(checkpoint_path, version):
 
     model_info = load_from_ultralytics(checkpoint_path, version=version)
@@ -358,9 +295,11 @@ def make_model(checkpoint_path, version):
     depth_multiple = model_info["depth_multiple"]
     width_multiple = model_info["width_multiple"]
     use_p6 = model_info["use_p6"]
-    backbone = darknet_pan_backbone(backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6)
+    backbone = darknet_pan_backbone(
+        backbone_name, depth_multiple, width_multiple, version=version, use_p6=use_p6
+    )
     strides = model_info["strides"]
-    num_anchors = len(model_info["anchor_grids"][0]) // 2 
+    num_anchors = len(model_info["anchor_grids"][0]) // 2
     num_classes = model_info["num_classes"]
     model = YOLO(backbone, strides, num_anchors, num_classes)
 
@@ -370,6 +309,7 @@ def make_model(checkpoint_path, version):
     model = model.eval()
 
     return model
+
 
 def collate_fn(batch):
     return batch.to("cuda")
