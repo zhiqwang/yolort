@@ -1,4 +1,5 @@
 # ppq int8 ptq Example
+
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 
 The ppq int8 ptq example of `yolort`.
@@ -16,6 +17,4 @@ Here we will mainly discuss how to use the ppq interface, we recommend that you 
 
 1. Distill your calibration data (Optional: If you don't have images for calibration and bn is in your model, you can use this)
 1. Export your custom model to onnx format
-2. Quantization onnx-format float model to a json file and a float model
-
-
+1. Quantization onnx-format float model to a json file and a float model

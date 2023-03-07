@@ -26,8 +26,8 @@ from PIL import Image
 from quantization_backup import (
     calibrate,
     collate_fn,
-    get_parser,
     get_distill_data,
+    get_parser,
     make_model,
     prepare_data_loaders,
 )
