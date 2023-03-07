@@ -22,7 +22,7 @@ from yolort.models.backbone_utils import darknet_pan_backbone
 from yolort.models.box_head import YOLOHead
 
 
-class UniformDataset(Dataset):
+class Uniform_dataset(Dataset):
     def __init__(self, length, size, transform):
         self.length = length
         self.transform = transform
@@ -36,8 +36,8 @@ class UniformDataset(Dataset):
         return sample
 
 
-def getRandomData(size_=(3, 416, 416), num_data_=100, batch_size_=4):
-    dataset = UniformDataset(num_data_, size=size_, transform=None)
+def get_random_data(size_=(3, 416, 416), num_data_=100, batch_size_=4):
+    dataset = Uniform_dataset(num_data_, size=size_, transform=None)
     dataloader_ = DataLoader(dataset, batch_size=batch_size_, shuffle=True, num_workers=8)
     return dataloader_
 
@@ -46,9 +46,9 @@ def own_loss(A, B):
     return (A - B).norm() ** 2 / B.size(0)
 
 
-class output_hook(object):
+class Output_hook(object):
     def __init__(self):
-        super(output_hook, self).__init__()
+        super(Output_hook, self).__init__()
         self.outputs = None
 
     def hook(self, module, input, output):
@@ -58,9 +58,9 @@ class output_hook(object):
         self.outputs = None
 
 
-def getDistillData(path, teacher_model, size, batch_size, start_idx, iterations=500, num_batch=1):
+def get_distill_data(path, teacher_model, size, batch_size, start_idx, iterations=500, num_batch=1):
     # init
-    dataloader = getRandomData(size, num_batch, batch_size)
+    dataloader = get_random_data(size, num_batch, batch_size)
 
     eps = 1e-6
     # init hooks and single precision model
@@ -74,7 +74,7 @@ def getDistillData(path, teacher_model, size, batch_size, start_idx, iterations=
     for n, m in teacher_model.named_modules():
         if isinstance(m, nn.Conv2d) and len(hook_handles) < layers:
             # register hooks on the conv layers to get the intermediate output after conv and before bn:
-            hook = output_hook()
+            hook = Output_hook()
             hooks.append(hook)
             hook_handles.append(m.register_forward_hook(hook.hook))
         if isinstance(m, nn.BatchNorm2d):
@@ -146,7 +146,7 @@ def getDistillData(path, teacher_model, size, batch_size, start_idx, iterations=
     # return refined_gaussian
 
 
-class quantDatasets(Dataset):
+class Quant_datasets(Dataset):
     def __init__(self, root, transform):
         self.root = root
         self.images = [os.path.join(self.root, path) for path in os.listdir(self.root)]
@@ -174,7 +174,7 @@ def prepare_data_loaders(data_path, shape):
     #         transforms.ToTensor(),
     #         normalize,
     #     ]))
-    dataset_test = quantDatasets(
+    dataset_test = Quant_datasets(
         data_path,
         transform=transforms.Compose(
             [
@@ -259,7 +259,7 @@ class YOLO(nn.Module):
         return head_outputs
 
 
-class ModelWrapper(torch.nn.Module):
+class Model_wrapper(torch.nn.Module):
     """
     Wrapper class for model with dict/list rvalues.
     """
@@ -304,7 +304,7 @@ def make_model(checkpoint_path, version):
     model = YOLO(backbone, strides, num_anchors, num_classes)
 
     model.load_state_dict(model_info["state_dict"])
-    model = ModelWrapper(model)
+    model = Model_wrapper(model)
 
     model = model.eval()
 

@@ -27,7 +27,7 @@ from quantization_backup import (
     calibrate,
     collate_fn,
     get_parser,
-    getDistillData,
+    get_distill_data,
     make_model,
     prepare_data_loaders,
 )
@@ -57,7 +57,7 @@ def main():
     sorted(imgs_lists)
     if len(imgs_lists) < args.num_of_batches:
         args.num_of_batches = args.num_of_batches - len(imgs_lists)
-        getDistillData(
+        get_distill_data(
             args.distilled_data_path,
             model,
             args.input_size,
