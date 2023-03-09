@@ -210,12 +210,20 @@ def get_parser():
     parser.add_argument("--version", type=str, default="r6.0", help="opset version")
     parser.add_argument("--threshold", type=float, default=0.25, help="threshold")
     parser.add_argument("--distill_data", type=int, default=1, help="if you want to distill data")
-    parser.add_argument("--regenerate_data", type=int, default=1, help="if you wangt to generate new data in place of old data")
+    parser.add_argument(
+        "--regenerate_data",
+        type=int,
+        default=1,
+        help="if you wangt to generate new data in place of old data",
+    )
     parser.add_argument(
         "--distilled_data_path", type=str, default="./distilled_data/", help="The path of distilled data"
     )
     parser.add_argument(
-        "--calibration_data_path", type=str, default="./distilled_data/", help="The path of calibration data, if zeroq is not used, you should set it"
+        "--calibration_data_path",
+        type=str,
+        default="./distilled_data/",
+        help="The path of calibration data, if zeroq is not used, you should set it",
     )
     parser.add_argument("--export2onnx", type=int, default=1, help="if export .pth to .onnx")
     parser.add_argument("--ptq", type=int, default=1, help="flag to ptq the model")
@@ -230,7 +238,10 @@ def get_parser():
         "--onnx_output_path", type=str, default="./model/float_yolov5.onnx", help="onnx output name"
     )
     parser.add_argument(
-        "--sim_onnx_output_path", type=str, default="./model/sim_float_yolov5.onnx", help="simed onnx output name"
+        "--sim_onnx_output_path",
+        type=str,
+        default="./model/sim_float_yolov5.onnx",
+        help="simed onnx output name",
     )
     parser.add_argument(
         "--quantized_onnx_output_path",
