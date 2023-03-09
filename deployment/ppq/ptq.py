@@ -23,14 +23,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from utils import (
-    calibrate,
-    collate_fn,
-    get_parser,
-    get_distill_data,
-    make_model,
-    prepare_data_loaders,
-)
+from utils import calibrate, collate_fn, get_distill_data, get_parser, make_model, prepare_data_loaders
 from yolort.models import YOLOv5
 
 PLATFORM = TargetPlatform.TRT_INT8
@@ -70,7 +63,6 @@ def main():
                 args.distill_iterations,
                 args.num_of_batches,
             )
-
 
     if args.export2onnx:
         # torch to onnx
