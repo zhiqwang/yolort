@@ -19,6 +19,7 @@ from ppq.quantization.optim import *
 
 import argparse
 import os
+import shutil
 from pathlib import Path
 
 from PIL import Image
@@ -46,8 +47,8 @@ def main():
     if args.distill_data:
         distilled_data_path = Path(args.distilled_data_path)
         args.calibration_data_path = distilled_data_path
-        if args.regenerate_data:
-            os.rmdir(distilled_data_path)
+        if args.regenerate_data and os.path.exists(distilled_data_path):
+            shutil.rmtree(distilled_data_path)
         if not os.path.exists(distilled_data_path):
             os.makedirs(distilled_data_path)
         imgs_lists = os.listdir(distilled_data_path)
@@ -66,7 +67,7 @@ def main():
 
     if args.export2onnx:
         # torch to onnx
-        dummy_inputs = torch.randn([1] + args.input_size, device="cpu")
+        dummy_inputs = torch.randn([1] + args.input_size, device="cuda")
         torch.onnx.export(
             model,
             dummy_inputs,
@@ -143,10 +144,10 @@ def main():
                 graph=graph, running_device="cuda", dataloader=dataloader, collate_fn=lambda x: x.cuda()
             )
 
-        if not os.path.exists(args.quantized_onnx_output_path):
-            os.makedirs(args.quantized_onnx_output_path)
-        if not os.path.exists(args.quantized_onnx_json_path):
-            os.makedirs(args.quantized_onnx_json_path)
+        # if not os.path.exists(args.quantized_onnx_output_path):
+        #     os.makedirs(args.quantized_onnx_output_path)
+        # if not os.path.exists(args.quantized_onnx_json_path):
+        #     os.makedirs(args.quantized_onnx_json_path)
 
         export_ppq_graph(
             graph=graph,
