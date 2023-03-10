@@ -1,13 +1,13 @@
+import argparse
+import os
+import shutil
+from pathlib import Path
+
 import onnx
 import torch
 import torchvision
 from onnx import helper, version_converter
 from onnxsim import simplify
-
-import argparse
-import os
-import shutil
-from pathlib import Path
 
 from PIL import Image
 

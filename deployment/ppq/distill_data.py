@@ -1,11 +1,11 @@
-import onnx
-import torch
-import torchvision
-
 import argparse
 import os
 import shutil
 from pathlib import Path
+
+import onnx
+import torch
+import torchvision
 
 from PIL import Image
 
