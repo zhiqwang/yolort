@@ -18,25 +18,25 @@ Here we will mainly discuss how to use the ppq interface, we recommend that you 
 1. Distill your calibration data (Optional: If you don't have images for calibration and bn is in your model, you can use this)
 
    ```
-    python ptq.py --distill_data=1 --export2onnx=0 --ptq=0
+    python distill_data.py --distill_data=1
    ```
 
-1. Export your custom model to onnx format
+2. Export your custom model to onnx format
 
    ```
-    python ptq.py --distill_data=0 --export2onnx=1 --ptq=0
+    python export2onnx.py --export2onnx=1
    ```
 
-1. Quantization onnx-format float model to a json file and a float model
+3. Quantization onnx-format float model to a json file and a float model
 
    ```
-    python ptq.py --distill_data=0 --export2onnx=1 --ptq=1
+    python ptq.py --ptq=1
    ```
 
-1. All of above
+4. All of above
 
    ```
-    python ptq.py --distill_data=1 --export2onnx=1 --ptq=1
+    python all_in_one.py --distill_data=1 --export2onnx=1 --ptq=1
    ```
 
 More details can be checked in utils.py
