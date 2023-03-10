@@ -41,6 +41,7 @@ def main():
     checkpoint_path = Path(args.checkpoint_path)
     assert checkpoint_path.exists(), f"Not found checkpoint file at '{checkpoint_path}'"
     model = make_model(checkpoint_path, args.version)
+    model = model.to(args.device)
     model.eval()
 
     # distill data
@@ -67,7 +68,7 @@ def main():
 
     if args.export2onnx:
         # torch to onnx
-        dummy_inputs = torch.randn([1] + args.input_size, device="cuda")
+        dummy_inputs = torch.randn([1] + args.input_size, device=args.device)
         torch.onnx.export(
             model,
             dummy_inputs,
@@ -108,8 +109,8 @@ def main():
                 quantizer.quantize_operation(op_name=op.name, platform=dispatching[op.name])
 
         # 初始化执行器
-        collate_fn = lambda x: x.to("cuda")
-        executor = TorchExecutor(graph=graph, device="cuda")
+        collate_fn = lambda x: x.to(args.device)
+        executor = TorchExecutor(graph=graph, device=args.device)
         executor.tracing_operation_meta(inputs=torch.zeros(size=[1] + args.input_size).cuda())
         executor.load_graph(graph=graph)
 
@@ -141,7 +142,7 @@ def main():
 
         if args.show_error_cal:
             graphwise_error_analyse(
-                graph=graph, running_device="cuda", dataloader=dataloader, collate_fn=lambda x: x.cuda()
+                graph=graph, running_device=args.device, dataloader=dataloader, collate_fn=lambda x: x.cuda()
             )
 
         # if not os.path.exists(args.quantized_onnx_output_path):
