@@ -26,10 +26,6 @@ ipython
 tabulate
 pandas
 
-# quantization --------------------------------
-ppq>=0.6.6
-
-
 # extras --------------------------------------
 # pycocotools on PyPI needs python3.7 as minimal
 # pycocotools>=2.0.2  # corresponds to https://github.com/ppwwyyxx/cocoapi

@@ -1,119 +1,135 @@
+import argparse
+
 import onnx
 import ppq.lib as PFL
 import torch
-import torchvision
-from onnx import helper, version_converter
+
 from onnxsim import simplify
 
-from ppq import BaseGraph, graphwise_error_analyse, QuantizationSettingFactory, TargetPlatform, TorchExecutor
-from ppq.api import (
-    ENABLE_CUDA_KERNEL,
-    export_ppq_graph,
-    load_onnx_graph,
-    load_torch_model,
-    quantize_onnx_model,
+from ppq import graphwise_error_analyse, TargetPlatform, TorchExecutor
+from ppq.api import export_ppq_graph, load_onnx_graph
+from ppq.quantization.optim import (
+    ParameterQuantizePass,
+    PassiveParameterQuantizePass,
+    QuantAlignmentPass,
+    QuantizeFusionPass,
+    QuantizeSimplifyPass,
+    RuntimeCalibrationPass,
 )
-from torch.utils.data import DataLoader
-from ppq.quantization.optim import *
 
+from utils import collate_fn, prepare_data_loaders
 
-import argparse
-import os
-import shutil
-from pathlib import Path
-
-from PIL import Image
-
-from utils import calibrate, collate_fn, get_distill_data, get_parser, make_model, prepare_data_loaders
-from yolort.models import YOLOv5
 
 PLATFORM = TargetPlatform.TRT_INT8
 
 
 def main():
+    parser = argparse.ArgumentParser("ptq tool.", add_help=True)
 
-    # parser
-    parser = get_parser()
+    parser.add_argument(
+        "--calibration_data_path",
+        type=str,
+        default="./distilled_data/",
+        help="The path of calibration data, if zeroq is not used, you should set it",
+    )
+    parser.add_argument("--show_error_cal", type=int, default=1, help="flag to show error cal")
+
+    parser.add_argument("--input_size", default=[3, 640, 640], type=int, help="input size")
+
+    parser.add_argument(
+        "--sim_onnx_output_path",
+        type=str,
+        default="./model/sim_float_yolov5.onnx",
+        help="simed onnx output name",
+    )
+    parser.add_argument(
+        "--quantized_onnx_output_path",
+        type=str,
+        default="./model/quantized_yolov5.onnx",
+        help="quantized onnx output name",
+    )
+    parser.add_argument(
+        "--quantized_onnx_json_path",
+        type=str,
+        default="./model/quantized_yolov5.json",
+        help="quantized onnx output name",
+    )
+    parser.add_argument("--calib_steps", type=int, default=64, help="opset version")
     args = parser.parse_args()
     print(f"Command Line Args: {args}")
 
-    if args.ptq:
+    # quantization
+    onnx_model = onnx.load(args.onnx_output_path)
+    simplified, _ = simplify(onnx_model)
+    onnx.save(simplified, args.sim_onnx_output_path)
+    graph = load_onnx_graph(args.sim_onnx_output_path)
 
-        # quantization
-        onnx_model = onnx.load(args.onnx_output_path)
-        simplified, _ = simplify(onnx_model)
-        onnx.save(simplified, args.sim_onnx_output_path)
-        graph = load_onnx_graph(args.sim_onnx_output_path)
+    quantizer = PFL.Quantizer(platform=TargetPlatform.TRT_INT8, graph=graph)
+    dispatching = {op.name: TargetPlatform.FP32 for op in graph.operations.values()}
+    # dataloader
+    dataloader = prepare_data_loaders(args.calibration_data_path, args.input_size)
+    # 从第一个卷积到最后的卷积中间的所有算子量化，其他算子不量化
+    from ppq.IR import SearchableGraph
 
-        quantizer = PFL.Quantizer(platform=TargetPlatform.TRT_INT8, graph=graph)
-        dispatching = {op.name: TargetPlatform.FP32 for op in graph.operations.values()}
-        # dataloader
-        dataloader = prepare_data_loaders(args.calibration_data_path, args.input_size)
-        # 从第一个卷积到最后的卷积中间的所有算子量化，其他算子不量化
-        from ppq.IR import SearchableGraph
+    search_engine = SearchableGraph(graph)
+    for op in search_engine.opset_matching(
+        sp_expr=lambda x: x.type == "Conv",
+        rp_expr=lambda x, y: True,
+        ep_expr=lambda x: x.type == "Conv",
+        direction="down",
+    ):
+        dispatching[op.name] = TargetPlatform.TRT_INT8
 
-        search_engine = SearchableGraph(graph)
-        for op in search_engine.opset_matching(
-            sp_expr=lambda x: x.type == "Conv",
-            rp_expr=lambda x, y: True,
-            ep_expr=lambda x: x.type == "Conv",
-            direction="down",
-        ):
-            dispatching[op.name] = TargetPlatform.TRT_INT8
+    # 为算子初始化量化信息
+    for op in graph.operations.values():
+        if dispatching[op.name] == TargetPlatform.TRT_INT8:
+            quantizer.quantize_operation(op_name=op.name, platform=dispatching[op.name])
 
-        # 为算子初始化量化信息
-        for op in graph.operations.values():
-            if dispatching[op.name] == TargetPlatform.TRT_INT8:
-                quantizer.quantize_operation(op_name=op.name, platform=dispatching[op.name])
+    # 初始化执行器
+    executor = TorchExecutor(graph=graph, device=args.device)
+    executor.tracing_operation_meta(inputs=torch.zeros(size=[1] + args.input_size).cuda())
+    executor.load_graph(graph=graph)
 
-        # 初始化执行器
-        collate_fn = lambda x: x.to(args.device)
-        executor = TorchExecutor(graph=graph, device=args.device)
-        executor.tracing_operation_meta(inputs=torch.zeros(size=[1] + args.input_size).cuda())
-        executor.load_graph(graph=graph)
+    # 创建优化管线
+    pipeline = PFL.Pipeline(
+        [
+            QuantizeSimplifyPass(),
+            QuantizeFusionPass(activation_type=quantizer.activation_fusion_types),
+            ParameterQuantizePass(),
+            RuntimeCalibrationPass(),
+            PassiveParameterQuantizePass(),
+            QuantAlignmentPass(force_overlap=True),
+            # 微调你的网络
+            # LearnedStepSizePass(steps=1500)
+            # 如果需要训练网络，训练过程必须发生在ParameterBakingPass之前
+            # ParameterBakingPass()
+        ]
+    )
 
-        # 创建优化管线
-        pipeline = PFL.Pipeline(
-            [
-                QuantizeSimplifyPass(),
-                QuantizeFusionPass(activation_type=quantizer.activation_fusion_types),
-                ParameterQuantizePass(),
-                RuntimeCalibrationPass(),
-                PassiveParameterQuantizePass(),
-                QuantAlignmentPass(force_overlap=True),
-                # 微调你的网络
-                # LearnedStepSizePass(steps=1500)
-                # 如果需要训练网络，训练过程必须发生在ParameterBakingPass之前
-                # ParameterBakingPass()
-            ]
-        )
+    # 调用管线完成量化
+    pipeline.optimize(
+        graph=graph,
+        dataloader=dataloader,
+        verbose=True,
+        calib_steps=args.calib_steps,
+        collate_fn=collate_fn,
+        executor=executor,
+    )
 
-        # 调用管线完成量化
-        pipeline.optimize(
+    if args.show_error_cal:
+        graphwise_error_analyse(
             graph=graph,
+            running_device=args.device,
             dataloader=dataloader,
-            verbose=True,
-            calib_steps=args.calib_steps,
             collate_fn=collate_fn,
-            executor=executor,
         )
 
-        if args.show_error_cal:
-            graphwise_error_analyse(
-                graph=graph, running_device=args.device, dataloader=dataloader, collate_fn=lambda x: x.cuda()
-            )
-
-        # if not os.path.exists(args.quantized_onnx_output_path):
-        #     os.makedirs(args.quantized_onnx_output_path)
-        # if not os.path.exists(args.quantized_onnx_json_path):
-        #     os.makedirs(args.quantized_onnx_json_path)
-
-        export_ppq_graph(
-            graph=graph,
-            platform=TargetPlatform.TRT_INT8,
-            graph_save_to=args.quantized_onnx_output_path,
-            config_save_to=args.quantized_onnx_json_path,
-        )
+    export_ppq_graph(
+        graph=graph,
+        platform=TargetPlatform.TRT_INT8,
+        graph_save_to=args.quantized_onnx_output_path,
+        config_save_to=args.quantized_onnx_json_path,
+    )
 
 
 if __name__ == "__main__":
