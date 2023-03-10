@@ -1,9 +1,9 @@
 import argparse
+import os
 
 import onnx
 import ppq.lib as PFL
 import torch
-import os
 
 from onnxsim import simplify
 
@@ -55,7 +55,7 @@ def main():
     sim_onnx_output_name = "sim_float_yolov5.onnx"
     quantized_onnx_output_name = "quantized_float_yolov5.onnx"
     quantized_json_output_name = "quantized_json_yolov5.onnx"
-    
+
     print(f"Command Line Args: {args}")
 
     # quantization

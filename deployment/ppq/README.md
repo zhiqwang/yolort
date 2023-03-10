@@ -21,13 +21,13 @@ Here we will mainly discuss how to use the ppq interface, we recommend that you 
     python distill_data.py --checkpoint_path=./model/yolov5s.pt
    ```
 
-2. Export your custom model to onnx format
+1. Export your custom model to onnx format
 
    ```
     python create_onnx.py --checkpoint_path=./model/yolov5s.pt
    ```
 
-3. Quantization onnx-format float model to a json file and a float model
+1. Quantization onnx-format float model to a json file and a float model
 
    ```
     python ptq.py --onnx_input_path=./model/yolov5s.pt
