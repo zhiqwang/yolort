@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
 
-class Uniform_dataset(Dataset):
+class UniformDataset(Dataset):
     def __init__(self, length, size, transform):
         self.length = length
         self.transform = transform
@@ -26,7 +26,7 @@ class Uniform_dataset(Dataset):
 
 
 def get_random_data(size_=(3, 416, 416), num_data_=100, batch_size_=4):
-    dataset = Uniform_dataset(num_data_, size=size_, transform=None)
+    dataset = UniformDataset(num_data_, size=size_, transform=None)
     dataloader_ = DataLoader(dataset, batch_size=batch_size_, shuffle=True, num_workers=8)
     return dataloader_
 
@@ -35,9 +35,9 @@ def own_loss(A, B):
     return (A - B).norm() ** 2 / B.size(0)
 
 
-class Output_hook(object):
+class OutputHook(object):
     def __init__(self):
-        super(Output_hook, self).__init__()
+        super(OutputHook, self).__init__()
         self.outputs = None
 
     def hook(self, module, input, output):
@@ -63,7 +63,7 @@ def get_distill_data(path, teacher_model, size, batch_size, start_idx, iteration
     for n, m in teacher_model.named_modules():
         if isinstance(m, nn.Conv2d) and len(hook_handles) < layers:
             # register hooks on the conv layers to get the intermediate output after conv and before bn:
-            hook = Output_hook()
+            hook = OutputHook()
             hooks.append(hook)
             hook_handles.append(m.register_forward_hook(hook.hook))
         if isinstance(m, nn.BatchNorm2d):
@@ -127,7 +127,7 @@ def get_distill_data(path, teacher_model, size, batch_size, start_idx, iteration
         handle.remove()
 
 
-class Quant_datasets(Dataset):
+class QuantDatasets(Dataset):
     def __init__(self, root, transform):
         self.root = root
         self.images = [os.path.join(self.root, path) for path in os.listdir(self.root)]
@@ -146,7 +146,7 @@ class Quant_datasets(Dataset):
 
 def prepare_data_loaders(data_path, shape):
 
-    dataset_test = Quant_datasets(
+    dataset_test = QuantDatasets(
         data_path,
         transform=transforms.Compose(
             [

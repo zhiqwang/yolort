@@ -24,7 +24,7 @@ class YOLO(nn.Module):
         return head_outputs
 
 
-class Model_wrapper(torch.nn.Module):
+class ModelWrapper(torch.nn.Module):
     """
     Wrapper class for model with dict/list rvalues.
     """
@@ -69,7 +69,7 @@ def make_model(checkpoint_path, version):
     model = YOLO(backbone, strides, num_anchors, num_classes)
 
     model.load_state_dict(model_info["state_dict"])
-    model = Model_wrapper(model)
+    model = ModelWrapper(model)
 
     model = model.eval()
 

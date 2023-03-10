@@ -3,6 +3,7 @@ import argparse
 import onnx
 import ppq.lib as PFL
 import torch
+import os
 
 from onnxsim import simplify
 
@@ -36,33 +37,32 @@ def main():
 
     parser.add_argument("--input_size", default=[3, 640, 640], type=int, help="input size")
 
-    parser.add_argument(
-        "--sim_onnx_output_path",
-        type=str,
-        default="./model/sim_float_yolov5.onnx",
-        help="simed onnx output name",
-    )
-    parser.add_argument(
-        "--quantized_onnx_output_path",
-        type=str,
-        default="./model/quantized_yolov5.onnx",
-        help="quantized onnx output name",
-    )
-    parser.add_argument(
-        "--quantized_onnx_json_path",
-        type=str,
-        default="./model/quantized_yolov5.json",
-        help="quantized onnx output name",
-    )
     parser.add_argument("--calib_steps", type=int, default=64, help="opset version")
+
+    parser.add_argument("--onnx_input_path", type=str, default="./model/yolov5.onnx", help="onnx input path")
+
+    parser.add_argument(
+        "--quantized_res_path",
+        type=str,
+        default="./model/",
+        help="quantized outputs",
+    )
+
+    parser.add_argument("--device", type=str, default="cuda", help="opset version")
+
     args = parser.parse_args()
+
+    sim_onnx_output_name = "sim_float_yolov5.onnx"
+    quantized_onnx_output_name = "quantized_float_yolov5.onnx"
+    quantized_json_output_name = "quantized_json_yolov5.onnx"
+    
     print(f"Command Line Args: {args}")
 
     # quantization
-    onnx_model = onnx.load(args.onnx_output_path)
+    onnx_model = onnx.load(args.onnx_input_path)
     simplified, _ = simplify(onnx_model)
-    onnx.save(simplified, args.sim_onnx_output_path)
-    graph = load_onnx_graph(args.sim_onnx_output_path)
+    onnx.save(simplified, os.path.join(args.quantized_res_path, sim_onnx_output_name))
+    graph = load_onnx_graph(os.path.join(args.quantized_res_path, sim_onnx_output_name))
 
     quantizer = PFL.Quantizer(platform=TargetPlatform.TRT_INT8, graph=graph)
     dispatching = {op.name: TargetPlatform.FP32 for op in graph.operations.values()}
@@ -127,8 +127,8 @@ def main():
     export_ppq_graph(
         graph=graph,
         platform=TargetPlatform.TRT_INT8,
-        graph_save_to=args.quantized_onnx_output_path,
-        config_save_to=args.quantized_onnx_json_path,
+        graph_save_to=os.path.join(args.quantized_res_path, quantized_onnx_output_name),
+        config_save_to=os.path.join(args.quantized_res_path, quantized_json_output_name),
     )
 
 

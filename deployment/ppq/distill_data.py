@@ -14,6 +14,8 @@ def main():
     parser.add_argument(
         "--checkpoint_path", type=str, default="yolov5s.pt", help="The path of checkpoint weights"
     )
+    parser.add_argument("--input_size", default=[3, 640, 640], type=int, help="input size")
+    parser.add_argument("--batch_size", default=1, type=int, help="batch size")
     parser.add_argument("--version", type=str, default="r6.0", help="opset version")
     parser.add_argument("--threshold", type=float, default=0.25, help="threshold")
     parser.add_argument("--device", type=str, default="cuda", help="opset version")

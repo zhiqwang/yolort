@@ -18,19 +18,19 @@ Here we will mainly discuss how to use the ppq interface, we recommend that you 
 1. Distill your calibration data (Optional: If you don't have images for calibration and bn is in your model, you can use this)
 
    ```
-    python distill_data.py --distill_data=1
+    python distill_data.py --checkpoint_path=./model/yolov5s.pt
    ```
 
-1. Export your custom model to onnx format
+2. Export your custom model to onnx format
 
    ```
-    python export2onnx.py --export2onnx=1
+    python create_onnx.py --checkpoint_path=./model/yolov5s.pt
    ```
 
-1. Quantization onnx-format float model to a json file and a float model
+3. Quantization onnx-format float model to a json file and a float model
 
    ```
-    python ptq.py --ptq=1
+    python ptq.py --onnx_input_path=./model/yolov5s.pt
    ```
 
 More details can be checked in utils.py
