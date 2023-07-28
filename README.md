@@ -111,7 +111,7 @@ model = torch.hub.load("zhiqwang/yolov5-rt-stack:main", "yolov5s", pretrained=Tr
 
 ### Loading checkpoint from official yolov5
 
-The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. Please see our documents on what we [share](https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html) and how we [differ](https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html) from yolov5 for more details.
+The following is the interface for loading the checkpoint weights trained with `ultralytics/yolov5`. Please see our documents on what we [share](https://zhiqwang.com/yolort/notebooks/how-to-align-with-ultralytics-yolov5.html) and how we [differ](https://zhiqwang.com/yolort/notebooks/comparison-between-yolort-vs-yolov5.html) from yolov5 for more details.
 
 ```python
 from yolort.models import YOLOv5
@@ -146,7 +146,7 @@ y_runtime = PredictorORT(engine_path, device="cpu")
 predictions = y_runtime.predict("bus.jpg")
 ```
 
-Please check out this [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/export-onnx-inference-onnxruntime.html) to use yolort's ONNX model conversion and ONNX Runtime inferencing. And you can use the [example](deployment/onnxruntime) for ONNX Runtime C++ interface.
+Please check out this [tutorial](https://zhiqwang.com/yolort/notebooks/export-onnx-inference-onnxruntime.html) to use yolort's ONNX model conversion and ONNX Runtime inferencing. And you can use the [example](deployment/onnxruntime) for ONNX Runtime C++ interface.
 
 ### Inference on TensorRT backend
 
@@ -165,11 +165,11 @@ y_runtime = PredictorTRT(engine_path, device=device)
 predictions = y_runtime.predict("bus.jpg")
 ```
 
-Besides, we provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) detailing yolort's model conversion to TensorRT and the use of the Python interface. Please check this [example](deployment/tensorrt) if you want to use the C++ interface.
+Besides, we provide a [tutorial](https://zhiqwang.com/yolort/notebooks/onnx-graphsurgeon-inference-tensorrt.html) detailing yolort's model conversion to TensorRT and the use of the Python interface. Please check this [example](deployment/tensorrt) if you want to use the C++ interface.
 
 ## 🎨 Model Graph Visualization
 
-Now, `yolort` can draw the model graph directly, checkout our [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/model-graph-visualization.html) to see how to use and visualize the model graph.
+Now, `yolort` can draw the model graph directly, checkout our [tutorial](https://zhiqwang.com/yolort/notebooks/model-graph-visualization.html) to see how to use and visualize the model graph.
 
 <a href="notebooks/assets/yolov5_graph_visualize.svg"><img src="notebooks/assets/yolov5_graph_visualize.svg" alt="YOLO model visualize" width="500"/></a>
 
