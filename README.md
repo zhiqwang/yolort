@@ -6,8 +6,8 @@
 
 ______________________________________________________________________
 
-[Documentation](https://zhiqwang.com/yolov5-rt-stack/) •
-[Installation Instructions](https://zhiqwang.com/yolov5-rt-stack/installation.html) •
+[Documentation](https://zhiqwang.com/yolort/) •
+[Installation Instructions](https://zhiqwang.com/yolort/installation.html) •
 [Deployment](#-deployment) •
 [Contributing](.github/CONTRIBUTING.md) •
 [Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
@@ -129,7 +129,7 @@ predictions = model.predict(img_path)
 
 ### Inference on LibTorch backend
 
-We provide a [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is converted into `torchscript`. And we provide a [C++ example](deployment/libtorch) of how to do inference with the serialized `torchscript` model.
+We provide a [tutorial](https://zhiqwang.com/yolort/notebooks/inference-pytorch-export-libtorch.html) to demonstrate how the model is converted into `torchscript`. And we provide a [C++ example](deployment/libtorch) of how to do inference with the serialized `torchscript` model.
 
 ### Inference on ONNX Runtime backend
 
