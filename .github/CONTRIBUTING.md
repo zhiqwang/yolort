@@ -41,7 +41,7 @@ conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 ### Install yolort
 
 ```bash
-git clone https://github.com/zhiqwang/yolov5-rt-stack.git
+git clone https://github.com/zhiqwang/yolort.git
 cd yolov5-rt-stack
 pip install -e .
 ```
