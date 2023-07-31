@@ -36,7 +36,6 @@ from .metrics import fitness
 # Settings
 CONFIG_DIR = user_config_dir()  # Ultralytics settings dir
 RANK = int(os.getenv("RANK", -1))
-matplotlib.rc("font", **{"size": 11})
 
 
 class Colors:
