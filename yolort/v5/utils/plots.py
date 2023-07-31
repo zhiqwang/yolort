@@ -36,8 +36,6 @@ from .metrics import fitness
 # Settings
 CONFIG_DIR = user_config_dir()  # Ultralytics settings dir
 RANK = int(os.getenv("RANK", -1))
-matplotlib.rc("font", **{"size": 11})
-matplotlib.use("Agg")  # for writing to files only
 
 
 class Colors:
@@ -446,7 +444,6 @@ def plot_labels(labels, names=(), save_dir=Path("")):
             ax[a].spines[s].set_visible(False)
 
     plt.savefig(save_dir / "labels.jpg", dpi=200)
-    matplotlib.use("Agg")
     plt.close()
 
 
