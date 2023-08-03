@@ -44,7 +44,7 @@ def get_long_description():
     # Get the long description from the README file
     description = (PATH_ROOT / "README.md").read_text(encoding="utf-8")
     # replace relative repository path to absolute link to the release
-    static_url = f"https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/v{version}"
+    static_url = f"https://raw.githubusercontent.com/zhiqwang/yolort/v{version}"
     description = description.replace("docs/source/_static/", f"{static_url}/docs/source/_static/")
     description = description.replace("notebooks/assets/", f"{static_url}/notebooks/assets/")
     description = description.replace("_graph_visualize.svg", "_graph_visualize.png")
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         author_email="me@zhiqwang.com",
         long_description=get_long_description(),
         long_description_content_type="text/markdown",
-        url="https://github.com/zhiqwang/yolov5-rt-stack",
+        url="https://github.com/zhiqwang/yolort",
         license="GPL-3.0",
         packages=find_packages(exclude=["test", "deployment", "notebooks"]),
         zip_safe=False,
@@ -128,8 +128,8 @@ if __name__ == "__main__":
         # maintainers, and where to support the project financially. The key is
         # what's used to render the link text on PyPI.
         project_urls={  # Optional
-            "Bug Reports": "https://github.com/zhiqwang/yolov5-rt-stack/issues",
+            "Bug Reports": "https://github.com/zhiqwang/yolort/issues",
             "Funding": "https://zhiqwang.com",
-            "Source": "https://github.com/zhiqwang/yolov5-rt-stack/",
+            "Source": "https://github.com/zhiqwang/yolort/",
         },
     )

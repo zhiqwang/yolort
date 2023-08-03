@@ -35,7 +35,7 @@ class YOLOTRTGraphSurgeon:
     module named ``LogitsDecoder`` to connect to ``EfficientNMS_TRT`` plugin in TensorRT.
 
     And the ``EfficientNMS_TRT`` plays the same role of following computation.
-    https://github.com/zhiqwang/yolov5-rt-stack/blob/ba00833/yolort/models/box_head.py#L410-L418
+    https://github.com/zhiqwang/yolort/blob/ba00833/yolort/models/box_head.py#L410-L418
 
     Args:
         model_path (string): The path pointing to the PyTorch saved model to load.

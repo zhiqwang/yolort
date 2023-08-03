@@ -11,7 +11,7 @@ The TensorRT inference example of `yolort`.
 
 ## Usage
 
-Here we will mainly discuss how to use the C++ interface, we recommend that you check out our [tutorial](https://zhiqwang.com/yolov5-rt-stack/notebooks/onnx-graphsurgeon-inference-tensorrt.html) first.
+Here we will mainly discuss how to use the C++ interface, we recommend that you check out our [tutorial](https://zhiqwang.com/yolort/notebooks/onnx-graphsurgeon-inference-tensorrt.html) first.
 
 1. Export your custom model to TensorRT format
 

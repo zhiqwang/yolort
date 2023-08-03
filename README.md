@@ -10,21 +10,21 @@ ______________________________________________________________________
 [Installation Instructions](https://zhiqwang.com/yolort/installation.html) •
 [Deployment](#-deployment) •
 [Contributing](.github/CONTRIBUTING.md) •
-[Reporting Issues](https://github.com/zhiqwang/yolov5-rt-stack/issues/new?assignees=&labels=&template=bug-report.yml)
+[Reporting Issues](https://github.com/zhiqwang/yolort/issues/new?assignees=&labels=&template=bug-report.yml)
 
 ______________________________________________________________________
 
 [![Python Version](https://img.shields.io/badge/Python-3.6--3.10-FFD43B?logo=python)](https://pypi.org/project/yolort/)
 [![PyPI version](https://img.shields.io/pypi/v/yolort?color=4D97FF&logo=PyPI)](https://badge.fury.io/py/yolort)
 [![PyPI downloads](https://static.pepy.tech/personalized-badge/yolort?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=pypi%20downloads)](https://pepy.tech/project/yolort)
-[![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolov5-rt-stack/total?label=Model%20downloads&logo=PyTorch&color=FF6F00&logoColor=EE4C2C)](https://github.com/zhiqwang/yolov5-rt-stack/releases)
+[![Github downloads](https://img.shields.io/github/downloads/zhiqwang/yolort/total?label=Model%20downloads&logo=PyTorch&color=FF6F00&logoColor=EE4C2C)](https://github.com/zhiqwang/yolort/releases)
 [![Slack](https://img.shields.io/badge/Slack%20chat-4A154B?logo=slack&logoColor=white)](https://join.slack.com/t/yolort/shared_invite/zt-mqwc7235-940aAh8IaKYeWclrJx10SA)
 [![PRs Welcome](https://img.shields.io/badge/PRs%20welcome-792EE5?logo=GitHub-Sponsors&logoColor=#white)](.github/CONTRIBUTING.md)
 
-[![CI testing](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/ci-test.yml)
-[![Build & deploy docs](https://github.com/zhiqwang/yolov5-rt-stack/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/zhiqwang/yolov5-rt-stack/tree/gh-pages)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolov5-rt-stack/main.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolov5-rt-stack/main)
-[![codecov](https://codecov.io/gh/zhiqwang/yolov5-rt-stack/branch/main/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolov5-rt-stack)
+[![CI testing](https://github.com/zhiqwang/yolort/actions/workflows/ci-test.yml/badge.svg)](https://github.com/zhiqwang/yolort/actions/workflows/ci-test.yml)
+[![Build & deploy docs](https://github.com/zhiqwang/yolort/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/zhiqwang/yolort/tree/gh-pages)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/zhiqwang/yolort/main.svg)](https://results.pre-commit.ci/latest/github/zhiqwang/yolort/main)
+[![codecov](https://codecov.io/gh/zhiqwang/yolort/branch/main/graph/badge.svg?token=1GX96EA72Y)](https://codecov.io/gh/zhiqwang/yolort)
 
 ______________________________________________________________________
 
@@ -74,8 +74,8 @@ There are no extra compiled components in `yolort` and package dependencies are 
 
   ```shell
   # clone yolort repository locally
-  git clone https://github.com/zhiqwang/yolov5-rt-stack.git
-  cd yolov5-rt-stack
+  git clone https://github.com/zhiqwang/yolort.git
+  cd yolort
   # install in editable mode
   pip install -e .
   ```
@@ -106,7 +106,7 @@ There are no extra compiled components in `yolort` and package dependencies are 
 The models are also available via torch hub, to load `yolov5s` with pretrained weights simply do:
 
 ```python
-model = torch.hub.load("zhiqwang/yolov5-rt-stack:main", "yolov5s", pretrained=True)
+model = torch.hub.load("zhiqwang/yolort:main", "yolov5s", pretrained=True)
 ```
 
 ### Loading checkpoint from official yolov5
@@ -177,7 +177,7 @@ Now, `yolort` can draw the model graph directly, checkout our [tutorial](https:/
 
 We love your input! Please see our [Contributing Guide](.github/CONTRIBUTING.md) to get started and for how to help out. Thank you to all our contributors! If you like this project please consider ⭐ this repo, as it is the simplest way to support us.
 
-[![Contributors](https://contrib.rocks/image?repo=zhiqwang/yolov5-rt-stack)](https://github.com/zhiqwang/yolov5-rt-stack/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=zhiqwang/yolort)](https://github.com/zhiqwang/yolort/graphs/contributors)
 
 ## 📖 Citing yolort
 
@@ -187,7 +187,7 @@ If you use yolort in your publication, please cite it by using the following Bib
 @Misc{yolort2021,
   author =       {Zhiqiang Wang and Song Lin and Shiquan Yu and Wei Zeng and Fidan Kharrasov},
   title =        {YOLORT: A runtime stack for object detection on specialized accelerators},
-  howpublished = {\url{https://github.com/zhiqwang/yolov5-rt-stack}},
+  howpublished = {\url{https://github.com/zhiqwang/yolort}},
   year =         {2021}
 }
 ```

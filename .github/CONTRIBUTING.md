@@ -17,7 +17,7 @@ We appreciate all contributions. If you are interested in contributing to `yolor
 
 - If you would like to fix a bug
 
-  - please pick one from the [list of open issues labelled as "help wanted"](https://github.com/zhiqwang/yolov5-rt-stack/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
+  - please pick one from the [list of open issues labelled as "help wanted"](https://github.com/zhiqwang/yolort/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
   - comment on the issue that you want to work on this issue
   - send a PR with your fix, see below.
 
@@ -42,7 +42,7 @@ conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 
 ```bash
 git clone https://github.com/zhiqwang/yolort.git
-cd yolov5-rt-stack
+cd yolort
 pip install -e .
 ```
 
@@ -102,7 +102,7 @@ If all previous checks (flake8, mypy, unit tests) are passing, please send a PR.
 - :white_check_mark: Verify your PR is **up-to-date with upstream/main**. You could update your PR to upstream/main by running the following code, don't forget replacing 'feature' with the name of your local branch:
 
   ```bash
-  git remote add upstream https://github.com/zhiqwang/yolov5-rt-stack.git
+  git remote add upstream https://github.com/zhiqwang/yolort.git
   git fetch upstream
   git rebase upstream/main
   git checkout -b feature  # <--- REPLACE 'feature' WITH YOUR LOCAL BRANCH NAME
