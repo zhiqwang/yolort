@@ -132,5 +132,5 @@ class TestONNXExporter:
             self.run_model(model, [[img_one, img_two], [img_two, img_one, img_dummy]])
 
         # Test exported model on images of misbatch
-        with pytest.raises(ValueError, match="Model requires 3 inputs. Input Feed contains 2"):
+        with pytest.raises(ValueError, match="Required inputs (['image3']) are missing from input feed (['image1', 'image2'])."):
             self.run_model(model, [[img_two, img_one, img_dummy], [img_one, img_two]])
