@@ -84,7 +84,7 @@ class AnnotationsConverter:
                 {
                     "id": 1,
                     "name": "GNU General Public License v3.0",
-                    "url": "https://github.com/zhiqwang/yolov5-rt-stack/blob/main/LICENSE",
+                    "url": "https://github.com/zhiqwang/yolort/blob/main/LICENSE",
                 }
             ]
             return licenses

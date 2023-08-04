@@ -80,7 +80,7 @@ nbsphinx_execute = "never"
 
 nbsphinx_epilog = """
 View this document as a notebook:
-https://github.com/zhiqwang/yolov5-rt-stack/blob/main/{{ env.doc2path(env.docname, base=None) }}
+https://github.com/zhiqwang/yolort/blob/main/{{ env.doc2path(env.docname, base=None) }}
 
 ----
 """
@@ -106,12 +106,12 @@ html_theme_options = {
     # "google_analytics_account": "UA-XXXXX",
     # Specify a base_url used to generate sitemap.xml. If not
     # specified, then no sitemap will be built.
-    "base_url": "https://zhiqwang.com/yolov5-rt-stack",
+    "base_url": "https://zhiqwang.com/yolort",
     # Set the color and the accent color
     "color_primary": "blue",
     "color_accent": "light-blue",
     # Set the repo location to get a badge with stats
-    "repo_url": "https://github.com/zhiqwang/yolov5-rt-stack/",
+    "repo_url": "https://github.com/zhiqwang/yolort/",
     "repo_name": "yolort",
     # Visible levels of the global TOC; -1 means unlimited
     "globaltoc_depth": 3,

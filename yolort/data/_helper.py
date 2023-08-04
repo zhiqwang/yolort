@@ -65,7 +65,7 @@ def prepare_coco128(
         data_path.mkdir(parents=True, exist_ok=True)
 
     zip_path = data_path / "coco128.zip"
-    coco128_url = "https://github.com/zhiqwang/yolov5-rt-stack/releases/download/v0.3.0/coco128.zip"
+    coco128_url = "https://github.com/zhiqwang/yolort/releases/download/v0.3.0/coco128.zip"
     if not zip_path.is_file():
         logger.info(f"Downloading coco128 datasets form {coco128_url}")
         torch.hub.download_url_to_file(coco128_url, zip_path, hash_prefix="a67d2887")

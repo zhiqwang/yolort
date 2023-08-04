@@ -52,7 +52,7 @@ def test_train_with_vanilla_model():
 
 def test_train_with_vanilla_module():
     """
-    For issue #86: <https://github.com/zhiqwang/yolov5-rt-stack/issues/86>
+    For issue #86: <https://github.com/zhiqwang/yolort/issues/86>
     """
     # Define the device
     device = torch.device("cpu")
