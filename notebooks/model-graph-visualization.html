@@ -106,7 +106,7 @@
       
         <div class="md-flex__cell md-flex__cell--shrink">
           <div class="md-header-nav__source">
-            <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+            <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -165,7 +165,7 @@
        title="yolort documentation">YOLOv5 Runtime Stack</a>
   </label>
     <div class="md-nav__source">
-      <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+      <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -706,25 +706,25 @@
   if hasattr(mod, name):
 /usr/local/lib/python3.9/site-packages/torch/_jit_internal.py:668: LightningDeprecationWarning: The `LightningModule.loaded_optimizer_states_dict` property is deprecated in v1.4 and will be removed in v1.6.
   if hasattr(mod, name):
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/yolo_module.py:97: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/Users/chi/Documents/projects/coding/yolort/yolort/models/yolo_module.py:97: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   for img in inputs:
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/transform.py:79: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/Users/chi/Documents/projects/coding/yolort/yolort/models/transform.py:79: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   images = [img for img in images]
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:31: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/chi/Documents/projects/coding/yolort/yolort/models/anchor_utils.py:31: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   stride = torch.as_tensor([stride], dtype=dtype, device=device)
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:50: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/chi/Documents/projects/coding/yolort/yolort/models/anchor_utils.py:50: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   anchor_grid = torch.as_tensor(anchor_grid, dtype=dtype, device=device)
 /usr/local/lib/python3.9/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)
   return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:79: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/chi/Documents/projects/coding/yolort/yolort/models/anchor_utils.py:79: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   shifts = shifts - torch.tensor(0.5, dtype=shifts.dtype, device=device)
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/transform.py:312: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/chi/Documents/projects/coding/yolort/yolort/models/transform.py:312: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   torch.tensor(s, dtype=torch.float32, device=boxes.device)
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/transform.py:312: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+/Users/chi/Documents/projects/coding/yolort/yolort/models/transform.py:312: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
   torch.tensor(s, dtype=torch.float32, device=boxes.device)
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/transform.py:313: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/chi/Documents/projects/coding/yolort/yolort/models/transform.py:313: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   / torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
-/Users/chi/Documents/projects/coding/yolov5-rt-stack/yolort/models/transform.py:313: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+/Users/chi/Documents/projects/coding/yolort/yolort/models/transform.py:313: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
   / torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
 </pre></div></div>
 </div>
@@ -813,7 +813,7 @@ def forward(self,
 </div>
 </section>
 <p>View this document as a notebook:
-<a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/model-graph-visualization.ipynb">https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/model-graph-visualization.ipynb</a></p>
+<a class="reference external" href="https://github.com/zhiqwang/yolort/blob/main/notebooks/model-graph-visualization.ipynb">https://github.com/zhiqwang/yolort/blob/main/notebooks/model-graph-visualization.ipynb</a></p>
 <hr class="docutils"/>
 
 
@@ -863,7 +863,7 @@ def forward(self,
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

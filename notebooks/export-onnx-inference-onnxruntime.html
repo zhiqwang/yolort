@@ -106,7 +106,7 @@
       
         <div class="md-flex__cell md-flex__cell--shrink">
           <div class="md-header-nav__source">
-            <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+            <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -165,7 +165,7 @@
        title="yolort documentation">YOLOv5 Runtime Stack</a>
   </label>
     <div class="md-nav__source">
-      <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+      <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -1009,15 +1009,15 @@ We are using opset version: 11
 <div class="highlight"><pre>
 /opt/conda/lib/python3.8/site-packages/torch/nn/functional.py:3701: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
   (torch.floor((input.size(i + 2).float() * torch.tensor(scale_factors[i], dtype=torch.float32)).float()))
-/coding/yolov5-rt-stack/yolort/models/transform.py:282: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/coding/yolort/yolort/models/transform.py:282: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   img_h, img_w = _get_shape_onnx(img)
-/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:45: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/coding/yolort/yolort/models/anchor_utils.py:45: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).to(dtype=dtype)
-/coding/yolov5-rt-stack/yolort/models/anchor_utils.py:46: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/coding/yolort/yolort/models/anchor_utils.py:46: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
-/coding/yolov5-rt-stack/yolort/models/box_head.py:402: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/coding/yolort/yolort/models/box_head.py:402: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
-/coding/yolov5-rt-stack/yolort/models/box_head.py:333: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/coding/yolort/yolort/models/box_head.py:333: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   for head_output, grid, shift, stride in zip(head_outputs, grids, shifts, strides):
 /opt/conda/lib/python3.8/site-packages/torch/onnx/symbolic_opset9.py:2815: UserWarning: Exporting aten::index operator of advanced indexing in opset 11 is achieved by combination of multiple ONNX operators, including Reshape, Transpose, Concat, and Gather. If indices include negative values, the exported graph will produce incorrect results.
   warnings.warn("Exporting aten::index operator of advanced indexing in opset " +
@@ -1241,7 +1241,7 @@ Exported model has been tested with ONNXRuntime, and the result looks good!
 </section>
 </section>
 <p>View this document as a notebook:
-<a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/export-onnx-inference-onnxruntime.ipynb">https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/export-onnx-inference-onnxruntime.ipynb</a></p>
+<a class="reference external" href="https://github.com/zhiqwang/yolort/blob/main/notebooks/export-onnx-inference-onnxruntime.ipynb">https://github.com/zhiqwang/yolort/blob/main/notebooks/export-onnx-inference-onnxruntime.ipynb</a></p>
 <hr class="docutils"/>
 
 
@@ -1291,7 +1291,7 @@ Exported model has been tested with ONNXRuntime, and the result looks good!
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

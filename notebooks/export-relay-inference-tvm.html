@@ -106,7 +106,7 @@
       
         <div class="md-flex__cell md-flex__cell--shrink">
           <div class="md-header-nav__source">
-            <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+            <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -165,7 +165,7 @@
        title="yolort documentation">YOLOv5 Runtime Stack</a>
   </label>
     <div class="md-nav__source">
-      <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+      <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -784,23 +784,23 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torch
   if hasattr(mod, name):
 /Users/zhiqiang/miniconda3/envs/tvm/lib/python3.8/site-packages/torch/_jit_internal.py:669: LightningDeprecationWarning: The `LightningModule.model_size` property was deprecated in v1.5 and will be removed in v1.7. Please use the `pytorch_lightning.utilities.memory.get_model_size_mb`.
   item = getattr(mod, name)
-/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/yolo_module.py:113: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/Users/zhiqiang/Coding/yolort/yolort/models/yolo_module.py:113: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   for img in inputs:
-/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/transform.py:179: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/Users/zhiqiang/Coding/yolort/yolort/models/transform.py:179: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   images = [img for img in images]
 /Users/zhiqiang/miniconda3/envs/tvm/lib/python3.8/site-packages/torch/nn/functional.py:3701: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
   (torch.floor((input.size(i + 2).float() * torch.tensor(scale_factors[i], dtype=torch.float32)).float()))
-/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/transform.py:282: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/Users/zhiqiang/Coding/yolort/yolort/models/transform.py:282: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   img_h, img_w = _get_shape_onnx(img)
 /Users/zhiqiang/miniconda3/envs/tvm/lib/python3.8/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)
   return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
-/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/anchor_utils.py:45: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/zhiqiang/Coding/yolort/yolort/models/anchor_utils.py:45: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   anchors = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).to(dtype=dtype)
-/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/anchor_utils.py:46: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/zhiqiang/Coding/yolort/yolort/models/anchor_utils.py:46: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
-/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/box_head.py:402: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+/Users/zhiqiang/Coding/yolort/yolort/models/box_head.py:402: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
   strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).to(dtype=dtype)
-/Users/zhiqiang/Coding/yolov5-rt-stack/yolort/models/box_head.py:333: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
+/Users/zhiqiang/Coding/yolort/yolort/models/box_head.py:333: TracerWarning: Iterating over a tensor might cause the trace to be incorrect. Passing a tensor of different shape won't change the number of iterations executed (and might lead to errors or silently give incorrect results).
   for head_output, grid, shift, stride in zip(head_outputs, grids, shifts, strides):
 </pre></div></div>
 </div>
@@ -2400,7 +2400,7 @@ Exported model has been tested with TVM Runtime, and the result looks good!
 </section>
 </section>
 <p>View this document as a notebook:
-<a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/export-relay-inference-tvm.ipynb">https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/export-relay-inference-tvm.ipynb</a></p>
+<a class="reference external" href="https://github.com/zhiqwang/yolort/blob/main/notebooks/export-relay-inference-tvm.ipynb">https://github.com/zhiqwang/yolort/blob/main/notebooks/export-relay-inference-tvm.ipynb</a></p>
 <hr class="docutils"/>
 
 
@@ -2450,7 +2450,7 @@ Exported model has been tested with TVM Runtime, and the result looks good!
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

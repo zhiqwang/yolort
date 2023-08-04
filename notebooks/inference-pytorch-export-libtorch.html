@@ -106,7 +106,7 @@
       
         <div class="md-flex__cell md-flex__cell--shrink">
           <div class="md-header-nav__source">
-            <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+            <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -165,7 +165,7 @@
        title="yolort documentation">YOLOv5 Runtime Stack</a>
   </label>
     <div class="md-nav__source">
-      <a href="https://github.com/zhiqwang/yolov5-rt-stack/" title="Go to repository" class="md-source" data-md-source="github">
+      <a href="https://github.com/zhiqwang/yolort/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -900,7 +900,7 @@ tensor([5, 0, 0, 0])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># label_path = "https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/main/notebooks/assets/coco.names"</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># label_path = "https://raw.githubusercontent.com/zhiqwang/yolort/main/notebooks/assets/coco.names"</span>
 <span class="n">label_source</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.names"</span>
 <span class="n">label_path</span> <span class="o">=</span> <span class="n">label_source</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">safe_download</span><span class="p">(</span><span class="n">label_path</span><span class="p">,</span> <span class="n">label_source</span><span class="p">)</span>
@@ -1003,9 +1003,9 @@ Starting TorchScript export with torch 1.10.2+cu113...
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/coding/yolov5-rt-stack/yolort/models/yolo.py:179: UserWarning: YOLO always returns a (Losses, Detections) tuple in scripting.
+/coding/yolort/yolort/models/yolo.py:179: UserWarning: YOLO always returns a (Losses, Detections) tuple in scripting.
   warnings.warn("YOLO always returns a (Losses, Detections) tuple in scripting.")
-/coding/yolov5-rt-stack/yolort/models/yolov5.py:180: UserWarning: YOLOv5 always returns a (Losses, Detections) tuple in scripting.
+/coding/yolort/yolort/models/yolov5.py:180: UserWarning: YOLOv5 always returns a (Losses, Detections) tuple in scripting.
   warnings.warn("YOLOv5 always returns a (Losses, Detections) tuple in scripting.")
 </pre></div></div>
 </div>
@@ -1085,7 +1085,7 @@ Exported model has been tested with libtorch, and the result looks good!
 </section>
 </section>
 <p>View this document as a notebook:
-<a class="reference external" href="https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/inference-pytorch-export-libtorch.ipynb">https://github.com/zhiqwang/yolov5-rt-stack/blob/main/notebooks/inference-pytorch-export-libtorch.ipynb</a></p>
+<a class="reference external" href="https://github.com/zhiqwang/yolort/blob/main/notebooks/inference-pytorch-export-libtorch.ipynb">https://github.com/zhiqwang/yolort/blob/main/notebooks/inference-pytorch-export-libtorch.ipynb</a></p>
 <hr class="docutils"/>
 
 
@@ -1135,7 +1135,7 @@ Exported model has been tested with libtorch, and the result looks good!
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

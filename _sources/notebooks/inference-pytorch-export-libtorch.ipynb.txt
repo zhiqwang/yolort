@@ -280,7 +280,7 @@
     }
    ],
    "source": [
-    "# label_path = \"https://raw.githubusercontent.com/zhiqwang/yolov5-rt-stack/main/notebooks/assets/coco.names\"\n",
+    "# label_path = \"https://raw.githubusercontent.com/zhiqwang/yolort/main/notebooks/assets/coco.names\"\n",
     "label_source = \"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.names\"\n",
     "label_path = label_source.split(\"/\")[-1]\n",
     "safe_download(label_path, label_source)"
@@ -371,9 +371,9 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "/coding/yolov5-rt-stack/yolort/models/yolo.py:179: UserWarning: YOLO always returns a (Losses, Detections) tuple in scripting.\n",
+      "/coding/yolort/yolort/models/yolo.py:179: UserWarning: YOLO always returns a (Losses, Detections) tuple in scripting.\n",
       "  warnings.warn(\"YOLO always returns a (Losses, Detections) tuple in scripting.\")\n",
-      "/coding/yolov5-rt-stack/yolort/models/yolov5.py:180: UserWarning: YOLOv5 always returns a (Losses, Detections) tuple in scripting.\n",
+      "/coding/yolort/yolort/models/yolov5.py:180: UserWarning: YOLOv5 always returns a (Losses, Detections) tuple in scripting.\n",
       "  warnings.warn(\"YOLOv5 always returns a (Losses, Detections) tuple in scripting.\")\n"
      ]
     }
