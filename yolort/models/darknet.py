@@ -38,17 +38,11 @@ class Darknet(nn.Module):
         num_blocks = Darknet.depth2blocks[depth]
         # create darknet with `stem_out_channels` and `num_blocks` layers.
         # to make model structure more clear, we don't use `for` statement in python.
-        self.dark2 = nn.Sequential(
-            *self.make_group_layer(in_channels, num_blocks[0], stride=2)
-        )
+        self.dark2 = nn.Sequential(*self.make_group_layer(in_channels, num_blocks[0], stride=2))
         in_channels *= 2  # 128
-        self.dark3 = nn.Sequential(
-            *self.make_group_layer(in_channels, num_blocks[1], stride=2)
-        )
+        self.dark3 = nn.Sequential(*self.make_group_layer(in_channels, num_blocks[1], stride=2))
         in_channels *= 2  # 256
-        self.dark4 = nn.Sequential(
-            *self.make_group_layer(in_channels, num_blocks[2], stride=2)
-        )
+        self.dark4 = nn.Sequential(*self.make_group_layer(in_channels, num_blocks[2], stride=2))
         in_channels *= 2  # 512
 
         self.dark5 = nn.Sequential(

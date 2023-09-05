@@ -23,23 +23,26 @@ class Exp(MyExp):
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
     def get_model(self, sublinear=False):
-
         def init_yolo(M):
             for m in M.modules():
                 if isinstance(m, nn.BatchNorm2d):
                     m.eps = 1e-3
                     m.momentum = 0.03
+
         if "model" not in self.__dict__:
-            from yolort.models import YOLOX, YOLOPAFPN, YOLOXHead
+            from yolort.models import YOLOPAFPN, YOLOX, YOLOXHead
+
             in_channels = [256, 512, 1024]
             # NANO model use depthwise = True, which is main difference.
             backbone = YOLOPAFPN(
-                self.depth, self.width, in_channels=in_channels,
-                act=self.act, depthwise=True,
+                self.depth,
+                self.width,
+                in_channels=in_channels,
+                act=self.act,
+                depthwise=True,
             )
             head = YOLOXHead(
-                self.num_classes, self.width, in_channels=in_channels,
-                act=self.act, depthwise=True
+                self.num_classes, self.width, in_channels=in_channels, act=self.act, depthwise=True
             )
             self.model = YOLOX(backbone, head)
 

@@ -3,9 +3,9 @@
 # Copyright (c) Megvii Inc. All rights reserved.
 import os
 import shutil
-from loguru import logger
 
 import torch
+from loguru import logger
 
 
 def load_ckpt(model, ckpt):
@@ -14,9 +14,7 @@ def load_ckpt(model, ckpt):
     for key_model, v in model_state_dict.items():
         if key_model not in ckpt:
             logger.warning(
-                "{} is not in the ckpt. Please double check and see if this is desired.".format(
-                    key_model
-                )
+                "{} is not in the ckpt. Please double check and see if this is desired.".format(key_model)
             )
             continue
         v_ckpt = ckpt[key_model]

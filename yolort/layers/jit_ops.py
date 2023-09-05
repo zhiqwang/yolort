@@ -57,7 +57,8 @@ class JitOp:
     def nvcc_args(self) -> List:
         """Get optional list of compiler flags to forward to nvcc when building CUDA sources"""
         args = [
-            "-O3", "--use_fast_math",
+            "-O3",
+            "--use_fast_math",
             "-std=c++17" if sys.platform == "win32" else "-std=c++14",
             "-U__CUDA_NO_HALF_OPERATORS__",
             "-U__CUDA_NO_HALF_CONVERSIONS__",
@@ -67,6 +68,7 @@ class JitOp:
 
     def build_op(self):
         from torch.utils.cpp_extension import CppExtension
+
         return CppExtension(
             name=self.absolute_name(),
             sources=self.sources(),
@@ -83,19 +85,19 @@ class JitOp:
             return importlib.import_module(self.absolute_name())
         except Exception:  # op not compiled, jit load
             from yolort.utils import wait_for_the_master
+
             with wait_for_the_master():  # to avoid race condition
                 return self.jit_load(verbose)
 
     def jit_load(self, verbose=True):
-        from torch.utils.cpp_extension import load
         from loguru import logger
+        from torch.utils.cpp_extension import load
+
         try:
             import ninja  # noqa
         except ImportError:
             if verbose:
-                logger.warning(
-                    f"Ninja is not installed, fall back to normal installation for {self.name}."
-                )
+                logger.warning(f"Ninja is not installed, fall back to normal installation for {self.name}.")
 
         build_tik = time.time()
         # build op and load
@@ -118,18 +120,18 @@ class JitOp:
 
 
 class FastCOCOEvalOp(JitOp):
-
     def __init__(self, name="fast_cocoeval"):
         super().__init__(name=name)
 
     def absolute_name(self):
-        return f'yolox.layers.{self.name}'
+        return f"yolox.layers.{self.name}"
 
     def sources(self):
         sources = glob.glob(os.path.join("yolox", "layers", "cocoeval", "*.cpp"))
         if not sources:  # source will be empty list if the so file is removed after install
             # use abosolute path to compile
             import yolox
+
             code_path = os.path.join(yolox.__path__[0], "layers", "cocoeval", "*.cpp")
             sources = glob.glob(code_path)
         return sources

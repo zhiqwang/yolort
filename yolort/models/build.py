@@ -14,7 +14,7 @@ __all__ = [
     "yolox_l",
     "yolox_x",
     "yolov3",
-    "yolox_custom"
+    "yolox_custom",
 ]
 
 _CKPT_ROOT_URL = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download"
@@ -29,8 +29,14 @@ _CKPT_FULL_PATH = {
 }
 
 
-def create_yolox_model(name: str, pretrained: bool = True, num_classes: int = 80, device=None,
-                       exp_path: str = None, ckpt_path: str = None) -> nn.Module:
+def create_yolox_model(
+    name: str,
+    pretrained: bool = True,
+    num_classes: int = 80,
+    device=None,
+    exp_path: str = None,
+    ckpt_path: str = None,
+) -> nn.Module:
     """creates and loads a YOLOX model
 
     Args:
@@ -47,14 +53,15 @@ def create_yolox_model(name: str, pretrained: bool = True, num_classes: int = 80
     Returns:
         YOLOX model (nn.Module)
     """
-    from yolort.models.yolox import get_exp, Exp
+    from yolort.models.yolox import Exp, get_exp
 
     if device is None:
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
     device = torch.device(device)
 
-    assert name in _CKPT_FULL_PATH or name == "yolox_custom", \
-        f"user should use one of value in {_CKPT_FULL_PATH.keys()} or \"yolox_custom\""
+    assert (
+        name in _CKPT_FULL_PATH or name == "yolox_custom"
+    ), f'user should use one of value in {_CKPT_FULL_PATH.keys()} or "yolox_custom"'
     if name in _CKPT_FULL_PATH:
         exp: Exp = get_exp(exp_name=name)
         exp.num_classes = num_classes
@@ -66,7 +73,7 @@ def create_yolox_model(name: str, pretrained: bool = True, num_classes: int = 80
                 ckpt = ckpt["model"]
             yolox_model.load_state_dict(ckpt)
     else:
-        assert exp_path is not None, "for a \"yolox_custom\" model exp_path must be provided"
+        assert exp_path is not None, 'for a "yolox_custom" model exp_path must be provided'
         exp: Exp = get_exp(exp_file=exp_path)
         yolox_model = exp.get_model()
         if ckpt_path:

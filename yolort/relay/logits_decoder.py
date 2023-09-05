@@ -6,6 +6,7 @@ import torch
 from torch import nn, Tensor
 from torchvision.ops import box_convert
 
+
 def _decode_pred_logits(pred_logits: Tensor):
     """
     Decode the prediction logit from the PostPrecess.
@@ -16,6 +17,7 @@ def _decode_pred_logits(pred_logits: Tensor):
     boxes = box_convert(pred_logits[..., :4], in_fmt="cxcywh", out_fmt="xyxy")
 
     return boxes, scores
+
 
 def decode_single(
     rel_codes: Tensor,
@@ -38,6 +40,7 @@ def decode_single(
 
     return pred_xy, pred_wh
 
+
 def _concat_pred_logits(
     head_outputs: List[Tensor],
     grids: List[Tensor],
@@ -59,6 +62,7 @@ def _concat_pred_logits(
     all_pred_logits = torch.cat(all_pred_logits, dim=1)
 
     return all_pred_logits
+
 
 class LogitsDecoder(nn.Module):
     """

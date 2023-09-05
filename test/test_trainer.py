@@ -1,23 +1,22 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
 import argparse
-from loguru import logger
 
 import torch
+from loguru import logger
+from yolort.core import Trainer
+from yolort.exp import get_exp
 
 from yolort.utils import fuse_model, get_local_rank, get_model_info
-from yolort.exp import get_exp
-from yolort.core import Trainer
+
 
 def make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-expn", "--experiment-name", type=str, default='yolox_s')
+    parser.add_argument("-expn", "--experiment-name", type=str, default="yolox_s")
     parser.add_argument("-n", "--name", type=str, default=None, help="model name")
 
     # distributed
-    parser.add_argument(
-        "--dist-backend", default="nccl", type=str, help="distributed backend"
-    )
+    parser.add_argument("--dist-backend", default="nccl", type=str, help="distributed backend")
     parser.add_argument(
         "--dist-url",
         default=None,
@@ -25,9 +24,7 @@ def make_parser():
         help="url used to set up distributed training",
     )
     parser.add_argument("-b", "--batch-size", type=int, default=64, help="batch size")
-    parser.add_argument(
-        "-d", "--devices", default=None, type=int, help="device for training"
-    )
+    parser.add_argument("-d", "--devices", default=None, type=int, help="device for training")
     parser.add_argument(
         "-f",
         "--exp_file",
@@ -35,9 +32,7 @@ def make_parser():
         type=str,
         help="plz input your experiment description file",
     )
-    parser.add_argument(
-        "--resume", default=False, action="store_true", help="resume training"
-    )
+    parser.add_argument("--resume", default=False, action="store_true", help="resume training")
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")
     parser.add_argument(
         "-e",
@@ -46,12 +41,8 @@ def make_parser():
         type=int,
         help="resume training start epoch",
     )
-    parser.add_argument(
-        "--num_machines", default=1, type=int, help="num of node for training"
-    )
-    parser.add_argument(
-        "--machine_rank", default=0, type=int, help="node rank for multi-node training"
-    )
+    parser.add_argument("--num_machines", default=1, type=int, help="num of node for training")
+    parser.add_argument("--machine_rank", default=0, type=int, help="node rank for multi-node training")
     parser.add_argument(
         "--fp16",
         dest="fp16",
@@ -80,7 +71,7 @@ def make_parser():
         type=str,
         help="Logger to be used for metrics. \
         Implemented loggers include `tensorboard` and `wandb`.",
-        default="tensorboard"
+        default="tensorboard",
     )
     parser.add_argument(
         "opts",
@@ -135,6 +126,7 @@ def make_parser():
     )
     return parser
 
+
 def setup_model(exp, args):
     model = exp.get_model()
     logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
@@ -159,6 +151,7 @@ def setup_model(exp, args):
 
     return model
 
+
 def main(exp, args):
     logger.info("Args: {}".format(args))
     model = setup_model(exp, args)
@@ -171,9 +164,7 @@ def main(exp, args):
     decoder = None
 
     # start evaluate
-    *_, summary = evaluator.evaluate(
-        model, is_distributed, args.fp16, trt_file, decoder, exp.test_size
-    )
+    *_, summary = evaluator.evaluate(model, is_distributed, args.fp16, trt_file, decoder, exp.test_size)
     logger.info("\n" + summary)
 
 

@@ -39,7 +39,9 @@ def get_aug_params(value, center=0):
     else:
         raise ValueError(
             "Affine params should be either a sequence containing two values\
-             or single float values. Got {}".format(value)
+             or single float values. Got {}".format(
+                value
+            )
         )
 
 
@@ -95,9 +97,7 @@ def apply_affine_to_bboxes(targets, target_size, M, scale):
     corner_xs = corner_points[:, 0::2]
     corner_ys = corner_points[:, 1::2]
     new_bboxes = (
-        np.concatenate(
-            (corner_xs.min(1), corner_ys.min(1), corner_xs.max(1), corner_ys.max(1))
-        )
+        np.concatenate((corner_xs.min(1), corner_ys.min(1), corner_xs.max(1), corner_ys.max(1)))
         .reshape(4, num_gts)
         .T
     )
@@ -203,9 +203,7 @@ class TrainTransform:
 
         targets_t = np.hstack((labels_t, boxes_t))
         padded_labels = np.zeros((self.max_labels, 5))
-        padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[
-            : self.max_labels
-        ]
+        padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[: self.max_labels]
         padded_labels = np.ascontiguousarray(padded_labels, dtype=np.float32)
         return image_t, padded_labels
 

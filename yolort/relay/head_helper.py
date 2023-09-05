@@ -6,6 +6,7 @@ import torch
 from torch import nn, Tensor
 from torchvision.ops import box_convert
 
+
 def _decode_pred_logits(pred_logits: Tensor):
     """
     Decode the prediction logit from the PostPrecess.

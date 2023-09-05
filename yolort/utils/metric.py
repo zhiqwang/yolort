@@ -5,18 +5,14 @@ import functools
 import os
 import time
 from collections import defaultdict, deque
-import psutil
 
 import numpy as np
+import psutil
 
 import torch
 
-__all__ = [
-    "AverageMeter",
-    "MeterBuffer",
-    "gpu_mem_usage",
-    "mem_usage"
-]
+__all__ = ["AverageMeter", "MeterBuffer", "gpu_mem_usage", "mem_usage"]
+
 
 def gpu_mem_usage():
     """

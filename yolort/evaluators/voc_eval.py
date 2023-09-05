@@ -154,7 +154,8 @@ def voc_eval(
             # union
             uni = (
                 (bb[2] - bb[0] + 1.0) * (bb[3] - bb[1] + 1.0)
-                + (BBGT[:, 2] - BBGT[:, 0] + 1.0) * (BBGT[:, 3] - BBGT[:, 1] + 1.0) - inters
+                + (BBGT[:, 2] - BBGT[:, 0] + 1.0) * (BBGT[:, 3] - BBGT[:, 1] + 1.0)
+                - inters
             )
 
             overlaps = inters / uni

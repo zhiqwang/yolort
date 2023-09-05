@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 import torch
 
-from torch import Tensor
-from yolort.exp import Exp
+from torch import distributed as dist, Tensor
 from yolort.data import DataPrefetcher
+from yolort.exp import Exp
 from yolort.utils import contains_any_tensor
-from torch import distributed as dist
+
 
 def get_world_size() -> int:
     if not dist.is_available():
@@ -17,6 +17,7 @@ def get_world_size() -> int:
     if not dist.is_initialized():
         return 1
     return dist.get_world_size()
+
 
 def test_contains_any_tensor():
     dummy_numpy = np.random.randn(3, 6)
@@ -33,17 +34,18 @@ def test_get_dataset():
     # Test the datasets
     image, target, _, _ = next(iter(train_dataset))
     assert image.shape == (3, 640, 640)
-    assert target.shape ==(50, 5)
+    assert target.shape == (50, 5)
+
 
 def test_get_dataloader():
     batch_size = 8
     is_distributed = get_world_size() > 1
     data_loader = Exp().get_data_loader(
-            batch_size=batch_size,
-            is_distributed=is_distributed,
-            no_aug=False,
-            cache_img=None,
-        )
+        batch_size=batch_size,
+        is_distributed=is_distributed,
+        no_aug=False,
+        cache_img=None,
+    )
     prefetcher = DataPrefetcher(data_loader)
     images, targets = prefetcher.next()
 
@@ -52,6 +54,7 @@ def test_get_dataloader():
     assert len(images[0]) == 3
     assert len(targets) == batch_size
     assert isinstance(targets[0], Tensor)
+
 
 @pytest.mark.skip("Remove Lightning dependency")
 def test_detection_data_module():
@@ -73,4 +76,3 @@ def test_detection_data_module():
     assert isinstance(targets[0]["image_id"], Tensor)
     assert isinstance(targets[0]["boxes"], Tensor)
     assert isinstance(targets[0]["labels"], Tensor)
-
