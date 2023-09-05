@@ -29,4 +29,6 @@ pandas
 # extras --------------------------------------
 # pycocotools on PyPI needs python3.7 as minimal
 # pycocotools>=2.0.2  # corresponds to https://github.com/ppwwyyxx/cocoapi
-thop  # FLOPs computation
+thop   # FLOPs computation
+loguru # the most popular third-party logging framework
+Ninja  # a small build system with a focus on speed

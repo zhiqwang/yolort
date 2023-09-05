@@ -1,52 +1,197 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
-from pathlib import Path
+import argparse
+from loguru import logger
 
-import pytest
-from yolort.data import _helper as data_helper
+import torch
+
+from yolort.utils import fuse_model, get_local_rank, get_model_info
+from yolort.exp import get_exp
+from yolort.core import Trainer
+
+def make_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-expn", "--experiment-name", type=str, default='yolox_s')
+    parser.add_argument("-n", "--name", type=str, default=None, help="model name")
+
+    # distributed
+    parser.add_argument(
+        "--dist-backend", default="nccl", type=str, help="distributed backend"
+    )
+    parser.add_argument(
+        "--dist-url",
+        default=None,
+        type=str,
+        help="url used to set up distributed training",
+    )
+    parser.add_argument("-b", "--batch-size", type=int, default=64, help="batch size")
+    parser.add_argument(
+        "-d", "--devices", default=None, type=int, help="device for training"
+    )
+    parser.add_argument(
+        "-f",
+        "--exp_file",
+        default=None,
+        type=str,
+        help="plz input your experiment description file",
+    )
+    parser.add_argument(
+        "--resume", default=False, action="store_true", help="resume training"
+    )
+    parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")
+    parser.add_argument(
+        "-e",
+        "--start_epoch",
+        default=None,
+        type=int,
+        help="resume training start epoch",
+    )
+    parser.add_argument(
+        "--num_machines", default=1, type=int, help="num of node for training"
+    )
+    parser.add_argument(
+        "--machine_rank", default=0, type=int, help="node rank for multi-node training"
+    )
+    parser.add_argument(
+        "--fp16",
+        dest="fp16",
+        default=False,
+        action="store_true",
+        help="Adopting mix precision training.",
+    )
+    parser.add_argument(
+        "--cache",
+        type=str,
+        nargs="?",
+        const="ram",
+        help="Caching imgs to ram/disk for fast training.",
+    )
+    parser.add_argument(
+        "-o",
+        "--occupy",
+        dest="occupy",
+        default=False,
+        action="store_true",
+        help="occupy GPU memory first for training.",
+    )
+    parser.add_argument(
+        "-l",
+        "--logger",
+        type=str,
+        help="Logger to be used for metrics. \
+        Implemented loggers include `tensorboard` and `wandb`.",
+        default="tensorboard"
+    )
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
+    parser.add_argument("--conf", default=None, type=float, help="test conf")
+    parser.add_argument("--nms", default=None, type=float, help="test nms threshold")
+    parser.add_argument("--tsize", default=None, type=int, help="test img size")
+    parser.add_argument("--seed", default=None, type=int, help="eval seed")
+    parser.add_argument(
+        "--fuse",
+        dest="fuse",
+        default=False,
+        action="store_true",
+        help="Fuse conv and bn for testing.",
+    )
+    parser.add_argument(
+        "--trt",
+        dest="trt",
+        default=False,
+        action="store_true",
+        help="Using TensorRT model for testing.",
+    )
+    parser.add_argument(
+        "--legacy",
+        dest="legacy",
+        default=False,
+        action="store_true",
+        help="To be compatible with older versions",
+    )
+    parser.add_argument(
+        "--test",
+        dest="test",
+        default=False,
+        action="store_true",
+        help="Evaluating on test-dev set.",
+    )
+    parser.add_argument(
+        "--speed",
+        dest="speed",
+        default=False,
+        action="store_true",
+        help="speed test only.",
+    )
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
+    return parser
+
+def setup_model(exp, args):
+    model = exp.get_model()
+    logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
+    logger.info("Model Structure:\n{}".format(str(model)))
+
+    rank = get_local_rank()
+    torch.cuda.set_device(rank)
+    model.cuda(rank)
+    model.eval()
+
+    if args.ckpt is None:
+        ckpt_file = "yolox_s.pth"
+        url = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_s.pth"
+        torch.hub.download_url_to_file(url, ckpt_file)
+    else:
+        ckpt_file = args.ckpt
+    logger.info("loading checkpoint from {}".format(ckpt_file))
+    ckpt = torch.load(ckpt_file)
+    model.load_state_dict(ckpt["model"])
+    logger.info("loaded checkpoint done, start fusing model...")
+    model = fuse_model(model)
+
+    return model
+
+def main(exp, args):
+    logger.info("Args: {}".format(args))
+    model = setup_model(exp, args)
+
+    is_distributed = False
+    evaluator = exp.get_evaluator(args.batch_size, is_distributed, args.test, args.legacy)
+    evaluator.per_class_AP = True
+    evaluator.per_class_AR = True
+    trt_file = None
+    decoder = None
+
+    # start evaluate
+    *_, summary = evaluator.evaluate(
+        model, is_distributed, args.fp16, trt_file, decoder, exp.test_size
+    )
+    logger.info("\n" + summary)
 
 
-@pytest.mark.skip("Remove Lightning dependency")
 def test_training_step():
-    import pytorch_lightning as pl
-    from yolort.data.data_module import DetectionDataModule
-    from yolort.trainer import DefaultTask
+    args = make_parser().parse_args()
+    exp = get_exp(args.exp_file, args.name)
+    exp.merge(args.opts)
+    h, w = exp.input_size
+    assert h % 32 == 0 and w % 32 == 0, "input size must be multiples of 32"
 
-    # Setup the DataModule
-    data_path = "data-bin"
-    train_dataset = data_helper.get_dataset(data_root=data_path, mode="train")
-    val_dataset = data_helper.get_dataset(data_root=data_path, mode="val")
-    data_module = DetectionDataModule(train_dataset, val_dataset, batch_size=8)
-    # Load model
-    model = DefaultTask(arch="yolov5n")
-    model = model.train()
-    # Trainer
-    trainer = pl.Trainer(max_epochs=1)
-    trainer.fit(model, data_module)
+    exp.max_epoch = 1
+    trainer = Trainer(exp, args)
+    trainer.train()
 
 
-@pytest.mark.skip("Remove Lightning dependency")
-@pytest.mark.parametrize("arch, version, map5095, map50", [("yolov5s", "r4.0", 42.5, 65.3)])
-def test_test_epoch_end(arch, version, map5095, map50):
-    import pytorch_lightning as pl
-    from yolort.trainer import DefaultTask
+def test_test_epoch_end():
+    args = make_parser().parse_args()
+    exp = get_exp(args.exp_file, args.name)
+    exp.merge(args.opts)
 
-    # Acquire the annotation file
-    data_path = Path("data-bin")
-    coco128_dirname = "coco128"
-    data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
-    annotation_file = data_path / coco128_dirname / "annotations" / "instances_train2017.json"
-
-    # Get dataloader to test
-    val_dataloader = data_helper.get_dataloader(data_root=data_path, mode="val")
-
-    # Load model
-    model = DefaultTask(arch=arch, version=version, pretrained=True, annotation_path=annotation_file)
-
-    # test step
-    trainer = pl.Trainer(max_epochs=1)
-    trainer.test(model, dataloaders=val_dataloader)
-    # test epoch end
-    results = model.evaluator.compute()
-    assert results["AP"] > map5095
-    assert results["AP50"] > map50
+    main(exp, args)

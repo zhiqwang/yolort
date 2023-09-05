@@ -16,8 +16,8 @@
 1. 下载 yolort 源码:
 
    ```sh
-   git clone https://github.com/zhiqwang/yolort.git
-   cd yolort/deployment/tensorrt-yolov6
+   git clone https://github.com/zhiqwang/yolov5-rt-stack.git
+   cd yolov5-rt-stack/deployment/tensorrt-yolov6
    ```
 
 1. 导出 ONNX 的时候请务必包含 EfficientNMS 算子, 稍后我们会加入一个更清晰的流程. ~从 YOLOv6 官方地址下载 ONNX 模型，如 [yolov6n.onnx](https://github.com/meituan/YOLOv6/releases/download/0.1.0/yolov6n.onnx)~.

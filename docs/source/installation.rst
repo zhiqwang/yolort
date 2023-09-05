@@ -10,7 +10,7 @@ install PyTorch 1.8.0+ and torchvision 0.9.0+.
 
 To install yolort, you may either use the repository
 
-   https://github.com/zhiqwang/yolort/
+   https://github.com/zhiqwang/yolov5-rt-stack/
 
 and ``setup.py`` from there or use
 
@@ -22,7 +22,7 @@ to get the latest release and
 
 ::
 
-   pip install 'git+https://github.com/zhiqwang/yolort.git'
+   pip install 'git+https://github.com/zhiqwang/yolov5-rt-stack.git'
 
 to install the development version.
 

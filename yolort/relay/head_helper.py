@@ -4,7 +4,18 @@ import random
 
 import torch
 from torch import nn, Tensor
-from yolort.models.box_head import _decode_pred_logits
+from torchvision.ops import box_convert
+
+def _decode_pred_logits(pred_logits: Tensor):
+    """
+    Decode the prediction logit from the PostPrecess.
+    """
+    # Compute conf
+    # box_conf x class_conf, w/ shape: num_anchors x num_classes
+    scores = pred_logits[..., 5:] * pred_logits[..., 4:5]
+    boxes = box_convert(pred_logits[..., :4], in_fmt="cxcywh", out_fmt="xyxy")
+
+    return boxes, scores
 
 
 class FakeYOLO(nn.Module):

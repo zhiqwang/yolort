@@ -1,6 +1,10 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
 import hashlib
 
+import sys
+sys.path.append("/Users/mac/yolort/")
+sys.path.append("/Users/mac/yolort")
+
 from torch import Tensor
 from yolort.v5 import attempt_download, AutoShape, load_yolov5_model
 
@@ -13,7 +17,6 @@ def test_attempt_download():
         bytes = f.read()  # read entire file as bytes
         readable_hash = hashlib.sha256(bytes).hexdigest()
     assert readable_hash[:8] == "9ca9a642"
-
 
 def test_load_yolov5_model_autoshape_attached():
     img_path = "test/assets/zidane.jpg"

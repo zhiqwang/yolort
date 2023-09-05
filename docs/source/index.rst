@@ -50,8 +50,8 @@ Read a source of image(s) and detect its objects:
 And we support loading the trained weights from YOLOv5. Please see our documents on what
 we `share`_ and how we `differ`_ from yolov5 for more details.
 
-.. _share: https://zhiqwang.com/yolort/notebooks/how-to-align-with-ultralytics-yolov5.html
-.. _differ: https://zhiqwang.com/yolort/notebooks/comparison-between-yolort-vs-yolov5.html
+.. _share: https://zhiqwang.com/yolov5-rt-stack/notebooks/how-to-align-with-ultralytics-yolov5.html
+.. _differ: https://zhiqwang.com/yolov5-rt-stack/notebooks/comparison-between-yolort-vs-yolov5.html
 
 .. code:: python
 
