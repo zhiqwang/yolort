@@ -15,6 +15,8 @@ class Exp(MyExp):
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
     def get_model(self):
-        self.model = models.__dict__['yolov5l'](upstream_version="r6.0",)
+        self.model = models.__dict__["yolov5l"](
+            upstream_version="r6.0",
+        )
         self.model.train()
         return self.model

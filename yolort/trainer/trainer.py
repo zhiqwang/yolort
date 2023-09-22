@@ -4,18 +4,15 @@
 import datetime
 import os
 import time
-from loguru import logger
 
 import torch
+from loguru import logger
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
 from yolort.data import DataPrefetcher
 from yolort.exp import Exp
 from yolort.utils import (
-    MeterBuffer,
-    ModelEMA,
-    WandbLogger,
     adjust_status,
     all_reduce_norm,
     get_local_rank,
@@ -26,13 +23,17 @@ from yolort.utils import (
     is_parallel,
     load_ckpt,
     mem_usage,
+    MeterBuffer,
+    ModelEMA,
     occupy_mem,
     save_checkpoint,
     setup_logger,
-    synchronize
+    synchronize,
+    WandbLogger,
 )
 
 __all__ = ["Trainer"]
+
 
 class Trainer:
     def __init__(self, exp: Exp, args):
@@ -48,7 +49,7 @@ class Trainer:
         self.is_distributed = get_world_size() > 1
         self.rank = get_rank()
         self.local_rank = get_local_rank()
-        self.device = "cuda:{}".format(self.local_rank) if torch.cuda.is_available() else 'cpu'
+        self.device = "cuda:{}".format(self.local_rank) if torch.cuda.is_available() else "cpu"
         self.use_model_ema = exp.ema
         self.save_history_ckpt = exp.save_history_ckpt
 
@@ -132,12 +133,10 @@ class Trainer:
         logger.info("exp value:\n{}".format(self.exp))
 
         # model related init
-        if self.device != 'cpu':
+        if self.device != "cpu":
             torch.cuda.set_device(self.local_rank)
         model = self.exp.get_model()
-        logger.info(
-            "Model Summary: {}".format(get_model_info(model, self.exp.test_size))
-        )
+        logger.info("Model Summary: {}".format(get_model_info(model, self.exp.test_size)))
         model.to(self.device)
 
         # solver related init
@@ -183,9 +182,7 @@ class Trainer:
                 self.tblogger = SummaryWriter(os.path.join(self.file_name, "tensorboard"))
             elif self.args.logger == "wandb":
                 self.wandb_logger = WandbLogger.initialize_wandb_logger(
-                    self.args,
-                    self.exp,
-                    self.evaluator.dataloader.dataset
+                    self.args, self.exp, self.evaluator.dataloader.dataset
                 )
             else:
                 raise ValueError("logger must be either 'tensorboard' or 'wandb'")
@@ -194,9 +191,7 @@ class Trainer:
         logger.info("\n{}".format(model))
 
     def after_train(self):
-        logger.info(
-            "Training of experiment is done and the best AP is {:.2f}".format(self.best_ap * 100)
-        )
+        logger.info("Training of experiment is done and the best AP is {:.2f}".format(self.best_ap * 100))
         if self.rank == 0:
             if self.args.logger == "wandb":
                 self.wandb_logger.finish()
@@ -243,14 +238,10 @@ class Trainer:
                 self.epoch + 1, self.max_epoch, self.iter + 1, self.max_iter
             )
             loss_meter = self.meter.get_filtered_meter("loss")
-            loss_str = ", ".join(
-                ["{}: {:.1f}".format(k, v.latest) for k, v in loss_meter.items()]
-            )
+            loss_str = ", ".join(["{}: {:.1f}".format(k, v.latest) for k, v in loss_meter.items()])
 
             time_meter = self.meter.get_filtered_meter("time")
-            time_str = ", ".join(
-                ["{}: {:.3f}s".format(k, v.avg) for k, v in time_meter.items()]
-            )
+            time_str = ", ".join(["{}: {:.3f}s".format(k, v.avg) for k, v in time_meter.items()])
 
             mem_str = "gpu mem: {:.0f}Mb, mem: {:.1f}Gb".format(gpu_mem_usage(), mem_usage())
 
@@ -267,16 +258,12 @@ class Trainer:
 
             if self.rank == 0:
                 if self.args.logger == "tensorboard":
-                    self.tblogger.add_scalar(
-                        "train/lr", self.meter["lr"].latest, self.progress_in_iter)
+                    self.tblogger.add_scalar("train/lr", self.meter["lr"].latest, self.progress_in_iter)
                     for k, v in loss_meter.items():
-                        self.tblogger.add_scalar(
-                            f"train/{k}", v.latest, self.progress_in_iter)
+                        self.tblogger.add_scalar(f"train/{k}", v.latest, self.progress_in_iter)
                 if self.args.logger == "wandb":
                     metrics = {"train/" + k: v.latest for k, v in loss_meter.items()}
-                    metrics.update({
-                        "train/lr": self.meter["lr"].latest
-                    })
+                    metrics.update({"train/lr": self.meter["lr"].latest})
                     self.wandb_logger.log_metrics(metrics, step=self.progress_in_iter)
 
             self.meter.clear_meters()
@@ -306,15 +293,11 @@ class Trainer:
             self.best_ap = ckpt.pop("best_ap", 0)
             # resume the training states variables
             start_epoch = (
-                self.args.start_epoch - 1
-                if self.args.start_epoch is not None
-                else ckpt["start_epoch"]
+                self.args.start_epoch - 1 if self.args.start_epoch is not None else ckpt["start_epoch"]
             )
             self.start_epoch = start_epoch
             logger.info(
-                "loaded checkpoint '{}' (epoch {})".format(
-                    self.args.resume, self.start_epoch
-                )
+                "loaded checkpoint '{}' (epoch {})".format(self.args.resume, self.start_epoch)
             )  # noqa
         else:
             if self.args.ckpt is not None:
@@ -347,11 +330,13 @@ class Trainer:
                 self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
                 self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
             if self.args.logger == "wandb":
-                self.wandb_logger.log_metrics({
-                    "val/COCOAP50": ap50,
-                    "val/COCOAP50_95": ap50_95,
-                    "train/epoch": self.epoch + 1,
-                })
+                self.wandb_logger.log_metrics(
+                    {
+                        "val/COCOAP50": ap50,
+                        "val/COCOAP50_95": ap50_95,
+                        "train/epoch": self.epoch + 1,
+                    }
+                )
                 self.wandb_logger.log_images(predictions)
             logger.info("\n" + summary)
         synchronize()
@@ -387,6 +372,6 @@ class Trainer:
                         "epoch": self.epoch + 1,
                         "optimizer": self.optimizer.state_dict(),
                         "best_ap": self.best_ap,
-                        "curr_ap": ap
-                    }
+                        "curr_ap": ap,
+                    },
                 )

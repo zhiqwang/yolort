@@ -7,8 +7,7 @@ from typing import Optional
 
 import torch
 import torch.distributed as dist
-from torch.utils.data.sampler import BatchSampler as torchBatchSampler
-from torch.utils.data.sampler import Sampler
+from torch.utils.data.sampler import BatchSampler as torchBatchSampler, Sampler
 
 
 class YoloBatchSampler(torchBatchSampler):
@@ -68,9 +67,7 @@ class InfiniteSampler(Sampler):
 
     def __iter__(self):
         start = self._rank
-        yield from itertools.islice(
-            self._infinite_indices(), start, None, self._world_size
-        )
+        yield from itertools.islice(self._infinite_indices(), start, None, self._world_size)
 
     def _infinite_indices(self):
         g = torch.Generator()

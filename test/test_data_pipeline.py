@@ -1,17 +1,17 @@
 # Copyright (c) 2021, Zhiqiang Wang. All Rights Reserved.
+import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
-import sys
+
 sys.path.append("../yolort")
 
 import torch
-from torch import Tensor
-from yolort.exp import Exp
+from torch import distributed as dist, Tensor
 from yolort.data import DataPrefetcher
+from yolort.exp import Exp
 from yolort.utils import contains_any_tensor
-from torch import distributed as dist
 
 
 def get_world_size() -> int:
@@ -57,6 +57,7 @@ def test_get_dataloader():
     assert len(images[0]) == 3
     assert len(targets) == batch_size
     assert isinstance(targets[0], Tensor)
+
 
 test_get_dataloader()
 

@@ -14,11 +14,11 @@ import os
 import pickle
 import time
 from contextlib import contextmanager
-from loguru import logger
 
 import numpy as np
 
 import torch
+from loguru import logger
 from torch import distributed as dist
 
 __all__ = [
@@ -39,9 +39,9 @@ _LOCAL_PROCESS_GROUP = None
 
 
 def get_num_devices():
-    gpu_list = os.getenv('CUDA_VISIBLE_DEVICES', None)
+    gpu_list = os.getenv("CUDA_VISIBLE_DEVICES", None)
     if gpu_list is not None:
-        return len(gpu_list.split(','))
+        return len(gpu_list.split(","))
     else:
         devices_list_info = os.popen("nvidia-smi -L")
         devices_list_info = devices_list_info.read().strip().split("\n")
@@ -151,10 +151,10 @@ def _serialize_to_tensor(data, group):
     device = torch.device("cpu" if backend == "gloo" else "cuda")
 
     buffer = pickle.dumps(data)
-    if len(buffer) > 1024 ** 3:
+    if len(buffer) > 1024**3:
         logger.warning(
             "Rank {} trying to all-gather {:.2f} GB of data on device {}".format(
-                get_rank(), len(buffer) / (1024 ** 3), device
+                get_rank(), len(buffer) / (1024**3), device
             )
         )
     storage = torch.ByteStorage.from_buffer(buffer)
@@ -169,14 +169,9 @@ def _pad_to_largest_tensor(tensor, group):
         Tensor: padded tensor that has the max size
     """
     world_size = dist.get_world_size(group=group)
-    assert (
-        world_size >= 1
-    ), "comm.gather/all_gather must be called from ranks within the given group!"
+    assert world_size >= 1, "comm.gather/all_gather must be called from ranks within the given group!"
     local_size = torch.tensor([tensor.numel()], dtype=torch.int64, device=tensor.device)
-    size_list = [
-        torch.zeros([1], dtype=torch.int64, device=tensor.device)
-        for _ in range(world_size)
-    ]
+    size_list = [torch.zeros([1], dtype=torch.int64, device=tensor.device) for _ in range(world_size)]
     dist.all_gather(size_list, local_size, group=group)
     size_list = [int(size.item()) for size in size_list]
 
@@ -185,9 +180,7 @@ def _pad_to_largest_tensor(tensor, group):
     # we pad the tensor because torch all_gather does not support
     # gathering tensors of different shapes
     if local_size != max_size:
-        padding = torch.zeros(
-            (max_size - local_size,), dtype=torch.uint8, device=tensor.device
-        )
+        padding = torch.zeros((max_size - local_size,), dtype=torch.uint8, device=tensor.device)
         tensor = torch.cat((tensor, padding), dim=0)
     return size_list, tensor
 
@@ -216,10 +209,7 @@ def all_gather(data, group=None):
     max_size = max(size_list)
 
     # receiving Tensor from all ranks
-    tensor_list = [
-        torch.empty((max_size,), dtype=torch.uint8, device=tensor.device)
-        for _ in size_list
-    ]
+    tensor_list = [torch.empty((max_size,), dtype=torch.uint8, device=tensor.device) for _ in size_list]
     dist.all_gather(tensor_list, tensor, group=group)
 
     data_list = []
@@ -258,10 +248,7 @@ def gather(data, dst=0, group=None):
     # receiving Tensor from all ranks
     if rank == dst:
         max_size = max(size_list)
-        tensor_list = [
-            torch.empty((max_size,), dtype=torch.uint8, device=tensor.device)
-            for _ in size_list
-        ]
+        tensor_list = [torch.empty((max_size,), dtype=torch.uint8, device=tensor.device) for _ in size_list]
         dist.gather(tensor, tensor_list, dst=dst, group=group)
 
         data_list = []
@@ -282,7 +269,7 @@ def shared_random_seed():
             create one.
     All workers must call this function, otherwise it will deadlock.
     """
-    ints = np.random.randint(2 ** 31)
+    ints = np.random.randint(2**31)
     all_ints = all_gather(ints)
     return all_ints[0]
 

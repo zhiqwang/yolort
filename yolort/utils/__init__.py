@@ -19,7 +19,7 @@ from .boxes import *
 from .checkpoint import load_ckpt, save_checkpoint
 from .dist import *
 from .ema import *
-from .logger import WandbLogger, setup_logger
+from .logger import setup_logger, WandbLogger
 from .lr_scheduler import LRScheduler
 from .metric import *
 from .model_utils import *
