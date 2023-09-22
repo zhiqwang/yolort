@@ -10,7 +10,7 @@ from yolort.utils import is_module_available, requires_module
 if is_module_available("pytorch_lightning"):
     from pytorch_lightning import LightningDataModule
 
-from .coco import COCODetection
+from yolort.data.datasets.coco import COCODetection
 from .transforms import collate_fn, default_train_transforms, default_val_transforms
 from .voc import VOCDetection
 

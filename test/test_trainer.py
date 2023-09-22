@@ -1,52 +1,108 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
-from pathlib import Path
+import argparse
+import importlib
 
-import pytest
-from yolort.data import _helper as data_helper
+import sys
+sys.path.append("../yolort/")
 
+def make_parser():
+    parser = argparse.ArgumentParser("YOLOX train parser")
+    parser.add_argument("-expn", "--experiment-name", type=str, default="yolov5n")
+    parser.add_argument("-n", "--name", type=str, default="yolov5n", help="model name")
 
-@pytest.mark.skip("Remove Lightning dependency")
+    # distributed
+    parser.add_argument(
+        "--dist-backend", default="nccl", type=str, help="distributed backend"
+    )
+    parser.add_argument(
+        "--dist-url",
+        default=None,
+        type=str,
+        help="url used to set up distributed training",
+    )
+    parser.add_argument("-b", "--batch-size", type=int, default=64, help="batch size")
+    parser.add_argument(
+        "-d", "--devices", default=None, type=int, help="device for training"
+    )
+    parser.add_argument(
+        "-f",
+        "--exp_file",
+        default=None,
+        type=str,
+        help="plz input your experiment description file",
+    )
+    parser.add_argument(
+        "--resume", default=False, action="store_true", help="resume training"
+    )
+    parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")
+    parser.add_argument(
+        "-e",
+        "--start_epoch",
+        default=None,
+        type=int,
+        help="resume training start epoch",
+    )
+    parser.add_argument(
+        "--num_machines", default=1, type=int, help="num of node for training"
+    )
+    parser.add_argument(
+        "--machine_rank", default=0, type=int, help="node rank for multi-node training"
+    )
+    parser.add_argument(
+        "--fp16",
+        dest="fp16",
+        default=False,
+        action="store_true",
+        help="Adopting mix precision training.",
+    )
+    parser.add_argument(
+        "--cache",
+        type=str,
+        nargs="?",
+        const="ram",
+        help="Caching imgs to ram/disk for fast training.",
+    )
+    parser.add_argument(
+        "-o",
+        "--occupy",
+        dest="occupy",
+        default=False,
+        action="store_true",
+        help="occupy GPU memory first for training.",
+    )
+    parser.add_argument(
+        "-l",
+        "--logger",
+        type=str,
+        help="Logger to be used for metrics. \
+        Implemented loggers include `tensorboard` and `wandb`.",
+        default="tensorboard"
+    )
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
+    return parser
+
 def test_training_step():
-    import pytorch_lightning as pl
-    from yolort.data.data_module import DetectionDataModule
-    from yolort.trainer import DefaultTask
+    args = make_parser().parse_args()
+    module_name = ".".join(["yolort", "exp", "default", args.name])
+    exp = importlib.import_module(module_name).Exp()
+    exp.merge(args.opts)
+    h, w = exp.input_size
+    assert h % 32 == 0 and w % 32 == 0, "input size must be multiples of 32"
 
-    # Setup the DataModule
-    data_path = "data-bin"
-    train_dataset = data_helper.get_dataset(data_root=data_path, mode="train")
-    val_dataset = data_helper.get_dataset(data_root=data_path, mode="val")
-    data_module = DetectionDataModule(train_dataset, val_dataset, batch_size=8)
-    # Load model
-    model = DefaultTask(arch="yolov5n")
-    model = model.train()
-    # Trainer
-    trainer = pl.Trainer(max_epochs=1)
-    trainer.fit(model, data_module)
+    from yolort.trainer import Trainer
+    trainer = Trainer(exp, args)
+    trainer.train()
 
+def test_test_epoch_end():
+    args = make_parser().parse_args()
+    module_name = ".".join(["yolort", "exp", "default", args.name])
+    exp = importlib.import_module(module_name).Exp()
+    exp.merge(args.opts)
 
-@pytest.mark.skip("Remove Lightning dependency")
-@pytest.mark.parametrize("arch, version, map5095, map50", [("yolov5s", "r4.0", 42.5, 65.3)])
-def test_test_epoch_end(arch, version, map5095, map50):
-    import pytorch_lightning as pl
-    from yolort.trainer import DefaultTask
-
-    # Acquire the annotation file
-    data_path = Path("data-bin")
-    coco128_dirname = "coco128"
-    data_helper.prepare_coco128(data_path, dirname=coco128_dirname)
-    annotation_file = data_path / coco128_dirname / "annotations" / "instances_train2017.json"
-
-    # Get dataloader to test
-    val_dataloader = data_helper.get_dataloader(data_root=data_path, mode="val")
-
-    # Load model
-    model = DefaultTask(arch=arch, version=version, pretrained=True, annotation_path=annotation_file)
-
-    # test step
-    trainer = pl.Trainer(max_epochs=1)
-    trainer.test(model, dataloaders=val_dataloader)
-    # test epoch end
-    results = model.evaluator.compute()
-    assert results["AP"] > map5095
-    assert results["AP50"] > map50
+    main(exp, args)
