@@ -321,6 +321,31 @@ class TestModel:
         assert isinstance(losses["bbox_regression"], Tensor)
         assert isinstance(losses["objectness"], Tensor)
 
+    def test_criterion_p6(self):
+        N, H, W = 4, 640, 640
+        use_p6 = True
+        head_outputs = self._get_head_outputs(N, H, W, use_p6=use_p6)
+        strides = self._get_strides(use_p6)
+        anchor_grids = self._get_anchor_grids(use_p6)
+        num_classes = self.num_classes
+
+        targets = torch.tensor(
+            [
+                [0.0000, 7.0000, 0.0714, 0.3749, 0.0760, 0.0654],
+                [0.0000, 1.0000, 0.1027, 0.4402, 0.2053, 0.1920],
+                [1.0000, 5.0000, 0.4720, 0.6720, 0.3280, 0.1760],
+                [3.0000, 3.0000, 0.6305, 0.3290, 0.3274, 0.2270],
+            ]
+        )
+        criterion = SetCriterion(strides, anchor_grids, num_classes)
+        assert len(criterion.balance) == 4, "P6 model should have 4 balance values"
+        assert criterion.ssi == 1, "stride 16 should be at index 1"
+        losses = criterion(targets, head_outputs)
+        assert isinstance(losses, dict)
+        assert isinstance(losses["cls_logits"], Tensor)
+        assert isinstance(losses["bbox_regression"], Tensor)
+        assert isinstance(losses["objectness"], Tensor)
+
 
 @pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolov5ts"])
 def test_torchscript(arch):

@@ -123,8 +123,10 @@ class SetCriterion(nn.Module):
         self.anchor_grids = anchor_grids
         self.num_anchors = len(anchor_grids[0]) // 2
 
-        self.balance = [4.0, 1.0, 0.4]
-        self.ssi = 0  # stride 16 index
+        # Balance values per detection layer; extended for P6 models (4 layers)
+        balance_defaults = [4.0, 1.0, 0.4, 0.1]
+        self.balance = balance_defaults[: len(strides)]
+        self.ssi = strides.index(16) if 16 in strides else 0  # stride 16 index
 
         self.sort_obj_iou = False
 
@@ -161,8 +163,9 @@ class SetCriterion(nn.Module):
                 of the model for the format
         """
         device = targets.device
+        num_layers = len(self.strides)
         anchor_grids = torch.as_tensor(self.anchor_grids, dtype=torch.float32, device=device).view(
-            self.num_anchors, -1, 2
+            num_layers, -1, 2
         )
         strides = torch.as_tensor(self.strides, dtype=torch.float32, device=device).view(-1, 1, 1)
         anchor_grids /= strides
@@ -263,7 +266,7 @@ class SetCriterion(nn.Module):
         target_cls, target_box, anch = [], [], []
         indices: List[Tuple[Tensor, Tensor, Tensor, Tensor]] = []
 
-        for i in range(num_anchors):
+        for i in range(len(head_outputs)):
             anchors = anchor_grids[i]
             gain[2:6] = torch.tensor(head_outputs[i].shape)[[3, 2, 3, 2]]  # xyxy gain
 
