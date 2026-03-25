@@ -1,5 +1,8 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 
+from pathlib import Path
+from unittest.mock import Mock
+
 import numpy as np
 import pytest
 import torch
@@ -91,8 +94,14 @@ def test_read_image_to_tensor():
     assert tuple(out.shape) == (N, H, W)
 
 
-def test_get_image_from_url():
-    url = "https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jpg"
+def test_get_image_from_url(monkeypatch):
+    image_bytes = (Path(__file__).parent / "assets" / "zidane.jpg").read_bytes()
+    monkeypatch.setattr(
+        "yolort.utils.image_utils.requests.get",
+        lambda _: Mock(content=image_bytes),
+    )
+
+    url = "https://example.com/zidane.jpg"
     img = get_image_from_url(url)
     assert isinstance(img, np.ndarray)
     assert tuple(img.shape) == (720, 1280, 3)

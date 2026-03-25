@@ -12,6 +12,15 @@ from yolort.relay.trt_graphsurgeon import YOLOTRTGraphSurgeon
 from yolort.v5 import attempt_download
 
 
+def _skip_if_onnx_export_requires_onnxscript():
+    try:
+        import torch.onnx._internal.exporter._core  # noqa: F401
+    except ModuleNotFoundError as error:
+        if error.name == "onnxscript":
+            pytest.skip("onnxscript is required by the installed PyTorch ONNX exporter")
+        raise
+
+
 @pytest.mark.parametrize("h", [320, 416, 640])
 @pytest.mark.parametrize("w", [320, 416, 640])
 def test_get_trace_module(h, w):
@@ -57,6 +66,7 @@ def test_yolo_trt_inference(arch, version, upstream_version, hash_prefix):
     ],
 )
 def test_yolo_trt_inference_to_onnx(arch, version, upstream_version, hash_prefix):
+    _skip_if_onnx_export_requires_onnxscript()
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
     checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
@@ -79,6 +89,7 @@ def test_yolo_trt_inference_to_onnx(arch, version, upstream_version, hash_prefix
     ],
 )
 def test_yolo_graphsurgeon_wo_nms(arch, version, upstream_version, hash_prefix):
+    _skip_if_onnx_export_requires_onnxscript()
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
     checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
@@ -100,6 +111,7 @@ def test_yolo_graphsurgeon_wo_nms(arch, version, upstream_version, hash_prefix):
     ],
 )
 def test_yolo_graphsurgeon_register_nms(arch, version, upstream_version, hash_prefix):
+    _skip_if_onnx_export_requires_onnxscript()
     base_url = "https://github.com/ultralytics/yolov5/releases/download/"
     model_url = f"{base_url}/{upstream_version}/{arch}.pt"
     checkpoint_path = attempt_download(model_url, hash_prefix=hash_prefix)
