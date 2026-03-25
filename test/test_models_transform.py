@@ -24,6 +24,19 @@ def test_yolo_transform():
     torch.testing.assert_close(annotations[1]["boxes"], annotations_copy[1]["boxes"], rtol=0, atol=0)
 
 
+def test_yolo_transform_no_targets():
+    """Test that a batch where all images have no bounding boxes does not raise an error."""
+    transform = YOLOTransform(300, 500)
+    images = [torch.rand(3, 200, 300), torch.rand(3, 200, 200)]
+    annotations = [
+        {"boxes": torch.zeros((0, 4)), "labels": torch.zeros(0, dtype=torch.int64)},
+        {"boxes": torch.zeros((0, 4)), "labels": torch.zeros(0, dtype=torch.int64)},
+    ]
+    samples, targets = transform(images, annotations)
+    assert isinstance(samples, NestedTensor)
+    assert targets.shape == (0, 6)
+
+
 @pytest.mark.parametrize("im_shape", [(500, 500), (500, 1080), (720, 900), (1000, 950), (900, 720)])
 @pytest.mark.parametrize("auto", [True, False])
 @pytest.mark.parametrize("stride", [32, 64])
