@@ -14,11 +14,15 @@ from yolort.runtime import PredictorORT
 from yolort.runtime.ort_helper import export_onnx
 from yolort.utils.image_utils import to_numpy
 
-_onnx_opset_version = getattr(
+DEFAULT_ONNX_OPSET_VERSION = 11
+# `_onnx_opset_version` was removed in newer torchvision releases. Fall back to
+# `BASE_ONNX_OPSET_VERSION` when available and keep opset 11 as the historical default.
+_base_onnx_opset_version = getattr(
     _register_onnx_ops,
-    "_onnx_opset_version",
-    getattr(_register_onnx_ops, "BASE_ONNX_OPSET_VERSION", 11),
+    "BASE_ONNX_OPSET_VERSION",
+    DEFAULT_ONNX_OPSET_VERSION,
 )
+_onnx_opset_version = getattr(_register_onnx_ops, "_onnx_opset_version", _base_onnx_opset_version)
 
 # In environments without onnxruntime we prefer to
 # invoke all tests in the repo and have this one skipped rather than fail.
