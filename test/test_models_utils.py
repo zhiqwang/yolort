@@ -18,7 +18,7 @@ class TestMakeDivisible:
         assert _make_divisible(16.0, 8) == 16
 
     def test_round_up(self):
-        assert _make_divisible(17.0, 8) == 16  # 17 + 4 = 21 // 8 * 8 = 16
+        assert _make_divisible(17.0, 8) == 16
 
     def test_min_value(self):
         assert _make_divisible(1.0, 8, min_value=8) == 8
