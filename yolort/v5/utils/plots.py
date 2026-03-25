@@ -85,14 +85,23 @@ def check_font(font="Arial.ttf", size=10):
     font = font if font.exists() else (CONFIG_DIR / font.name)
     try:
         return ImageFont.truetype(str(font) if font.exists() else font.name, size)
-    except Exception as e:  # download if missing
+    except OSError as e:  # download if missing
         print(f"Warning: Font error: {e}")
         url = "https://ultralytics.com/assets/" + font.name
         print(f"Downloading {url} to {font}...")
         try:
             torch.hub.download_url_to_file(url, str(font), progress=False)
+            return ImageFont.truetype(str(font), size)
         except Exception as download_error:
-            print(f"Warning: Could not download font: {download_error}. Using default font.")
+            print(f"Warning: Could not download font: {download_error}. Falling back to default fonts.")
+        last_error = e
+        for fallback_font in ("DejaVuSans.ttf", "Arial.ttf"):
+            try:
+                return ImageFont.truetype(fallback_font, size)
+            except OSError as fallback_error:
+                last_error = fallback_error
+        print(f"Warning: Font fallback error: {last_error}")
+        return ImageFont.load_default()
 
 
 class Annotator:
