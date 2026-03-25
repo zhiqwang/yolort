@@ -16,9 +16,9 @@ from yolort.v5.utils.general import (
     make_divisible,
     one_cycle,
     url2file,
-    xyxy2xywh,
     xywh2xyxy,
     xywhn2xyxy,
+    xyxy2xywh,
     xyxy2xywhn,
 )
 

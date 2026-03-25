@@ -3,6 +3,7 @@ import pytest
 import torch
 
 from yolort.v5.models.common import (
+    autopad,
     Bottleneck,
     C3,
     Concat,
@@ -16,7 +17,6 @@ from yolort.v5.models.common import (
     GhostConv,
     SPP,
     SPPF,
-    autopad,
 )
 
 

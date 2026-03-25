@@ -4,11 +4,11 @@ import torch
 from torch import nn
 
 from yolort.models._utils import (
-    FocalLoss,
     _make_divisible,
     bbox_iou,
     decode_single,
     encode_single,
+    FocalLoss,
     smooth_binary_cross_entropy,
 )
 

@@ -4,13 +4,13 @@ import torch
 from PIL import Image
 
 from yolort.data.transforms import (
+    collate_fn,
     Compose,
     ConvertImageDtype,
-    PILToTensor,
-    RandomHorizontalFlip,
-    collate_fn,
     default_train_transforms,
     default_val_transforms,
+    PILToTensor,
+    RandomHorizontalFlip,
 )
 
 
