@@ -80,16 +80,19 @@ colors = Colors()  # create instance
 
 
 def check_font(font="Arial.ttf", size=10):
-    # Return a PIL TrueType Font, downloading to CONFIG_DIR if necessary
+    # Return a PIL TrueType Font, falling back to a bundled default if necessary
     font = Path(font)
     font = font if font.exists() else (CONFIG_DIR / font.name)
     try:
         return ImageFont.truetype(str(font) if font.exists() else font.name, size)
-    except Exception as e:  # download if missing
+    except Exception as e:
         print(f"Warning: Font error: {e}")
-        url = "https://ultralytics.com/assets/" + font.name
-        print(f"Downloading {url} to {font}...")
-        torch.hub.download_url_to_file(url, str(font), progress=False)
+        for fallback_font in ("DejaVuSans.ttf", "Arial.ttf"):
+            try:
+                return ImageFont.truetype(fallback_font, size)
+            except Exception:
+                pass
+        return ImageFont.load_default()
 
 
 class Annotator:
