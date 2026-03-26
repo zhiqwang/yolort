@@ -47,9 +47,9 @@
   
   
     <title>Deploying yolort on TensorRT &#8212; yolort  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=83e35b93" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=75810a84" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css?v=79c92029" />
-    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
@@ -778,8 +778,8 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">torch</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"CUDA_DEVICE_ORDER"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"PCI_BUS_ID"</span>
 <span class="n">cuda_visible</span> <span class="o">=</span> <span class="s2">"0"</span>
@@ -788,7 +788,7 @@
 <span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span>
 <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">'cuda'</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">tensorrt</span> <span class="k">as</span> <span class="nn">trt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorrt</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">trt</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"We're using TensorRT: </span><span class="si">{</span><span class="n">trt</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2"> device: </span><span class="si">{</span><span class="n">cuda_visible</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -805,11 +805,11 @@ We're using TensorRT: 8.2.4.2 on cuda device: 0.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
 
-<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">Visualizer</span>
-<span class="kn">from</span> <span class="nn">yolort.v5</span> <span class="kn">import</span> <span class="n">attempt_download</span>
-<span class="kn">from</span> <span class="nn">yolort.v5.utils.downloads</span> <span class="kn">import</span> <span class="n">safe_download</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">yolort.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Visualizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">yolort.v5</span><span class="w"> </span><span class="kn">import</span> <span class="n">attempt_download</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">yolort.v5.utils.downloads</span><span class="w"> </span><span class="kn">import</span> <span class="n">safe_download</span>
 </pre></div>
 </div>
 </div>
@@ -888,7 +888,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg t
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.runtime.trt_helper</span> <span class="kn">import</span> <span class="n">export_tensorrt_engine</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">yolort.runtime.trt_helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_tensorrt_engine</span>
 </pre></div>
 </div>
 </div>
@@ -1024,7 +1024,7 @@ Serialize engine success, saved as yolov5s.engine
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.runtime</span> <span class="kn">import</span> <span class="n">PredictorTRT</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">yolort.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">PredictorTRT</span>
 </pre></div>
 </div>
 </div>
@@ -1126,7 +1126,7 @@ Loading yolov5s.engine for TensorRT inference...
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">yolort.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">YOLOv5</span>
 </pre></div>
 </div>
 </div>
@@ -1349,7 +1349,7 @@ Downloading https://huggingface.co/spaces/zhiqwang/assets/resolve/main/coco.name
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2024, yolort team.
+              &#169; Copyright 2026, yolort team.
               
           </div>
             Created using

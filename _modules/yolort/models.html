@@ -46,7 +46,7 @@
   
   
     <title>yolort.models &#8212; yolort  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=83e35b93" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=75810a84" />
     <link rel="stylesheet" type="text/css" href="../../_static/material.css?v=79c92029" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b3ba4146"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
@@ -657,12 +657,12 @@
   <h1 id="modules-yolort-models--page-root">Source code for yolort.models</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (c) 2021, yolort team. All rights reserved.</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">.yolo</span> <span class="kn">import</span> <span class="n">YOLO</span>
-<span class="kn">from</span> <span class="nn">.yolov5</span> <span class="kn">import</span> <span class="n">YOLOv5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.yolo</span><span class="w"> </span><span class="kn">import</span> <span class="n">YOLO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.yolov5</span><span class="w"> </span><span class="kn">import</span> <span class="n">YOLOv5</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"YOLO"</span><span class="p">,</span>
@@ -678,7 +678,7 @@
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="yolov5n"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5n">[docs]</a><span class="k">def</span> <span class="nf">yolov5n</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5n"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5n">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5n</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -697,7 +697,7 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolov5s"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5s">[docs]</a><span class="k">def</span> <span class="nf">yolov5s</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5s"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5s">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5s</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -720,7 +720,7 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolov5m"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5m">[docs]</a><span class="k">def</span> <span class="nf">yolov5m</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5m"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5m">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5m</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -743,7 +743,7 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolov5l"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5l">[docs]</a><span class="k">def</span> <span class="nf">yolov5l</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5l"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5l">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5l</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -766,7 +766,7 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolov5n6"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5n6">[docs]</a><span class="k">def</span> <span class="nf">yolov5n6</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5n6"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5n6">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5n6</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -785,7 +785,7 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolov5s6"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5s6">[docs]</a><span class="k">def</span> <span class="nf">yolov5s6</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5s6"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5s6">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5s6</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -804,7 +804,7 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolov5m6"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5m6">[docs]</a><span class="k">def</span> <span class="nf">yolov5m6</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5m6"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5m6">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5m6</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r6.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -823,7 +823,7 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolov5ts"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5ts">[docs]</a><span class="k">def</span> <span class="nf">yolov5ts</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r4.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<div class="viewcode-block" id="yolov5ts"><a class="viewcode-back" href="../../models.html#yolort.models.yolov5ts">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">yolov5ts</span><span class="p">(</span><span class="n">upstream_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r4.0"</span><span class="p">,</span> <span class="n">export_friendly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Args:</span>
 <span class="sd">        upstream_version (str): model released by the upstream YOLOv5. Possible values</span>
@@ -842,9 +842,9 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<span class="k">def</span> <span class="nf">_export_module_friendly</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">yolort.v5</span> <span class="kn">import</span> <span class="n">Conv</span>
-    <span class="kn">from</span> <span class="nn">yolort.v5.utils.activations</span> <span class="kn">import</span> <span class="n">Hardswish</span><span class="p">,</span> <span class="n">SiLU</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_export_module_friendly</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">yolort.v5</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">yolort.v5.utils.activations</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hardswish</span><span class="p">,</span> <span class="n">SiLU</span>
 
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
         <span class="n">m</span><span class="o">.</span><span class="n">_non_persistent_buffers_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># pytorch 1.6.0 compatibility</span>
@@ -873,7 +873,7 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2024, yolort team.
+              &#169; Copyright 2026, yolort team.
               
           </div>
             Created using

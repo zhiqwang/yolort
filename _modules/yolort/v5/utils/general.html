@@ -46,7 +46,7 @@
   
   
     <title>yolort.v5.utils.general &#8212; yolort  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=83e35b93" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=75810a84" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/material.css?v=79c92029" />
     <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=b3ba4146"></script>
     <script src="../../../../_static/doctools.js?v=888ff710"></script>
@@ -660,31 +660,31 @@
 <span class="sd">General utils</span>
 <span class="sd">"""</span>
 
-<span class="kn">import</span> <span class="nn">contextlib</span>
-<span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">platform</span>
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">signal</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">import</span> <span class="nn">urllib</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">pkg_resources</span> <span class="k">as</span> <span class="nn">pkg</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torchvision</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
-<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">is_module_available</span><span class="p">,</span> <span class="n">requires_module</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pkg_resources</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pkg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">yolort.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_module_available</span><span class="p">,</span> <span class="n">requires_module</span>
 
 <span class="k">if</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">):</span>
-    <span class="kn">import</span> <span class="nn">cv2</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
 
-<span class="kn">from</span> <span class="nn">.metrics</span> <span class="kn">import</span> <span class="n">box_iou</span><span class="p">,</span> <span class="n">fitness</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">box_iou</span><span class="p">,</span> <span class="n">fitness</span>
 
 <span class="c1"># Settings</span>
 <span class="n">torch</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">320</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="s2">"long"</span><span class="p">)</span>
@@ -700,7 +700,7 @@
 <span class="n">ROOT</span> <span class="o">=</span> <span class="n">FILE</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># YOLOv5 root directory</span>
 
 
-<div class="viewcode-block" id="set_logging"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.set_logging">[docs]</a><span class="k">def</span> <span class="nf">set_logging</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="set_logging"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.set_logging">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">set_logging</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="c1"># Sets level and returns logger</span>
     <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"RANK"</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># rank in world for Multi-GPU trainings</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
@@ -713,38 +713,38 @@
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">set_logging</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Profile</span><span class="p">(</span><span class="n">contextlib</span><span class="o">.</span><span class="n">ContextDecorator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Profile</span><span class="p">(</span><span class="n">contextlib</span><span class="o">.</span><span class="n">ContextDecorator</span><span class="p">):</span>
     <span class="c1"># Usage: @Profile() decorator or 'with Profile():' context manager</span>
-    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Profile results: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">s"</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Timeout</span><span class="p">(</span><span class="n">contextlib</span><span class="o">.</span><span class="n">ContextDecorator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Timeout</span><span class="p">(</span><span class="n">contextlib</span><span class="o">.</span><span class="n">ContextDecorator</span><span class="p">):</span>
     <span class="c1"># Usage: @Timeout(seconds) decorator or 'with Timeout(seconds):' context manager</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout_msg</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">suppress_timeout_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout_msg</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">suppress_timeout_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timeout_message</span> <span class="o">=</span> <span class="n">timeout_msg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">suppress</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">suppress_timeout_errors</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_timeout_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_timeout_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout_message</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_handler</span><span class="p">)</span>  <span class="c1"># Set handler for SIGALRM</span>
         <span class="n">signal</span><span class="o">.</span><span class="n">alarm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>  <span class="c1"># start countdown for SIGALRM to be raised</span>
 
-    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
         <span class="n">signal</span><span class="o">.</span><span class="n">alarm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Cancel SIGALRM if it's scheduled</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">suppress</span> <span class="ow">and</span> <span class="n">exc_type</span> <span class="ow">is</span> <span class="ne">TimeoutError</span><span class="p">:</span>  <span class="c1"># Suppress TimeoutError</span>
             <span class="k">return</span> <span class="kc">True</span>
 
 
-<span class="k">def</span> <span class="nf">try_except</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">try_except</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
     <span class="c1"># try-except function. Usage: @try_except decorator</span>
-    <span class="k">def</span> <span class="nf">handler</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handler</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -753,17 +753,17 @@
     <span class="k">return</span> <span class="n">handler</span>
 
 
-<span class="k">def</span> <span class="nf">methods</span><span class="p">(</span><span class="n">instance</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">methods</span><span class="p">(</span><span class="n">instance</span><span class="p">):</span>
     <span class="c1"># Get class/instance methods</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"__"</span><span class="p">)]</span>
 
 
-<span class="k">def</span> <span class="nf">print_args</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_args</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
     <span class="c1"># Print argparser arguments</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">colorstr</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: "</span><span class="p">)</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
 
 
-<span class="k">def</span> <span class="nf">init_seeds</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_seeds</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Initialize random number generator (RNG) seeds</span>
 <span class="sd">    https://pytorch.org/docs/stable/notes/randomness.html</span>
@@ -771,7 +771,7 @@
 <span class="sd">    cudnn seed 0 settings are slower and more reproducible,</span>
 <span class="sd">    else faster and less reproducible</span>
 <span class="sd">    """</span>
-    <span class="kn">import</span> <span class="nn">torch.backends.cudnn</span> <span class="k">as</span> <span class="nn">cudnn</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">torch.backends.cudnn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cudnn</span>
 
     <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -779,7 +779,7 @@
     <span class="n">cudnn</span><span class="o">.</span><span class="n">benchmark</span><span class="p">,</span> <span class="n">cudnn</span><span class="o">.</span><span class="n">deterministic</span> <span class="o">=</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">seed</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="intersect_dicts"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.intersect_dicts">[docs]</a><span class="k">def</span> <span class="nf">intersect_dicts</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">()):</span>
+<div class="viewcode-block" id="intersect_dicts"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.intersect_dicts">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">intersect_dicts</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">()):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Dictionary intersection of matching keys and shapes,</span>
 <span class="sd">    omitting 'exclude' keys, using dict1 values</span>
@@ -791,13 +791,13 @@
     <span class="p">}</span></div>
 
 
-<span class="k">def</span> <span class="nf">get_latest_run</span><span class="p">(</span><span class="n">search_dir</span><span class="o">=</span><span class="s2">"."</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_latest_run</span><span class="p">(</span><span class="n">search_dir</span><span class="o">=</span><span class="s2">"."</span><span class="p">):</span>
     <span class="c1"># Return path to most recent 'last.pt' in /runs (i.e. to --resume from)</span>
     <span class="n">last_list</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">search_dir</span><span class="si">}</span><span class="s2">/**/last*.pt"</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">last_list</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getctime</span><span class="p">)</span> <span class="k">if</span> <span class="n">last_list</span> <span class="k">else</span> <span class="s2">""</span>
 
 
-<span class="k">def</span> <span class="nf">user_config_dir</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s2">"Ultralytics"</span><span class="p">,</span> <span class="n">env_var</span><span class="o">=</span><span class="s2">"YOLOV5_CONFIG_DIR"</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">user_config_dir</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s2">"Ultralytics"</span><span class="p">,</span> <span class="n">env_var</span><span class="o">=</span><span class="s2">"YOLOV5_CONFIG_DIR"</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return path of user configuration directory. Prefer environment</span>
 <span class="sd">    variable if exists. Make dir if required.</span>
@@ -819,7 +819,7 @@
     <span class="k">return</span> <span class="n">path</span>
 
 
-<span class="k">def</span> <span class="nf">is_writeable</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_writeable</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return True if directory has write permissions, test opening a file</span>
 <span class="sd">    with write permissions if test=True</span>
@@ -837,12 +837,12 @@
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">R_OK</span><span class="p">)</span>  <span class="c1"># possible issues on Windows</span>
 
 
-<span class="k">def</span> <span class="nf">is_pip</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_pip</span><span class="p">():</span>
     <span class="c1"># Is file in a pip package?</span>
     <span class="k">return</span> <span class="s2">"site-packages"</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parts</span>
 
 
-<span class="k">def</span> <span class="nf">is_ascii</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_ascii</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Is string composed of all ASCII (no UTF) characters?</span>
 <span class="sd">    (note str().isascii() introduced in python 3.7)</span>
@@ -851,17 +851,17 @@
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="s2">"ignore"</span><span class="p">))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">is_chinese</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="s2">"人工智能"</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_chinese</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="s2">"人工智能"</span><span class="p">):</span>
     <span class="c1"># Is string composed of any Chinese characters?</span>
     <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">"[</span><span class="se">\u4e00</span><span class="s2">-</span><span class="se">\u9fff</span><span class="s2">]"</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">emojis</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">emojis</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
     <span class="c1"># Return platform-dependent emoji-safe version of string</span>
     <span class="k">return</span> <span class="nb">str</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="s2">"ignore"</span><span class="p">)</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"Windows"</span> <span class="k">else</span> <span class="nb">str</span>
 
 
-<span class="k">def</span> <span class="nf">file_size</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">file_size</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="c1"># Return file/dir size (MB)</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
@@ -872,9 +872,9 @@
         <span class="k">return</span> <span class="mf">0.0</span>
 
 
-<span class="k">def</span> <span class="nf">check_online</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_online</span><span class="p">():</span>
     <span class="c1"># Check internet connectivity</span>
-    <span class="kn">import</span> <span class="nn">socket</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="s2">"1.1.1.1"</span><span class="p">,</span> <span class="mi">443</span><span class="p">),</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># check host accessibility</span>
@@ -883,12 +883,12 @@
         <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">check_python</span><span class="p">(</span><span class="n">minimum</span><span class="o">=</span><span class="s2">"3.6.2"</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_python</span><span class="p">(</span><span class="n">minimum</span><span class="o">=</span><span class="s2">"3.6.2"</span><span class="p">):</span>
     <span class="c1"># Check current python version vs. required python version</span>
     <span class="n">check_version</span><span class="p">(</span><span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span> <span class="n">minimum</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Python "</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">check_version</span><span class="p">(</span><span class="n">current</span><span class="o">=</span><span class="s2">"0.0.0"</span><span class="p">,</span> <span class="n">minimum</span><span class="o">=</span><span class="s2">"0.0.0"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"version "</span><span class="p">,</span> <span class="n">pinned</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_version</span><span class="p">(</span><span class="n">current</span><span class="o">=</span><span class="s2">"0.0.0"</span><span class="p">,</span> <span class="n">minimum</span><span class="o">=</span><span class="s2">"0.0.0"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"version "</span><span class="p">,</span> <span class="n">pinned</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="c1"># Check version vs. required version</span>
     <span class="n">current</span><span class="p">,</span> <span class="n">minimum</span> <span class="o">=</span> <span class="p">(</span><span class="n">pkg</span><span class="o">.</span><span class="n">parse_version</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">minimum</span><span class="p">))</span>
     <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">current</span> <span class="o">==</span> <span class="n">minimum</span><span class="p">)</span> <span class="k">if</span> <span class="n">pinned</span> <span class="k">else</span> <span class="p">(</span><span class="n">current</span> <span class="o">&gt;=</span> <span class="n">minimum</span><span class="p">)</span>  <span class="c1"># bool</span>
@@ -898,7 +898,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">def</span> <span class="nf">check_img_size</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_img_size</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Verify image size is a multiple of stride stride in each dimension</span>
 <span class="sd">    """</span>
@@ -914,7 +914,7 @@
     <span class="k">return</span> <span class="n">new_size</span>
 
 
-<span class="k">def</span> <span class="nf">check_suffix</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="s2">"yolov5s.pt"</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="p">(</span><span class="s2">".pt"</span><span class="p">,),</span> <span class="n">msg</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_suffix</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="s2">"yolov5s.pt"</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="p">(</span><span class="s2">".pt"</span><span class="p">,),</span> <span class="n">msg</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
     <span class="c1"># Check file(s) for acceptable suffix</span>
     <span class="k">if</span> <span class="n">file</span> <span class="ow">and</span> <span class="n">suffix</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">suffix</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -925,12 +925,12 @@
                 <span class="k">assert</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">suffix</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">msg</span><span class="si">}{</span><span class="n">f</span><span class="si">}</span><span class="s2"> acceptable suffix is </span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span>
 
 
-<span class="k">def</span> <span class="nf">check_yaml</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="p">(</span><span class="s2">".yaml"</span><span class="p">,</span> <span class="s2">".yml"</span><span class="p">)):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_yaml</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="p">(</span><span class="s2">".yaml"</span><span class="p">,</span> <span class="s2">".yml"</span><span class="p">)):</span>
     <span class="c1"># Search/download YAML file (if necessary) and return path, checking suffix</span>
     <span class="k">return</span> <span class="n">check_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">check_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Search/download file (if necessary) and return path</span>
 <span class="sd">    """</span>
@@ -964,7 +964,7 @@
     <span class="k">return</span> <span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># return file</span>
 
 
-<span class="k">def</span> <span class="nf">url2file</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">url2file</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
     <span class="c1"># Convert URL to filename, i.e. https://url.com/file.txt?auth -&gt; file.txt</span>
     <span class="n">url</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">url</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">":/"</span><span class="p">,</span> <span class="s2">"://"</span><span class="p">)</span>  <span class="c1"># Pathlib turns :// -&gt; :/</span>
     <span class="c1"># '%2F' to '/', split https://url.com/file.txt?auth</span>
@@ -972,22 +972,22 @@
     <span class="k">return</span> <span class="n">file</span>
 
 
-<span class="k">def</span> <span class="nf">make_divisible</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">divisor</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_divisible</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">divisor</span><span class="p">):</span>
     <span class="c1"># Returns x evenly divisible by divisor</span>
     <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">divisor</span><span class="p">)</span> <span class="o">*</span> <span class="n">divisor</span>
 
 
-<span class="k">def</span> <span class="nf">clean_str</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_str</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
     <span class="c1"># Cleans a string by replacing special characters with underscore _</span>
     <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="s2">"[|@#!¡·$€%&amp;()=?¿^*;:,¨´&gt;&lt;+]"</span><span class="p">,</span> <span class="n">repl</span><span class="o">=</span><span class="s2">"_"</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">one_cycle</span><span class="p">(</span><span class="n">y1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">one_cycle</span><span class="p">(</span><span class="n">y1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
     <span class="c1"># lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf</span>
     <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">steps</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span> <span class="o">+</span> <span class="n">y1</span>
 
 
-<span class="k">def</span> <span class="nf">colorstr</span><span class="p">(</span><span class="o">*</span><span class="nb">input</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">colorstr</span><span class="p">(</span><span class="o">*</span><span class="nb">input</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code,</span>
 <span class="sd">    i.e.  colorstr('blue', 'hello world')</span>
@@ -1017,7 +1017,7 @@
     <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">colors</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">string</span><span class="si">}</span><span class="s2">"</span> <span class="o">+</span> <span class="n">colors</span><span class="p">[</span><span class="s2">"end"</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">labels_to_class_weights</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">labels_to_class_weights</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
     <span class="c1"># Get class weights (inverse frequency) from training labels</span>
     <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># no labels loaded</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">()</span>
@@ -1037,7 +1037,7 @@
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">labels_to_image_weights</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">class_weights</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">80</span><span class="p">)):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">labels_to_image_weights</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">nc</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">class_weights</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">80</span><span class="p">)):</span>
     <span class="c1"># Produces image weights based on class_weights and image contents</span>
     <span class="n">class_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">),</span> <span class="n">minlength</span><span class="o">=</span><span class="n">nc</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">])</span>
     <span class="n">image_weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">class_weights</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nc</span><span class="p">)</span> <span class="o">*</span> <span class="n">class_counts</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -1045,7 +1045,7 @@
     <span class="k">return</span> <span class="n">image_weights</span>
 
 
-<span class="k">def</span> <span class="nf">xyxy2xywh</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">xyxy2xywh</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h]</span>
 <span class="sd">    where xy1=top-left, xy2=bottom-right</span>
@@ -1058,7 +1058,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 
-<span class="k">def</span> <span class="nf">xywh2xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">xywh2xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2]</span>
 <span class="sd">    where xy1=top-left, xy2=bottom-right</span>
@@ -1071,7 +1071,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 
-<span class="k">def</span> <span class="nf">xywhn2xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">padw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">padh</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">xywhn2xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">padw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">padh</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x, y, w, h] normalized to [x1, y1, x2, y2]</span>
 <span class="sd">    where xy1=top-left, xy2=bottom-right</span>
@@ -1084,7 +1084,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 
-<span class="k">def</span> <span class="nf">xyxy2xywhn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">xyxy2xywhn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h]</span>
 <span class="sd">    normalized where xy1=top-left, xy2=bottom-right</span>
@@ -1099,7 +1099,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 
-<span class="k">def</span> <span class="nf">xyn2xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">padw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">padh</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">xyn2xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">padw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">padh</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="c1"># Convert normalized segments into pixel segments, shape (n,2)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">padw</span>  <span class="c1"># top left x</span>
@@ -1107,7 +1107,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 
-<span class="k">def</span> <span class="nf">segment2box</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">640</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">segment2box</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">640</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert 1 segment label to 1 box label, applying inside-image</span>
 <span class="sd">    constraint, i.e. (xy1, xy2, ...) to (xyxy)</span>
@@ -1121,7 +1121,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">segments2boxes</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">segments2boxes</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
     <span class="c1"># Convert segment labels to box labels, i.e. (cls, xy1, xy2, ...) to (cls, xywh)</span>
     <span class="n">boxes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
@@ -1130,7 +1130,7 @@
     <span class="k">return</span> <span class="n">xyxy2xywh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">boxes</span><span class="p">))</span>  <span class="c1"># cls, xywh</span>
 
 
-<span class="k">def</span> <span class="nf">resample_segments</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resample_segments</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
     <span class="c1"># Up-sample an (n,2) segment</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
@@ -1140,7 +1140,7 @@
     <span class="k">return</span> <span class="n">segments</span>
 
 
-<div class="viewcode-block" id="scale_coords"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.scale_coords">[docs]</a><span class="k">def</span> <span class="nf">scale_coords</span><span class="p">(</span><span class="n">img1_shape</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">img0_shape</span><span class="p">,</span> <span class="n">ratio_pad</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="scale_coords"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.scale_coords">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">scale_coords</span><span class="p">(</span><span class="n">img1_shape</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">img0_shape</span><span class="p">,</span> <span class="n">ratio_pad</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="c1"># Rescale coords (xyxy) from img1_shape to img0_shape</span>
     <span class="k">if</span> <span class="n">ratio_pad</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># calculate from img0_shape</span>
         <span class="c1"># gain  = old / new</span>
@@ -1158,7 +1158,7 @@
     <span class="k">return</span> <span class="n">coords</span></div>
 
 
-<span class="k">def</span> <span class="nf">clip_coords</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clip_coords</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
     <span class="c1"># Clip bounding xyxy bounding boxes to image shape (height, width)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>  <span class="c1"># faster individually</span>
         <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clamp_</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># x1</span>
@@ -1170,7 +1170,7 @@
         <span class="n">boxes</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># y1, y2</span>
 
 
-<div class="viewcode-block" id="non_max_suppression"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.non_max_suppression">[docs]</a><span class="k">def</span> <span class="nf">non_max_suppression</span><span class="p">(</span>
+<div class="viewcode-block" id="non_max_suppression"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.non_max_suppression">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">non_max_suppression</span><span class="p">(</span>
     <span class="n">prediction</span><span class="p">,</span>
     <span class="n">conf_thres</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
     <span class="n">iou_thres</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span>
@@ -1277,7 +1277,7 @@
     <span class="k">return</span> <span class="n">output</span></div>
 
 
-<span class="k">def</span> <span class="nf">strip_optimizer</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">"best.pt"</span><span class="p">,</span> <span class="n">saved_path</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">strip_optimizer</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">"best.pt"</span><span class="p">,</span> <span class="n">saved_path</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Strip optimizer from 'checkpoint_path' to finalize training,</span>
 <span class="sd">    optionally save as 'saved_path'</span>
@@ -1297,7 +1297,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Optimizer stripped from </span><span class="si">{</span><span class="n">checkpoint_path</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">saved_info</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">mb</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">MB"</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">print_mutation</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">hyp</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">bucket</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_mutation</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">hyp</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">bucket</span><span class="p">):</span>
     <span class="n">evolve_csv</span><span class="p">,</span> <span class="n">evolve_yaml</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">"evolve.csv"</span><span class="p">,</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s2">"hyp_evolve.yaml"</span>
     <span class="c1"># [results + hyps]</span>
     <span class="n">keys</span> <span class="o">=</span> <span class="p">(</span>
@@ -1345,7 +1345,7 @@
 
 
 <span class="nd">@requires_module</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">apply_classifier</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">im0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_classifier</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">im0</span><span class="p">):</span>
     <span class="c1"># Apply a second stage classifier to YOLO outputs</span>
     <span class="n">im0</span> <span class="o">=</span> <span class="p">[</span><span class="n">im0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">im0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">im0</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>  <span class="c1"># per image</span>
@@ -1380,7 +1380,7 @@
     <span class="k">return</span> <span class="n">x</span>
 
 
-<span class="k">def</span> <span class="nf">increment_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">mkdir</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">increment_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">mkdir</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Increment file or directory path.</span>
 <span class="sd">    i.e. runs/exp --&gt; runs/exp{sep}2, runs/exp{sep}3, ... etc.</span>
@@ -1416,7 +1416,7 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2024, yolort team.
+              &#169; Copyright 2026, yolort team.
               
           </div>
             Created using

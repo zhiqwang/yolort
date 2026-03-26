@@ -46,7 +46,7 @@
   
   
     <title>yolort.v5.utils.downloads &#8212; yolort  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=83e35b93" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=75810a84" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/material.css?v=79c92029" />
     <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=b3ba4146"></script>
     <script src="../../../../_static/doctools.js?v=888ff710"></script>
@@ -660,25 +660,25 @@
 <span class="sd">Download utils</span>
 <span class="sd">"""</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">platform</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">import</span> <span class="nn">urllib</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
 
-<span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">from</span> <span class="nn">torch.hub</span> <span class="kn">import</span> <span class="n">download_url_to_file</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.hub</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_url_to_file</span>
 
 
-<span class="k">def</span> <span class="nf">gsutil_getsize</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gsutil_getsize</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
     <span class="c1"># gs://bucket/file size https://cloud.google.com/storage/docs/gsutil/commands/du</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="sa">f</span><span class="s2">"gsutil du </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">" "</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>  <span class="c1"># bytes</span>
 
 
-<span class="k">def</span> <span class="nf">safe_download</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">url2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_bytes</span><span class="o">=</span><span class="mf">1e0</span><span class="p">,</span> <span class="n">error_msg</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">safe_download</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">url2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_bytes</span><span class="o">=</span><span class="mf">1e0</span><span class="p">,</span> <span class="n">error_msg</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Attempts to download file from url or url2, checks</span>
 <span class="sd">    and removes incomplete downloads &lt; min_bytes</span>
@@ -701,7 +701,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="attempt_download"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.attempt_download">[docs]</a><span class="k">def</span> <span class="nf">attempt_download</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="s2">"ultralytics/yolov5"</span><span class="p">,</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="attempt_download"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.attempt_download">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">attempt_download</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="s2">"ultralytics/yolov5"</span><span class="p">,</span> <span class="n">hash_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="c1"># Attempt file download if does not exist</span>
     <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"'"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
 
@@ -756,7 +756,7 @@
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">gdrive_download</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"16TiPfZj7htmTyhntwcZyEEAejOUxuT6m"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">"tmp.zip"</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gdrive_download</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"16TiPfZj7htmTyhntwcZyEEAejOUxuT6m"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">"tmp.zip"</span><span class="p">):</span>
     <span class="c1"># Downloads a file from Google Drive.</span>
     <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="n">file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
@@ -792,7 +792,7 @@
     <span class="k">return</span> <span class="n">r</span>
 
 
-<span class="k">def</span> <span class="nf">get_token</span><span class="p">(</span><span class="n">cookie</span><span class="o">=</span><span class="s2">"./cookie"</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_token</span><span class="p">(</span><span class="n">cookie</span><span class="o">=</span><span class="s2">"./cookie"</span><span class="p">):</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cookie</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">"download"</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
@@ -818,7 +818,7 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2024, yolort team.
+              &#169; Copyright 2026, yolort team.
               
           </div>
             Created using

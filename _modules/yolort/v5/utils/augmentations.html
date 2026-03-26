@@ -46,7 +46,7 @@
   
   
     <title>yolort.v5.utils.augmentations &#8212; yolort  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=83e35b93" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=75810a84" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/material.css?v=79c92029" />
     <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=b3ba4146"></script>
     <script src="../../../../_static/doctools.js?v=888ff710"></script>
@@ -660,27 +660,27 @@
 <span class="sd">Image augmentation functions</span>
 <span class="sd">"""</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">is_module_available</span><span class="p">,</span> <span class="n">requires_module</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">yolort.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_module_available</span><span class="p">,</span> <span class="n">requires_module</span>
 
 <span class="k">if</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">):</span>
-    <span class="kn">import</span> <span class="nn">cv2</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
 
-<span class="kn">from</span> <span class="nn">.general</span> <span class="kn">import</span> <span class="n">check_version</span><span class="p">,</span> <span class="n">colorstr</span><span class="p">,</span> <span class="n">resample_segments</span><span class="p">,</span> <span class="n">segment2box</span>
-<span class="kn">from</span> <span class="nn">.metrics</span> <span class="kn">import</span> <span class="n">bbox_ioa</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_version</span><span class="p">,</span> <span class="n">colorstr</span><span class="p">,</span> <span class="n">resample_segments</span><span class="p">,</span> <span class="n">segment2box</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">bbox_ioa</span>
 
 
-<span class="k">class</span> <span class="nc">Albumentations</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Albumentations</span><span class="p">:</span>
     <span class="c1"># YOLOv5 Albumentations class (optional, only used if package is installed)</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">albumentations</span> <span class="k">as</span> <span class="nn">A</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">albumentations</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">A</span>
 
             <span class="n">check_version</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span> <span class="s2">"1.0.3"</span><span class="p">)</span>  <span class="c1"># version requirement</span>
 
@@ -697,7 +697,7 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">colorstr</span><span class="p">(</span><span class="s2">"albumentations: "</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="ow">and</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">:</span>
             <span class="c1"># transformed</span>
             <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im</span><span class="p">,</span> <span class="n">bboxes</span><span class="o">=</span><span class="n">labels</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">class_labels</span><span class="o">=</span><span class="n">labels</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
@@ -707,7 +707,7 @@
 
 
 <span class="nd">@requires_module</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">augment_hsv</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">hgain</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">sgain</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">vgain</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">augment_hsv</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">hgain</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">sgain</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">vgain</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
     <span class="c1"># HSV color-space augmentation</span>
     <span class="k">if</span> <span class="n">hgain</span> <span class="ow">or</span> <span class="n">sgain</span> <span class="ow">or</span> <span class="n">vgain</span><span class="p">:</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="n">hgain</span><span class="p">,</span> <span class="n">sgain</span><span class="p">,</span> <span class="n">vgain</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># random gains</span>
@@ -724,7 +724,7 @@
 
 
 <span class="nd">@requires_module</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">hist_equalize</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">clahe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bgr</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hist_equalize</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">clahe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bgr</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="c1"># Equalize histogram on BGR image 'im' with im.shape(n,m,3) and range 0-255</span>
     <span class="n">yuv</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2YUV</span> <span class="k">if</span> <span class="n">bgr</span> <span class="k">else</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2YUV</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">clahe</span><span class="p">:</span>
@@ -735,7 +735,7 @@
     <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">yuv</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_YUV2BGR</span> <span class="k">if</span> <span class="n">bgr</span> <span class="k">else</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_YUV2RGB</span><span class="p">)</span>  <span class="c1"># convert YUV image to RGB</span>
 
 
-<span class="k">def</span> <span class="nf">replicate</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">replicate</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
     <span class="c1"># Replicate labels</span>
     <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
     <span class="n">boxes</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -753,7 +753,7 @@
 
 
 <div class="viewcode-block" id="letterbox"><a class="viewcode-back" href="../../../../yolov5.html#yolort.v5.letterbox">[docs]</a><span class="nd">@requires_module</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">letterbox</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">letterbox</span><span class="p">(</span>
     <span class="n">im</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">new_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span>
     <span class="n">color</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">114</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">114</span><span class="p">),</span>
@@ -795,7 +795,7 @@
 
 
 <span class="nd">@requires_module</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">random_perspective</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">random_perspective</span><span class="p">(</span>
     <span class="n">im</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">segments</span><span class="o">=</span><span class="p">(),</span>
@@ -902,7 +902,7 @@
 
 
 <span class="nd">@requires_module</span><span class="p">(</span><span class="s2">"cv2"</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">copy_paste</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">segments</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_paste</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">segments</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
     <span class="c1"># Implement Copy-Paste augmentation https://arxiv.org/abs/2012.07177,</span>
     <span class="c1"># labels as nx5 np.array(cls, xyxy)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span>
@@ -933,7 +933,7 @@
     <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">segments</span>
 
 
-<span class="k">def</span> <span class="nf">cutout</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cutout</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
     <span class="c1"># Applies image cutout augmentation https://arxiv.org/abs/1708.04552</span>
     <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">:</span>
         <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
@@ -961,7 +961,7 @@
     <span class="k">return</span> <span class="n">labels</span>
 
 
-<span class="k">def</span> <span class="nf">mixup</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">im2</span><span class="p">,</span> <span class="n">labels2</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mixup</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">im2</span><span class="p">,</span> <span class="n">labels2</span><span class="p">):</span>
     <span class="c1"># Applies MixUp augmentation https://arxiv.org/pdf/1710.09412.pdf</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">beta</span><span class="p">(</span><span class="mf">32.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">)</span>  <span class="c1"># mixup ratio, alpha=beta=32.0</span>
     <span class="n">im</span> <span class="o">=</span> <span class="p">(</span><span class="n">im</span> <span class="o">*</span> <span class="n">r</span> <span class="o">+</span> <span class="n">im2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
@@ -970,7 +970,7 @@
 
 
 <span class="c1"># box1(4, n), box2(4, n)</span>
-<span class="k">def</span> <span class="nf">box_candidates</span><span class="p">(</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">,</span> <span class="n">wh_thr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ar_thr</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">area_thr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">box_candidates</span><span class="p">(</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">,</span> <span class="n">wh_thr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ar_thr</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">area_thr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">):</span>
     <span class="c1"># Compute candidate boxes: box1 before augment, box2</span>
     <span class="c1"># after augment, wh_thr (pixels), aspect_ratio_thr, area_ratio</span>
     <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span> <span class="o">=</span> <span class="n">box1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">box1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">box1</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">box1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -999,7 +999,7 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2024, yolort team.
+              &#169; Copyright 2026, yolort team.
               
           </div>
             Created using

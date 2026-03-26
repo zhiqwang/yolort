@@ -46,7 +46,7 @@
   
   
     <title>yolort.v5.helper &#8212; yolort  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=83e35b93" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=75810a84" />
     <link rel="stylesheet" type="text/css" href="../../../_static/material.css?v=79c92029" />
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=b3ba4146"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
@@ -656,21 +656,21 @@
             
   <h1 id="modules-yolort-v5-helper--page-root">Source code for yolort.v5.helper</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (c) 2021, yolort team. All rights reserved.</span>
-<span class="kn">import</span> <span class="nn">contextlib</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">.models.yolo</span> <span class="kn">import</span> <span class="n">Detect</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">attempt_download</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models.yolo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Detect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">attempt_download</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"add_yolov5_context"</span><span class="p">,</span> <span class="s2">"load_yolov5_model"</span><span class="p">,</span> <span class="s2">"get_yolov5_size"</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="add_yolov5_context"><a class="viewcode-back" href="../../../yolov5.html#yolort.v5.add_yolov5_context">[docs]</a><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
-<span class="k">def</span> <span class="nf">add_yolov5_context</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_yolov5_context</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Temporarily add yolov5 folder to `sys.path`. Adapted from</span>
 <span class="sd">    https://github.com/fcakyon/yolov5-pip/blob/0d03de6/yolov5/utils/general.py#L739-L754</span>
@@ -686,7 +686,7 @@
         <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path_ultralytics_yolov5</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_yolov5_size"><a class="viewcode-back" href="../../../yolov5.html#yolort.v5.get_yolov5_size">[docs]</a><span class="k">def</span> <span class="nf">get_yolov5_size</span><span class="p">(</span><span class="n">depth_multiple</span><span class="p">,</span> <span class="n">width_multiple</span><span class="p">):</span>
+<div class="viewcode-block" id="get_yolov5_size"><a class="viewcode-back" href="../../../yolov5.html#yolort.v5.get_yolov5_size">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_yolov5_size</span><span class="p">(</span><span class="n">depth_multiple</span><span class="p">,</span> <span class="n">width_multiple</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">depth_multiple</span> <span class="o">==</span> <span class="mf">0.33</span> <span class="ow">and</span> <span class="n">width_multiple</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">"n"</span>
     <span class="k">if</span> <span class="n">depth_multiple</span> <span class="o">==</span> <span class="mf">0.33</span> <span class="ow">and</span> <span class="n">width_multiple</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
@@ -703,7 +703,7 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="load_yolov5_model"><a class="viewcode-back" href="../../../yolov5.html#yolort.v5.load_yolov5_model">[docs]</a><span class="k">def</span> <span class="nf">load_yolov5_model</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fuse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="load_yolov5_model"><a class="viewcode-back" href="../../../yolov5.html#yolort.v5.load_yolov5_model">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">load_yolov5_model</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fuse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Creates a specified YOLOv5 model.</span>
 
@@ -757,7 +757,7 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2024, yolort team.
+              &#169; Copyright 2026, yolort team.
               
           </div>
             Created using

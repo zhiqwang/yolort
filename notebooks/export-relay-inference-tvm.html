@@ -47,9 +47,9 @@
   
   
     <title>Deploying yolort on TVM &#8212; yolort  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=83e35b93" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=75810a84" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css?v=79c92029" />
-    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
@@ -730,17 +730,17 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torch
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tvm</span>
-<span class="kn">from</span> <span class="nn">tvm</span> <span class="kn">import</span> <span class="n">relay</span>
-<span class="kn">from</span> <span class="nn">tvm.runtime.vm</span> <span class="kn">import</span> <span class="n">VirtualMachine</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tvm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tvm</span><span class="w"> </span><span class="kn">import</span> <span class="n">relay</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tvm.runtime.vm</span><span class="w"> </span><span class="kn">import</span> <span class="n">VirtualMachine</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
 
 <span class="c1"># PyTorch imports</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">import</span> <span class="nn">torchvision</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
 </pre></div>
 </div>
 </div>
@@ -759,8 +759,8 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torch
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.models</span> <span class="kn">import</span> <span class="n">yolov5n</span>
-<span class="kn">from</span> <span class="nn">yolort.relay</span> <span class="kn">import</span> <span class="n">get_trace_module</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">yolort.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">yolov5n</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">yolort.relay</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_trace_module</span>
 </pre></div>
 </div>
 </div>
@@ -834,7 +834,7 @@ graph(%self.1 : __torch__.yolort.relay.trace_wrapper.TraceWrapper,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">yolort.utils</span> <span class="kn">import</span> <span class="n">get_image_from_url</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">yolort.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_image_from_url</span>
 
 <span class="n">img_source</span> <span class="o">=</span> <span class="s2">"https://huggingface.co/spaces/zhiqwang/assets/resolve/main/bus.jpg"</span>
 <span class="c1"># img_source = "https://huggingface.co/spaces/zhiqwang/assets/resolve/main/zidane.jpg"</span>
@@ -2446,7 +2446,7 @@ Exported model has been tested with TVM Runtime, and the result looks good!
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2024, yolort team.
+              &#169; Copyright 2026, yolort team.
               
           </div>
             Created using
