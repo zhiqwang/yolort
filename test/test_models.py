@@ -346,6 +346,22 @@ class TestModel:
         assert isinstance(losses["bbox_regression"], Tensor)
         assert isinstance(losses["objectness"], Tensor)
 
+    def test_criterion_no_targets(self, use_p6=False):
+        N, H, W = 4, 640, 640
+        head_outputs = self._get_head_outputs(N, H, W)
+        strides = self._get_strides(use_p6)
+        anchor_grids = self._get_anchor_grids(use_p6)
+        num_classes = self.num_classes
+
+        # Simulate a batch where all images have no bounding boxes
+        targets = torch.zeros((0, 6))
+        criterion = SetCriterion(strides, anchor_grids, num_classes)
+        losses = criterion(targets, head_outputs)
+        assert isinstance(losses, dict)
+        assert isinstance(losses["cls_logits"], Tensor)
+        assert isinstance(losses["bbox_regression"], Tensor)
+        assert isinstance(losses["objectness"], Tensor)
+
 
 @pytest.mark.parametrize("arch", ["yolov5s", "yolov5m", "yolov5l", "yolov5ts"])
 def test_torchscript(arch):

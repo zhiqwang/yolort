@@ -164,7 +164,7 @@ class YOLOTransform(nn.Module):
         """
 
         device = images[0].device
-        images = [img for img in images]
+        images = [images[i] for i in range(len(images))]
         if targets is not None:
             # make a copy of targets to avoid modifying it in-place
             # once torchscript supports dict comprehension
@@ -211,7 +211,10 @@ class YOLOTransform(nn.Module):
                     targets_merged[:, 1] = target["labels"]
                     targets_merged[:, 2:] = target["boxes"]
                     targets_batched.append(targets_merged)
-            targets_batched = torch.cat(targets_batched, dim=0)
+            if targets_batched:
+                targets_batched = torch.cat(targets_batched, dim=0)
+            else:
+                targets_batched = torch.zeros((0, 6), dtype=torch.float32, device=device)
         else:
             targets_batched = None
 

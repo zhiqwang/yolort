@@ -89,7 +89,10 @@ def check_font(font="Arial.ttf", size=10):
         print(f"Warning: Font error: {e}")
         url = "https://ultralytics.com/assets/" + font.name
         print(f"Downloading {url} to {font}...")
-        torch.hub.download_url_to_file(url, str(font), progress=False)
+        try:
+            torch.hub.download_url_to_file(url, str(font), progress=False)
+        except Exception as download_error:
+            print(f"Warning: Could not download font: {download_error}. Using default font.")
 
 
 class Annotator:

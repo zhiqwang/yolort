@@ -68,7 +68,6 @@ class TestONNXExporter:
     def get_test_images(self):
         return self.get_image("bus.jpg"), self.get_image("zidane.jpg")
 
-    @pytest.mark.xfail(reason="PyTorch 1.12 and 1.13 does not work.")
     @pytest.mark.parametrize(
         "arch, fixed_size, upstream_version",
         [
@@ -132,5 +131,5 @@ class TestONNXExporter:
             self.run_model(model, [[img_one, img_two], [img_two, img_one, img_dummy]])
 
         # Test exported model on images of misbatch
-        with pytest.raises(ValueError, match="Required inputs (['image3']) are missing from input feed"):
+        with pytest.raises(ValueError, match=r"Required inputs \(\['image3'\]\) are missing from input feed"):
             self.run_model(model, [[img_two, img_one, img_dummy], [img_one, img_two]])
