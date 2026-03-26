@@ -164,7 +164,7 @@ class YOLOTransform(nn.Module):
         """
 
         device = images[0].device
-        images = [img for img in images]
+        images = [images[i] for i in range(len(images))]
         if targets is not None:
             # make a copy of targets to avoid modifying it in-place
             # once torchscript supports dict comprehension

@@ -10,7 +10,7 @@ from torchvision.io import ImageReadMode, read_image
 from yolort.utils import contains_any_tensor
 
 from . import yolo
-from .transform import _get_shape_onnx, YOLOTransform
+from .transform import _get_shape_onnx, _tracing_int_onnx, YOLOTransform
 from .yolo import YOLO
 
 __all__ = ["YOLOv5"]
@@ -142,10 +142,15 @@ class YOLOv5(nn.Module):
         original_image_sizes: List[Tuple[int, int]] = []
 
         if not self.training:
-            for img in inputs:
-                val = img.shape[-2:]
-                assert len(val) == 2
-                original_image_sizes.append((val[0], val[1]))
+            if torchvision._is_tracing():
+                for i in range(len(inputs)):
+                    val = _get_shape_onnx(inputs[i])
+                    original_image_sizes.append((_tracing_int_onnx(val[0]), _tracing_int_onnx(val[1])))
+            else:
+                for img in inputs:
+                    val = img.shape[-2:]
+                    assert len(val) == 2
+                    original_image_sizes.append((val[0], val[1]))
 
         # Transform the input
         samples, targets = self.transform(inputs, targets)
