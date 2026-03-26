@@ -1,5 +1,6 @@
 # Copyright (c) 2021, yolort team. All rights reserved.
 import contextlib
+import inspect
 import sys
 from pathlib import Path
 
@@ -64,7 +65,10 @@ def load_yolov5_model(checkpoint_path: str, fuse: bool = False):
     """
 
     with add_yolov5_context():
-        ckpt = torch.load(attempt_download(checkpoint_path), map_location=torch.device("cpu"))
+        load_kwargs = {"map_location": torch.device("cpu")}
+        if "weights_only" in inspect.signature(torch.load).parameters:
+            load_kwargs["weights_only"] = False
+        ckpt = torch.load(attempt_download(checkpoint_path), **load_kwargs)
         if fuse:
             model = ckpt["ema" if ckpt.get("ema") else "model"].float().fuse().eval()
         else:  # without layer fuse
