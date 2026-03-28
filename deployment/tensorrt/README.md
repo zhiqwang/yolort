@@ -27,7 +27,7 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
    trtexec --onnx=best.trt.onnx --saveEngine=best.engine --workspace=8192
    ```
 
-1. \[Optional\] Quick test with the TensorRT Python interface.
+1. [Optional] Quick test with the TensorRT Python interface.
 
    ```python
    import torch
@@ -58,7 +58,7 @@ Here we will mainly discuss how to use the C++ interface, we recommend that you 
      cmake --build .  # Can also use the yolort_trt.sln to build on Windows System
      ```
 
-   - \[Windows System Only\] Copy following dependent dynamic link libraries (xxx.dll) to Release/Debug directory
+   - [Windows System Only] Copy following dependent dynamic link libraries (xxx.dll) to Release/Debug directory
 
      - cudnn_cnn_infer64_8.dll, cudnn_ops_infer64_8.dll, cudnn64_8.dll, nvinfer.dll, nvinfer_plugin.dll, nvonnxparser.dll, zlibwapi.dll (On which CUDA and cudnn depend)
      - opencv_corexxx.dll opencv_imgcodecsxxx.dll opencv_imgprocxxx.dll (Subsequent dependencies by OpenCV or you can also use Static OpenCV Library)

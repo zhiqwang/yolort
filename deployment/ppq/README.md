@@ -13,7 +13,7 @@ The ppq int8 ptq example of `yolort`.
 
 ## Usage
 
-Here we will mainly discuss how to use the ppq interface, we recommend that you check out  [tutorial](https://github.com/openppl-public/ppq/tree/master/ppq/samples) first. This code can be used to do the following stuff:
+Here we will mainly discuss how to use the ppq interface, we recommend that you check out [tutorial](https://github.com/openppl-public/ppq/tree/master/ppq/samples) first. This code can be used to do the following stuff:
 
 1. Distill your calibration data (Optional: If you don't have images for calibration and bn is in your model, you can use this)
 

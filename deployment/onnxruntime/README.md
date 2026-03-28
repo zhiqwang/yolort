@@ -8,7 +8,7 @@ The ONNX Runtime inference for `yolort`, both CPU and GPU are supported.
 
 - ONNX Runtime 1.7+
 - OpenCV
-- CUDA \[Optional\]
+- CUDA [Optional]
 
 *We didn't impose too strong restrictions on the versions of dependencies.*
 
@@ -30,7 +30,7 @@ The ONNX model exported by yolort differs from other pipeline in the following t
 
    And then, you can find that a ONNX model ("best.onnx") have been generated in the directory of "best.pt". Set the `size_divisible` here according to your model, 32 for P5 ("yolov5s.pt" for instance) and 64 for P6 ("yolov5s6.pt" for instance).
 
-1. \[Optional\] Quick test with the ONNX Runtime Python interface.
+1. [Optional] Quick test with the ONNX Runtime Python interface.
 
    ```python
    from yolort.runtime import PredictorORT

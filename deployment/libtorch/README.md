@@ -8,7 +8,7 @@ The LibTorch inference for `yolort`, both GPU and CPU are supported.
 
 - LibTorch 1.8.0+ together with corresponding TorchVision 0.9.0+
 - OpenCV
-- CUDA 10.2+ \[Optional\]
+- CUDA 10.2+ [Optional]
 
 *We didn't impose too strong restrictions on the version of CUDA.*
 
