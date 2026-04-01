@@ -221,6 +221,8 @@ class PathAggregationNetwork(nn.Module):
             last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx + 1)
             inners.insert(0, last_inner)
             last_inner = self.get_result_from_inner_blocks(last_inner, 3 * idx + 2)
+            if x[2].shape[3] % 2 != 0:
+                print('Warning: Your input image is too small, it will be "RuntimeError". ')
             last_inner = torch.cat([last_inner, x[num_features - idx - 2]], dim=1)
 
         inners.insert(0, last_inner)
