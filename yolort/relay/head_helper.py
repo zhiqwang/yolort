@@ -1,10 +1,10 @@
 # Copyright (c) 2022, yolort team. All rights reserved.
 
-import random
-
 import torch
 from torch import nn, Tensor
 from yolort.models.box_head import _decode_pred_logits
+
+from .nms_helper import NonMaxSupressionOp
 
 
 class FakeYOLO(nn.Module):
@@ -85,39 +85,3 @@ class FakePostProcess(nn.Module):
         classes_keep = classes_keep.float()
         out = torch.concat([i, boxes_keep, classes_keep, scores_keep], 1)
         return out
-
-
-class NonMaxSupressionOp(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, boxes, scores, detections_per_class, iou_thresh, score_thresh):
-        """
-        Symbolic method to export an NonMaxSupression ONNX models.
-
-        Args:
-            boxes (Tensor): An input tensor with shape [num_batches, spatial_dimension, 4].
-                have been multiplied original size here.
-            scores (Tensor): An input tensor with shape [num_batches, num_classes, spatial_dimension].
-                only one class score here.
-            detections_per_class (Tensor, optional): Integer representing the maximum number of
-                boxes to be selected per batch per class. It is a scalar.
-            iou_thresh (Tensor, optional): Float representing the threshold for deciding whether
-                boxes overlap too much with respect to IOU. It is scalar. Value range [0, 1].
-            score_thresh (Tensor, optional): Float representing the threshold for deciding when to
-                remove boxes based on score. It is a scalar.
-
-        Returns:
-            Tensor(int64): selected indices from the boxes tensor. [num_selected_indices, 3],
-                the selected index format is [batch_index, class_index, box_index].
-        """
-        batch = scores.shape[0]
-        num_det = random.randint(0, 100)
-        batches = torch.randint(0, batch, (num_det,)).sort()[0]
-        idxs = torch.arange(100, 100 + num_det)
-        zeros = torch.zeros((num_det,), dtype=torch.int64)
-        selected_indices = torch.cat([batches[None], zeros[None], idxs[None]], 0).T.contiguous()
-        selected_indices = selected_indices.to(torch.int64)
-        return selected_indices
-
-    @staticmethod
-    def symbolic(g, boxes, scores, detections_per_class, iou_thresh, score_thresh):
-        return g.op("NonMaxSuppression", boxes, scores, detections_per_class, iou_thresh, score_thresh)
